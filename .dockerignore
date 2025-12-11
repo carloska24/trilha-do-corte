@@ -1,0 +1,7 @@
+node_modules
+dist
+.git
+.env
+.firebase
+merged_code.txt
+*.log

@@ -1,0 +1,335 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+:root {
+  /* Light Mode Colors */
+  --bg-primary: #fafafa; /* Zinc 50 */
+  --bg-secondary: #f4f4f5; /* Zinc 100 */
+  --bg-card: #ffffff;
+  --text-primary: #09090b; /* Zinc 950 */
+  --text-secondary: #52525b; /* Zinc 600 */
+  --border-color: #e4e4e7; /* Zinc 200 */
+  --stripe-color: rgba(0, 0, 0, 0.04);
+}
+
+:root[class='dark'] {
+  /* Dark Mode Colors (Original) */
+  --bg-primary: #121212;
+  --bg-secondary: #09090b;
+  --bg-card: #1e1e1e;
+  --text-primary: #ffffff;
+  --text-secondary: #a1a1aa; /* Zinc 400 */
+  --border-color: rgba(255, 255, 255, 0.05); /* White/5 */
+  --stripe-color: rgba(255, 255, 255, 0.03);
+}
+
+/* Global Barber Pole Background */
+body {
+  background-color: var(--bg-primary);
+  /* Cyberpunk Barber Pole: Dark with subtle moving stripes */
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.03) 0px,
+    rgba(255, 255, 255, 0.03) 20px,
+    transparent 20px,
+    transparent 40px
+  );
+  background-size: 56px 56px;
+  animation: barberScroll 15s linear infinite;
+
+  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
+  overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+@keyframes barberScroll {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 56px 0;
+  }
+}
+
+/* Tipografia Urbana */
+.font-graffiti {
+  font-family: 'Permanent Marker', cursive;
+  letter-spacing: 0.05em;
+}
+
+/* Efeito de Vidro para Cards */
+.glass-panel {
+  background: rgba(24, 24, 27, 0.7); /* Zinc 900 com transparência */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Scrollbar Personalizada */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #09090b;
+}
+::-webkit-scrollbar-thumb {
+  background: #27272a;
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #eab308; /* Amarelo Sólido */
+}
+
+/* Animações Sutis */
+.fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Badge Promocional Ribbon */
+.clip-path-promo {
+  clip-path: polygon(0 0, 100% 0, 92% 50%, 100% 100%, 0 100%);
+}
+
+/* --- CUSTOM CHAIR ANIMATIONS --- */
+
+/* Header Chair: Subtle Float */
+@keyframes float-slow {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+.animate-float-slow {
+  animation: float-slow 4s ease-in-out infinite;
+}
+
+/* Waiting Chair: Neon Pulse (Breathing) */
+@keyframes pulse-neon {
+  0%,
+  100% {
+    opacity: 1;
+    filter: drop-shadow(0 0 5px rgba(34, 211, 238, 0.5));
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    filter: drop-shadow(0 0 15px rgba(34, 211, 238, 0.8));
+    transform: scale(1.02);
+  }
+}
+.animate-pulse-neon {
+  animation: pulse-neon 3s ease-in-out infinite;
+}
+
+/* Waiting Chair: Scan Line Effect */
+@keyframes scan-vertical {
+  0% {
+    top: -10%;
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    top: 110%;
+    opacity: 0;
+  }
+}
+.animate-scan-vertical {
+  animation: scan-vertical 2s linear infinite;
+  background: linear-gradient(to bottom, transparent, rgba(34, 211, 238, 0.5), transparent);
+}
+
+/* --- 3D FLIP ANIMATION UTILITIES --- */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.transform-style-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+}
+
+.rotate-y-180 {
+  transform: rotateY(180deg);
+}
+
+/* --- TEXT BUTTON STYLE --- */
+/* --- TEXT BUTTON STYLE (Refined for Mobile) --- */
+.text-button-style {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+  letter-spacing: -0.02em;
+  color: #ffffff;
+  /* Removed gradient/clip for maximum sharpness */
+}
+
+/* --- ARCADE TEXTURE --- */
+.bg-arcade-texture {
+  background-color: #151515;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacit%79='0.15'/%3E%3C/svg%3E"),
+    radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.05) 0%, transparent 60%);
+  box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.1), inset 0 -4px 8px rgba(0, 0, 0, 0.8),
+    0 0 20px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* --- PREMIUM BADGES & TEXT GLOW --- */
+.text-glow-subtle {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8); /* Removed blur glow, focused on readability */
+  font-weight: 700;
+  opacity: 0.9;
+}
+
+.badge-premium {
+  background: linear-gradient(180deg, rgba(30, 30, 30, 0.9) 0%, rgba(10, 10, 10, 0.95) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(4px);
+  transition: all 0.3s ease;
+}
+
+.badge-premium:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.badge-dot-glow {
+  box-shadow: 0 0 8px currentColor;
+}
+
+/* --- NEW ANIMATIONS FOR STATUS CIRCLE --- */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.8s ease-out forwards;
+}
+
+.delay-100 {
+  animation-delay: 0.1s;
+}
+.delay-200 {
+  animation-delay: 0.2s;
+}
+.delay-300 {
+  animation-delay: 0.3s;
+}
+
+@keyframes pulseSlow {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(0.95);
+  }
+}
+
+.animate-pulse-slow {
+  animation: pulseSlow 3s ease-in-out infinite;
+}
+
+/* --- FONTS --- */
+.font-sf-pro {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, Helvetica,
+    Arial, sans-serif;
+}
+
+/* --- MARQUEE / TICKER ANIMATION --- */
+@keyframes ticker {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-ticker {
+  animation: ticker 20s linear infinite;
+  width: max-content;
+}
+
+.animate-ticker:hover {
+  animation-play-state: paused;
+}
+
+.mask-gradient-x {
+  mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+}
+
+/* --- NEW MAGNIFICENT BARBER POLE --- */
+@keyframes pole-slide {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 28px 28px;
+  }
+}
+
+.bg-barber-pole-card {
+  background-color: #000;
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(20, 20, 20, 1) 0px,
+    rgba(20, 20, 20, 1) 10px,
+    rgba(10, 10, 10, 1) 10px,
+    rgba(10, 10, 10, 1) 20px
+  );
+  background-size: 28px 28px;
+  animation: pole-slide 2s linear infinite;
+  position: relative;
+}
+
+.bg-barber-pole-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.8) 100%);
+  pointer-events: none;
+}
+
+.text-glow-neon {
+  text-shadow: 0 0 5px #eab308, 0 0 10px #eab308;
+}

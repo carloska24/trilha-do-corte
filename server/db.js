@@ -1,0 +1,318 @@
+import sqlite3 from 'sqlite3';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import bcrypt from 'bcryptjs';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const dbPath = join(__dirname, 'database.sqlite');
+console.log('🔌 Conectando ao Banco de Dados em:', dbPath);
+const db = new sqlite3.Database(dbPath);
+
+// Pre-calculated hash for '123' to avoid async issues in top-level or sync delay
+// generated with bcrypt.hashSync('123', 10)
+const DEFAULT_PASS_HASH = bcrypt.hashSync('123', 10);
+
+// Initial Data (from constants.ts)
+const SERVICES = [
+  {
+    id: '1',
+    name: 'Corte',
+    price: 'R$ 35,00',
+    priceValue: 35,
+    description: 'Corte completo (55min).',
+    icon: 'scissors',
+    image:
+      'https://images.unsplash.com/photo-1605497788044-5a32c7078486?q=80&w=400&auto=format&fit=crop',
+  },
+  {
+    id: '2',
+    name: 'Barba',
+    price: 'R$ 25,00',
+    priceValue: 25,
+    description: 'Modelagem e acabamento (30min).',
+    icon: 'razor',
+    image:
+      'https://images.unsplash.com/photo-1503951914875-befbb7470d03?q=80&w=400&auto=format&fit=crop',
+  },
+  {
+    id: '3',
+    name: 'Sobrancelha',
+    price: 'R$ 10,00',
+    priceValue: 10,
+    description: 'Design de sobrancelha (10min).',
+    icon: 'razor',
+    image:
+      'https://images.unsplash.com/photo-1599351431202-6e0005079746?q=80&w=400&auto=format&fit=crop',
+  },
+  {
+    id: '4',
+    name: 'Pezinho',
+    price: 'R$ 10,00',
+    priceValue: 10,
+    description: 'Acabamento do pezinho (15min).',
+    icon: 'scissors',
+    image:
+      'https://images.unsplash.com/photo-1622286342621-4bd786c2447c?q=80&w=400&auto=format&fit=crop',
+  },
+  {
+    id: '5',
+    name: 'Hidratação',
+    price: 'R$ 20,00',
+    priceValue: 20,
+    description: 'Tratamento capilar (30min).',
+    icon: 'combo',
+    image:
+      'https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?q=80&w=400&auto=format&fit=crop',
+  },
+];
+
+const BARBERS = [
+  {
+    id: 'b1',
+    name: 'Mestre Vapor',
+    specialty: 'Fades & Freestyle',
+    image:
+      'https://images.unsplash.com/photo-1581803118522-7b72a50f7e9f?q=80&w=400&auto=format&fit=crop',
+    email: 'mestre@trilha.com',
+    password: DEFAULT_PASS_HASH,
+  },
+  {
+    id: 'b2',
+    name: 'Zero Grau',
+    specialty: 'Barba Terapia',
+    image:
+      'https://images.unsplash.com/photo-1618077553780-75539862f629?q=80&w=400&auto=format&fit=crop',
+    email: 'zero@trilha.com',
+    password: DEFAULT_PASS_HASH,
+  },
+];
+
+const CLIENTS = [
+  {
+    id: '1',
+    name: 'Lucas Grafite',
+    phone: '(11) 99888-7766',
+    level: 4,
+    lastVisit: '28/09/2023',
+    img: 'https://images.unsplash.com/photo-1527980965255-d3b416303d12?q=80&w=200&auto=format&fit=crop',
+    status: 'active',
+    notes: 'Gosta de degradê navalhado. Torce pro Corinthians.',
+    password: DEFAULT_PASS_HASH,
+    email: 'lucas@email.com',
+  },
+  {
+    id: '2',
+    name: 'Pedro Skate',
+    phone: '(11) 91234-5678',
+    level: 1,
+    lastVisit: 'Ontem',
+    img: null,
+    status: 'new',
+    notes: 'Primeira vez. Cabelo difícil de pentear.',
+    password: DEFAULT_PASS_HASH,
+    email: 'pedro@email.com',
+  },
+  {
+    id: '3',
+    name: 'Marcos Trem',
+    phone: '(11) 97777-1111',
+    level: 8,
+    lastVisit: '10/10/2023',
+    img: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=200&auto=format&fit=crop',
+    status: 'vip',
+    notes: 'Cliente antigo. Sempre pede café.',
+    password: DEFAULT_PASS_HASH,
+    email: 'marcos@email.com',
+  },
+  {
+    id: '4',
+    name: 'João da Silva',
+    phone: '(11) 95555-4444',
+    level: 2,
+    lastVisit: 'Hoje',
+    img: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop',
+    status: 'active',
+    notes: '',
+    password: DEFAULT_PASS_HASH,
+    email: 'joao@email.com',
+  },
+  {
+    id: '5',
+    name: 'Ana Style',
+    phone: '(11) 93333-2222',
+    level: 5,
+    lastVisit: 'Hoje',
+    img: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&auto=format&fit=crop',
+    status: 'active',
+    notes: 'Desenho na nuca.',
+    password: DEFAULT_PASS_HASH,
+    email: 'ana@email.com',
+  },
+];
+
+const today = new Date().toISOString().split('T')[0];
+const APPOINTMENTS = [
+  {
+    id: '101',
+    clientName: 'João da Silva',
+    serviceId: '1',
+    date: today,
+    time: '09:00',
+    status: 'completed',
+    price: 45,
+    photoUrl:
+      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop',
+  },
+  {
+    id: '102',
+    clientName: 'Pedro Skate',
+    serviceId: '3',
+    date: today,
+    time: '10:30',
+    status: 'confirmed',
+    price: 70,
+    photoUrl:
+      'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=400&auto=format&fit=crop',
+  },
+  {
+    id: '103',
+    clientName: 'Lucas Grafite',
+    serviceId: '2',
+    date: today,
+    time: '14:00',
+    status: 'pending',
+    price: 35,
+    photoUrl:
+      'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=200&auto=format&fit=crop',
+  },
+  {
+    id: '104',
+    clientName: 'Marcos Trem',
+    serviceId: '1',
+    date: today,
+    time: '16:00',
+    status: 'pending',
+    price: 45,
+    photoUrl:
+      'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop',
+  },
+  {
+    id: '105',
+    clientName: 'Ana Style',
+    serviceId: '1',
+    date: today,
+    time: '17:00',
+    status: 'confirmed',
+    price: 45,
+    photoUrl:
+      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&auto=format&fit=crop',
+  },
+];
+
+db.serialize(() => {
+  // Services Table
+  db.run(`CREATE TABLE IF NOT EXISTS services (
+    id TEXT PRIMARY KEY,
+    name TEXT,
+    price TEXT,
+    priceValue REAL,
+    description TEXT,
+    icon TEXT,
+    image TEXT
+  )`);
+
+  // Barbers Table
+  db.run(`CREATE TABLE IF NOT EXISTS barbers (
+    id TEXT PRIMARY KEY,
+    name TEXT,
+    specialty TEXT,
+    image TEXT,
+    email TEXT,
+    password TEXT
+  )`);
+
+  // Clients Table
+  db.run(`CREATE TABLE IF NOT EXISTS clients (
+    id TEXT PRIMARY KEY,
+    name TEXT,
+    phone TEXT,
+    level INTEGER,
+    lastVisit TEXT,
+    img TEXT,
+    status TEXT,
+    notes TEXT,
+    password TEXT,
+    email TEXT
+  )`);
+
+  // Appointments Table
+  db.run(`CREATE TABLE IF NOT EXISTS appointments (
+    id TEXT PRIMARY KEY,
+    clientName TEXT,
+    serviceId TEXT,
+    date TEXT,
+    time TEXT,
+    status TEXT,
+    price REAL,
+    photoUrl TEXT,
+    notes TEXT
+  )`);
+
+  // Seed Data if empty
+  db.get('SELECT count(*) as count FROM services', (err, row) => {
+    if (row.count === 0) {
+      console.log('Seeding Services...');
+      const stmt = db.prepare('INSERT INTO services VALUES (?, ?, ?, ?, ?, ?, ?)');
+      SERVICES.forEach(s =>
+        stmt.run(s.id, s.name, s.price, s.priceValue, s.description, s.icon, s.image)
+      );
+      stmt.finalize();
+    }
+  });
+
+  db.get('SELECT count(*) as count FROM barbers', (err, row) => {
+    if (row.count === 0) {
+      console.log('Seeding Barbers...');
+      const stmt = db.prepare('INSERT INTO barbers VALUES (?, ?, ?, ?, ?, ?)');
+      BARBERS.forEach(b => stmt.run(b.id, b.name, b.specialty, b.image, b.email, b.password));
+      stmt.finalize();
+    }
+  });
+
+  db.get('SELECT count(*) as count FROM clients', (err, row) => {
+    if (row.count === 0) {
+      console.log('Seeding Clients...');
+      const stmt = db.prepare('INSERT INTO clients VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+      CLIENTS.forEach(c =>
+        stmt.run(
+          c.id,
+          c.name,
+          c.phone,
+          c.level,
+          c.lastVisit,
+          c.img,
+          c.status,
+          c.notes,
+          c.password,
+          c.email
+        )
+      );
+      stmt.finalize();
+    }
+  });
+
+  db.get('SELECT count(*) as count FROM appointments', (err, row) => {
+    if (row.count === 0) {
+      console.log('Seeding Appointments...');
+      const stmt = db.prepare('INSERT INTO appointments VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
+      APPOINTMENTS.forEach(a =>
+        stmt.run(a.id, a.clientName, a.serviceId, a.date, a.time, a.status, a.price, a.photoUrl, '')
+      );
+      stmt.finalize();
+    }
+  });
+});
+
+export default db;
