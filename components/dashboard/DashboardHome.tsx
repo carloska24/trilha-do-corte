@@ -17,46 +17,122 @@ interface DashboardHomeProps {
   onInitiateFinish: (id: string) => void;
 }
 
+// --- ISOLATED COMPONENTS (PREVENT RE-RENDERS) ---
+const QueueTicker = React.memo(({ queue }: { queue: Appointment[] }) => {
+  return (
+    <div className="w-full relative mt-2 group">
+      {/* Header Label */}
+      <div className="absolute -top-3 left-4 z-20">
+        <span className="bg-white dark:bg-street-dark px-2 text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary border border-border-color rounded-sm">
+          Fila de Espera
+        </span>
+      </div>
+
+      <div className="w-full h-28 bg-white/5 dark:bg-black/20 backdrop-blur-md border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden relative flex items-center shadow-inner">
+        {/* Neon Glow Line */}
+        <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#FFD700] to-transparent opacity-50"></div>
+
+        {queue.length === 0 ? (
+          <div className="w-full flex flex-col items-center justify-center text-text-secondary z-10 opacity-60">
+            <Armchair size={24} className="mb-2" />
+            <span className="text-[10px] font-bold uppercase tracking-widest">Ninguém na fila</span>
+          </div>
+        ) : (
+          // Marquee Container
+          <div className="flex animate-ticker items-center pl-4 py-2 hover:pause-animation">
+            {[...queue, ...queue].map((client, i) => (
+              <div
+                key={`${client.id}-${i}`}
+                className="flex-shrink-0 w-52 h-16 bg-[#F5F5F7] dark:bg-[#111] rounded-lg border-l-4 border-[#FFD700] mr-4 flex items-center p-3 relative overflow-hidden shadow-lg group-card transition-all hover:scale-105"
+              >
+                {/* Background Pattern */}
+                <div className="absolute inset-0 opacity-5 bg-[linear-gradient(45deg,#000_25%,transparent_25%,transparent_50%,#000_50%,#000_75%,transparent_75%,transparent)] bg-[length:4px_4px]"></div>
+
+                {/* Avatar */}
+                <div className="w-10 h-10 rounded-full bg-gray-300 overflow-hidden border-2 border-white dark:border-gray-800 shadow-sm z-10">
+                  <img
+                    src={
+                      client.photoUrl ||
+                      'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop'
+                    }
+                    className="w-full h-full object-cover"
+                    alt={client.clientName}
+                  />
+                </div>
+
+                {/* Info */}
+                <div className="ml-3 flex flex-col min-w-0 z-10">
+                  <span className="text-text-primary font-black text-xs uppercase truncate leading-tight tracking-tight">
+                    {client.clientName.split(' ')[0]}
+                  </span>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-[10px] text-text-secondary font-bold font-mono bg-black/5 dark:bg-white/10 px-1.5 rounded-sm">
+                      {client.time}
+                    </span>
+                    {/* Status Dot */}
+                    <div className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse"></div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+});
+
 export const DashboardHome: React.FC<DashboardHomeProps> = ({
   appointments,
   onStatusChange,
   currentTime,
   onInitiateFinish,
 }) => {
-  // Filas
-  const queue = appointments
-    .filter(a => a.status === 'pending' || a.status === 'confirmed')
-    .sort((a, b) => a.time.localeCompare(b.time));
-  const inProgress = appointments.find(a => a.status === 'in_progress');
+  // Memoized Derived Data to prevent recalc on every clock tick
+  const { queue, inProgress, nextClient } = React.useMemo(() => {
+    const q = appointments
+      .filter(a => a.status === 'pending' || a.status === 'confirmed')
+      .sort((a, b) => a.time.localeCompare(b.time));
 
-  const nextClient = queue.length > 0 ? queue[0] : null;
+    return {
+      queue: q,
+      inProgress: appointments.find(a => a.status === 'in_progress'),
+      nextClient: q.length > 0 ? q[0] : null,
+    };
+  }, [appointments]);
 
   // Format Date: "QUARTA-FEIRA, 3 DE DEZEMBRO"
-  const dateString = currentTime
-    .toLocaleDateString('pt-BR', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-    })
-    .toUpperCase();
+  const dateString = React.useMemo(
+    () =>
+      currentTime
+        .toLocaleDateString('pt-BR', {
+          weekday: 'long',
+          day: 'numeric',
+          month: 'long',
+        })
+        .toUpperCase(),
+    [currentTime.toDateString()]
+  );
 
   // Shop Status Logic
-  const hour = currentTime.getHours();
-  const day = currentTime.getDay();
-  const isShopOpen = day !== 0 && hour >= 8 && hour < 19;
+  const { isShopOpen } = React.useMemo(() => {
+    const hour = currentTime.getHours();
+    const day = currentTime.getDay();
+    return { isShopOpen: day !== 0 && hour >= 8 && hour < 19 };
+  }, [currentTime.getHours(), currentTime.getDay()]);
 
   return (
     <div className="flex flex-col items-center w-full max-w-md mx-auto h-full animate-[fadeIn_0.5s_ease-out] transition-colors duration-300">
       {/* 1. CLOCK & DATE */}
       <div className="flex flex-col items-center mt-4 mb-8">
-        <h1 className="text-6xl font-bold text-text-primary tracking-tighter leading-none font-sans">
+        <h1 className="text-6xl font-bold text-text-primary tracking-tighter leading-none font-sans drop-shadow-lg">
           {currentTime.toLocaleTimeString([], {
             hour: '2-digit',
             minute: '2-digit',
             second: '2-digit',
           })}
         </h1>
-        <p className="text-text-secondary text-xs font-bold uppercase tracking-widest mt-1">
+        <p className="text-text-secondary text-xs font-bold uppercase tracking-widest mt-1 opacity-80">
           {dateString}
         </p>
       </div>
@@ -177,6 +253,7 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({
             onClick={() => onInitiateFinish(inProgress.id)}
             className="w-full h-20 bg-gradient-to-r from-green-600 to-emerald-500 rounded-2xl flex items-center px-4 relative overflow-hidden shadow-lg active:scale-[0.98] transition-transform"
           >
+            <div className="absolute inset-0 bg-[linear-gradient(45deg,rgba(255,255,255,0.1)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.1)_50%,rgba(255,255,255,0.1)_75%,transparent_75%,transparent)] bg-[length:24px_24px] opacity-20"></div>
             <div className="flex-1 flex items-center gap-4 z-10">
               <div className="w-12 h-12 rounded-full bg-black/20 flex items-center justify-center border border-white/20">
                 <User className="text-white" />
@@ -195,106 +272,47 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({
           <button
             onClick={() => nextClient && onStatusChange(nextClient.id, 'in_progress')}
             disabled={!nextClient}
-            className={`w-full h-20 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-2xl flex items-center justify-between px-4 relative overflow-hidden shadow-lg transition-all
+            className={`w-full h-20 bg-gradient-to-r from-[#FFD700] to-[#FFA500] rounded-2xl flex items-center justify-between px-4 relative overflow-hidden shadow-[0_4px_20px_rgba(255,215,0,0.3)] transition-all
               ${
                 !nextClient
                   ? 'opacity-50 grayscale cursor-not-allowed'
-                  : 'active:scale-[0.98] cursor-pointer'
+                  : 'active:scale-[0.98] cursor-pointer hover:shadow-[0_6px_25px_rgba(255,215,0,0.5)]'
               }
             `}
           >
+            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10 mix-blend-multiply"></div>
             <div className="flex items-center gap-4 z-10">
               {/* Avatar */}
-              <div className="w-12 h-12 rounded-full bg-black/10 p-0.5">
+              <div className="w-12 h-12 rounded-full bg-black/20 p-0.5 border border-white/30">
                 <img
                   src={
                     nextClient?.photoUrl ||
                     'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop'
                   }
-                  className="w-full h-full object-cover rounded-full"
+                  className="w-full h-full object-cover rounded-full filter contrast-110"
                   alt="Client"
                 />
               </div>
 
               {/* Text */}
               <div className="flex flex-col items-start">
-                <span className="text-[10px] font-bold text-[#1a1a1a] uppercase tracking-widest mb-0.5">
+                <span className="text-[10px] font-black text-black/60 uppercase tracking-[0.2em] mb-0.5">
                   PRÓXIMO DA FILA
                 </span>
-                <span className="text-2xl font-bold text-white uppercase leading-none drop-shadow-sm">
+                <span className="text-2xl font-black text-white uppercase leading-none drop-shadow-md tracking-tighter">
                   {nextClient ? `CHAMAR ${nextClient.clientName.split(' ')[0]}` : 'AGUARDANDO...'}
                 </span>
               </div>
             </div>
 
-            {/* Arrow Icon (Optional but nice) */}
-            <ChevronRight className="text-white/80" size={32} />
+            {/* Arrow Icon */}
+            {nextClient && <ChevronRight className="text-black/40 animate-pulse" size={32} />}
           </button>
         )}
       </div>
 
-      {/* 4. QUEUE TICKER (MARQUEE) */}
-      <div className="w-full h-24 bg-transparent border-none flex items-center overflow-hidden relative group">
-        <div className="absolute inset-0 mask-gradient-x pointer-events-none z-20"></div>
-
-        {queue.length === 0 ? (
-          <div className="w-full flex flex-col items-center justify-center text-text-secondary z-10 transition-colors">
-            <Armchair size={24} className="mb-2 opacity-50" />
-            <span className="text-xs font-bold uppercase tracking-widest">Sem fila de espera</span>
-          </div>
-        ) : (
-          <div className="flex animate-ticker items-center pl-4 py-2">
-            {[...queue, ...queue].map((client, i) => (
-              <div
-                key={`${client.id}-${i}`}
-                className="flex-shrink-0 w-48 h-16 bg-white dark:bg-street-dark rounded-xl border border-gray-100 dark:border-border-color mr-4 flex items-center p-2 relative overflow-hidden transition-all duration-300 shadow-sm dark:shadow-none"
-              >
-                {/* Colored decorative bar */}
-                <div
-                  className={`absolute left-0 top-0 bottom-0 w-1 ${
-                    i % 3 === 0
-                      ? 'bg-cyan-500 shadow-[0_0_10px_#06b6d4]'
-                      : i % 3 === 1
-                      ? 'bg-purple-500 shadow-[0_0_10px_#a855f7]'
-                      : 'bg-orange-500 shadow-[0_0_10px_#f97316]'
-                  }`}
-                ></div>
-
-                {/* Avatar */}
-                <div className="ml-2 w-10 h-10 rounded-full bg-gray-100 dark:bg-black/30 overflow-hidden border border-gray-200 dark:border-white/10 flex-shrink-0">
-                  <img
-                    src={
-                      client.photoUrl ||
-                      'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop'
-                    }
-                    className="w-full h-full object-cover"
-                    alt={client.clientName}
-                  />
-                </div>
-
-                {/* Info */}
-                <div className="ml-3 flex flex-col min-w-0">
-                  <span className="text-text-primary font-bold text-xs uppercase truncate leading-tight transition-colors">
-                    {client.clientName.split(' ')[0]}
-                  </span>
-                  <span className="text-[10px] text-text-secondary font-bold uppercase tracking-wider flex items-center gap-1 transition-colors">
-                    {client.time}
-                    <span
-                      className={`w-1.5 h-1.5 rounded-full ${
-                        i % 3 === 0
-                          ? 'bg-cyan-500'
-                          : i % 3 === 1
-                          ? 'bg-purple-500'
-                          : 'bg-orange-500'
-                      }`}
-                    ></span>
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      {/* 4. QUEUE TICKER (ISOLATED) */}
+      <QueueTicker queue={queue} />
     </div>
   );
 };
