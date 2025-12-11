@@ -153,63 +153,7 @@ const CLIENTS = [
 ];
 
 const today = new Date().toISOString().split('T')[0];
-const APPOINTMENTS = [
-  {
-    id: '101',
-    clientName: 'João da Silva',
-    serviceId: '1',
-    date: today,
-    time: '09:00',
-    status: 'completed',
-    price: 45,
-    photoUrl:
-      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop',
-  },
-  {
-    id: '102',
-    clientName: 'Pedro Skate',
-    serviceId: '3',
-    date: today,
-    time: '10:30',
-    status: 'confirmed',
-    price: 70,
-    photoUrl:
-      'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=400&auto=format&fit=crop',
-  },
-  {
-    id: '103',
-    clientName: 'Lucas Grafite',
-    serviceId: '2',
-    date: today,
-    time: '14:00',
-    status: 'pending',
-    price: 35,
-    photoUrl:
-      'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=200&auto=format&fit=crop',
-  },
-  {
-    id: '104',
-    clientName: 'Marcos Trem',
-    serviceId: '1',
-    date: today,
-    time: '16:00',
-    status: 'pending',
-    price: 45,
-    photoUrl:
-      'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop',
-  },
-  {
-    id: '105',
-    clientName: 'Ana Style',
-    serviceId: '1',
-    date: today,
-    time: '17:00',
-    status: 'confirmed',
-    price: 45,
-    photoUrl:
-      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&auto=format&fit=crop',
-  },
-];
+const APPOINTMENTS = [];
 
 db.serialize(() => {
   // Services Table

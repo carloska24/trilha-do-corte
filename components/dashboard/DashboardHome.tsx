@@ -28,7 +28,7 @@ const QueueTicker = React.memo(({ queue }: { queue: Appointment[] }) => {
         </span>
       </div>
 
-      <div className="w-full h-28 bg-white/5 dark:bg-black/20 backdrop-blur-md border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden relative flex items-center shadow-inner">
+      <div className="w-full h-28 bg-[#111] border border-gray-800 rounded-xl overflow-hidden relative flex items-center shadow-inner transform-gpu">
         {/* Neon Glow Line */}
         <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#FFD700] to-transparent opacity-50"></div>
 
@@ -39,17 +39,17 @@ const QueueTicker = React.memo(({ queue }: { queue: Appointment[] }) => {
           </div>
         ) : (
           // Marquee Container
-          <div className="flex animate-ticker items-center pl-4 py-2 hover:pause-animation">
+          <div className="flex animate-ticker items-center pl-4 py-2 hover:pause-animation will-change-transform">
             {[...queue, ...queue].map((client, i) => (
               <div
                 key={`${client.id}-${i}`}
-                className="flex-shrink-0 w-52 h-16 bg-[#F5F5F7] dark:bg-[#111] rounded-lg border-l-4 border-[#FFD700] mr-4 flex items-center p-3 relative overflow-hidden shadow-lg group-card transition-all hover:scale-105"
+                className="flex-shrink-0 w-52 h-16 bg-[#F5F5F7] dark:bg-[#0a0a0a] rounded-lg border-l-4 border-[#FFD700] mr-4 flex items-center p-3 relative overflow-hidden border border-white/5 transform-gpu"
               >
-                {/* Background Pattern */}
-                <div className="absolute inset-0 opacity-5 bg-[linear-gradient(45deg,#000_25%,transparent_25%,transparent_50%,#000_50%,#000_75%,transparent_75%,transparent)] bg-[length:4px_4px]"></div>
+                {/* Background Pattern - Simplified */}
+                <div className="absolute inset-0 opacity-5 bg-black"></div>
 
                 {/* Avatar */}
-                <div className="w-10 h-10 rounded-full bg-gray-300 overflow-hidden border-2 border-white dark:border-gray-800 shadow-sm z-10">
+                <div className="w-10 h-10 rounded-full bg-gray-300 overflow-hidden border border-white/20 shadow-sm z-10">
                   <img
                     src={
                       client.photoUrl ||
