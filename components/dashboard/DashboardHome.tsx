@@ -2,7 +2,7 @@ import React from 'react';
 import { ChairIcon } from '../icons/ChairIcon';
 import { Appointment, AppointmentStatus } from '../../types';
 import { SERVICES } from '../../constants';
-import { Armchair, ChevronRight, User } from 'lucide-react';
+import { Armchair, ChevronRight, User, Star } from 'lucide-react';
 
 interface DashboardHomeProps {
   appointments: Appointment[];
@@ -137,110 +137,135 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({
         </p>
       </div>
 
-      {/* 2. CENTRAL STATUS CIRCLE (3D FLIP) */}
-      <div className="relative mb-8 w-72 h-72 perspective-1000">
-        <div
-          className={`relative w-full h-full transition-all duration-700 transform-style-3d ${
-            inProgress ? 'rotate-y-180' : ''
-          }`}
-        >
-          {/* FRONT FACE: STATION FREE / CLOSED */}
-          <div className="absolute inset-0 backface-hidden flex flex-col justify-between items-center text-center bg-street-gray dark:bg-arcade-texture rounded-full border-8 border-white dark:border-street-dark shadow-[0_10px_40px_rgba(0,0,0,0.1)] dark:shadow-[0_0_30px_rgba(0,0,0,0.8)] overflow-hidden py-8 transition-colors duration-300">
-            {/* 1. TOP SECTION: CHAIR ICON */}
-            <div className="flex-1 flex items-center justify-center w-full animate-fade-in-up">
-              <div className={`relative z-10 ${isShopOpen ? 'animate-pulse-neon' : ''}`}>
-                <ChairIcon
-                  size={80}
-                  className={`${
-                    isShopOpen
-                      ? 'text-cyan-600 dark:text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)] dark:drop-shadow-[0_0_8px_rgba(34,211,238,0.9)]'
-                      : 'text-red-900/50 drop-shadow-none'
-                  }`}
-                />
+      {/* 2. RECTANGULAR STATUS AREA (BLUE ZONE) */}
+      <div className="w-full relative mb-4 flex-1 flex flex-col justify-center">
+        {/* Main Status Container */}
+        {/* Main Status Container - FULL COVER REFACTOR */}
+        <div className="w-full aspect-square md:aspect-auto md:h-[500px] relative bg-[#050505] rounded-3xl overflow-hidden shadow-2xl border border-white/5 group">
+          {/* 1. STATUS SIGNAGE (TOP ABSOLUTE) */}
+          <div className="absolute top-12 left-0 right-0 z-30 flex flex-col items-center pointer-events-none">
+            {isShopOpen ? (
+              // OPEN STATE (Standard Neon Plate)
+              <div className="relative px-12 py-4 rounded-xl border-2 backdrop-blur-md shadow-[0_0_30px_rgba(74,222,128,0.5)] bg-black/40 border-green-500/30">
+                <h2 className="text-6xl md:text-7xl font-black uppercase tracking-tighter leading-none text-center text-transparent bg-clip-text bg-gradient-to-b from-white to-green-400 drop-shadow-[0_0_15px_rgba(74,222,128,0.5)]">
+                  ABERTO
+                </h2>
+                <div className="flex items-center justify-center gap-3 mt-2">
+                  <div className="h-[1px] w-12 bg-green-500/50"></div>
+                  <p className="text-xs md:text-sm font-bold uppercase tracking-[0.3em] font-mono text-green-400/80">
+                    08:00 - 19:00
+                  </p>
+                  <div className="h-[1px] w-12 bg-green-500/50"></div>
+                </div>
               </div>
-            </div>
+            ) : (
+              // CLOSED STATE (Hanging Retro Neon Sign)
+              <div className="relative flex flex-col items-center mt-2 w-full">
+                {/* Hanging Rope Effect */}
+                <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-[1px] h-16 bg-gradient-to-b from-gray-800 to-cyan-500/50 opacity-80"></div>
+                <div className="absolute -top-8 left-1/2 -translate-x-1/2 w-16 h-16 border-t border-l border-cyan-500/10 rotate-45 transform origin-bottom opacity-30"></div>
 
-            {/* 2. MIDDLE SECTION: TEXTS */}
-            <div className="flex-1 flex flex-col items-center justify-center w-full animate-fade-in-up delay-100">
-              <h2
-                className={`text-3xl font-bold uppercase leading-none mb-2 tracking-tight ${
-                  isShopOpen ? 'text-text-primary' : 'text-red-900'
-                }`}
-              >
-                {isShopOpen ? 'ESTAÇÃO LIVRE' : 'FECHADO'}
-              </h2>
-              <p
-                className={`text-xs font-bold uppercase tracking-[0.2em] max-w-[220px] leading-relaxed ${
-                  isShopOpen ? 'text-text-secondary' : 'text-red-900/60'
-                }`}
-              >
-                {isShopOpen ? 'NENHUM ATENDIMENTO EM ANDAMENTO' : 'HORÁRIO: 08H ÀS 19H (SEG-SÁB)'}
-              </p>
-            </div>
+                {/* The Board - Scaled Down ~50% & Vertically Compacted */}
+                <div className="relative border-2 border-cyan-400 rounded-xl px-4 pt-3 pb-1 bg-black/90 backdrop-blur-xl shadow-[0_0_15px_#06b6d4,inset_0_0_10px_rgba(6,182,212,0.2)] flex flex-col items-center w-[50%] max-w-[200px]">
+                  {/* Cursive Text Top (Floating) */}
+                  <div className="absolute -top-4 left-0 right-0 text-center z-20">
+                    <span
+                      className="font-script text-3xl text-[#FFD700] -rotate-6 drop-shadow-[0_0_3px_#FACC15] block"
+                      style={{ textShadow: '1px 1px 0px #000' }}
+                    >
+                      Desculpe
+                    </span>
+                  </div>
 
-            {/* 3. BOTTOM SECTION: BADGE */}
-            <div className="flex-1 flex items-end justify-center w-full pb-2 animate-fade-in-up delay-200">
-              <div
-                className={`px-6 py-2 rounded-full flex items-center gap-2 group cursor-default transition-colors ${
-                  isShopOpen
-                    ? 'badge-premium animate-pulse-slow'
-                    : 'bg-red-100 dark:bg-red-950/30 border border-red-200 dark:border-red-900/30'
-                }`}
-              >
-                <div
-                  className={`w-2.5 h-2.5 rounded-full ${
-                    isShopOpen ? 'bg-cyan-500 badge-dot-glow' : 'bg-red-500 dark:bg-red-900'
-                  }`}
-                ></div>
-                <span
-                  className={`text-xs font-black uppercase tracking-widest transition-colors ${
-                    isShopOpen
-                      ? 'text-white group-hover:text-cyan-400'
-                      : 'text-red-600 dark:text-red-800'
-                  }`}
-                >
-                  {isShopOpen ? 'PISTA LIVRE' : 'LOJA FECHADA'}
-                </span>
+                  {/* Inner Content */}
+                  <div className="flex flex-col items-center pt-1 relative z-10 w-full">
+                    {/* Stars */}
+                    <Star className="absolute top-1 left-1 text-yellow-400 w-3 h-3 animate-pulse drop-shadow-[0_0_4px_#FACC15] fill-yellow-400" />
+                    <Star className="absolute top-1 right-1 text-yellow-400 w-3 h-3 animate-pulse drop-shadow-[0_0_4px_#FACC15] fill-yellow-400" />
+
+                    {/* "ESTAMOS" */}
+                    <span className="text-[#ff00ff] font-bold tracking-[0.15em] text-[10px] drop-shadow-[0_0_3px_#ff00ff] animate-pulse mb-0.5">
+                      ESTAMOS
+                    </span>
+                    {/* "FECHADO" */}
+                    <h2
+                      className="text-3xl font-black text-[#A855F7] tracking-wider leading-none"
+                      style={{ textShadow: '0 0 8px #A855F7, 1px 1px 0px #4a044e' }}
+                    >
+                      FECHADO
+                    </h2>
+                  </div>
+
+                  {/* Bottom Hours logic */}
+                  <div className="mt-1 pt-0.5 border-t border-cyan-500/30 w-full text-center">
+                    <span className="text-[8px] text-cyan-300 font-mono tracking-[0.1em] drop-shadow-[0_0_1px_cyan]">
+                      DAS 19H ÀS 08H
+                    </span>
+                  </div>
+                </div>
               </div>
-            </div>
-
-            {/* Decorative Inner Ring */}
-            <div className="absolute inset-4 rounded-full border border-gray-200 dark:border-white/5 pointer-events-none"></div>
+            )}
           </div>
 
-          {/* BACK FACE: IN PROGRESS */}
-          <div className="absolute inset-0 backface-hidden rotate-y-180 flex flex-col items-center justify-center text-center bg-street-gray border-8 border-street-dark shadow-[0_0_30px_rgba(0,0,0,0.2)] dark:shadow-[0_0_60px_rgba(0,0,0,0.8)] rounded-full overflow-hidden transition-colors duration-300">
-            {inProgress && (
-              <>
-                <div className="mb-2 relative">
-                  <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-green-500 shadow-[0_0_20px_rgba(34,197,94,0.5)]">
-                    <img
-                      src={
-                        inProgress.photoUrl ||
-                        'https://images.unsplash.com/photo-1618077553780-75539862f629?q=80&w=400&auto=format&fit=crop'
+          {/* 2. MAIN CONTENT (FULL COVER) */}
+          <div className="absolute inset-0 z-10 transition-all duration-700 ease-out">
+            {inProgress ? (
+              /* --- IN PROGRESS (FULL COVER) --- */
+              <div className="w-full h-full relative">
+                <img
+                  src={
+                    inProgress.photoUrl ||
+                    'https://images.unsplash.com/photo-1618077553780-75539862f629?q=80&w=400&auto=format&fit=crop'
+                  }
+                  className="w-full h-full object-cover filter brightness-[0.8]"
+                  alt="Cliente"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/60"></div>
+
+                {/* Client Label (Bottom) */}
+                <div className="absolute bottom-0 left-0 right-0 p-6 flex flex-col items-center">
+                  <span className="text-neon-yellow font-black text-sm uppercase tracking-[0.2em] mb-1 drop-shadow-lg">
+                    Em Atendimento
+                  </span>
+                  <h2 className="text-4xl text-white font-black uppercase tracking-tighter drop-shadow-xl">
+                    {inProgress.clientName}
+                  </h2>
+                </div>
+              </div>
+            ) : (
+              /* --- SHOP STATUS (CHAIR) --- */
+              <div className="w-full h-full relative flex items-end justify-center overflow-hidden">
+                {/* Background Atmosphere */}
+                <div
+                  className={`absolute inset-0 transition-opacity duration-1000 ${
+                    isShopOpen ? 'opacity-30 bg-blue-900/20' : 'opacity-20 bg-red-900/10'
+                  }`}
+                ></div>
+
+                {/* Chair Image (Full Cover, Full Color) */}
+                <img
+                  src={isShopOpen ? '/chair-open.png' : '/chair-closed.png'}
+                  className={`
+                      w-full h-full object-cover object-center transition-all duration-1000 transform
+                      ${
+                        isShopOpen
+                          ? 'scale-105 filter contrast-125 saturate-110 drop-shadow-[0_0_50px_rgba(0,100,255,0.2)]'
+                          : 'scale-100 contrast-110 saturate-110'
                       }
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                </div>
-                <h2 className="text-2xl font-bold text-text-primary uppercase leading-none mb-1">
-                  EM ANDAMENTO
-                </h2>
-                <p className="text-[10px] text-text-secondary font-bold uppercase tracking-widest max-w-[180px]">
-                  {inProgress.clientName}
-                </p>
+                    `}
+                  alt="Cadeira"
+                  onError={e => {
+                    e.currentTarget.src = isShopOpen
+                      ? 'https://png.pngtree.com/png-vector/20230906/ourmid/pngtree-barber-shop-chair-3d-illustration-png-image_9963953.png'
+                      : 'https://png.pngtree.com/png-vector/20230906/ourmid/pngtree-vintage-barber-chair-3d-illustration-png-image_9963943.png';
+                  }}
+                />
 
-                {/* Status Indicators */}
-                <div className="flex items-center gap-4 mt-4">
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_5px_#22c55e]"></div>
-                    <span className="text-[10px] font-bold text-green-500 uppercase">OCUPADO</span>
-                  </div>
-                </div>
-
-                {/* Decorative Inner Ring */}
-                <div className="absolute inset-4 rounded-full border border-border-color pointer-events-none"></div>
-              </>
+                {/* Closed Overlay Effect */}
+                {!isShopOpen && (
+                  <div className="absolute inset-0 bg-black/40 bg-[url('https://www.transparenttextures.com/patterns/diagmonds-light.png')] opacity-50 mix-blend-overlay pointer-events-none"></div>
+                )}
+              </div>
             )}
           </div>
         </div>
