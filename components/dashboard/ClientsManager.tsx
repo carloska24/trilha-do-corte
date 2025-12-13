@@ -48,6 +48,28 @@ export const ClientsManager: React.FC<ClientsManagerProps> = ({
     client.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // --- UX HELPERS ---
+  const getLevelStyle = (level: number) => {
+    if (level >= 5) return 'border-neon-yellow shadow-[0_0_10px_rgba(234,179,8,0.3)]'; // VIP Gold
+    if (level >= 3) return 'border-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.3)]'; // Regular Blue
+    return 'border-green-500/50'; // Newbie Green
+  };
+
+  const getRecurrenceStatus = (lastVisit: string | null | undefined) => {
+    if (!lastVisit || lastVisit === 'Nunca') return { color: 'bg-green-500', label: 'Novo' };
+
+    // Parse date (assuming DD/MM/YYYY)
+    const [day, month, year] = lastVisit.split('/').map(Number);
+    const visitDate = new Date(year, month - 1, day);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - visitDate.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays <= 15) return { color: 'bg-green-500', label: 'Ativo' };
+    if (diffDays <= 30) return { color: 'bg-yellow-500', label: 'Atenção' };
+    return { color: 'bg-red-500', label: 'Risco' };
+  };
+
   return (
     <div className="flex flex-col h-full w-full p-4 pb-32 animate-fade-in relative z-10">
       {/* Header Section */}
@@ -57,93 +79,178 @@ export const ClientsManager: React.FC<ClientsManagerProps> = ({
         </h1>
         <div className="w-24 h-1 bg-neon-yellow rounded-full shadow-[0_0_10px_rgba(227,253,0,0.5)]"></div>
         <p className="text-text-secondary text-[10px] font-bold uppercase tracking-[0.4em] mt-3">
-          Gerencie sua base de passageiros
+          Base de Passageiros
         </p>
       </div>
 
-      {/* Search Bar (Glassmorphism) */}
+      {/* Search Bar (HUD Scanner Style) */}
       <div className="relative mb-8 group flex-shrink-0">
-        <div className="absolute inset-0 bg-gradient-to-r from-neon-yellow/20 to-transparent rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
         <div className="relative">
-          <Search
-            className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-neon-yellow transition-colors"
-            size={22}
-          />
+          <div className="absolute inset-y-0 left-0 w-1 bg-neon-yellow/50 rounded-l-md group-focus-within:bg-neon-yellow group-focus-within:shadow-[0_0_15px_#EAB308] transition-all duration-300"></div>
           <input
             type="text"
-            placeholder="BUSCAR PASSAGEIRO..."
+            placeholder="SCANNEAR PASSAGEIRO..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            className="w-full bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 rounded-2xl py-5 pl-14 pr-4 text-sm font-bold uppercase tracking-wider focus:outline-none focus:border-neon-yellow/50 focus:bg-white dark:focus:bg-black/40 transition-all shadow-lg dark:shadow-[0_0_30px_rgba(0,0,0,0.3)]"
+            className="w-full bg-black/40 backdrop-blur-md border border-gray-800 text-white placeholder-gray-500/50 py-5 pl-12 pr-4 text-sm font-mono uppercase tracking-wider focus:outline-none focus:border-neon-yellow/50 focus:bg-black/60 transition-all shadow-inner"
+            style={{ clipPath: 'polygon(0 0, 100% 0, 100% 85%, 98% 100%, 0 100%)' }}
           />
+          <Search
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-neon-yellow transition-colors"
+            size={18}
+          />
+          {/* Tech Decorations */}
+          <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-neon-yellow/30"></div>
+          <div className="absolute bottom-0 right-8 w-8 h-[2px] bg-gray-800"></div>
         </div>
       </div>
 
-      {/* Client List */}
+      {/* Client List (Holographic Cards) */}
       <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar min-h-0">
         <div className="flex flex-col gap-4 pb-20">
-          {filteredClients.map(client => (
-            <div
-              key={client.id}
-              onClick={() => onSelectClient(client)}
-              className="group relative bg-white dark:bg-black/40 backdrop-blur-sm border border-gray-200 dark:border-white/5 p-4 rounded-2xl hover:border-neon-yellow/30 hover:shadow-lg dark:hover:shadow-neon-yellow/10 transition-all duration-300 cursor-pointer overflow-hidden flex-shrink-0"
-            >
-              {/* Hover Glow Effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-neon-yellow/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          {filteredClients.map(client => {
+            // 1. LOGIC: LEVEL RINGS (Loyalty)
+            // Lvl 1-2: Green (Iniciante)
+            // Lvl 3-4: Cyan (Regular)
+            // Lvl 5+: Gold (VIP)
+            let ringColor = 'border-green-500';
+            let ringShadow = 'shadow-[0_0_10px_rgba(34,197,94,0.3)]';
+            let badgeColor = 'text-green-400 border-green-500/30 bg-green-950/30';
 
-              <div className="relative flex items-center justify-between z-10">
-                <div className="flex items-center gap-5">
-                  {/* Avatar with Neon Ring */}
-                  <div className="relative">
-                    <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-gray-100 dark:border-white/10 group-hover:border-neon-yellow transition-colors shadow-lg">
-                      {client.img ? (
-                        <img
-                          src={client.img}
-                          alt={client.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-[#111] text-gray-400 dark:text-gray-600">
-                          <User size={28} />
-                        </div>
-                      )}
+            if (client.level >= 5) {
+              ringColor = 'border-yellow-400';
+              ringShadow = 'shadow-[0_0_15px_rgba(250,204,21,0.4)]';
+              badgeColor = 'text-yellow-400 border-yellow-500/30 bg-yellow-950/30';
+            } else if (client.level >= 3) {
+              ringColor = 'border-cyan-400';
+              ringShadow = 'shadow-[0_0_12px_rgba(34,211,238,0.4)]';
+              badgeColor = 'text-cyan-400 border-cyan-500/30 bg-cyan-950/30';
+            }
+
+            // 2. LOGIC: STATUS DOTS (Retention / Risk)
+            // New/Today/<30 days: Green (Safe)
+            // 30-60 days: Yellow (Warning)
+            // >60 days: Red (Churned/Risk)
+            let statusColor = 'bg-green-500 shadow-[0_0_8px_#22c55e]';
+            let statusLabel = 'ATIVO';
+
+            if (client.lastVisit === 'Nunca') {
+              statusColor = 'bg-green-500 shadow-[0_0_8px_#22c55e]'; // New is Good
+              statusLabel = 'NOVO';
+            } else if (client.lastVisit === 'Hoje' || client.lastVisit === 'Ontem') {
+              statusColor = 'bg-green-500 shadow-[0_0_8px_#22c55e]';
+              statusLabel = 'ATIVO';
+            } else {
+              // Parse DD/MM/YYYY
+              try {
+                const parts = client.lastVisit.split('/');
+                if (parts.length === 3) {
+                  const visitDate = new Date(
+                    parseInt(parts[2]),
+                    parseInt(parts[1]) - 1,
+                    parseInt(parts[0])
+                  );
+                  const now = new Date();
+                  const diffTime = Math.abs(now.getTime() - visitDate.getTime());
+                  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                  if (diffDays > 60) {
+                    statusColor = 'bg-red-500 shadow-[0_0_8px_#ef4444]';
+                    statusLabel = 'RISCO';
+                  } else if (diffDays > 30) {
+                    statusColor = 'bg-yellow-500 shadow-[0_0_8px_#eab308]';
+                    statusLabel = 'ATENÇÃO';
+                  }
+                }
+              } catch (e) {
+                // Fallback
+              }
+            }
+
+            return (
+              <div
+                key={client.id}
+                className="group relative bg-[#0a0a0a]/90 backdrop-blur-md border border-white/5 p-4 rounded-2xl hover:border-white/10 transition-all duration-300 flex-shrink-0 shadow-lg"
+              >
+                <div
+                  className="relative flex items-center gap-4 z-10 w-full cursor-pointer"
+                  onClick={() => onSelectClient(client)}
+                >
+                  {/* AVATAR + RING + DOT */}
+                  <div className="relative flex-shrink-0">
+                    <div
+                      className={`w-16 h-16 rounded-full p-[3px] border-2 ${ringColor} ${ringShadow} transition-all`}
+                    >
+                      <div className="w-full h-full rounded-full overflow-hidden bg-zinc-900 border border-black relative">
+                        {client.img ? (
+                          <img
+                            src={client.img}
+                            alt={client.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-zinc-600">
+                            <User size={24} />
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    {/* Status Dot (Mock) */}
-                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-black shadow-[0_0_5px_rgba(34,197,94,0.8)]"></div>
+
+                    {/* Status Dot (Bottom Right) */}
+                    <div
+                      className={`absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-[#0a0a0a] ${statusColor} z-20`}
+                    ></div>
                   </div>
 
-                  {/* Info */}
-                  <div className="flex flex-col">
-                    <h3 className="text-xl font-graffiti text-gray-900 dark:text-white leading-none mb-1 group-hover:text-neon-yellow transition-colors">
+                  {/* TEXT INFO */}
+                  <div className="flex flex-col flex-1 min-w-0">
+                    <h3 className="text-xl font-black text-white leading-none mb-1.5 uppercase tracking-wide truncate group-hover:text-neon-yellow transition-colors">
                       {client.name}
                     </h3>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest bg-gray-100 dark:bg-white/5 px-2 py-0.5 rounded-sm">
-                        Nível {client.level || 1}
-                      </span>
-                      {client.lastVisit && (
-                        <span className="text-[10px] font-bold text-gray-400 dark:text-gray-600 uppercase tracking-wider">
-                          • {client.lastVisit}
+
+                    <div className="flex items-center gap-2.5 flex-wrap">
+                      {/* LEVEL BADGE */}
+                      <div
+                        className={`flex items-center px-1.5 py-[2px] rounded border ${badgeColor}`}
+                      >
+                        <span className="text-[10px] font-black font-mono tracking-widest leading-none">
+                          LVL {client.level || 1}
                         </span>
-                      )}
+                      </div>
+
+                      {/* SEPARATOR */}
+                      <div className="w-[1px] h-3 bg-zinc-700"></div>
+
+                      {/* VISIT TEXT */}
+                      <div className="flex flex-col leading-none">
+                        <span className="text-[8px] font-bold text-zinc-500 uppercase tracking-wider">
+                          {client.lastVisit === 'Nunca'
+                            ? 'NOVO CLIENTE'
+                            : `VISITOU: ${client.lastVisit}`}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Action Icon */}
-                <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center text-gray-400 dark:text-gray-500 group-hover:bg-neon-yellow group-hover:text-black transition-all transform group-hover:scale-110 shadow-lg">
-                  <ChevronRight size={20} />
+                  {/* ARROW ICON (Right Side) */}
+                  <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-zinc-500 group-hover:bg-neon-yellow group-hover:text-black transition-all">
+                    <ChevronRight size={18} strokeWidth={3} />
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
 
           {/* Empty State */}
           {filteredClients.length === 0 && (
             <div className="flex flex-col items-center justify-center mt-20 opacity-50">
-              <User size={64} className="text-gray-300 dark:text-gray-700 mb-4" />
-              <p className="text-gray-400 dark:text-gray-500 font-graffiti text-xl">
-                Nenhum passageiro encontrado
+              <User size={64} className="text-zinc-800 mb-4" />
+              <p className="text-zinc-600 font-graffiti text-xl text-center">
+                BANCO DE DADOS VAZIO
+                <br />
+                <span className="text-sm font-sans font-normal opacity-50">
+                  Nenhum passageiro encontrado no sistema.
+                </span>
               </p>
             </div>
           )}
@@ -153,67 +260,69 @@ export const ClientsManager: React.FC<ClientsManagerProps> = ({
       {/* Floating Add Button (Neon Pulse) */}
       <button
         onClick={() => setIsAddModalOpen(true)}
-        className="fixed bottom-24 right-6 w-16 h-16 bg-neon-yellow rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(227,253,0,0.4)] hover:shadow-[0_0_50px_rgba(227,253,0,0.6)] hover:scale-110 transition-all z-40 text-black animate-pulse-slow"
+        className="fixed bottom-24 right-6 w-16 h-16 bg-neon-yellow rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(227,253,0,0.4)] hover:shadow-[0_0_50px_rgba(227,253,0,0.6)] hover:scale-110 transition-all z-40 text-black animate-pulse-slow group"
       >
-        <Plus size={32} strokeWidth={3} />
+        <Plus
+          size={32}
+          strokeWidth={3}
+          className="group-hover:rotate-90 transition-transform duration-300"
+        />
       </button>
 
       {/* MODAL ADICIONAR CLIENTE */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 dark:bg-black/90 backdrop-blur-md animate-fade-in">
-          <div className="bg-white dark:bg-[#111] w-full max-w-md p-8 rounded-sm shadow-[0_0_50px_rgba(0,0,0,0.2)] dark:shadow-[0_0_50px_rgba(0,0,0,0.8)] relative border border-gray-200 dark:border-white/10 transition-colors">
+          <div className="bg-white dark:bg-[#0a0a0a] w-full max-w-md p-8 rounded-xl shadow-[0_0_50px_rgba(0,0,0,0.8)] relative border border-white/10 transition-colors">
             <button
               onClick={() => setIsAddModalOpen(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-900 dark:text-gray-500 dark:hover:text-white transition-colors"
+              className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
             >
               <X size={24} />
             </button>
 
-            <h2 className="text-3xl font-graffiti text-gray-900 dark:text-white mb-1">
-              NOVO PASSAGEIRO
-            </h2>
+            <h2 className="text-3xl font-graffiti text-white mb-1">NOVO PASSAGEIRO</h2>
             <div className="w-16 h-1 bg-neon-yellow rounded-full mb-8 shadow-[0_0_10px_rgba(227,253,0,0.5)]"></div>
 
             <div className="space-y-6">
               <div className="group">
-                <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] block mb-2 group-focus-within:text-neon-yellow transition-colors">
+                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] block mb-2 group-focus-within:text-neon-yellow transition-colors">
                   Nome do Cliente
                 </label>
                 <input
                   type="text"
                   value={newClientData.name}
                   onChange={e => setNewClientData({ ...newClientData, name: e.target.value })}
-                  className="w-full bg-gray-50 dark:bg-black border-b-2 border-gray-200 dark:border-gray-800 text-gray-900 dark:text-white py-3 text-lg font-bold focus:outline-none focus:border-neon-yellow transition-colors placeholder-gray-400 dark:placeholder-gray-800"
+                  className="w-full bg-black border-b-2 border-zinc-800 text-white py-3 text-lg font-bold focus:outline-none focus:border-neon-yellow transition-colors placeholder-zinc-700"
                   placeholder="DIGITE O NOME..."
                 />
               </div>
               <div className="group">
-                <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] block mb-2 group-focus-within:text-neon-yellow transition-colors">
+                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] block mb-2 group-focus-within:text-neon-yellow transition-colors">
                   Telefone / WhatsApp
                 </label>
                 <input
                   type="text"
                   value={newClientData.phone}
                   onChange={e => setNewClientData({ ...newClientData, phone: e.target.value })}
-                  className="w-full bg-gray-50 dark:bg-black border-b-2 border-gray-200 dark:border-gray-800 text-gray-900 dark:text-white py-3 text-lg font-bold focus:outline-none focus:border-neon-yellow transition-colors placeholder-gray-400 dark:placeholder-gray-800"
+                  className="w-full bg-black border-b-2 border-zinc-800 text-white py-3 text-lg font-bold focus:outline-none focus:border-neon-yellow transition-colors placeholder-zinc-700"
                   placeholder="(00) 00000-0000"
                 />
               </div>
               <div className="group">
-                <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] block mb-2 group-focus-within:text-neon-yellow transition-colors">
+                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] block mb-2 group-focus-within:text-neon-yellow transition-colors">
                   Notas Iniciais
                 </label>
                 <textarea
                   value={newClientData.notes}
                   onChange={e => setNewClientData({ ...newClientData, notes: e.target.value })}
-                  className="w-full bg-gray-50 dark:bg-black border-2 border-gray-200 dark:border-gray-800 rounded-sm p-4 text-gray-900 dark:text-white focus:outline-none focus:border-neon-yellow transition-colors h-24 resize-none text-sm font-medium"
+                  className="w-full bg-black border-2 border-zinc-800 rounded-lg p-4 text-white focus:outline-none focus:border-neon-yellow transition-colors h-24 resize-none text-sm font-medium placeholder-zinc-700"
                   placeholder="Preferências de corte, estilo, etc..."
                 />
               </div>
 
               <button
                 onClick={handleSaveNewClient}
-                className="w-full bg-neon-yellow hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black text-black font-black text-lg py-4 rounded-sm transition-all flex justify-center items-center gap-3 mt-4 shadow-[0_0_20px_rgba(227,253,0,0.2)] hover:shadow-[0_0_30px_rgba(227,253,0,0.4)] uppercase tracking-widest"
+                className="w-full bg-neon-yellow hover:bg-white text-black font-black text-lg py-4 rounded-lg transition-all flex justify-center items-center gap-3 mt-4 shadow-[0_0_20px_rgba(227,253,0,0.2)] hover:shadow-[0_0_30px_rgba(227,253,0,0.4)] uppercase tracking-widest"
               >
                 <Save size={20} /> Cadastrar
               </button>

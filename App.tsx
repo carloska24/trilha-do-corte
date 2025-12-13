@@ -324,7 +324,7 @@ function App() {
   };
 
   return (
-    <div className="bg-street-dark text-white font-sans selection:bg-neon-yellow selection:text-black">
+    <div className="bg-transparent text-white font-sans selection:bg-neon-yellow selection:text-black">
       {/* Toast Notification */}
       {notification && (
         <div

@@ -7,6 +7,10 @@ import {
   Calendar as CalendarIcon,
   Scissors,
   Zap,
+  Wallet,
+  Clock,
+  CheckCircle2,
+  AlertCircle,
 } from 'lucide-react';
 
 interface CalendarViewProps {
@@ -34,6 +38,23 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   const [clientName, setClientName] = useState('');
   const [selectedService, setSelectedService] = useState(services[0]?.id || '');
 
+  // Auto-Scroll to Current Time
+  useEffect(() => {
+    if (activeTab === 'daily') {
+      const currentHour = new Date().getHours();
+      // Ensure we target a valid slot within our range (8-21)
+      const targetHour = Math.max(8, Math.min(currentHour, 21));
+
+      // Delay slightly to ensure render
+      setTimeout(() => {
+        const element = document.getElementById(`hour-${targetHour}`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+    }
+  }, [activeTab, selectedDate]);
+
   // Ticker Style Injection
   useEffect(() => {
     const style = document.createElement('style');
@@ -51,7 +72,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
     `;
     document.head.appendChild(style);
     return () => {
-      document.head.removeChild(style);
+      document.head.removeChild(style); // Safe cleanup
     };
   }, []);
 
@@ -103,8 +124,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   // Helper to get service details
   const getServiceDetails = (id: string) => {
     const s = services.find(serv => serv.id === id);
-    // Fallback if not found (e.g. legacy ID)
-    return s || { name: 'Serviço', category: 'Geral', icon: 'scissors' };
+    return s || { name: 'Serviço', category: 'Geral', icon: 'scissors', price: 'R$-' };
   };
 
   // CALENDAR GRID LOGIC
@@ -228,8 +248,11 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
           </h1>
           <button
             onClick={() => {
-              const nextTime = calculateNextAvailableSlot();
-              setQuickAddSlot({ date: selectedDate, time: nextTime });
+              // Determine next reasonable slot
+              const now = new Date();
+              const nextHour = now.getHours() + 1;
+              const time = `${String(nextHour).padStart(2, '0')}:00`;
+              setQuickAddSlot({ date: selectedDate, time });
               setIsQuickAddOpen(true);
             }}
             className="w-10 h-10 md:w-12 md:h-12 bg-neon-yellow rounded-full flex items-center justify-center text-black hover:scale-110 transition-transform shadow-[0_0_20px_rgba(234,179,8,0.4)]"
@@ -267,7 +290,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
       </div>
 
       {/* 2. BODY */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar">
+      <div className="flex-1 overflow-y-auto custom-scrollbar relative">
         {activeTab === 'daily' ? (
           <>
             {/* Daily Nav */}
@@ -289,6 +312,11 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                     })
                     .toUpperCase()}
                 </h2>
+                {selectedDate.toDateString() === new Date().toDateString() && (
+                  <span className="text-[9px] text-green-500 font-bold uppercase tracking-widest block -mt-1">
+                    Hoje
+                  </span>
+                )}
               </div>
               <button
                 onClick={() => changeDate(1)}
@@ -299,15 +327,26 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
             </div>
 
             {/* Timeline */}
-            <div className="pb-24 pt-2">
+            <div className="pb-24 pt-2 relative">
               {getTimeSlots().map(hour => {
                 const hourStr = String(hour).padStart(2, '0');
                 const apps = getAppointmentsForDate(selectedDate).filter(a =>
                   a.time.startsWith(hourStr)
                 );
 
+                // Check if this hour is in the past for today
+                const isPast =
+                  selectedDate.toDateString() === new Date().toDateString() &&
+                  hour < new Date().getHours();
+
                 return (
-                  <div key={hour} className="flex min-h-[110px] border-b border-gray-800/30 group">
+                  <div
+                    key={hour}
+                    id={`hour-${hour}`}
+                    className={`flex min-h-[110px] border-b border-gray-800/30 group ${
+                      isPast ? 'opacity-60 bg-black/40' : ''
+                    }`}
+                  >
                     {/* Time Column */}
                     <div className="w-16 md:w-20 py-4 pl-2 md:pl-4 text-xs md:text-sm font-mono font-bold text-gray-500 flex flex-col items-start border-r border-gray-800/50 bg-[#111]">
                       <span>{hourStr}:00</span>
@@ -318,14 +357,16 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                       {apps.length > 0 ? (
                         apps.map(app => {
                           const service = getServiceDetails(app.serviceId);
+                          // Mock Payment Status logic (random for display if not real)
+                          const isPaid = app.status === 'confirmed';
 
                           return (
                             <div
                               key={app.id}
                               onClick={() => onSelectClient(app.clientName)}
-                              className="mb-3 last:mb-0 relative overflow-hidden rounded-xl border border-gray-800 bg-[#1A1A1A] hover:border-neon-yellow transition-all duration-300 cursor-pointer group/card shadow-lg hover:-translate-y-1"
+                              className="mb-3 last:mb-0 relative overflow-hidden rounded-xl border border-gray-800 bg-[#1A1A1A] hover:border-neon-yellow transition-all duration-300 cursor-pointer group/card shadow-lg hover:-translate-y-1 block"
                             >
-                              {/* Status Stripe */}
+                              {/* Left Status Bar */}
                               <div
                                 className={`absolute left-0 top-0 bottom-0 w-1 ${
                                   app.status === 'confirmed'
@@ -336,37 +377,49 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                                 }`}
                               ></div>
 
-                              <div className="flex flex-row justify-between items-center p-3 md:p-4 pl-4 md:pl-5 gap-2">
-                                <div className="flex-1 min-w-0">
-                                  {/* Client Name */}
-                                  <h4 className="font-black text-white text-base md:text-lg truncate mb-1.5 leading-tight">
-                                    {app.clientName}
-                                  </h4>
+                              <div className="flex flex-row justify-between items-center p-3 gap-2">
+                                <div className="flex-1 min-w-0 pl-2">
+                                  {/* Client Name + Time */}
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <h4 className="font-black text-white text-base md:text-lg truncate leading-tight">
+                                      {app.clientName}
+                                    </h4>
+                                    <span className="text-[10px] font-mono text-gray-500 bg-black px-1 rounded border border-gray-800">
+                                      {app.time}
+                                    </span>
+                                  </div>
 
-                                  {/* Service Info with Ticker */}
+                                  {/* Service Ticker & Price */}
                                   <div className="flex flex-wrap items-center gap-2 mt-1">
-                                    <div className="flex items-center gap-2 text-gray-300 text-[10px] md:text-xs font-bold uppercase tracking-wider bg-black/40 w-[140px] px-2 py-1 rounded border border-gray-800 overflow-hidden relative">
-                                      <Scissors
-                                        size={10}
-                                        className="text-neon-yellow shrink-0 z-10 bg-black/40"
-                                      />
-                                      <div className="overflow-hidden w-full relative h-[16px]">
-                                        <div className="animate-marquee absolute top-0 left-0">
-                                          <span className="mr-8">{service.name}</span>
-                                          <span className="mr-8">{service.name}</span>
-                                          <span className="mr-8">{service.name}</span>
-                                          <span className="mr-8">{service.name}</span>
-                                        </div>
-                                      </div>
+                                    <div className="flex items-center gap-2 text-gray-300 text-[10px] md:text-xs font-bold uppercase tracking-wider bg-black/40 px-2 py-1 rounded border border-gray-800">
+                                      {service.category === 'Barba' ? (
+                                        <Zap size={10} className="text-neon-yellow" />
+                                      ) : (
+                                        <Scissors size={10} className="text-neon-yellow" />
+                                      )}
+                                      <span className="truncate max-w-[100px]">{service.name}</span>
                                     </div>
-                                    <div className="text-[10px] font-mono text-gray-500 bg-black/20 px-1.5 py-0.5 rounded border border-white/5 shrink-0">
-                                      {service.duration || 45}min
+                                    <div className="text-[10px] font-mono text-green-400 font-bold bg-green-950/30 px-1.5 py-0.5 rounded border border-green-900/50">
+                                      {service.price}
                                     </div>
                                   </div>
                                 </div>
 
-                                {/* Right Side Info - Simplified for Mobile */}
-                                <div className="text-right flex flex-col items-end gap-1 md:gap-2 shrink-0">
+                                {/* Right Side Info: Payment & Status */}
+                                <div className="text-right flex flex-col items-end gap-1.5 shrink-0">
+                                  {/* Payment Badge */}
+                                  <div
+                                    className={`flex items-center gap-1 text-[9px] font-bold uppercase px-1.5 py-0.5 rounded ${
+                                      isPaid
+                                        ? 'text-green-500 bg-green-500/10'
+                                        : 'text-zinc-500 bg-zinc-800'
+                                    }`}
+                                  >
+                                    <Wallet size={10} />
+                                    {isPaid ? 'PAGO' : 'PEND.'}
+                                  </div>
+
+                                  {/* Status Text */}
                                   <div
                                     className={`px-1.5 py-0.5 rounded-[4px] text-[8px] md:text-[10px] font-black uppercase tracking-widest border ${
                                       app.status === 'confirmed'
@@ -376,28 +429,21 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                                   >
                                     {app.status === 'confirmed' ? 'Confirmado' : 'Pendente'}
                                   </div>
-
-                                  {/* Service Tag Badge (Combo etc) */}
-                                  {service.category === 'Combo' && (
-                                    <div className="flex items-center gap-1 text-[9px] font-bold text-purple-400">
-                                      <Zap size={10} fill="currentColor" /> COMBO
-                                    </div>
-                                  )}
                                 </div>
                               </div>
                             </div>
                           );
                         })
                       ) : (
-                        // Empty Slot Interaction
+                        // Empty Slot Interaction (Ghost Slot)
                         <div
                           onClick={() => handleSlotClick(hour)}
-                          className="w-full h-full flex items-center justify-center rounded-xl border border-dashed border-gray-800 hover:border-neon-yellow hover:bg-[#151515] transition-all cursor-pointer group/empty"
+                          className="w-full h-full flex items-center justify-center rounded-xl border border-dashed border-gray-800/50 hover:border-gray-600 hover:bg-[#151515] transition-all cursor-pointer group/empty opacity-50 hover:opacity-100"
                         >
-                          <div className="flex items-center gap-2 text-gray-600 group-hover/empty:text-neon-yellow transition-colors">
+                          <div className="flex items-center gap-2 text-gray-700 group-hover/empty:text-gray-400 transition-colors">
                             <Plus size={18} />
                             <span className="text-[10px] md:text-xs font-black uppercase tracking-widest hidden group-hover/empty:inline-block">
-                              Agendar
+                              Disponível
                             </span>
                           </div>
                         </div>

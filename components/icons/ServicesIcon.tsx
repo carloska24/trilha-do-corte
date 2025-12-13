@@ -21,6 +21,8 @@ export const ServicesIcon: React.FC<ServicesIconProps> = ({
       xmlns="http://www.w3.org/2000/svg"
       className={className}
       fill={color}
+      stroke={color}
+      strokeWidth={2.8}
     >
       <g>
         <path d="m47 47c-3.309 0-6 2.691-6 6s2.691 6 6 6 6-2.691 6-6-2.691-6-6-6zm0 10c-2.206 0-4-1.794-4-4s1.794-4 4-4 4 1.794 4 4-1.794 4-4 4z"></path>
