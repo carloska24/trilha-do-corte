@@ -47,13 +47,26 @@ export const VitrineDestaques: React.FC<VitrineDestaquesProps> = ({ services, on
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-4 px-4">
-        <h2 className="text-xl font-black text-white uppercase tracking-tighter flex items-center gap-2">
-          <Sparkles className="text-neon-yellow hidden md:block" size={20} />
-          Destaques{' '}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-neon-yellow to-neon-orange">
-            Da Trilha
-          </span>
-        </h2>
+        <div
+          onClick={() => {
+            const el = document.getElementById('vitrine-section');
+            if (el) {
+              const headerOffset = 90;
+              const elementPosition = el.getBoundingClientRect().top;
+              const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+              window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+            }
+          }}
+          className="flex items-center gap-2 cursor-pointer select-none active:scale-95 transition-transform"
+        >
+          <h2 className="text-xl font-black text-white uppercase tracking-tighter flex items-center gap-2">
+            <Sparkles className="text-neon-yellow hidden md:block" size={20} />
+            Destaques{' '}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-neon-yellow to-neon-orange">
+              Da Trilha
+            </span>
+          </h2>
+        </div>
         <button className="text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-white transition-colors flex items-center gap-1">
           Ver tudo <ChevronRight size={12} />
         </button>
@@ -61,13 +74,13 @@ export const VitrineDestaques: React.FC<VitrineDestaquesProps> = ({ services, on
 
       <div
         ref={scrollRef}
-        className="flex overflow-x-auto snap-x snap-mandatory gap-4 px-4 pb-8 hide-scrollbar"
+        className="flex overflow-x-auto snap-x snap-mandatory gap-4 px-[10vw] pb-8 hide-scrollbar"
       >
         {items.map((item: any, idx) => (
           <div
             key={item.id || idx}
             onClick={() => onBook(item.type === 'service' ? item.id : undefined)}
-            className="flex-shrink-0 w-[90vw] md:w-[600px] snap-center relative group cursor-pointer"
+            className="flex-shrink-0 w-[80vw] md:w-[600px] snap-center relative group cursor-pointer"
           >
             <div
               className={`

@@ -27,18 +27,7 @@ import { ClientMobileDrawer } from './client/ClientMobileDrawer';
 import { NotificationsSheet } from './client/NotificationsSheet';
 import { TicketCard } from './ui/TicketCard';
 
-interface ClientDashboardProps {
-  client: ClientProfile;
-  appointments: Appointment[];
-  allAppointments: Appointment[]; // Para a galeria geral
-  onOpenBooking: () => void;
-  onCancelBooking: (id: string) => void;
-  onRebook: (appointment: Appointment) => void;
-  services: ServiceItem[];
-  onLogout: () => void;
-  promotions?: ServiceItem[];
-  onUpdateProfile: (data: Partial<ClientProfile>) => void;
-}
+import { ClientProfileSettings } from './client/ClientProfileSettings';
 
 export const ClientDashboard: React.FC<ClientDashboardProps> = ({
   client,
@@ -55,6 +44,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
   const [cancelConfirmId, setCancelConfirmId] = useState<string | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [isProfileSettingsOpen, setIsProfileSettingsOpen] = useState(false);
 
   const getServiceName = (id: string) => services.find(s => s.id === id)?.name || 'Serviço';
 
@@ -79,7 +69,14 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
   const scrollToSection = (id: string) => {
     const el = document.getElementById(id);
     if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const headerOffset = 85;
+      const elementPosition = el.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth',
+      });
     }
   };
 
@@ -90,7 +87,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-transparent pt-20 pb-24 transition-colors duration-300 overflow-x-hidden">
+    <div className="min-h-screen bg-transparent pt-20 pb-0 transition-colors duration-300 overflow-x-hidden">
       {/* DRAWER MENU */}
       <ClientMobileDrawer
         isOpen={isDrawerOpen}
@@ -99,6 +96,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
         onLogout={onLogout}
         onUpdateProfile={onUpdateProfile}
         onOpenNotifications={() => setIsNotificationsOpen(true)}
+        onOpenProfile={() => setIsProfileSettingsOpen(true)}
       />
 
       {/* NOTIFICATIONS SHEET */}
@@ -107,6 +105,14 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
         onClose={() => setIsNotificationsOpen(false)}
         appointments={appointments}
         onConfirmAppointment={handleConfirmPresence}
+      />
+
+      {/* PROFILE SETTINGS MODAL */}
+      <ClientProfileSettings
+        isOpen={isProfileSettingsOpen}
+        onClose={() => setIsProfileSettingsOpen(false)}
+        client={client}
+        onSave={onUpdateProfile}
       />
 
       {/* APP HEADER */}
@@ -119,10 +125,15 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
       <div className="max-w-7xl mx-auto space-y-8 md:space-y-12">
         {/* 1. PRÓXIMO EMBARQUE (UPCOMING TICKET) - MOVED TO TOP */}
         <section className="px-4 mt-4">
-          <h2 className="text-xl font-black text-white uppercase tracking-tighter flex items-center gap-2 mb-4">
+          <div
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="flex items-center gap-2 mb-4 w-fit cursor-pointer select-none active:scale-95 transition-transform"
+          >
             <Ticket className="text-purple-500" size={20} />
-            Próximo <span className="text-gray-600">Embarque</span>
-          </h2>
+            <h2 className="text-xl font-black text-white uppercase tracking-tighter">
+              Próximo <span className="text-gray-600">Embarque</span>
+            </h2>
+          </div>
 
           {upcoming.length > 0 ? (
             upcoming.map(app => (
@@ -209,7 +220,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
         </section>
 
         {/* 2. VITRINE DESTAQUES (WAS 1) */}
-        <section className="animate-[fadeIn_0.5s_ease-out]">
+        <section id="vitrine-section" className="animate-[fadeIn_0.5s_ease-out]">
           {/* Use mock promotions if available, otherwise fallback to services */}
           <VitrineDestaques
             services={promotions && promotions.length > 0 ? promotions : services}
@@ -217,96 +228,65 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
           />
         </section>
 
-        {/* 2. MENU RÁPIDO (ACTION GRID) */}
-        <section className="px-4">
-          <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 ml-1">
-            Acesso Rápido
-          </h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <button
-              onClick={onOpenBooking}
-              className="bg-[#1a1a1a] p-4 rounded-xl border border-gray-800 flex flex-col items-center gap-2 hover:border-neon-yellow transition-colors group"
-            >
-              <div className="w-10 h-10 bg-neon-yellow/10 rounded-full flex items-center justify-center text-neon-yellow group-hover:bg-neon-yellow group-hover:text-black transition-colors">
-                <Plus size={20} />
-              </div>
-              <span className="text-white font-bold text-xs uppercase">Novo Agendamento</span>
-            </button>
-
-            <button
-              onClick={() => scrollToSection('wallet-section')}
-              className="bg-[#1a1a1a] p-4 rounded-xl border border-gray-800 flex flex-col items-center gap-2 hover:border-blue-500 transition-colors group"
-            >
-              <div className="w-10 h-10 bg-blue-500/10 rounded-full flex items-center justify-center text-blue-500 group-hover:bg-blue-500 group-hover:text-white transition-colors">
-                <Ticket size={20} />
-              </div>
-              <span className="text-white font-bold text-xs uppercase">Minhas Reservas</span>
-            </button>
-
-            <button
-              onClick={() => scrollToSection('wallet-section')}
-              className="bg-[#1a1a1a] p-4 rounded-xl border border-gray-800 flex flex-col items-center gap-2 hover:border-purple-500 transition-colors group"
-            >
-              <div className="w-10 h-10 bg-purple-500/10 rounded-full flex items-center justify-center text-purple-500 group-hover:bg-purple-500 group-hover:text-white transition-colors">
-                <Wallet size={20} />
-              </div>
-              <span className="text-white font-bold text-xs uppercase">Carteira Digital</span>
-            </button>
-
-            <button
-              onClick={() => scrollToSection('wallet-section')}
-              className="bg-[#1a1a1a] p-4 rounded-xl border border-gray-800 flex flex-col items-center gap-2 hover:border-green-500 transition-colors group"
-            >
-              <div className="w-10 h-10 bg-green-500/10 rounded-full flex items-center justify-center text-green-500 group-hover:bg-green-500 group-hover:text-white transition-colors">
-                <Star size={20} />
-              </div>
-              <span className="text-white font-bold text-xs uppercase">Clube VIP</span>
-            </button>
-          </div>
-        </section>
-
         {/* 3. MENU DE ESTILO (SERVICES) */}
         <section id="services-section" className="relative pt-4">
           <div className="absolute inset-x-4 top-0 h-px bg-gradient-to-r from-transparent via-gray-800 to-transparent"></div>
+
+          {/* Header added here since ServiceShowcase might not expose it easily, or wrapper it */}
+          <div
+            onClick={() => scrollToSection('services-section')}
+            className="px-4 py-4 flex items-center gap-2 cursor-pointer select-none active:scale-95 transition-transform w-fit"
+          >
+            <Scissors className="text-neon-orange" size={20} />
+            <h2 className="text-xl font-black text-white uppercase tracking-tighter">
+              Menu de <span className="text-neon-orange">Estilo</span>
+            </h2>
+          </div>
+
           <ServiceShowcase services={services} onBookService={s => onOpenBooking()} />
         </section>
 
         {/* 4. LOYALTY & UPCOMING (Grid) */}
         <section
           id="wallet-section"
-          className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12 px-4 relative"
+          className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12 px-4 pt-0 relative"
         >
           {/* LEFT: Loyalty Card */}
-          <div className="lg:col-span-5 space-y-6">
-            <h2 className="text-xl font-black text-white uppercase tracking-tighter flex items-center gap-2 mb-4">
-              <Scissors className="text-neon-orange" size={20} />
-              Fidelidade <span className="text-gray-600">Pro</span>
-            </h2>
+          <div className="lg:col-span-5 space-y-4">
+            <div
+              onClick={() => scrollToSection('wallet-section')}
+              className="flex items-center gap-2 mb-2 cursor-pointer select-none active:scale-95 transition-transform w-fit"
+            >
+              <Scissors className="text-neon-orange" size={18} />
+              <h2 className="text-lg font-black text-white uppercase tracking-tighter">
+                Fidelidade <span className="text-gray-600">Pro</span>
+              </h2>
+            </div>
 
             <div className="relative group perspective-1000 cursor-pointer" onClick={() => {}}>
               <div className="absolute -inset-1 bg-gradient-to-r from-neon-yellow to-neon-orange rounded-xl blur opacity-30 group-hover:opacity-50 transition duration-500"></div>
               <div className="relative bg-[#1a1a1a] rounded-xl overflow-hidden shadow-2xl transform transition-transform group-hover:rotate-x-2">
                 {/* Card Header */}
-                <div className="h-32 bg-gradient-to-br from-gray-800 to-black relative p-6 flex justify-between items-start">
+                <div className="bg-gradient-to-br from-gray-800 to-black relative p-4 flex justify-between items-start">
                   <div className="opacity-20 absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
                   <div className="relative z-10 w-full">
-                    <div className="flex justify-between items-start w-full mb-8">
-                      <span className="font-graffiti text-white text-2xl">
+                    <div className="flex justify-between items-start w-full mb-4">
+                      <span className="font-graffiti text-white text-xl">
                         VIP <span className="text-neon-yellow">CARD</span>
                       </span>
-                      <QrCode className="text-white/80" />
+                      <QrCode className="text-white/80 w-5 h-5" />
                     </div>
-                    <div className="h-1 w-full bg-gray-700/50 rounded-full overflow-hidden">
+                    <div className="h-1 w-full bg-gray-700/50 rounded-full overflow-hidden mb-1">
                       <div
                         className="h-full bg-neon-yellow shadow-[0_0_10px_#EAB308]"
                         style={{ width: `${(client.loyaltyPoints / 10) * 100}%` }}
                       ></div>
                     </div>
-                    <div className="flex justify-between items-end mt-1">
-                      <span className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">
-                        Progresso do Nível
+                    <div className="flex justify-between items-end">
+                      <span className="text-[9px] text-gray-400 uppercase tracking-widest font-bold">
+                        Nível
                       </span>
-                      <span className="text-neon-yellow font-bold text-xs">
+                      <span className="text-neon-yellow font-bold text-[10px]">
                         {client.loyaltyPoints * 10}%
                       </span>
                     </div>
@@ -314,35 +294,34 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
                 </div>
 
                 {/* Card Slots */}
-                <div className="bg-[#111] p-6 grid grid-cols-5 gap-3">
+                <div className="bg-[#111] p-3 grid grid-cols-5 gap-2">
                   {[...Array(10)].map((_, i) => (
                     <div
                       key={i}
-                      className={`aspect-square rounded-full flex items-center justify-center border-2 transition-all relative
+                      className={`aspect-square rounded-full flex items-center justify-center border transition-all relative
                                 ${
                                   i < client.loyaltyPoints
-                                    ? 'border-neon-yellow bg-neon-yellow/10 shadow-[0_0_10px_rgba(234,179,8,0.2)]'
+                                    ? 'border-neon-yellow bg-neon-yellow/10 shadow-[0_0_5px_rgba(234,179,8,0.2)]'
                                     : 'border-white/10 bg-white/5'
                                 }`}
                     >
                       {i < client.loyaltyPoints ? (
-                        <Scissors size={14} className="text-neon-yellow -rotate-45" />
+                        <Scissors size={10} className="text-neon-yellow -rotate-45" />
                       ) : i === 9 ? (
-                        <Star className="text-gray-700 w-4 h-4" />
+                        <Star className="text-gray-700 w-3 h-3" />
                       ) : (
-                        <div className="w-1.5 h-1.5 rounded-full bg-gray-800"></div>
+                        <div className="w-1 h-1 rounded-full bg-gray-800"></div>
                       )}
                     </div>
                   ))}
                 </div>
 
-                <div className="bg-black p-4 flex justify-between items-center border-t border-white/10">
-                  <span className="text-gray-500 text-[10px] uppercase font-bold tracking-widest flex items-center gap-2">
-                    <RefreshCw size={12} className="animate-spin-slow" /> Atualizado Automaticamente
+                <div className="bg-black p-3 flex justify-between items-center border-t border-white/10">
+                  <span className="text-gray-500 text-[9px] uppercase font-bold tracking-widest flex items-center gap-1.5">
+                    <RefreshCw size={10} className="animate-spin-slow" /> Atualizado
                   </span>
-                  <span className="text-white font-bold text-xs">
-                    Faltam <span className="text-neon-orange">{10 - client.loyaltyPoints}</span>{' '}
-                    para resgate
+                  <span className="text-white font-bold text-[10px]">
+                    Faltam <span className="text-neon-orange">{10 - client.loyaltyPoints}</span>
                   </span>
                 </div>
               </div>
@@ -364,50 +343,6 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
         <section id="gallery-section">
           <PortfolioGallery />
         </section>
-
-        {/* 6. HISTORY (Lookbook) */}
-        <section className="bg-[#1a1a1a] mx-4 p-8 rounded-xl border border-white/5">
-          <h2 className="text-xl font-black text-white uppercase tracking-tighter mb-6 flex items-center gap-3">
-            <Camera size={20} className="text-blue-500" />
-            Seu Histórico{' '}
-            <span className="text-gray-400 font-normal text-sm ml-auto cursor-pointer hover:text-neon-yellow underline">
-              Ver tudo
-            </span>
-          </h2>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {history.slice(0, 4).map((app, idx) => (
-              <div key={idx} className="group cursor-pointer">
-                <div className="aspect-square bg-black rounded-sm overflow-hidden relative mb-2">
-                  {app.photoUrl ? (
-                    <img
-                      src={app.photoUrl}
-                      className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-700">
-                      <ImageIcon size={32} />
-                    </div>
-                  )}
-                  <div className="absolute top-2 right-2 bg-black/60 text-white text-[10px] px-2 py-1 rounded backdrop-blur-sm">
-                    {new Date(app.date).toLocaleDateString()}
-                  </div>
-                </div>
-                <p className="font-bold text-white text-sm truncate">
-                  {getServiceName(app.serviceId)}
-                </p>
-                <p className="text-xs text-gray-500">
-                  {app.status === 'completed' ? 'Finalizado' : 'Cancelado'}
-                </p>
-              </div>
-            ))}
-            {history.length === 0 && (
-              <div className="col-span-full text-center py-8 text-gray-400 text-sm">
-                Ainda não há registros no seu histórico.
-              </div>
-            )}
-          </div>
-        </section>
       </div>
 
       {/* MOBILE BOTTOM NAV */}
@@ -415,7 +350,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
         currentTab="dash"
         onTabChange={tab => {
           if (tab === 'profile') {
-            setIsDrawerOpen(true); // Open drawer for profile/settings
+            setIsProfileSettingsOpen(true); // FIXED: Opens Profile Modal instead of Drawer
           } else if (tab === 'services') {
             scrollToSection('services-section');
           } else if (tab === 'wallet') {

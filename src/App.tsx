@@ -23,7 +23,6 @@ import {
 } from './types';
 import { CheckCircle, AlertCircle, Bookmark } from 'lucide-react';
 import { generateId } from './utils';
-import { MOCK_PROMOTIONS } from './mock_data';
 
 function App() {
   const [isBookingOpen, setIsBookingOpen] = useState(false);

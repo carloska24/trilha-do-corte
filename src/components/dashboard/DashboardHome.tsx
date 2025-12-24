@@ -1,7 +1,6 @@
 import React from 'react';
 import { ChairIcon } from '../icons/ChairIcon';
-import { Appointment, AppointmentStatus } from '../../types';
-import { SERVICES } from '../../constants';
+import { Appointment, AppointmentStatus, ServiceItem } from '../../types';
 import { Armchair, ChevronRight, User, Star } from 'lucide-react';
 
 interface DashboardHomeProps {
@@ -15,106 +14,110 @@ interface DashboardHomeProps {
   currentTime: Date;
   shopStatus: any;
   onInitiateFinish: (id: string) => void;
+  services: ServiceItem[];
 }
 
 // --- ISOLATED COMPONENTS (PREVENT RE-RENDERS) ---
-const QueueTicker = React.memo(({ queue }: { queue: Appointment[] }) => {
-  return (
-    <div className="w-full relative mt-6 group">
-      {/* Title Label - Bem Vindo Style - Corrected */}
-      <div className="absolute -top-7 left-4 z-20 flex items-end pointer-events-none">
-        <span
-          className="font-script text-4xl text-[#FFD700] -rotate-6 drop-shadow-[0_0_4px_#FACC15] z-20 relative"
-          style={{ textShadow: '2px 2px 0px #000' }}
-        >
-          Próximos
-        </span>
-      </div>
-
-      <div className="w-full h-40 bg-[#050505] border border-gray-800 rounded-2xl overflow-hidden relative flex items-center shadow-2xl transform-gpu ring-1 ring-white/5 pt-4">
-        {/* Neon Glow Decoration */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-50"></div>
-          <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-purple-500/20 to-transparent opacity-30"></div>
+const QueueTicker = React.memo(
+  ({ queue, services }: { queue: Appointment[]; services: ServiceItem[] }) => {
+    return (
+      <div className="w-full relative mt-6 group">
+        {/* Title Label - Bem Vindo Style - Corrected */}
+        <div className="absolute -top-7 left-4 z-20 flex items-end pointer-events-none">
+          <span
+            className="font-script text-4xl text-[#FFD700] -rotate-6 drop-shadow-[0_0_4px_#FACC15] z-20 relative"
+            style={{ textShadow: '2px 2px 0px #000' }}
+          >
+            Próximos
+          </span>
         </div>
 
-        {queue.length === 0 ? (
-          <div className="w-full flex flex-col items-center justify-center text-gray-500 z-10 opacity-60">
-            <Armchair size={24} className="mb-2 text-gray-600" />
-            <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-gray-600">
-              Terminal Vazio
-            </span>
+        <div className="w-full h-40 bg-[#050505] border border-gray-800 rounded-2xl overflow-hidden relative flex items-center shadow-2xl transform-gpu ring-1 ring-white/5 pt-4">
+          {/* Neon Glow Decoration */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-50"></div>
+            <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-purple-500/20 to-transparent opacity-30"></div>
           </div>
-        ) : (
-          // Marquee Container
-          <div className="flex animate-ticker items-center pl-4 py-2 hover:pause-animation will-change-transform">
-            {[...queue, ...queue].map((client, i) => {
-              // Find Service Name
-              const service = SERVICES.find(s => s.id === client.serviceId);
-              const serviceName = service ? service.name : 'Corte & Estilo';
-              const servicePrice = service ? service.price : 'R$ -';
 
-              return (
-                <div
-                  key={`${client.id}-${i}`}
-                  className="flex-shrink-0 w-72 h-24 bg-black/40 backdrop-blur-md rounded-xl border border-white/10 mr-5 flex flex-col relative overflow-hidden group/card hover:border-cyan-400 transition-all duration-300 shadow-lg hover:shadow-[0_0_20px_rgba(6,182,212,0.15)]"
-                >
-                  {/* Vibrant Gradient Background on Hover */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-cyan-900/10 via-blue-900/10 to-purple-900/10 opacity-0 group-hover/card:opacity-100 transition-opacity duration-300"></div>
+          {queue.length === 0 ? (
+            <div className="w-full flex flex-col items-center justify-center text-gray-500 z-10 opacity-60">
+              <Armchair size={24} className="mb-2 text-gray-600" />
+              <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-gray-600">
+                Terminal Vazio
+              </span>
+            </div>
+          ) : (
+            // Marquee Container
+            <div className="flex animate-ticker items-center pl-4 py-2 hover:pause-animation will-change-transform">
+              {[...queue, ...queue].map((client, i) => {
+                // Find Service Name
+                const service = services.find(s => s.id === client.serviceId);
+                const serviceName = service ? service.name : 'Corte & Estilo';
+                // const servicePrice = service ? service.price : 'R$ -';
 
-                  {/* Decorative Side Bar */}
-                  <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-cyan-400 via-blue-500 to-purple-600"></div>
+                return (
+                  <div
+                    key={`${client.id}-${i}`}
+                    className="flex-shrink-0 w-72 h-24 bg-black/40 backdrop-blur-md rounded-xl border border-white/10 mr-5 flex flex-col relative overflow-hidden group/card hover:border-cyan-400 transition-all duration-300 shadow-lg hover:shadow-[0_0_20px_rgba(6,182,212,0.15)]"
+                  >
+                    {/* Vibrant Gradient Background on Hover */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-cyan-900/10 via-blue-900/10 to-purple-900/10 opacity-0 group-hover/card:opacity-100 transition-opacity duration-300"></div>
 
-                  <div className="flex items-center h-full pl-4 pr-3 py-2 z-10">
-                    {/* Avatar */}
-                    <div className="w-16 h-16 rounded-full p-[2px] bg-gradient-to-tr from-cyan-400 via-white to-purple-500 shadow-lg">
-                      <div className="w-full h-full rounded-full overflow-hidden bg-black relative">
-                        <img
-                          src={
-                            client.photoUrl ||
-                            'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop'
-                          }
-                          className="w-full h-full object-cover filter contrast-110"
-                          alt={client.clientName}
-                        />
+                    {/* Decorative Side Bar */}
+                    <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-cyan-400 via-blue-500 to-purple-600"></div>
+
+                    <div className="flex items-center h-full pl-4 pr-3 py-2 z-10">
+                      {/* Avatar */}
+                      <div className="w-16 h-16 rounded-full p-[2px] bg-gradient-to-tr from-cyan-400 via-white to-purple-500 shadow-lg">
+                        <div className="w-full h-full rounded-full overflow-hidden bg-black relative">
+                          <img
+                            src={
+                              client.photoUrl ||
+                              'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop'
+                            }
+                            className="w-full h-full object-cover filter contrast-110"
+                            alt={client.clientName}
+                          />
+                        </div>
                       </div>
-                    </div>
 
-                    {/* Info */}
-                    <div className="ml-4 flex flex-col flex-1 min-w-0">
-                      <div className="flex justify-between items-center mb-0.5">
-                        <span className="text-[10px] font-bold text-cyan-400 font-mono tracking-widest bg-cyan-950/30 px-1.5 rounded border border-cyan-500/20">
-                          {client.time}
+                      {/* Info */}
+                      <div className="ml-4 flex flex-col flex-1 min-w-0">
+                        <div className="flex justify-between items-center mb-0.5">
+                          <span className="text-[10px] font-bold text-cyan-400 font-mono tracking-widest bg-cyan-950/30 px-1.5 rounded border border-cyan-500/20">
+                            {client.time}
+                          </span>
+                        </div>
+
+                        <span className="text-white font-black text-lg uppercase truncate leading-none tracking-tight group-hover/card:text-transparent group-hover/card:bg-clip-text group-hover/card:bg-gradient-to-r group-hover/card:from-white group-hover/card:to-cyan-200 transition-all">
+                          {client.clientName.split(' ')[0]}
                         </span>
-                      </div>
 
-                      <span className="text-white font-black text-lg uppercase truncate leading-none tracking-tight group-hover/card:text-transparent group-hover/card:bg-clip-text group-hover/card:bg-gradient-to-r group-hover/card:from-white group-hover/card:to-cyan-200 transition-all">
-                        {client.clientName.split(' ')[0]}
-                      </span>
-
-                      <div className="flex items-center gap-2 mt-1.5">
-                        <div className="w-full h-[1px] bg-white/10 flex-1"></div>
-                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider truncate max-w-[100px] group-hover/card:text-gray-300">
-                          {serviceName}
-                        </span>
+                        <div className="flex items-center gap-2 mt-1.5">
+                          <div className="w-full h-[1px] bg-white/10 flex-1"></div>
+                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider truncate max-w-[100px] group-hover/card:text-gray-300">
+                            {serviceName}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
-  );
-});
+    );
+  }
+);
 
 export const DashboardHome: React.FC<DashboardHomeProps> = ({
   appointments,
   onStatusChange,
   currentTime,
   onInitiateFinish,
+  services,
 }) => {
   // Memoized Derived Data to prevent recalc on every clock tick
   const { queue, inProgress, nextClient } = React.useMemo(() => {
@@ -486,7 +489,7 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({
       </div>
 
       {/* 4. QUEUE TICKER (ISOLATED) */}
-      <QueueTicker queue={queue} />
+      <QueueTicker queue={queue} services={services} />
     </div>
   );
 };

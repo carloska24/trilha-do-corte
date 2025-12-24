@@ -18,31 +18,18 @@ const MOCK_IMAGES: Record<string, string> = {
 
 export const ServiceShowcase: React.FC<ServiceShowcaseProps> = ({ services, onBookService }) => {
   return (
-    <div className="py-8">
-      <div className="flex items-center justify-between mb-8 px-4 md:px-0">
-        <h2 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white uppercase tracking-tighter flex items-center gap-2 transition-colors">
-          <Scissors className="text-neon-yellow" size={24} />
-          Menu de{' '}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-neon-yellow to-neon-orange">
-            Estilo
-          </span>
-        </h2>
-        <button className="text-[10px] md:text-xs font-bold text-gray-500 hover:text-gray-900 dark:hover:text-white uppercase tracking-widest transition-colors">
-          Ver Tabela Completa
-        </button>
-      </div>
-
-      <div className="flex overflow-x-auto pb-8 -mx-4 px-4 md:mx-0 md:px-0 gap-6 snap-x snap-mandatory hide-scrollbar">
+    <div className="pt-2 pb-2">
+      <div className="flex overflow-x-auto pb-8 -mx-4 px-[10vw] md:mx-0 md:px-0 gap-4 snap-x snap-mandatory hide-scrollbar">
         {services.slice(0, 5).map((service, index) => {
           if (!service || !service.name) return null; // Defensive check
           return (
             <div
               key={service.id || index}
-              className="flex-shrink-0 w-[85vw] md:w-[280px] snap-center bg-white dark:bg-[#151515] rounded-xl overflow-hidden border border-gray-200 dark:border-white/5 group hover:border-neon-yellow/50 dark:hover:border-white/20 transition-all duration-300 shadow-lg hover:shadow-2xl relative"
+              className="flex-shrink-0 w-[80vw] md:w-[320px] snap-center bg-white dark:bg-[#151515] rounded-xl overflow-hidden border border-gray-200 dark:border-white/5 group hover:border-neon-yellow/50 dark:hover:border-white/20 transition-all duration-300 shadow-lg hover:shadow-2xl relative"
             >
-              {/* Visual Header */}
-              <div className="h-40 relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-t from-white dark:from-[#151515] to-transparent z-10 transition-colors"></div>
+              {/* Visual Header - Widescreen */}
+              <div className="aspect-video w-full relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-t from-white dark:from-[#151515] to-transparent z-10 transition-colors opacity-60"></div>
                 <img
                   src={MOCK_IMAGES[service.name.split(' ')[0]] || MOCK_IMAGES.default}
                   alt={service.name}

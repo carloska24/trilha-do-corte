@@ -386,6 +386,7 @@ export const BarberDashboard: React.FC<BarberDashboardProps> = ({
             currentTime={currentTime}
             shopStatus={getShopStatus()}
             onInitiateFinish={initiateFinish}
+            services={services}
           />
         )}
 

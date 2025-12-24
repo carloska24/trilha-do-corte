@@ -144,6 +144,12 @@ export interface ClientProfile {
   loyaltyPoints: number; // 0 a 10
   history: Appointment[];
   savedStyles: SavedStyle[];
+  preferences?: {
+    cutFrequency: 'weekly' | 'biweekly' | 'monthly';
+    favoriteStyle: string; // e.g., "Fade", "Mullet"
+    beardPreference: 'clean' | 'stubble' | 'full';
+    notes?: string;
+  };
 }
 
 export interface BarberProfile {
