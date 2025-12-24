@@ -33,7 +33,15 @@ function App() {
   // Updated view types to include auth screens
   const [currentView, setCurrentView] = useState<
     'landing' | 'login-client' | 'login-barber' | 'client' | 'barber'
-  >('landing');
+  >(() => {
+    const saved = localStorage.getItem('currentView');
+    return (saved as any) || 'landing';
+  });
+
+  // Persist View
+  React.useEffect(() => {
+    localStorage.setItem('currentView', currentView);
+  }, [currentView]);
 
   // State específico para navegação dentro do painel do barbeiro
   const [barberView, setBarberView] = useState<DashboardView>('home');
@@ -286,7 +294,7 @@ function App() {
           ...prev,
           name: userData.name,
           phone: userData.emailOrPhone,
-          photoUrl: userData.photoUrl,
+          photoUrl: userData.photoUrl || prev.photoUrl, // Keep existing photo if new one is not provided
         }));
       } else {
         setBarberProfile({
