@@ -373,6 +373,8 @@ body {
   }
 }
 
-.animate-flipInY {
-  animation: flipInY 0.8s ease-out forwards;
+
+/* Slant Clip Path for Price Tag */
+.clip-path-slant-left {
+  clip-path: polygon(20% 0, 100% 0, 100% 100%, 0% 100%);
 }

@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { Appointment, ClientProfile, ServiceItem } from '../types';
+import { Appointment, ClientProfile, ServiceItem, Combo } from '../types';
+import { MOCK_COMBOS } from '../constants';
+import { ComboBookingModal } from './ComboBookingModal';
 import {
   Scissors,
   Ticket,
@@ -45,8 +47,23 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isProfileSettingsOpen, setIsProfileSettingsOpen] = useState(false);
+  const [selectedCombo, setSelectedCombo] = useState<Combo | null>(null);
 
   const getServiceName = (id: string) => services.find(s => s.id === id)?.name || 'Serviço';
+
+  const handleVitrineClick = (id?: string) => {
+    if (!id) {
+      onOpenBooking();
+      return;
+    }
+    const combo = MOCK_COMBOS.find(c => c.id === id);
+    if (combo) {
+      setSelectedCombo(combo);
+    } else {
+      // Simple fallback if not a combo found in mocks
+      onOpenBooking();
+    }
+  };
 
   // Sort upcoming vs history
   const upcoming = appointments
@@ -106,6 +123,15 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
         appointments={appointments}
         onConfirmAppointment={handleConfirmPresence}
       />
+
+      {/* COMBO BOOKING MODAL */}
+      {selectedCombo && (
+        <ComboBookingModal
+          isOpen={!!selectedCombo}
+          onClose={() => setSelectedCombo(null)}
+          combo={selectedCombo}
+        />
+      )}
 
       {/* PROFILE SETTINGS MODAL */}
       <ClientProfileSettings
@@ -222,10 +248,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
         {/* 2. VITRINE DESTAQUES (WAS 1) */}
         <section id="vitrine-section" className="animate-[fadeIn_0.5s_ease-out]">
           {/* Use mock promotions if available, otherwise fallback to services */}
-          <VitrineDestaques
-            services={promotions && promotions.length > 0 ? promotions : services}
-            onBook={id => onOpenBooking()}
-          />
+          <VitrineDestaques services={services} onBook={handleVitrineClick} />
         </section>
 
         {/* 3. MENU DE ESTILO (SERVICES) */}

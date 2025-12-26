@@ -1,6 +1,7 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { ChevronRight, Star, Sparkles, Scissors, Clock, Ticket } from 'lucide-react';
-import { ServiceItem } from '../../types';
+import { ServiceItem, Combo } from '../../types';
+import { MOCK_COMBOS } from '../../constants';
 
 interface VitrineDestaquesProps {
   services: ServiceItem[];
@@ -10,39 +11,52 @@ interface VitrineDestaquesProps {
 export const VitrineDestaques: React.FC<VitrineDestaquesProps> = ({ services, onBook }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // MOCK PROMOTIONS (COMBOS)
-  const promotions = [
-    {
-      id: 'promo-1',
-      type: 'combo',
-      title: 'DIA DO NOIVO',
-      subtitle: 'Preparação completa para o grande dia',
-      price: 'R$ 250,00',
-      image:
-        'https://images.unsplash.com/photo-1503951914875-452162b7f30a?auto=format&fit=crop&q=80',
-      badge: 'PREMIUM',
-      color: 'from-purple-600 to-blue-600',
-    },
-    {
-      id: 'promo-2',
-      type: 'combo',
-      title: 'PAI & FILHO',
-      subtitle: 'O legado continua. Experiência em dobro.',
-      price: 'R$ 60,00',
-      image:
-        'https://images.unsplash.com/photo-1599351431202-1e0f0137899a?auto=format&fit=crop&q=80',
-      badge: '-15% OFF',
-      color: 'from-neon-orange to-red-600',
-    },
-  ];
+  const MOCK_IMAGES: Record<string, string> = {
+    default:
+      'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?q=80&w=400&auto=format&fit=crop',
+    Corte:
+      'https://images.unsplash.com/photo-1621605815971-fbc98d665033?q=80&w=400&auto=format&fit=crop',
+    Barba:
+      'https://images.unsplash.com/photo-1599351431202-1e0f0137899a?q=80&w=400&auto=format&fit=crop',
+  };
 
-  // TOP SERVICES (Highlight 2 services)
-  const topServices = services.slice(0, 3).map(s => ({
-    ...s,
-    type: 'service',
+  // LOAD COMBOS FROM STORAGE
+  // Initializes with MOCK_COMBOS if nothing is stored, OR if you prefer to start clean, use []
+  // User requested "Only created in marketing", so we prioritize storage.
+  // If storage is empty, we fall back to Mocks? Or show nothing?
+  // Current behavior in PromotionsManager: "return stored ? JSON.parse(stored) : MOCK_COMBOS;"
+  // So we mirror that.
+  const [combos, setCombos] = useState<Combo[]>(() => {
+    const stored = localStorage.getItem('barberpro_combos');
+    return stored ? JSON.parse(stored) : MOCK_COMBOS;
+  });
+
+  // Listen for storage changes (optional, but good if creating in one tab and viewing in other)
+  useEffect(() => {
+    const handleStorage = () => {
+      const stored = localStorage.getItem('barberpro_combos');
+      if (stored) setCombos(JSON.parse(stored));
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
+
+  const promotions = combos.map(combo => ({
+    ...combo,
+    type: 'combo',
+    // Map theme to gradient colors for the card background effect
+    color:
+      combo.theme === 'neon'
+        ? 'from-neon-orange to-red-600'
+        : combo.theme === 'tuxedo'
+        ? 'from-purple-600 to-blue-600'
+        : combo.theme === 'gold'
+        ? 'from-yellow-600 via-yellow-700 to-yellow-900'
+        : 'from-blue-600 to-purple-600',
   }));
 
-  const items = [...promotions, ...topServices];
+  // ONLY SHOW MARKETING COMBOS (Removes Top Services)
+  const items = promotions;
 
   return (
     <div className="w-full">
@@ -79,7 +93,7 @@ export const VitrineDestaques: React.FC<VitrineDestaquesProps> = ({ services, on
         {items.map((item: any, idx) => (
           <div
             key={item.id || idx}
-            onClick={() => onBook(item.type === 'service' ? item.id : undefined)}
+            onClick={() => onBook(item.id)}
             className="flex-shrink-0 w-[80vw] md:w-[600px] snap-center relative group cursor-pointer"
           >
             <div
@@ -93,8 +107,26 @@ export const VitrineDestaques: React.FC<VitrineDestaquesProps> = ({ services, on
                 <img
                   src={
                     item.image ||
-                    'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&q=80'
+                    `/services/${(item.title || item.name)
+                      .toLowerCase()
+                      .replace(/\s+/g, '-')
+                      .normalize('NFD')
+                      .replace(/[\u0300-\u036f]/g, '')
+                      .replace('&', 'e')}.jpg`
                   }
+                  onError={e => {
+                    const target = e.currentTarget;
+                    // If failed path image, try local fallback logic or mock
+                    if (target.src.includes('.jpg') && !target.src.includes('data:')) {
+                      // Try png? Or just fallback.
+                      // Avoiding infinite loop if png also fails
+                      // target.src = target.src.replace('.jpg', '.png');
+                      target.src = MOCK_IMAGES.default;
+                    } else {
+                      target.src = MOCK_IMAGES.default;
+                      target.onerror = null;
+                    }
+                  }}
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                   alt={item.title || item.name}
                 />

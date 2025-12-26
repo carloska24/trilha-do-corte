@@ -418,46 +418,52 @@ export const PromoStudio: React.FC<PromoStudioProps> = ({
                         setSelectedServiceId(service.id);
                         setStep(2);
                       }}
-                      className={`relative group cursor-pointer rounded-xl overflow-hidden border-2 transition-all duration-300 transform hover:scale-[1.01]
+                      className={`relative group cursor-pointer rounded-xl overflow-hidden border-2 transition-all duration-300 transform
                           ${
                             selectedServiceId === service.id
-                              ? 'border-neon-yellow shadow-[0_0_15px_rgba(234,179,8,0.3)]'
-                              : 'border-white/10 bg-[#1a1a1a] hover:border-white/30 hover:shadow-xl'
+                              ? 'border-neon-yellow scale-[1.02]'
+                              : 'border-white/10 opacity-70 hover:opacity-100 hover:border-white/30'
                           }`}
                     >
-                      <div className="flex flex-col sm:flex-row h-auto sm:h-32">
+                      <div className="flex flex-col h-auto">
                         {/* Image Banner Segment */}
-                        <div className="w-full sm:w-32 h-32 sm:h-full relative shrink-0 z-20">
+                        <div className="w-full h-48 relative shrink-0 z-20">
                           <img
                             src={
                               service.image ||
                               'https://images.unsplash.com/photo-1599351431202-1e0f0137899a?auto=format&fit=crop&q=80'
                             }
                             alt={service.name}
-                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                            className="w-full h-full object-cover bg-black transition-transform duration-700"
                           />
 
-                          {/* EXISTING BADGE PREVIEW - Loop for multi */}
-                          {service.badges
-                            ? service.badges.map((b, idx) => (
+                          {/* --- DYNAMIC BADGE SYSTEM --- */}
+                          {service.badges && service.badges.length > 0
+                            ? service.badges.map((b, i) => (
                                 <div
-                                  key={idx}
-                                  className="scale-75 origin-top-left absolute top-0 left-0 z-30 pointer-events-none"
+                                  key={i}
+                                  className="absolute inset-0 z-30 pointer-events-none origin-top-left scale-75"
                                 >
                                   <PromoBadge config={b} />
                                 </div>
                               ))
                             : service.badgeConfig && (
-                                <div className="scale-75 origin-top-left absolute top-0 left-0 z-30">
-                                  <PromoBadge config={service.badgeConfig} />
+                                <div className="absolute inset-0 z-30 pointer-events-none origin-top-left scale-75">
+                                  <PromoBadge config={service.badgeConfig} className="z-30" />
                                 </div>
                               )}
 
-                          {/* Selection Check (Mobile Overlay) */}
+                          {/* Selection Check (Mobile Overlay) - GLASS EFFECT */}
                           {selectedServiceId === service.id && (
-                            <div className="absolute inset-0 bg-neon-yellow/20 flex items-center justify-center z-20 backdrop-blur-none">
-                              <div className="bg-neon-yellow rounded-full p-1 shadow-[0_0_15px_#eab308] animate-bounce">
-                                <CheckCircle className="text-black" size={20} />
+                            <div className="absolute inset-0 z-20 flex items-center justify-center">
+                              {/* The Glass Layer */}
+                              <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-white/5 to-transparent backdrop-blur-[0.5px] backdrop-brightness-110 border border-white/20 shadow-[inset_0_0_20px_rgba(255,255,255,0.15)]"></div>
+
+                              {/* Reflection Shine */}
+                              <div className="absolute -inset-full top-0 block transform -skew-x-12 bg-gradient-to-r from-transparent to-white/20 opacity-30 animate-shine" />
+
+                              <div className="relative z-30 bg-neon-yellow/90 backdrop-blur-md rounded-full p-2 shadow-[0_0_15px_rgba(234,179,8,0.5)] animate-in zoom-in duration-300">
+                                <CheckCircle className="text-black" size={24} strokeWidth={3} />
                               </div>
                             </div>
                           )}
@@ -466,86 +472,51 @@ export const PromoStudio: React.FC<PromoStudioProps> = ({
                         {/* Content Segment */}
                         <div
                           className={`flex-1 p-3 flex flex-col justify-between relative overflow-hidden transition-all duration-500
-                          ${
-                            selectedServiceId === service.id
-                              ? 'bg-barber-pole-card border-l-4 border-neon-yellow'
-                              : 'bg-gradient-to-r from-[#1a1a1a] to-[#111]'
-                          }`}
+                              ${
+                                selectedServiceId === service.id
+                                  ? 'bg-barber-pole-card border-none'
+                                  : 'bg-gradient-to-r from-[#1a1a1a] to-[#111] group-hover:bg-barber-pole-card'
+                              }`}
                         >
-                          {/* Top Row */}
-                          <div className="flex justify-between items-start z-10 mb-2">
+                          {/* Top Partition: Title & Status */}
+                          <div className="flex justify-between items-start z-10">
                             <div className="flex flex-col">
                               {/* Service Name */}
                               <h4
                                 className={`font-graffiti text-2xl tracking-wide uppercase leading-none transition-colors drop-shadow-lg
-                                ${
-                                  selectedServiceId === service.id
-                                    ? 'text-white text-glow-neon'
-                                    : 'text-white group-hover:text-neon-yellow'
-                                }`}
+                                    ${
+                                      selectedServiceId === service.id
+                                        ? 'text-white text-glow-neon'
+                                        : 'text-white group-hover:text-neon-yellow'
+                                    }`}
                               >
                                 {service.name}
                               </h4>
 
-                              {/* Custom Action Text for Studio */}
+                              {/* Selection Status Text */}
                               <div className="mt-1">
-                                <span className="text-[10px] uppercase font-bold tracking-widest text-purple-400 group-hover:text-purple-300 transition-colors flex items-center gap-1">
-                                  <Sparkles size={10} /> Customizar Badge
-                                </span>
+                                {selectedServiceId === service.id && (
+                                  <span className="text-[10px] uppercase font-black tracking-[0.2em] text-neon-yellow animate-pulse flex items-center gap-1">
+                                    ● Confirmado
+                                  </span>
+                                )}
                               </div>
-                            </div>
-
-                            {/* Price Badge */}
-                            <div className="flex flex-col items-end">
-                              <span
-                                className={`font-mono font-black text-xl px-4 py-1 rounded transform -skew-x-12 shadow-2xl transition-all border
-                                    ${
-                                      selectedServiceId === service.id
-                                        ? 'bg-neon-yellow text-black border-white shadow-[0_0_20px_rgba(234,179,8,0.6)] scale-110'
-                                        : 'bg-transparent text-white border-white/40 group-hover:bg-white group-hover:text-black group-hover:border-white shadow-lg'
-                                    }
-                                `}
-                              >
-                                R$ {service.priceValue.toFixed(2)}
-                              </span>
                             </div>
                           </div>
 
-                          {/* Bottom Row */}
-                          <div className="flex items-center gap-2 mt-auto z-10 w-full">
-                            {/* Marquee/Desc */}
-                            <div className="w-[70%] bg-black/60 rounded-lg border border-white/5 overflow-hidden h-8 flex items-center px-2 relative">
-                              <div className="w-full overflow-hidden">
-                                <div
-                                  className={`whitespace-nowrap antialiased ${
-                                    selectedServiceId === service.id
-                                      ? 'animate-ticker text-white'
-                                      : 'text-gray-300 group-hover:text-white'
-                                  }`}
-                                >
-                                  <span className="text-[10px] font-bold uppercase tracking-wide mr-8">
-                                    {service.description || 'Experiência Premium Barber Pro.'}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Duration Pill */}
-                            <div className="w-[30%] flex justify-end">
-                              <div
-                                className={`w-full flex items-center justify-center gap-1 py-1.5 rounded-full border transition-all shadow-lg
-                                ${
-                                  selectedServiceId === service.id
-                                    ? 'bg-black text-neon-yellow border-neon-yellow'
-                                    : 'bg-[#222] text-gray-300 border-white/10 group-hover:border-white/30'
-                                }`}
-                              >
-                                <Clock size={12} strokeWidth={3} />
-                                <span className="text-[10px] font-black uppercase">
-                                  {service.duration} min
-                                </span>
-                              </div>
-                            </div>
+                          {/* Bottom Partition: Price Only (Replaces footer) */}
+                          <div className="flex justify-end items-end mt-auto z-10">
+                            <span
+                              className={`font-mono font-black text-lg px-3 py-1 rounded transform -skew-x-12 shadow-md transition-all border
+                                      ${
+                                        selectedServiceId === service.id
+                                          ? 'bg-neon-yellow text-black border-white shadow-yellow-900/50'
+                                          : 'bg-black/50 text-white border-white/20 group-hover:bg-neon-yellow group-hover:text-black group-hover:border-white group-hover:shadow-yellow-900/50'
+                                      }
+                                  `}
+                            >
+                              R$ {service.priceValue.toFixed(2).replace('.', ',')}
+                            </span>
                           </div>
                         </div>
                       </div>

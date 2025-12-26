@@ -12,10 +12,12 @@ import {
   MapPin,
   Smartphone,
   Crown,
+  Search,
 } from 'lucide-react';
 import { ServiceItem, BookingData } from '../types';
 import { PromoBadge } from './ui/PromoBadge';
 import { TicketCard } from './ui/TicketCard';
+import { ServiceCard } from './ui/ServiceCard';
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -26,6 +28,15 @@ interface BookingModalProps {
 }
 
 const TIME_SLOTS = ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
+
+const MOCK_IMAGES: Record<string, string> = {
+  default:
+    'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?q=80&w=400&auto=format&fit=crop',
+  Corte:
+    'https://images.unsplash.com/photo-1621605815971-fbc98d665033?q=80&w=400&auto=format&fit=crop',
+  Barba:
+    'https://images.unsplash.com/photo-1599351431202-1e0f0137899a?q=80&w=400&auto=format&fit=crop',
+};
 
 const STEPS = [
   { number: 1, title: 'Serviço' },
@@ -52,6 +63,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   });
 
   const dateInputRef = useRef<HTMLInputElement>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Initialize data
   useEffect(() => {
@@ -71,6 +83,9 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   if (!isOpen) return null;
 
   // Helper to get current service
+  const filteredServices = services.filter(s =>
+    s.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
   const selectedService = services.find(s => s.id === formData.serviceId);
 
   const handleNext = () => {
@@ -107,7 +122,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
       />
 
       {/* Modal Container */}
-      <div className="relative bg-[#111] border border-white/10 w-full max-w-lg md:max-w-xl rounded-2xl shadow-2xl overflow-hidden flex flex-col h-[90vh] md:h-auto md:max-h-[90vh] animate-[fadeIn_0.3s_ease-out]">
+      <div className="relative bg-[#111] border border-white/10 w-[95%] md:w-full max-w-3xl rounded-2xl shadow-2xl overflow-hidden flex flex-col h-[90vh] md:h-auto md:max-h-[90vh] animate-[fadeIn_0.3s_ease-out]">
         {/* Header with Steps */}
         <div className="px-6 pt-6 pb-4 bg-[#151515] border-b border-white/5 relative z-20">
           <div className="flex justify-between items-center mb-6">
@@ -160,154 +175,27 @@ export const BookingModal: React.FC<BookingModalProps> = ({
           {/* STEP 1: SERVICE SELECTION */}
           {step === 1 && (
             <div className="space-y-4 animate-[slideRight_0.3s_ease-out]">
-              <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">
-                Escolha seu destino
-              </h3>
+              <div className="relative mb-4 group">
+                <Search
+                  className="absolute left-0 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-neon-yellow transition-colors"
+                  size={16}
+                />
+                <input
+                  type="text"
+                  placeholder="ESCOLHA SEU DESTINO"
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="w-full bg-transparent border-b border-gray-800 focus:border-neon-yellow text-sm font-bold text-white uppercase tracking-widest pl-6 py-2 focus:outline-none placeholder-gray-600 transition-colors"
+                />
+              </div>
               <div className="grid grid-cols-1 gap-4 pb-2">
-                {services.map((s, index) => (
-                  <div
-                    key={s.id}
-                    onClick={() => setFormData({ ...formData, serviceId: s.id })}
-                    className={`relative group cursor-pointer rounded-xl overflow-hidden border-2 transition-all duration-300 transform hover:scale-[1.01]
-                          ${
-                            formData.serviceId === s.id
-                              ? 'border-neon-yellow'
-                              : 'border-white/10 opacity-70 hover:opacity-100 hover:border-white/30'
-                          }`}
-                  >
-                    <div className="flex flex-col sm:flex-row h-auto sm:h-32">
-                      {/* Image Banner Segment */}
-                      <div className="w-full sm:w-32 h-32 sm:h-full relative shrink-0 z-20">
-                        <img
-                          src={
-                            s.image ||
-                            'https://images.unsplash.com/photo-1599351431202-1e0f0137899a?auto=format&fit=crop&q=80'
-                          }
-                          alt={s.name}
-                          className="w-full h-full object-cover transition-transform duration-700"
-                        />
-
-                        {/* --- DYNAMIC BADGE SYSTEM --- */}
-                        {/* Renders badge only if configured in Dashboard */}
-                        {s.badges && s.badges.length > 0
-                          ? s.badges.map((b, i) => (
-                              <div key={i} className="absolute inset-0 z-30 pointer-events-none">
-                                <PromoBadge config={b} />
-                              </div>
-                            ))
-                          : s.badgeConfig && <PromoBadge config={s.badgeConfig} className="z-30" />}
-
-                        {/* Selection Check (Mobile Overlay) - GLASS EFFECT */}
-                        {formData.serviceId === s.id && (
-                          <div className="absolute inset-0 z-20 flex items-center justify-center">
-                            {/* The Glass Layer */}
-                            <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-white/5 to-transparent backdrop-blur-[0.5px] backdrop-brightness-110 border border-white/20 shadow-[inset_0_0_20px_rgba(255,255,255,0.15)]"></div>
-
-                            {/* Reflection Shine */}
-                            <div className="absolute -inset-full top-0 block transform -skew-x-12 bg-gradient-to-r from-transparent to-white/20 opacity-30 animate-shine" />
-
-                            <div className="relative z-30 bg-neon-yellow/90 backdrop-blur-md rounded-full p-2 shadow-[0_0_15px_rgba(234,179,8,0.5)] animate-in zoom-in duration-300">
-                              <CheckCircle className="text-black" size={24} weight="bold" />
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Content Segment */}
-                      <div
-                        className={`flex-1 p-3 flex flex-col justify-between relative overflow-hidden transition-all duration-500
-                              ${
-                                formData.serviceId === s.id
-                                  ? 'bg-barber-pole-card border-none'
-                                  : 'bg-gradient-to-r from-[#1a1a1a] to-[#111]'
-                              }`}
-                      >
-                        {/* Top Row: Title + Price + Selection Hint currently unused or integrated */}
-                        <div className="flex justify-between items-start z-10 mb-2">
-                          <div className="flex flex-col">
-                            {/* Service Name */}
-                            <h4
-                              className={`font-graffiti text-2xl tracking-wide uppercase leading-none transition-colors drop-shadow-lg
-                                    ${
-                                      formData.serviceId === s.id
-                                        ? 'text-white text-glow-neon'
-                                        : 'text-white group-hover:text-neon-yellow'
-                                    }`}
-                            >
-                              {s.name}
-                            </h4>
-
-                            {/* Selection Status Text */}
-                            <div className="mt-1">
-                              {formData.serviceId === s.id ? (
-                                <span className="text-[10px] uppercase font-black tracking-[0.2em] text-neon-yellow animate-pulse flex items-center gap-1">
-                                  ● Confirmado
-                                </span>
-                              ) : (
-                                <span className="text-[10px] uppercase font-bold tracking-widest text-gray-600 group-hover:text-gray-400 transition-colors">
-                                  Toque para selecionar
-                                </span>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Price Badge VIVID */}
-                          <div className="flex flex-col items-end">
-                            <span
-                              className={`font-mono font-black text-xl px-4 py-1 rounded transform -skew-x-12 shadow-md transition-all border
-                                        ${
-                                          formData.serviceId === s.id
-                                            ? 'bg-neon-yellow text-black border-white shadow-yellow-900/50'
-                                            : 'bg-transparent text-white border-white/40 group-hover:bg-white group-hover:text-black group-hover:border-white shadow-lg'
-                                        }
-                                    `}
-                            >
-                              {formatPrice(s.priceValue)}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Bottom Row: Marquee (70%) + Duration (30%) */}
-                        <div className="flex items-center gap-2 mt-auto z-10 w-full">
-                          {/* 70% Marquee Container - REMOVED MASK to fix Blur */}
-                          <div className="w-[70%] bg-black/60 rounded-lg border border-white/5 overflow-hidden h-8 flex items-center px-2 relative">
-                            <div className="w-full overflow-hidden">
-                              <div
-                                className={`whitespace-nowrap antialiased ${
-                                  formData.serviceId === s.id
-                                    ? 'animate-ticker text-white'
-                                    : 'text-gray-300 group-hover:text-white'
-                                }`}
-                              >
-                                <span className="text-[10px] font-bold uppercase tracking-wide mr-8">
-                                  {s.description ||
-                                    'Experiência premium completa com profissionais de elite. Toalha quente, massagem facial e navalha afiada.'}
-                                </span>
-                                <span className="text-[10px] font-bold uppercase tracking-wide mr-8">
-                                  {s.description ||
-                                    'Experiência premium completa com profissionais de elite. Toalha quente, massagem facial e navalha afiada.'}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* 30% Duration Pill */}
-                          <div className="w-[30%] flex justify-end">
-                            <div
-                              className={`w-full flex items-center justify-center gap-1 py-1.5 rounded-full border transition-all shadow-lg
-                                ${
-                                  formData.serviceId === s.id
-                                    ? 'bg-black text-neon-yellow border-neon-yellow'
-                                    : 'bg-[#222] text-gray-300 border-white/10 group-hover:border-white/30'
-                                }`}
-                            >
-                              <Clock size={12} strokeWidth={3} />
-                              <span className="text-[10px] font-black uppercase">45 min</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                {filteredServices.map((s, index) => (
+                  <div key={s.id} className="h-full">
+                    <ServiceCard
+                      service={s}
+                      isSelected={formData.serviceId === s.id}
+                      onClick={() => setFormData({ ...formData, serviceId: s.id })}
+                    />
                   </div>
                 ))}
               </div>

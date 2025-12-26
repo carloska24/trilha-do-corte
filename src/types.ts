@@ -158,7 +158,14 @@ export interface BarberProfile {
   photoUrl?: string; // Foto do perfil do barbeiro
 }
 
-export type DashboardView = 'home' | 'clients' | 'calendar' | 'financial' | 'services' | 'settings';
+export type DashboardView =
+  | 'home'
+  | 'clients'
+  | 'calendar'
+  | 'financial'
+  | 'services'
+  | 'marketing'
+  | 'settings';
 
 export type ClientStatus = 'active' | 'new' | 'vip' | 'inactive';
 
@@ -171,4 +178,30 @@ export interface Client {
   img: string | null;
   status: ClientStatus;
   notes: string;
+}
+
+// COMBO / HIGHLIGHTS SYSTEM
+export interface ComboItem {
+  serviceId: string;
+  customLabel?: string; // Optional custom name for the service in this combo
+}
+
+export interface Combo {
+  id: string;
+  title: string; // e.g., "Dia do Noivo"
+  subtitle?: string; // e.g., "Experiência completa"
+  description?: string;
+
+  priceValue: number; // Total price of the combo
+
+  items: ComboItem[]; // List of services included
+
+  // Visual
+  badge?: string; // e.g., "VIP"
+  theme: 'gold' | 'silver' | 'neon' | 'tuxedo' | 'classic' | 'standard';
+
+  active: boolean;
+  featured?: boolean; // Should it appear in "Destaques"?
+  image?: string;
+  duration?: number; // Total duration in minutes
 }

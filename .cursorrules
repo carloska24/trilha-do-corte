@@ -1,0 +1,77 @@
+# Fale crie os Artefatos e Planos de Implementação em Portugues!
+
+# Project: Trilha do Corte (Barber SaaS)
+
+# Description: High-Tech/Cyberpunk Barber Shop Management System.
+
+# 1. Tech Stack & Core Libraries
+
+# - Frontend: React 19 + Vite
+
+# - Language: TypeScript (Strict)
+
+# - Styling: Tailwind CSS (Priority: Utility classes > Custom CSS)
+
+# - Icons: Lucide React (Primary), Phosphor Icons (Secondary/Badges)
+
+# - State: React Context API + LocalStorage (for persistence)
+
+# - Animation: CSS Keyframes (Tailwind) or Framer Motion (only if complex)
+
+# 2. Coding Standards
+
+# - Components: Functional Components with named exports.
+
+# - Props: Always define interface/type for Props (e.g., `interface HeaderProps {}`).
+
+# - Logic: Extract complex logic to Custom Hooks (e.g., `usePromotions`, `useAppointments`).
+
+# - Types: Centralize shared types in `src/types.ts`. Avoid `any`.
+
+# - Imports: Absolute imports or consist relative imports. Group imports: React -> Libs -> Components -> Types.
+
+# 3. UI/UX Guidelines (Cyberpunk Aesthetic)
+
+# - Theme: Dark Mode Native. Backgrounds must be dark (#111, #151515, #0b0e14).
+
+# - Colors:
+
+# - Primary: Neon Yellow (#eab308) - Text-glow, borders, primary actions.
+
+# - Secondary: Neon Purple (#a855f7) - AI features, creative badges.
+
+# - Accent: Cyan/Blue (#06b6d4) - Information, tech details.
+
+# - Effects:
+
+# - Glassmorphism: `backdrop-blur-md` + `bg-black/50` or `bg-white/5`.
+
+# - Glow: `drop-shadow-[0_0_10px_rgba(...)]` or box-shadows.
+
+# - Typography: Uppercase headers (`font-graffiti` or Sans-Serif bold) + Mono details.
+
+# - Responsiveness: Mobile-First approach. Test `md:` and `lg:` breakpoints.
+
+# - Ensure touch targets are at least 44px.
+
+# - Use drawers/modals for mobile interactions suitable.
+
+# 4. Folder Structure Rules
+
+# - `src/components/ui`: Reusable, dumb components (Buttons, Badges, Cards).
+
+# - `src/components/dashboard`: Admin/Barber facing features.
+
+# - `src/components/client`: End-user/Client facing features.
+
+# - `src/hooks`: Custom hooks.
+
+# - `src/types.ts`: Domain models.
+
+# 5. Development Workflow (Agent Behavior)
+
+# - When modifying UI: ALWAYS check if it matches the "High-Tech" aesthetic. No "Bootstrap-looking" components.
+
+# - When adding data: Update `src/types.ts` first, then mock data in `src/constants.ts` (if applicable), then component.
+
+# - When fixing bugs: removing specific "poluted" UI elements often yields better results than re-styling them.

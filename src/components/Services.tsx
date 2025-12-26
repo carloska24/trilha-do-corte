@@ -21,6 +21,15 @@ import {
   Rocket,
 } from 'lucide-react';
 
+const MOCK_IMAGES: Record<string, string> = {
+  default:
+    'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?q=80&w=400&auto=format&fit=crop',
+  Corte:
+    'https://images.unsplash.com/photo-1621605815971-fbc98d665033?q=80&w=400&auto=format&fit=crop',
+  Barba:
+    'https://images.unsplash.com/photo-1599351431202-1e0f0137899a?q=80&w=400&auto=format&fit=crop',
+};
+
 interface ServicesProps {
   onOpenBooking: () => void;
   services: ServiceItem[];
@@ -194,12 +203,26 @@ export const Services: React.FC<ServicesProps> = ({ onOpenBooking, services }) =
                 <div className="relative h-40 overflow-hidden">
                   <div className="absolute inset-0 bg-gradient-to-t from-[#121212] via-transparent to-transparent z-10"></div>
                   <img
-                    src={
-                      service.image ||
-                      'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?q=80&w=400&auto=format&fit=crop'
-                    }
+                    src={`/services/${service.name
+                      .toLowerCase()
+                      .replace(/\s+/g, '-')
+                      .normalize('NFD')
+                      .replace(/[\u0300-\u036f]/g, '')}.jpg`}
+                    onError={e => {
+                      const target = e.currentTarget;
+                      if (target.src.includes('.jpg')) {
+                        target.src = target.src.replace('.jpg', '.png');
+                      } else {
+                        // Fallback to MOCK_IMAGES or the service.image if exists, or global default
+                        target.src =
+                          MOCK_IMAGES[service.name.split(' ')[0]] ||
+                          service.image ||
+                          MOCK_IMAGES.default;
+                        target.onerror = null;
+                      }
+                    }}
                     alt={service.name}
-                    className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+                    className="w-full h-full object-contain bg-black transform group-hover:scale-105 transition-transform duration-500"
                   />
 
                   {/* Preço em Destaque na Imagem */}

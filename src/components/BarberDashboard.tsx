@@ -52,7 +52,7 @@ interface BarberDashboardProps {
     photoUrl?: string,
     notes?: string
   ) => void;
-  onNewAppointment: (data: any) => void;
+  onNewAppointment: (data: Partial<Appointment>) => void;
   barberProfile: BarberProfile;
   onLogout: () => void;
   onUpdateProfile: (data: Partial<BarberProfile>) => void;
@@ -94,7 +94,7 @@ export const BarberDashboard: React.FC<BarberDashboardProps> = ({
   const [currentTime, setCurrentTime] = useState(new Date());
   const [showFinancials, setShowFinancials] = useState(false); // Modal toggle
   const [showProfileModal, setShowProfileModal] = useState(false);
-  const [selectedClient, setSelectedClient] = useState<any>(null); // For Profile Modal
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null); // For Profile Modal
 
   // Financial State
   const [dailyGoal, setDailyGoal] = useState(1500);
