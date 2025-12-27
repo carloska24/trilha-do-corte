@@ -28,7 +28,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenBooking }) => {
       {/* Full Width Banner Hero Image */}
       <div className="relative z-10 w-full animate-[fadeIn_0.5s_ease-out] mb-4">
         <img
-          src="/hero_banner.jpg"
+          src="/hero_banner.png"
           alt="Na Trilha do Corte"
           className="w-full h-auto max-h-[60vh] object-cover object-top shadow-[0_10px_50px_rgba(0,0,0,0.5)]"
         />

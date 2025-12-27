@@ -17,6 +17,7 @@ import {
   LogOut,
   Star,
   Wallet, // Wallet was previously imported separately but already in lucide-react imports? No, added here.
+  Gift,
 } from 'lucide-react';
 import { PromotionsCarousel } from './client/PromotionsCarousel';
 import { ClientFooter } from './client/ClientFooter';
@@ -27,6 +28,7 @@ import { VitrineDestaques } from './client/VitrineDestaques';
 import { ClientBottomNav } from './client/ClientBottomNav';
 import { ClientMobileDrawer } from './client/ClientMobileDrawer';
 import { NotificationsSheet } from './client/NotificationsSheet';
+import { LoyaltyCard } from './client/LoyaltyCard';
 import { TicketCard } from './ui/TicketCard';
 
 import { ClientProfileSettings } from './client/ClientProfileSettings';
@@ -103,6 +105,57 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
     setIsNotificationsOpen(false);
   };
 
+  // Active Tab State for Bottom Nav
+  const [activeTab, setActiveTab] = useState('dash');
+
+  // Scroll Spy / Intersection Observer
+  React.useEffect(() => {
+    const observerOptions = {
+      root: null,
+      rootMargin: '-50% 0px -50% 0px', // Trigger when section is in middle of screen
+      threshold: 0,
+    };
+
+    const observerCallback = (entries: IntersectionObserverEntry[]) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          if (entry.target.id === 'top-section') setActiveTab('dash');
+          if (entry.target.id === 'services-section') setActiveTab('services');
+          if (entry.target.id === 'wallet-section') setActiveTab('wallet');
+        }
+      });
+    };
+
+    const observer = new IntersectionObserver(observerCallback, observerOptions);
+    const sections = ['top-section', 'services-section', 'wallet-section'];
+
+    sections.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  const handleTabChange = (tab: string) => {
+    if (tab === 'profile') {
+      setIsProfileSettingsOpen(true);
+      return;
+    }
+
+    // Instant Visual Feedback
+    setActiveTab(tab);
+
+    // Optimized Scroll
+    if (tab === 'services') {
+      scrollToSection('services-section');
+    } else if (tab === 'wallet') {
+      scrollToSection('wallet-section');
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-transparent pt-20 pb-0 transition-colors duration-300 overflow-x-hidden">
       {/* DRAWER MENU */}
@@ -150,7 +203,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
 
       <div className="max-w-7xl mx-auto space-y-8 md:space-y-12">
         {/* 1. PRÓXIMO EMBARQUE (UPCOMING TICKET) - MOVED TO TOP */}
-        <section className="px-4 mt-4">
+        <section className="px-4 mt-4" id="top-section">
           <div
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             className="flex items-center gap-2 mb-4 w-fit cursor-pointer select-none active:scale-95 transition-transform"
@@ -274,91 +327,12 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
           id="wallet-section"
           className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12 px-4 pt-0 relative"
         >
-          {/* LEFT: Loyalty Card */}
           <div className="lg:col-span-5 space-y-4">
-            <div
-              onClick={() => scrollToSection('wallet-section')}
-              className="flex items-center gap-2 mb-2 cursor-pointer select-none active:scale-95 transition-transform w-fit"
-            >
-              <Scissors className="text-neon-orange" size={18} />
-              <h2 className="text-lg font-black text-white uppercase tracking-tighter">
-                Fidelidade <span className="text-gray-600">Pro</span>
-              </h2>
-            </div>
-
-            <div className="relative group perspective-1000 cursor-pointer" onClick={() => {}}>
-              <div className="absolute -inset-1 bg-gradient-to-r from-neon-yellow to-neon-orange rounded-xl blur opacity-30 group-hover:opacity-50 transition duration-500"></div>
-              <div className="relative bg-[#1a1a1a] rounded-xl overflow-hidden shadow-2xl transform transition-transform group-hover:rotate-x-2">
-                {/* Card Header */}
-                <div className="bg-gradient-to-br from-gray-800 to-black relative p-4 flex justify-between items-start">
-                  <div className="opacity-20 absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
-                  <div className="relative z-10 w-full">
-                    <div className="flex justify-between items-start w-full mb-4">
-                      <span className="font-graffiti text-white text-xl">
-                        VIP <span className="text-neon-yellow">CARD</span>
-                      </span>
-                      <QrCode className="text-white/80 w-5 h-5" />
-                    </div>
-                    <div className="h-1 w-full bg-gray-700/50 rounded-full overflow-hidden mb-1">
-                      <div
-                        className="h-full bg-neon-yellow shadow-[0_0_10px_#EAB308]"
-                        style={{ width: `${(client.loyaltyPoints / 10) * 100}%` }}
-                      ></div>
-                    </div>
-                    <div className="flex justify-between items-end">
-                      <span className="text-[9px] text-gray-400 uppercase tracking-widest font-bold">
-                        Nível
-                      </span>
-                      <span className="text-neon-yellow font-bold text-[10px]">
-                        {client.loyaltyPoints * 10}%
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Card Slots */}
-                <div className="bg-[#111] p-3 grid grid-cols-5 gap-2">
-                  {[...Array(10)].map((_, i) => (
-                    <div
-                      key={i}
-                      className={`aspect-square rounded-full flex items-center justify-center border transition-all relative
-                                ${
-                                  i < client.loyaltyPoints
-                                    ? 'border-neon-yellow bg-neon-yellow/10 shadow-[0_0_5px_rgba(234,179,8,0.2)]'
-                                    : 'border-white/10 bg-white/5'
-                                }`}
-                    >
-                      {i < client.loyaltyPoints ? (
-                        <Scissors size={10} className="text-neon-yellow -rotate-45" />
-                      ) : i === 9 ? (
-                        <Star className="text-gray-700 w-3 h-3" />
-                      ) : (
-                        <div className="w-1 h-1 rounded-full bg-gray-800"></div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-
-                <div className="bg-black p-3 flex justify-between items-center border-t border-white/10">
-                  <span className="text-gray-500 text-[9px] uppercase font-bold tracking-widest flex items-center gap-1.5">
-                    <RefreshCw size={10} className="animate-spin-slow" /> Atualizado
-                  </span>
-                  <span className="text-white font-bold text-[10px]">
-                    Faltam <span className="text-neon-orange">{10 - client.loyaltyPoints}</span>
-                  </span>
-                </div>
-              </div>
-            </div>
+            <LoyaltyCard client={client} onClick={() => scrollToSection('wallet-section')} />
           </div>
 
           <div className="lg:col-span-7 space-y-6 hidden lg:block">
-            {/* Desktop-only placement, or remove if moving entirely to top mobile-first */}
-            {/* Since we moved it to the top, we might want to hide it here to avoid duplication, 
-                 OR keep it for desktop layout if the top one is mobile only. 
-                 The user request implies moving it generally. 
-                 Let's keep the Loyalty card taking full width or adjust grid.
-                 For now, I will Comment out the duplication to ensure it only appears at the top 
-                 as per "FIRST view" request. */}
+            {/* Desktop-only placement */}
           </div>
         </section>
 
@@ -370,18 +344,8 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
 
       {/* MOBILE BOTTOM NAV */}
       <ClientBottomNav
-        currentTab="dash"
-        onTabChange={tab => {
-          if (tab === 'profile') {
-            setIsProfileSettingsOpen(true); // FIXED: Opens Profile Modal instead of Drawer
-          } else if (tab === 'services') {
-            scrollToSection('services-section');
-          } else if (tab === 'wallet') {
-            scrollToSection('wallet-section');
-          } else {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }
-        }}
+        currentTab={activeTab}
+        onTabChange={handleTabChange}
         onOpenBooking={onOpenBooking}
       />
 

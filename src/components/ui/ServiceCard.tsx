@@ -22,6 +22,64 @@ const MOCK_IMAGES: Record<string, string> = {
     'https://images.unsplash.com/photo-1599351431202-1e0f0137899a?q=80&w=400&auto=format&fit=crop',
 };
 
+const MarqueeName: React.FC<{ text: string; isSelected: boolean }> = ({ text, isSelected }) => {
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const textRef = React.useRef<HTMLSpanElement>(null);
+  const [isOverflowing, setIsOverflowing] = React.useState(false);
+
+  React.useEffect(() => {
+    const checkOverflow = () => {
+      if (containerRef.current && textRef.current) {
+        setIsOverflowing(textRef.current.scrollWidth > containerRef.current.clientWidth);
+      }
+    };
+
+    checkOverflow();
+    window.addEventListener('resize', checkOverflow);
+    return () => window.removeEventListener('resize', checkOverflow);
+  }, [text]);
+
+  return (
+    <div ref={containerRef} className="w-full overflow-hidden relative h-6 flex items-center">
+      <div
+        className={`${
+          isOverflowing ? 'animate-ticker pl-1' : 'w-full truncate'
+        } whitespace-nowrap flex gap-8`}
+      >
+        <span
+          ref={textRef}
+          className={`font-graffiti text-lg tracking-wide uppercase leading-none ${
+            isSelected
+              ? 'text-neon-yellow drop-shadow-[0_0_5px_rgba(234,179,8,0.5)]'
+              : 'text-white/90 group-hover:text-white transition-colors'
+          }`}
+        >
+          {text}
+        </span>
+        {/* Duplicate for Marquee Loop */}
+        {isOverflowing && (
+          <span
+            className={`font-graffiti text-lg tracking-wide uppercase leading-none ${
+              isSelected
+                ? 'text-neon-yellow drop-shadow-[0_0_5px_rgba(234,179,8,0.5)]'
+                : 'text-white/90 group-hover:text-white transition-colors'
+            }`}
+          >
+            {text}
+          </span>
+        )}
+      </div>
+      {/* Gradient Masks for Overflow */}
+      {isOverflowing && (
+        <>
+          <div className="absolute left-0 top-0 bottom-0 w-4 bg-gradient-to-r from-zinc-800 to-transparent z-10" />
+          <div className="absolute right-0 top-0 bottom-0 w-4 bg-gradient-to-l from-zinc-800 to-transparent z-10" />
+        </>
+      )}
+    </div>
+  );
+};
+
 export const ServiceCard: React.FC<ServiceCardProps> = ({
   service,
   isSelected = false,
@@ -87,17 +145,8 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
       {/* 2. INFO AREA (Bottom - Compacted) */}
       <div className="flex h-14 border-t border-white/5 bg-gradient-to-br from-zinc-800 to-black">
         {/* NAME SERVICE AREA (Left) */}
-        <div className="flex-1 px-3 flex items-center min-w-0 relative">
-          <h4
-            className={`font-graffiti text-lg tracking-wide uppercase leading-none truncate w-full pr-2
-              ${
-                isSelected
-                  ? 'text-neon-yellow drop-shadow-[0_0_5px_rgba(234,179,8,0.5)]'
-                  : 'text-white/90 group-hover:text-white transition-colors'
-              }`}
-          >
-            {service.name}
-          </h4>
+        <div className="flex-1 px-3 flex items-center min-w-0 relative overflow-hidden">
+          <MarqueeName text={service.name} isSelected={isSelected} />
         </div>
 
         {/* PRICE AREA (Right - Clean) */}

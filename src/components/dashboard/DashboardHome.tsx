@@ -155,7 +155,7 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({
   return (
     <div className="flex flex-col items-center w-full max-w-md mx-auto h-full animate-[fadeIn_0.5s_ease-out] transition-colors duration-300">
       {/* 1. CLOCK & DATE */}
-      <div className="flex flex-col items-center mt-4 mb-8">
+      <div className="flex flex-col items-center mt-0 mb-4">
         <h1 className="text-6xl font-bold text-text-primary tracking-tighter leading-none font-sans drop-shadow-lg">
           {currentTime.toLocaleTimeString([], {
             hour: '2-digit',

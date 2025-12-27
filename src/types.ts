@@ -75,11 +75,20 @@ export interface ServiceItem {
   priceValue: number; // Numeric value for calculations
   description: string;
   image?: string;
-  icon?: 'scissors' | 'razor' | 'combo' | 'kids'; // Keeping for backward compat, but will prioritize image
+  icon?:
+    | 'scissors'
+    | 'razor'
+    | 'combo'
+    | 'kids'
+    | 'clipper'
+    | 'star'
+    | 'wind'
+    | 'sparkles'
+    | 'color'; // Expanded icon set
   featured?: boolean;
   tag?: string;
   category?: string; // 'Combo', 'Cabelo', 'Barba', etc
-  duration: number; // in minutes
+  duration?: number; // Optional now
   discountPercentage?: number;
   promoImage?: string; // Specific image for the showcase
   tags?: string[];
