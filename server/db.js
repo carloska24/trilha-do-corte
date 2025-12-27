@@ -21,8 +21,10 @@ const SERVICES = [
     name: 'Corte',
     price: 'R$ 35,00',
     priceValue: 35,
-    description: 'Corte completo (55min).',
+    description: 'Corte completo (45min).',
     icon: 'scissors',
+    category: 'Cabelo',
+    duration: 45,
     image:
       'https://images.unsplash.com/photo-1605497788044-5a32c7078486?q=80&w=400&auto=format&fit=crop',
   },
@@ -33,6 +35,8 @@ const SERVICES = [
     priceValue: 25,
     description: 'Modelagem e acabamento (30min).',
     icon: 'razor',
+    category: 'Barba',
+    duration: 30,
     image:
       'https://images.unsplash.com/photo-1503951914875-befbb7470d03?q=80&w=400&auto=format&fit=crop',
   },
@@ -43,6 +47,8 @@ const SERVICES = [
     priceValue: 10,
     description: 'Design de sobrancelha (10min).',
     icon: 'razor',
+    category: 'Barba',
+    duration: 10,
     image:
       'https://images.unsplash.com/photo-1599351431202-6e0005079746?q=80&w=400&auto=format&fit=crop',
   },
@@ -53,6 +59,8 @@ const SERVICES = [
     priceValue: 10,
     description: 'Acabamento do pezinho (15min).',
     icon: 'scissors',
+    category: 'Cabelo',
+    duration: 15,
     image:
       'https://images.unsplash.com/photo-1622286342621-4bd786c2447c?q=80&w=400&auto=format&fit=crop',
   },
@@ -63,6 +71,8 @@ const SERVICES = [
     priceValue: 20,
     description: 'Tratamento capilar (30min).',
     icon: 'combo',
+    category: 'Cabelo',
+    duration: 30,
     image:
       'https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?q=80&w=400&auto=format&fit=crop',
   },
@@ -164,7 +174,9 @@ db.serialize(() => {
     priceValue REAL,
     description TEXT,
     icon TEXT,
-    image TEXT
+    image TEXT,
+    category TEXT,
+    activePromo TEXT
   )`);
 
   // Barbers Table
@@ -208,9 +220,20 @@ db.serialize(() => {
   db.get('SELECT count(*) as count FROM services', (err, row) => {
     if (row.count === 0) {
       console.log('Seeding Services...');
-      const stmt = db.prepare('INSERT INTO services VALUES (?, ?, ?, ?, ?, ?, ?)');
+      const stmt = db.prepare('INSERT INTO services VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
       SERVICES.forEach(s =>
-        stmt.run(s.id, s.name, s.price, s.priceValue, s.description, s.icon, s.image)
+        stmt.run(
+          s.id,
+          s.name,
+          s.price,
+          s.priceValue,
+          s.description,
+          s.icon,
+          s.image,
+          s.category,
+          s.duration,
+          null
+        )
       );
       stmt.finalize();
     }

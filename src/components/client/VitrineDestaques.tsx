@@ -56,7 +56,23 @@ export const VitrineDestaques: React.FC<VitrineDestaquesProps> = ({ services, on
   }));
 
   // ONLY SHOW MARKETING COMBOS (Removes Top Services)
-  const items = promotions;
+  // MERGE: Featured Services (from Oficina) + Marketing Combos
+  const featuredServices = services
+    .filter(s => s.featured)
+    .map(s => ({
+      id: s.id,
+      title: s.name,
+      subtitle: s.category, // or description short
+      description: s.description,
+      image: s.image,
+      priceValue: s.priceValue,
+      type: 'service',
+      badge: 'DESTAQUE', // or s.tag if exists
+      active: true,
+      theme: 'neon', // Default theme for services? Or map category
+    }));
+
+  const items = [...promotions, ...featuredServices];
 
   return (
     <div className="w-full">
@@ -94,11 +110,11 @@ export const VitrineDestaques: React.FC<VitrineDestaquesProps> = ({ services, on
           <div
             key={item.id || idx}
             onClick={() => onBook(item.id)}
-            className="flex-shrink-0 w-[80vw] md:w-[600px] snap-center relative group cursor-pointer"
+            className="flex-shrink-0 w-[85vw] md:w-[320px] snap-center relative group cursor-pointer"
           >
             <div
               className={`
-                    relative h-[220px] md:h-[300px] rounded-2xl overflow-hidden shadow-lg border border-white/10 transition-transform duration-300 group-hover:scale-[1.02]
+                    relative h-[250px] rounded-2xl overflow-hidden shadow-lg border border-white/10 transition-transform duration-300 group-hover:scale-[1.02]
                     ${item.type === 'combo' ? 'shadow-[0_0_20px_rgba(0,0,0,0.5)]' : ''}
                 `}
             >
@@ -142,7 +158,7 @@ export const VitrineDestaques: React.FC<VitrineDestaquesProps> = ({ services, on
               <div className="absolute inset-0 p-6 flex flex-col justify-end items-start text-left z-20">
                 {/* Badges */}
                 <div className="absolute top-4 left-4 flex gap-2">
-                  {item.type === 'combo' ? (
+                  {item.badge ? (
                     <span className="bg-neon-yellow text-black text-[10px] font-black uppercase px-2 py-1 rounded shadow-lg">
                       {item.badge}
                     </span>

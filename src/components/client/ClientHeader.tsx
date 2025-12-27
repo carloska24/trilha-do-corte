@@ -1,6 +1,8 @@
 import React from 'react';
 import { Menu, Bell, User, MapPin } from 'lucide-react';
 import { ClientProfile } from '../../types';
+import { getStoreStatusMessage } from '../../utils/dateHelpers';
+import { useNotifications } from '../../utils/notificationUtils';
 
 interface ClientHeaderProps {
   client: ClientProfile;
@@ -8,14 +10,14 @@ interface ClientHeaderProps {
   onOpenNotifications: () => void;
 }
 
-import { getStoreStatusMessage } from '../../utils/dateHelpers';
-
 export const ClientHeader: React.FC<ClientHeaderProps> = ({
   client,
   onOpenMenu,
   onOpenNotifications,
 }) => {
   const status = getStoreStatusMessage();
+  const { unreadCount } = useNotifications();
+
   const photo = client.photoUrl || (client as any).img;
 
   // Get initials
@@ -102,12 +104,9 @@ export const ClientHeader: React.FC<ClientHeaderProps> = ({
           </div>
         </div>
 
-        {/* Center: System Status Badge (Desktop Only or Compact) */}
-        {/* Mobile: Hidden to save space, or minimal dot. Keeping clean for now. */}
-
         {/* Right: Actions Zone */}
         <div className="flex items-center gap-2">
-          {/* Status Pill (Visible on all screens, compact) */}
+          {/* Status Pill */}
           <div
             className={`hidden md:flex items-center gap-2 px-3 py-1 rounded-full border backdrop-blur-md mr-4 ${
               status.isOpen
@@ -138,8 +137,12 @@ export const ClientHeader: React.FC<ClientHeaderProps> = ({
               size={20}
               className="text-gray-400 group-hover:text-neon-yellow transition-colors"
             />
-            <span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 bg-neon-orange rounded-full animate-[ping_2s_linear_infinite]"></span>
-            <span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 bg-neon-orange rounded-full"></span>
+            {unreadCount > 0 && (
+              <>
+                <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full animate-[ping_2s_linear_infinite]"></span>
+                <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-600 rounded-full border border-[#050505]"></span>
+              </>
+            )}
           </button>
 
           {/* Menu Button */}

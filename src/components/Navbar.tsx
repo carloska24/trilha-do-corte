@@ -13,6 +13,7 @@ import {
   Settings,
 } from 'lucide-react';
 import { DashboardView } from '../types';
+import { CustomScissors } from './icons/CustomScissors';
 
 interface NavbarProps {
   onOpenBooking: () => void;
@@ -77,7 +78,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="flex items-center justify-between h-20">
           <div className="flex items-center cursor-pointer" onClick={() => onViewChange('landing')}>
             <div className="flex-shrink-0 text-neon-yellow flex items-center gap-2">
-              <Scissors className="h-8 w-8 -rotate-90" />
+              <CustomScissors className="h-10 w-10 text-neon-yellow" />
               <span className="font-graffiti text-2xl tracking-wider text-white">
                 NA TRILHA <span className="text-neon-orange">DO CORTE</span>
               </span>

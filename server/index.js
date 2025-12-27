@@ -131,10 +131,11 @@ app.get('/api/services', (req, res) => {
 });
 
 app.post('/api/services', (req, res) => {
-  const { name, price, priceValue, description, icon, image, activePromo } = req.body;
+  const { name, price, priceValue, description, icon, image, activePromo, category, duration } =
+    req.body;
   const id = Date.now().toString(); // Simple ID generation
   const sql =
-    'INSERT INTO services (id, name, price, priceValue, description, icon, image, activePromo) VALUES (?,?,?,?,?,?,?,?)';
+    'INSERT INTO services (id, name, price, priceValue, description, icon, image, activePromo, category, duration) VALUES (?,?,?,?,?,?,?,?,?,?)';
   const params = [
     id,
     name,
@@ -144,6 +145,8 @@ app.post('/api/services', (req, res) => {
     icon,
     image,
     activePromo ? JSON.stringify(activePromo) : null,
+    category || 'Outros',
+    duration || 30,
   ];
 
   db.run(sql, params, function (err) {
@@ -160,9 +163,10 @@ app.post('/api/services', (req, res) => {
 
 app.put('/api/services/:id', (req, res) => {
   const { id } = req.params;
-  const { name, price, priceValue, description, icon, image, activePromo } = req.body;
+  const { name, price, priceValue, description, icon, image, activePromo, category, duration } =
+    req.body;
   const sql =
-    'UPDATE services SET name = ?, price = ?, priceValue = ?, description = ?, icon = ?, image = ?, activePromo = ? WHERE id = ?';
+    'UPDATE services SET name = ?, price = ?, priceValue = ?, description = ?, icon = ?, image = ?, activePromo = ?, category = ?, duration = ? WHERE id = ?';
   const params = [
     name,
     price,
@@ -171,6 +175,8 @@ app.put('/api/services/:id', (req, res) => {
     icon,
     image,
     activePromo ? JSON.stringify(activePromo) : null,
+    category || 'Outros',
+    duration || 30,
     id,
   ];
 
@@ -181,8 +187,31 @@ app.put('/api/services/:id', (req, res) => {
     }
     res.json({
       message: 'updated',
-      data: { id, name, price, priceValue, description, icon, image, activePromo },
+      data: {
+        id,
+        name,
+        price,
+        priceValue,
+        description,
+        icon,
+        image,
+        activePromo,
+        category,
+        duration,
+      },
     });
+  });
+});
+
+app.delete('/api/services/:id', (req, res) => {
+  const { id } = req.params;
+  const sql = 'DELETE FROM services WHERE id = ?';
+  db.run(sql, [id], function (err) {
+    if (err) {
+      res.status(400).json({ error: err.message });
+      return;
+    }
+    res.json({ message: 'deleted', id });
   });
 });
 

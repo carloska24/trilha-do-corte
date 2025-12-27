@@ -2,6 +2,7 @@ import React from 'react';
 import { ChairIcon } from '../icons/ChairIcon';
 import { Appointment, AppointmentStatus, ServiceItem } from '../../types';
 import { Armchair, ChevronRight, User, Star } from 'lucide-react';
+import { sendBroadcastNotification } from '../../utils/notificationUtils';
 
 interface DashboardHomeProps {
   appointments: Appointment[];
@@ -172,104 +173,34 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({
       <div className="w-full relative mb-4 flex-1 flex flex-col justify-center">
         {/* Main Status Container */}
         {/* Main Status Container - FULL COVER REFACTOR */}
-        <div className="w-full aspect-square md:aspect-auto md:h-[500px] relative bg-[#050505] rounded-3xl overflow-hidden shadow-2xl border border-white/5 group">
+        <div className="w-full aspect-square md:aspect-auto md:h-[500px] relative bg-[#050505] rounded-md overflow-hidden shadow-2xl border border-white/5 group">
           {/* 1. STATUS SIGNAGE (TOP ABSOLUTE) - Hide when In Progress */}
           {!inProgress && (
-            <div className="absolute top-12 left-0 right-0 z-30 flex flex-col items-center pointer-events-none">
-              {isShopOpen ? (
-                // OPEN STATE (Hanging Retro Neon Sign - Green)
-                <div className="relative flex flex-col items-center mt-2 w-full">
-                  {/* Hanging Rope Effect */}
-                  <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-[1px] h-16 bg-gradient-to-b from-gray-800 to-green-500/50 opacity-80"></div>
-                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 w-16 h-16 border-t border-l border-green-500/10 rotate-45 transform origin-bottom opacity-30"></div>
+            <>
+              {/* NEW RED NEON SIGN (TOP LEFT) - PIXEL PERFECT MATCH */}
+              <div className="absolute top-8 left-2 z-30 pointer-events-none transform rotate-[-8deg] scale-[0.6] origin-top-left">
+                {/* Main Frame Container */}
+                <div className="relative rounded-2xl px-10 py-3 bg-black/90 flex flex-col items-center">
+                  {/* PULSING GLOW & BORDER LAYER (Separated from Text) */}
+                  <div className="absolute inset-0 border-[5px] border-[#ff0000] rounded-2xl shadow-[0_0_25px_rgba(255,0,0,0.6),inset_0_0_15px_rgba(255,0,0,0.4)] animate-pulse z-0"></div>
 
-                  {/* The Board - Compact Vertical (Green) */}
-                  <div className="relative border-2 border-green-400 rounded-xl px-4 pt-3 pb-1 bg-black/90 backdrop-blur-xl shadow-[0_0_15px_#4ade80,inset_0_0_10px_rgba(74,222,128,0.2)] flex flex-col items-center w-[50%] max-w-[200px]">
-                    {/* Cursive Text Top (Floating) */}
-                    <div className="absolute -top-4 left-0 right-0 text-center z-20">
-                      <span
-                        className="font-script text-3xl text-[#FFD700] -rotate-6 drop-shadow-[0_0_3px_#FACC15] block"
-                        style={{ textShadow: '1px 1px 0px #000' }}
-                      >
-                        Bem Vindo
-                      </span>
-                    </div>
+                  {/* Inner White/Pinkish Line (Tube Center) */}
+                  <div className="absolute inset-[3px] rounded-[14px] border-[2px] border-[#ff9999] opacity-70 z-0"></div>
 
-                    {/* Inner Content */}
-                    <div className="flex flex-col items-center pt-1 relative z-10 w-full">
-                      {/* Stars */}
-                      <Star className="absolute top-1 left-1 text-yellow-400 w-3 h-3 animate-pulse drop-shadow-[0_0_4px_#FACC15] fill-yellow-400" />
-                      <Star className="absolute top-1 right-1 text-yellow-400 w-3 h-3 animate-pulse drop-shadow-[0_0_4px_#FACC15] fill-yellow-400" />
-
-                      {/* "BARBER SHOP" */}
-                      <span className="text-[#ff00ff] font-bold tracking-[0.15em] text-[10px] drop-shadow-[0_0_3px_#ff00ff] animate-pulse mb-0.5">
-                        BARBER SHOP
-                      </span>
-                      {/* "ABERTO" */}
-                      <h2
-                        className="text-4xl font-black text-[#4ade80] tracking-wider leading-none"
-                        style={{ textShadow: '0 0 10px #4ade80, 1px 1px 0px #14532d' }}
-                      >
-                        ABERTO
-                      </h2>
-                    </div>
-
-                    {/* Bottom Hours logic */}
-                    <div className="mt-2 pt-1.5 border-t border-green-500/30 w-full text-center">
-                      <span className="text-[11px] font-bold text-green-300 font-mono tracking-[0.1em] drop-shadow-[0_0_1px_#4ade80]">
-                        08H ÀS 19H
-                      </span>
-                    </div>
-                  </div>
+                  {/* Text - Yellow Neon with Red Glow (Static on top) */}
+                  <h2
+                    className="relative z-10 text-5xl font-bold text-[#ffff00] tracking-widest leading-none"
+                    style={{
+                      fontFamily: '"Tilt Neon", "Neon", sans-serif',
+                      textShadow:
+                        '0 0 5px #ffff00, 0 0 10px #ff0000, 0 0 20px #ff0000, 0 0 40px #ff0000',
+                    }}
+                  >
+                    ABERTO
+                  </h2>
                 </div>
-              ) : (
-                // CLOSED STATE (Hanging Retro Neon Sign)
-                <div className="relative flex flex-col items-center mt-2 w-full">
-                  {/* Hanging Rope Effect */}
-                  <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-[1px] h-16 bg-gradient-to-b from-gray-800 to-cyan-500/50 opacity-80"></div>
-                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 w-16 h-16 border-t border-l border-cyan-500/10 rotate-45 transform origin-bottom opacity-30"></div>
-
-                  {/* The Board - Scaled Down ~50% & Vertically Compacted */}
-                  <div className="relative border-2 border-cyan-400 rounded-xl px-4 pt-3 pb-1 bg-black/90 backdrop-blur-xl shadow-[0_0_15px_#06b6d4,inset_0_0_10px_rgba(6,182,212,0.2)] flex flex-col items-center w-[50%] max-w-[200px]">
-                    {/* Cursive Text Top (Floating) */}
-                    <div className="absolute -top-4 left-0 right-0 text-center z-20">
-                      <span
-                        className="font-script text-3xl text-[#FFD700] -rotate-6 drop-shadow-[0_0_3px_#FACC15] block"
-                        style={{ textShadow: '1px 1px 0px #000' }}
-                      >
-                        Desculpe
-                      </span>
-                    </div>
-
-                    {/* Inner Content */}
-                    <div className="flex flex-col items-center pt-1 relative z-10 w-full">
-                      {/* Stars */}
-                      <Star className="absolute top-1 left-1 text-yellow-400 w-3 h-3 animate-pulse drop-shadow-[0_0_4px_#FACC15] fill-yellow-400" />
-                      <Star className="absolute top-1 right-1 text-yellow-400 w-3 h-3 animate-pulse drop-shadow-[0_0_4px_#FACC15] fill-yellow-400" />
-
-                      {/* "ESTAMOS" */}
-                      <span className="text-[#ff00ff] font-bold tracking-[0.15em] text-[10px] drop-shadow-[0_0_3px_#ff00ff] animate-pulse mb-0.5">
-                        ESTAMOS
-                      </span>
-                      {/* "FECHADO" */}
-                      <h2
-                        className="text-3xl font-black text-[#A855F7] tracking-wider leading-none"
-                        style={{ textShadow: '0 0 8px #A855F7, 1px 1px 0px #4a044e' }}
-                      >
-                        FECHADO
-                      </h2>
-                    </div>
-
-                    {/* Bottom Hours logic */}
-                    <div className="mt-2 pt-1.5 border-t border-cyan-500/30 w-full text-center">
-                      <span className="text-[11px] font-bold text-cyan-300 font-mono tracking-[0.1em] drop-shadow-[0_0_1px_cyan]">
-                        DAS 19H ÀS 08H
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
+              </div>
+            </>
           )}
 
           {/* 2. MAIN CONTENT (FULL COVER) */}
@@ -281,7 +212,7 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({
                 {/* Custom User Background */}
                 <img
                   src="/background-teste.png"
-                  className="absolute inset-0 w-full h-full object-cover opacity-100"
+                  className="absolute inset-0 w-full h-full object-cover object-top opacity-100"
                   alt="Background"
                   onError={e => {
                     const target = e.currentTarget;
@@ -294,8 +225,7 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({
                 />
 
                 {/* Overlays for atmosphere */}
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-cyan-900/10 via-black/50 to-black opacity-80"></div>
-                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>
+                {/* Overlays removed for clarity */}
               </div>
 
               {/* 1.5 MINI HANGING SIGN (TOP) - CLEAN VERSION (Text Only) */}
@@ -397,13 +327,13 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({
 
               {/* Chair Image (Full Cover, Full Color) */}
               <img
-                src={isShopOpen ? '/chair-open.jpg' : '/chair-closed.png'}
+                src={isShopOpen ? '/chair-open.png' : '/chair-closed.png'}
                 className={`
-                      w-full h-full object-cover object-center transition-all duration-1000 transform
+                      w-full h-full object-center transition-all duration-1000 transform
                       ${
                         isShopOpen
-                          ? 'scale-105 filter contrast-125 saturate-110 drop-shadow-[0_0_50px_rgba(0,100,255,0.2)]'
-                          : 'scale-100 contrast-110 saturate-110'
+                          ? 'object-contain scale-100 drop-shadow-[0_0_50px_rgba(0,100,255,0.2)]'
+                          : 'object-cover scale-100 contrast-110 saturate-110'
                       }
                     `}
                 alt="Cadeira"
@@ -428,62 +358,136 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({
         {inProgress ? (
           <button
             onClick={() => onInitiateFinish(inProgress.id)}
-            className="w-full h-20 bg-gradient-to-r from-green-600 to-emerald-500 rounded-2xl flex items-center px-4 relative overflow-hidden shadow-lg active:scale-[0.98] transition-transform"
+            className="w-full h-24 bg-gradient-to-r from-emerald-800 via-green-600 to-emerald-900 rounded-lg flex items-center px-0 relative overflow-hidden shadow-[0_4px_20px_rgba(16,185,129,0.4)] active:scale-[0.98] cursor-pointer hover:shadow-[0_6px_25px_rgba(16,185,129,0.5)] transition-all duration-300 group"
           >
-            <div className="absolute inset-0 bg-[linear-gradient(45deg,rgba(255,255,255,0.1)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.1)_50%,rgba(255,255,255,0.1)_75%,transparent_75%,transparent)] bg-[length:24px_24px] opacity-20"></div>
-            <div className="flex-1 flex items-center gap-4 z-10">
-              <div className="w-12 h-12 rounded-full bg-black/20 flex items-center justify-center border border-white/20">
-                <User className="text-white" />
-              </div>
-              <div className="flex flex-col items-start">
-                <span className="text-[10px] font-bold text-black/60 uppercase tracking-widest">
-                  AÇÃO NECESSÁRIA
-                </span>
-                <span className="text-2xl font-bold text-white uppercase leading-none">
-                  FINALIZAR
-                </span>
-              </div>
-            </div>
-          </button>
-        ) : (
-          <button
-            onClick={() => nextClient && onStatusChange(nextClient.id, 'in_progress')}
-            disabled={!nextClient}
-            className={`w-full h-20 bg-gradient-to-r from-[#FFD700] to-[#FFA500] rounded-2xl flex items-center justify-between px-4 relative overflow-hidden shadow-[0_4px_20px_rgba(255,215,0,0.3)] transition-all
-              ${
-                !nextClient
-                  ? 'opacity-50 grayscale cursor-not-allowed'
-                  : 'active:scale-[0.98] cursor-pointer hover:shadow-[0_6px_25px_rgba(255,215,0,0.5)]'
-              }
-            `}
-          >
-            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10 mix-blend-multiply"></div>
-            <div className="flex items-center gap-4 z-10">
-              {/* Avatar */}
-              <div className="w-12 h-12 rounded-full bg-black/20 p-0.5 border border-white/30">
+            {/* Pattern Overlay */}
+            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay"></div>
+
+            {/* 1. Icon/Avatar Area (30%) */}
+            <div className="w-[30%] h-full flex items-center justify-center relative z-10 pl-1">
+              <div className="w-[3.5rem] h-[3.5rem] rounded-full bg-gradient-to-br from-green-400 to-emerald-700 p-[2px] shadow-lg flex items-center justify-center">
                 <img
                   src={
-                    nextClient?.photoUrl ||
+                    inProgress?.photoUrl ||
                     'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop'
                   }
                   className="w-full h-full object-cover rounded-full filter contrast-110"
                   alt="Client"
                 />
               </div>
-
-              {/* Text */}
-              <div className="flex flex-col items-start">
-                <span className="text-[10px] font-black text-black/60 uppercase tracking-[0.2em] mb-0.5">
-                  PRÓXIMO DA FILA
-                </span>
-                <span className="text-2xl font-black text-white uppercase leading-none drop-shadow-md tracking-tighter">
-                  {nextClient ? `CHAMAR ${nextClient.clientName.split(' ')[0]}` : 'AGUARDANDO...'}
-                </span>
-              </div>
             </div>
 
-            {/* Arrow Icon */}
-            {nextClient && <ChevronRight className="text-black/40 animate-pulse" size={32} />}
+            {/* 2. Content Area (70%) */}
+            <div className="w-[70%] h-full flex items-center justify-between px-4 z-10 pl-2">
+              <div className="flex flex-col items-start min-w-0">
+                <span className="text-[10px] font-black text-green-200/80 uppercase tracking-[0.2em] mb-0.5 shadow-sm">
+                  AÇÃO NECESSÁRIA
+                </span>
+                <span className="text-2xl font-black text-white uppercase leading-none drop-shadow-md tracking-tighter truncate w-full">
+                  FINALIZAR
+                </span>
+              </div>
+
+              {/* Arrow/Action Icon */}
+              <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white text-emerald-900 transition-all">
+                <Star size={16} fill="currentColor" className="animate-[spin_4s_linear_infinite]" />
+              </div>
+            </div>
+          </button>
+        ) : (
+          <button
+            onClick={() => {
+              if (nextClient) {
+                onStatusChange(nextClient.id, 'in_progress');
+              } else {
+                sendBroadcastNotification(
+                  'VAGA DISPONÍVEL! ⚡',
+                  'Um horário acabou de vagar! Agende agora e garanta seu visual.',
+                  'opportunity'
+                );
+                alert('Notificação enviada para todos os clientes!');
+              }
+            }}
+            disabled={false}
+            className={`w-full h-24 rounded-lg flex items-center px-0 relative overflow-hidden transition-all duration-500
+              ${
+                nextClient
+                  ? 'bg-gradient-to-r from-amber-700 via-orange-600 to-red-800 shadow-[0_4px_20px_rgba(185,28,28,0.4)] active:scale-[0.98] cursor-pointer hover:shadow-[0_6px_25px_rgba(234,88,12,0.5)]'
+                  : 'bg-gradient-to-r from-neutral-900 via-stone-900 to-neutral-900 shadow-[0_4px_20px_rgba(0,0,0,0.5)] active:scale-[0.95] cursor-pointer hover:shadow-[0_0_30px_rgba(251,191,36,0.15)] border border-white/5 group/radar'
+              }
+            `}
+          >
+            {/* Pattern Overlay */}
+            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay"></div>
+
+            {/* CONDITIONAL RENDER: CLIENT vs RADAR */}
+            {nextClient ? (
+              <>
+                {/* 1. Client Avatar Area */}
+                <div className="w-[30%] h-full flex items-center justify-center relative z-10 pl-1">
+                  <div className="w-[4.5rem] h-[4.5rem] rounded-full bg-gradient-to-br from-yellow-500 to-red-600 p-[2px] shadow-lg transform scale-105">
+                    <img
+                      src={
+                        nextClient?.photoUrl ||
+                        'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop'
+                      }
+                      className="w-full h-full object-cover rounded-full filter contrast-110"
+                      alt="Client"
+                    />
+                  </div>
+                </div>
+
+                {/* 2. Client Info Area */}
+                <div className="w-[70%] h-full flex items-center justify-between px-4 z-10 pl-2">
+                  <div className="flex flex-col items-start min-w-0">
+                    <span className="text-[11px] font-black text-amber-100/80 uppercase tracking-[0.2em] mb-0.5 shadow-sm">
+                      PRÓXIMO DA FILA
+                    </span>
+                    <span className="text-3xl font-black text-white uppercase leading-none drop-shadow-md tracking-tighter truncate w-full">
+                      {nextClient.clientName}
+                    </span>
+                  </div>
+                  {/* Arrow Icon */}
+                  <ChevronRight
+                    className="text-amber-200/60 animate-pulse flex-shrink-0 ml-2"
+                    size={36}
+                  />
+                </div>
+              </>
+            ) : (
+              /* --- RADAR MODE (IDLE - DARK THEME) --- */
+              <div className="w-full h-full flex items-center justify-between px-6 relative z-10">
+                {/* Radar Visual (Left) - Amber/Gold */}
+                <div className="relative w-16 h-16 flex items-center justify-center">
+                  {/* Pulsing Rings */}
+                  <div className="absolute inset-0 rounded-full border border-amber-500/10 animate-[ping_3s_cubic-bezier(0,0,0.2,1)_infinite]"></div>
+                  <div className="absolute inset-0 rounded-full border border-amber-400/5 animate-[ping_3s_cubic-bezier(0,0,0.2,1)_infinite] delay-500"></div>
+                  {/* Center Icon */}
+                  <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center border border-white/10 shadow-inner relative overflow-hidden backdrop-blur-sm">
+                    {/* Radar Sweep Animation (Subtle) */}
+                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-amber-500/10 to-transparent animate-spin [animation-duration:4s]"></div>
+                    {/* Static Dot */}
+                    <div className="w-1.5 h-1.5 rounded-full bg-amber-500/50 shadow-[0_0_10px_#f59e0b] z-10"></div>
+                  </div>
+                </div>
+
+                {/* Text Info */}
+                <div className="flex flex-col items-start flex-1 ml-4 leading-tight opacity-50 group-hover/radar:opacity-100 transition-opacity duration-300">
+                  <span className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">
+                    Status: Ocioso
+                  </span>
+                  <span className="text-xl font-bold text-white uppercase leading-none tracking-tight mt-0.5">
+                    Buscar Cliente
+                  </span>
+                </div>
+
+                {/* Chevron (Subtle) instead of Dots */}
+                <ChevronRight
+                  className="text-white/10 group-hover/radar:text-amber-500/50 transition-colors duration-300"
+                  size={24}
+                />
+              </div>
+            )}
           </button>
         )}
       </div>

@@ -53,7 +53,7 @@ export const api = {
 
   getServices: async (): Promise<ServiceItem[]> => {
     try {
-      const response = await fetch(`${API_URL}/services`);
+      const response = await fetch(`${API_URL}/services?_t=${Date.now()}`);
       const json = await response.json();
       return json.data;
     } catch (error) {
@@ -93,6 +93,18 @@ export const api = {
     } catch (error) {
       console.error('Error updating service:', error);
       return null;
+    }
+  },
+
+  deleteService: async (id: string): Promise<boolean> => {
+    try {
+      const response = await fetch(`${API_URL}/services/${id}`, {
+        method: 'DELETE',
+      });
+      return response.ok;
+    } catch (error) {
+      console.error('Error deleting service:', error);
+      return false;
     }
   },
 

@@ -175,6 +175,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
         onClose={() => setIsNotificationsOpen(false)}
         appointments={appointments}
         onConfirmAppointment={handleConfirmPresence}
+        onOpenBooking={onOpenBooking}
       />
 
       {/* COMBO BOOKING MODAL */}

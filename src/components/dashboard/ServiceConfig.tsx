@@ -149,7 +149,11 @@ export const ServiceConfig: React.FC<ServiceConfigProps> = ({
     if (window.confirm('Tem certeza que deseja remover este serviço?')) {
       const updated = services.filter(s => s.id !== id);
       onUpdateServices(updated);
+
       // Backend call...
+      import('../../services/api').then(({ api }) => {
+        api.deleteService(id);
+      });
     }
   };
 

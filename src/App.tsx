@@ -182,7 +182,6 @@ function App() {
 
   // REMOVED: Services sync to localStorage caused QuotaExceededError due to Base64 images.
   // We rely on the API for services now.
-  /*
   React.useEffect(() => {
     try {
       localStorage.setItem('services', JSON.stringify(services));
@@ -190,7 +189,6 @@ function App() {
       console.error('Error saving services to localStorage:', error);
     }
   }, [services]);
-  */
 
   const showNotification = (message: string, type: 'success' | 'error' = 'success') => {
     setNotification({ message, type });
