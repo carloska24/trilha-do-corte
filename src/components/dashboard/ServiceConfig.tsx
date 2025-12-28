@@ -23,22 +23,19 @@ import { PromotionsManager } from './PromotionsManager';
 import { NewServiceIcon } from '../icons/NewServiceIcon';
 import { ServiceFormModal } from './ServiceFormModal';
 import { ServiceCard } from '../ui/ServiceCard';
-
-interface ServiceConfigProps {
-  barberProfile: BarberProfile;
-  onUpdateProfile: (profile: Partial<BarberProfile>) => void;
-  services: Service[];
-  onUpdateServices: (services: Service[]) => void;
-}
+import { useAuth } from '../../contexts/AuthContext';
+import { useData } from '../../contexts/DataContext';
 
 const CATEGORIES = ['Cabelo', 'Barba', 'Combo', 'Química', 'Estética', 'Outros'];
 
-export const ServiceConfig: React.FC<ServiceConfigProps> = ({
-  barberProfile,
-  onUpdateProfile,
-  services,
-  onUpdateServices,
-}) => {
+export const ServiceConfig: React.FC = () => {
+  const { currentUser } = useAuth();
+  const { services, updateServices, updateProfile } = useData();
+
+  const barberProfile = currentUser as BarberProfile;
+  const onUpdateProfile = updateProfile;
+  const onUpdateServices = updateServices;
+
   const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'services' | 'marketing'>('services');

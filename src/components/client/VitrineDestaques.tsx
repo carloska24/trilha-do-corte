@@ -154,8 +154,11 @@ export const VitrineDestaques: React.FC<VitrineDestaquesProps> = ({ services, on
               {/* Content */}
               <div className="absolute inset-0 p-6 flex flex-col justify-end items-start text-left z-20">
                 {/* Badges */}
-                <div className="absolute top-4 left-4 flex gap-2">
-                  {item.badge ? (
+                <div className="absolute top-4 left-4 flex flex-col gap-2 items-start">
+                  {/* Priority: New Badges System */}
+                  {item.badges && item.badges.length > 0 ? (
+                    item.badges.map((b: any, i: number) => <PromoBadge key={i} config={b} />)
+                  ) : item.badge ? (
                     <span className="bg-neon-yellow text-black text-[10px] font-black uppercase px-2 py-1 rounded shadow-lg">
                       {item.badge}
                     </span>

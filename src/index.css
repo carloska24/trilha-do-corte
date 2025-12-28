@@ -1,13 +1,58 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+
+@theme {
+  /* Fonts */
+  --font-sans: 'Inter', sans-serif;
+  --font-graffiti: 'Permanent Marker', cursive;
+  --font-rye: 'Rye', serif;
+  --font-serif: 'Playfair Display', serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-slab: 'Roboto Slab', serif;
+  --font-handwritten: 'Caveat', cursive;
+  --font-pixel: 'Press Start 2P', cursive;
+  --font-script: 'Dancing Script', cursive;
+  --font-gothic: 'Oswald', sans-serif;
+  --font-modern: 'Montserrat', sans-serif;
+
+  /* Colors */
+  --color-street-dark: var(--bg-primary);
+  --color-street-gray: var(--bg-card);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-border-color: var(--border-color);
+  --color-neon-yellow: #eab308;
+  --color-neon-orange: #f97316;
+  --color-spray-purple: #a855f7;
+  --color-spray-cyan: #06b6d4;
+
+  /* Background Images */
+  --background-image-track-pattern: linear-gradient(
+      to bottom,
+      transparent 50%,
+      rgba(255, 255, 255, 0.05) 50%
+    ),
+    linear-gradient(90deg, transparent 50%, rgba(0, 0, 0, 0.5) 50%);
+
+  /* Animations */
+  --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-slide-track: slideTrack 2s linear infinite;
+
+  @keyframes slideTrack {
+    0% {
+      transform: translateY(0);
+    }
+    100% {
+      transform: translateY(20px);
+    }
+  }
+}
 
 html {
   scroll-behavior: smooth;
 }
 
 :root {
-  /* Light Mode Colors */
+  /* ... kept as is for variables ... */
   --bg-primary: #fafafa; /* Zinc 50 */
   --bg-secondary: #f4f4f5; /* Zinc 100 */
   --bg-card: #ffffff;

@@ -205,7 +205,7 @@ export const BarberDashboard: React.FC<BarberDashboardProps> = ({
   return (
     <div className="min-h-screen bg-transparent text-text-primary font-sans selection:bg-yellow-500 selection:text-black transition-colors duration-300">
       {/* HEADER PIXEL PERFECT */}
-      <header className="fixed top-0 left-0 right-0 h-16 bg-white dark:bg-street-dark z-40 flex items-center justify-between px-4 border-b border-border-color transition-colors duration-300">
+      <header className="fixed top-0 left-0 right-0 h-16 bg-street-dark z-40 flex items-center justify-between px-4 border-b border-border-color transition-colors duration-300">
         {/* BRANDING (Left) */}
         <div className="flex items-center gap-3">
           {/* Logo - Restored Chair in Yellow Box */}
@@ -218,7 +218,7 @@ export const BarberDashboard: React.FC<BarberDashboardProps> = ({
 
           <div className="flex flex-col justify-center translate-y-[2px]">
             {/* Main Title with Glow */}
-            <h1 className="text-2xl md:text-3xl text-text-primary dark:text-white tracking-wide leading-none font-rye drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+            <h1 className="text-2xl md:text-3xl text-white tracking-wide leading-none font-rye drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
               Trilha do Corte
             </h1>
             <div className="flex items-center gap-2 pl-1">
@@ -237,26 +237,26 @@ export const BarberDashboard: React.FC<BarberDashboardProps> = ({
             onClick={() => setShowFinancials(true)}
             className="group flex items-center justify-center transition-transform hover:scale-110"
           >
-            <AnimatedWallet className="w-10 h-10 text-text-primary drop-shadow-xl filter brightness-110" />
+            <AnimatedWallet className="w-10 h-10 text-white drop-shadow-xl filter brightness-110" />
           </button>
 
           {/* Barber Profile */}
           <button
             onClick={() => setShowProfileModal(true)}
-            className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-gray-100 dark:border-street-gray shadow-md hover:border-[#FFD700] transition-colors"
+            className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-street-gray shadow-md hover:border-[#FFD700] transition-colors"
           >
             <img
               src={barberProfile.photoUrl || DEFAULT_BARBER_IMAGE}
               alt="Profile"
               className="w-full h-full object-cover"
             />
-            <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-white dark:border-street-dark animate-pulse"></div>
+            <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-street-dark animate-pulse"></div>
           </button>
         </div>
       </header>
 
       {/* BOTTOM NAV PIXEL PERFECT */}
-      <nav className="fixed bottom-0 left-0 right-0 h-20 bg-white dark:bg-street-dark border-t border-border-color z-50 flex justify-around items-center px-2 pb-2 transition-colors duration-300">
+      <nav className="fixed bottom-0 left-0 right-0 h-20 bg-street-dark border-t border-border-color z-50 flex justify-around items-center px-2 pb-2 transition-colors duration-300">
         <button
           onClick={() => onViewChange('home')}
           className="flex flex-col items-center justify-center gap-1 w-16 h-16 rounded-xl group"

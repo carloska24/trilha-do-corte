@@ -1,0 +1,117 @@
+# Implementation Plan - Phase 2: Core Architecture (Routing & Context)
+
+## Goal Description
+
+Refactor the application's core architecture by replacing the monolithic [App.tsx](file:///c:/Users/joaob/OneDrive/%C3%81rea%20de%20Trabalho/Trilha%20do%20Corte/trilha/src/App.tsx) state and manual routing with **React Router v7** (or v6 compat) and **React Context API**. This will decouple business logic from the view layer and enable proper deep linking and history navigation.
+
+## User Review Required
+
+> [!IMPORTANT] > **Architecture Shift**: We are moving from a single file ([App.tsx](file:///c:/Users/joaob/OneDrive/%C3%81rea%20de%20Trabalho/Trilha%20do%20Corte/trilha/src/App.tsx)) managing all state to distributed Context Providers. This is a major refactor.
+>
+> - **Routing**: `react-router-dom` will handle navigation. URL paths will change (e.g., `/dashboard`, `/book`).
+> - **State**: [AuthContext](file:///c:/Users/joaob/OneDrive/%C3%81rea%20de%20Trabalho/Trilha%20do%20Corte/trilha/src/contexts/AuthContext.tsx#6-13) and [DataContext](file:///c:/Users/joaob/OneDrive/%C3%81rea%20de%20Trabalho/Trilha%20do%20Corte/trilha/src/contexts/DataContext.tsx#5-15) will hold global application state.
+
+## Proposed Changes
+
+### 1. Dependencies
+
+#### [MODIFY] [package.json](file:///c%3A/Users/joaob/OneDrive/%C3%81rea%20de%20Trabalho/Trilha%20do%20Corte/trilha/package.json)
+
+- Add: `react-router-dom`
+
+### 2. Context Implementation
+
+#### [NEW] [src/contexts/AuthContext.tsx](file:///c%3A/Users/joaob/OneDrive/%C3%81rea%20de%20Trabalho/Trilha%20do%20Corte/trilha/src/contexts/AuthContext.tsx)
+
+- Manage `currentUser`, `userType` (client/barber), and login/logout methods.
+
+#### [NEW] [src/contexts/DataContext.tsx](file:///c%3A/Users/joaob/OneDrive/%C3%81rea%20de%20Trabalho/Trilha%20do%20Corte/trilha/src/contexts/DataContext.tsx)
+
+- Manage `appointments`, `services`, `clients`, `barbers` data.
+- **Optimization**: Move away from heavy `localStorage` for images if possible, or structure data better.
+
+### 3. Routing Setup
+
+#### [NEW] [src/routes.tsx](file:///c%3A/Users/joaob/OneDrive/%C3%81rea%20de%20Trabalho/Trilha%20do%20Corte/trilha/src/routes.tsx)
+
+- Define routes:
+  - `/` (Landing)
+  - `/login` (Auth)
+  - `/dashboard` (Barber Dashboard - Protected)
+  - `/client` (Client Dashboard - Protected)
+
+### 4. App Refactoring
+
+#### [MODIFY] [src/App.tsx](file:///c%3A/Users/joaob/OneDrive/%C3%81rea%20de%20Trabalho/Trilha%20do%20Corte/trilha/src/App.tsx)
+
+- Remove `currentView` state logic.
+- Remove huge `useState` blocks.
+- Wrap application in `<AuthProvider>` and `<DataProvider>`.
+- Render `<AppRoutes />` (from [routes.tsx](file:///c:/Users/joaob/OneDrive/%C3%81rea%20de%20Trabalho/Trilha%20do%20Corte/trilha/src/routes.tsx)).
+
+## Verification Plan
+
+### Automated Tests
+
+- `npm run build` to check for type errors in new contexts.
+
+### Manual Verification
+
+- **Navigation Flow**:
+  - Validated manually.
+  - Fixed bugs: [MainLayout](file:///c:/Users/joaob/OneDrive/%C3%81rea%20de%20Trabalho/Trilha%20do%20Corte/trilha/src/layouts/MainLayout.tsx#7-57) export, `Services/Hero/AiConsultant` props mismatch, **Missing Dark Mode Class**, **Barber Footer White**.
+  - Build Status: Success.
+
+## Phase 3: Components & Polish (Zero Visual Changes)
+
+### 1. Nested Routing for Dashboard
+
+Refactor [BarberDashboard](file:///c:/Users/joaob/OneDrive/%C3%81rea%20de%20Trabalho/Trilha%20do%20Corte/trilha/src/components/BarberDashboard.tsx#70-633) to serve as the Persistent Layout, preserving all current state and visuals. [COMPLETED]
+
+- **Strategy**: Replace conditional `currentView` rendering with `<Outlet />`.
+- **Routes** [IMPLEMENTED]:
+  - `/dashboard` -> [DashboardHome](file:///c:/Users/joaob/OneDrive/%C3%81rea%20de%20Trabalho/Trilha%20do%20Corte/trilha/src/components/dashboard/DashboardHome.tsx#109-505)
+  - `/dashboard/clients` -> [ClientsManager](file:///c:/Users/joaob/OneDrive/%C3%81rea%20de%20Trabalho/Trilha%20do%20Corte/trilha/src/components/dashboard/ClientsManager.tsx#12-338)
+  - `/dashboard/calendar` -> [CalendarView](file:///c:/Users/joaob/OneDrive/%C3%81rea%20de%20Trabalho/Trilha%20do%20Corte/trilha/src/components/dashboard/CalendarView.tsx#22-579)
+  - `/dashboard/services` -> [ServiceConfig](file:///c:/Users/joaob/OneDrive/%C3%81rea%20de%20Trabalho/Trilha%20do%20Corte/trilha/src/components/dashboard/ServiceConfig.tsx#31-300)
+  - `/dashboard/financial` -> [FinancialVault](file:///c:/Users/joaob/OneDrive/%C3%81rea%20de%20Trabalho/Trilha%20do%20Corte/trilha/src/components/dashboard/FinancialVault.tsx#12-243)
+  - `/dashboard/settings` -> [SettingsView](file:///c:/Users/joaob/OneDrive/%C3%81rea%20de%20Trabalho/Trilha%20do%20Corte/trilha/src/components/dashboard/SettingsView.tsx#29-354)
+
+#### [NEW] [PromoStudio.tsx](file:///src/components/dashboard/PromoStudio.tsx)
+
+## Phase 4: PWA & Mobile
+
+### Configuration
+
+- Install `vite-plugin-pwa`.
+- Update [vite.config.ts](file:///c:/Users/joaob/OneDrive/%C3%81rea%20de%20Trabalho/Trilha%20do%20Corte/trilha/vite.config.ts).
+- Generate `manifest.json`.
+- Add Service Worker for offline capabilities.
+
+### Assets
+
+- Use [public/studio-logo.png](file:///c:/Users/joaob/OneDrive/%C3%81rea%20de%20Trabalho/Trilha%20do%20Corte/trilha/public/studio-logo.png) for App Icons (192, 512).
+- Add `apple-touch-icon`.
+
+## Phase 5: Backend Migration (Postgres/Supabase)
+
+### Architecture Change
+
+- **Current**: Local SQLite File (Risky on Render).
+- **Target**: Cloud Postgres (Supabase). This ensures data survives re-deploys.
+
+### Implementation
+
+- **Dependencies**: Install `pg` (Node Postgres).
+- **Driver**: Refactor [server/db.js](file:///c:/Users/joaob/OneDrive/%C3%81rea%20de%20Trabalho/Trilha%20do%20Corte/trilha/server/db.js) to use `pg.Pool` connection to `process.env.DATABASE_URL`.
+- **Queries**: Convert SQLite `?` syntax to Postgres `$1`.
+
+## Verification Plan
+
+Break down [PromoStudio.tsx](file:///c:/Users/joaob/OneDrive/%C3%81rea%20de%20Trabalho/Trilha%20do%20Corte/trilha/src/components/dashboard/PromoStudio.tsx) into smaller chunks without altering CSS classes. [COMPLETED]
+
+- Extracted [PromoControls](file:///c:/Users/joaob/OneDrive/%C3%81rea%20de%20Trabalho/Trilha%20do%20Corte/trilha/src/components/dashboard/promo/PromoControls.tsx#36-473), [PromoPreview](file:///c:/Users/joaob/OneDrive/%C3%81rea%20de%20Trabalho/Trilha%20do%20Corte/trilha/src/components/dashboard/promo/PromoPreview.tsx#12-48), [ServiceSelector](file:///c:/Users/joaob/OneDrive/%C3%81rea%20de%20Trabalho/Trilha%20do%20Corte/trilha/src/components/dashboard/promo/ServiceSelector.tsx#13-61), `PromoConstants`.
+
+### 3. Optimization
+
+- Lazy load dashboard views to improve initial load time. [COMPLETED]

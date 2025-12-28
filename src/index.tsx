@@ -8,6 +8,19 @@ if (!rootElement) {
   throw new Error('Could not find root element to mount to');
 }
 
+import { registerSW } from 'virtual:pwa-register';
+
+// PWA Offline Registration
+registerSW({
+  immediate: true,
+  onNeedRefresh() {
+    console.log('🔄 New content available, reload to update.');
+  },
+  onOfflineReady() {
+    console.log('✅ App ready to work offline.');
+  },
+});
+
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>

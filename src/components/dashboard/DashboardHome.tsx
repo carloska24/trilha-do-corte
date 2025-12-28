@@ -3,19 +3,12 @@ import { ChairIcon } from '../icons/ChairIcon';
 import { Appointment, AppointmentStatus, ServiceItem } from '../../types';
 import { Armchair, ChevronRight, User, Star } from 'lucide-react';
 import { sendBroadcastNotification } from '../../utils/notificationUtils';
+import { useData } from '../../contexts/DataContext';
+import { useShopStatus } from '../../hooks/useShopStatus';
+import { useOutletContext } from 'react-router-dom';
 
-interface DashboardHomeProps {
-  appointments: Appointment[];
-  onStatusChange: (
-    id: string,
-    status: AppointmentStatus,
-    photoUrl?: string,
-    notes?: string
-  ) => void;
-  currentTime: Date;
-  shopStatus: any;
-  onInitiateFinish: (id: string) => void;
-  services: ServiceItem[];
+interface DashboardOutletContext {
+  initiateFinish: (id: string) => void;
 }
 
 // --- ISOLATED COMPONENTS (PREVENT RE-RENDERS) ---
@@ -113,13 +106,25 @@ const QueueTicker = React.memo(
   }
 );
 
-export const DashboardHome: React.FC<DashboardHomeProps> = ({
-  appointments,
-  onStatusChange,
-  currentTime,
-  onInitiateFinish,
-  services,
-}) => {
+export const DashboardHome: React.FC = () => {
+  const { appointments, services, updateAppointments } = useData();
+  const { currentTime, shopStatus } = useShopStatus();
+  const { initiateFinish } = useOutletContext<DashboardOutletContext>();
+
+  const onInitiateFinish = initiateFinish;
+
+  const onStatusChange = (
+    id: string,
+    status: AppointmentStatus,
+    photoUrl?: string,
+    notes?: string
+  ) => {
+    const updated = appointments.map(app =>
+      app.id === id ? { ...app, status, photoUrl, notes } : app
+    );
+    updateAppointments(updated);
+  };
+
   // Memoized Derived Data to prevent recalc on every clock tick
   const { queue, inProgress, nextClient } = React.useMemo(() => {
     const q = appointments
@@ -150,7 +155,7 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({
   const { isShopOpen } = React.useMemo(() => {
     const hour = currentTime.getHours();
     const day = currentTime.getDay();
-    return { isShopOpen: day !== 0 && hour >= 8 && hour < 21 };
+    return { isShopOpen: day !== 0 && hour >= 8 && hour < 21 }; // Re-using local logic for visual toggle, although hook provides status too
   }, [currentTime.getHours(), currentTime.getDay()]);
 
   return (

@@ -1,0 +1,496 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { ChairIcon } from '../components/icons/ChairIcon';
+import { ClientsIcon } from '../components/icons/ClientsIcon';
+import { CalendarIcon } from '../components/icons/CalendarIcon';
+import { ServicesIcon } from '../components/icons/ServicesIcon';
+import { SettingsIcon } from '../components/icons/SettingsIcon';
+import { AnimatedWallet } from '../components/icons/AnimatedWallet';
+import { useAuth } from '../contexts/AuthContext';
+import { useData } from '../contexts/DataContext';
+import { useUI } from '../contexts/UIContext';
+import { AppointmentStatus, BarberProfile, Client, Service } from '../types';
+import { LogOut, Check, X, Camera, Mic, MicOff, Settings } from 'lucide-react';
+
+// Sub-components (Modals only, as views are now Routes)
+import { FinancialModal } from '../components/dashboard/FinancialModal';
+import { ClientProfileModal } from '../components/dashboard/ClientProfileModal';
+
+const DEFAULT_BARBER_IMAGE =
+  'https://images.unsplash.com/photo-1618077553780-75539862f629?q=80&w=400&auto=format&fit=crop';
+
+export const DashboardLayout: React.FC = () => {
+  // Contexts
+  const { currentUser, logout } = useAuth();
+  const {
+    appointments,
+    clients,
+    services,
+    updateAppointments,
+    updateClients,
+    updateServices,
+    updateProfile,
+  } = useData();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Determine current view for active tab highlighting
+  const getCurrentView = () => {
+    const path = location.pathname;
+    if (path.includes('/dashboard/clients')) return 'clients';
+    if (path.includes('/dashboard/calendar')) return 'calendar';
+    if (path.includes('/dashboard/services')) return 'services';
+    if (path.includes('/dashboard/settings')) return 'settings';
+    return 'home'; // Default to home for /dashboard
+  };
+
+  const currentView = getCurrentView();
+
+  // UI State
+  const [showFinancials, setShowFinancials] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+
+  // Financial State
+  const [dailyGoal, setDailyGoal] = useState(1500);
+
+  // Finishing Flow State (Global because it can be triggered from multiple places potentially)
+  const [finishingAppId, setFinishingAppId] = useState<string | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [barberNotes, setBarberNotes] = useState('');
+  const [isRecording, setIsRecording] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const profilePhotoInputRef = useRef<HTMLInputElement>(null);
+
+  const barberProfile = currentUser as BarberProfile;
+  const hasSpeechSupport = 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window;
+
+  const handleProfilePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        alert('A imagem deve ter no máximo 2MB!');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        updateProfile({ photoUrl: reader.result as string });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const initiateFinish = (id: string) => {
+    setFinishingAppId(id);
+    setPhotoPreview(null);
+    setBarberNotes('');
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhotoPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const toggleRecording = () => {
+    if (!isRecording) {
+      setIsRecording(true);
+      setTimeout(() => {
+        setBarberNotes(prev => prev + ' (Transcrição: Cliente pediu corte baixo com degradê...)');
+        setIsRecording(false);
+      }, 3000);
+    } else {
+      setIsRecording(false);
+    }
+  };
+
+  const confirmFinish = () => {
+    if (finishingAppId) {
+      const updated = appointments.map(app =>
+        app.id === finishingAppId
+          ? {
+              ...app,
+              status: 'completed' as AppointmentStatus,
+              photoUrl: photoPreview || undefined,
+              notes: barberNotes,
+            }
+          : app
+      );
+      updateAppointments(updated);
+      setFinishingAppId(null);
+    }
+  };
+
+  // Derived Data for Financials
+  const finished = appointments
+    .filter(a => a.status === 'completed')
+    .sort((a, b) => b.time.localeCompare(a.time));
+  const todayRevenue = finished.reduce((acc, curr) => acc + curr.price, 0);
+  const completedCount = finished.length;
+
+  // Context for Outlets (Child routes can access these functions)
+  const outletContext = {
+    initiateFinish,
+    setSelectedClient,
+    dailyGoal,
+    openProfileModal: () => setShowProfileModal(true),
+  };
+
+  return (
+    <div className="min-h-screen bg-transparent text-text-primary font-sans selection:bg-yellow-500 selection:text-black transition-colors duration-300">
+      {/* HEADER PIXEL PERFECT */}
+      {/* HEADER PIXEL PERFECT */}
+      <header className="fixed top-0 left-0 right-0 h-16 bg-black z-40 flex items-center justify-between px-4 border-b border-border-color transition-colors duration-300">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 bg-[#FFD700] rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(234,179,8,0.2)] group hover:shadow-[0_0_30px_rgba(234,179,8,0.4)] transition-all duration-300">
+            <ChairIcon
+              size={28}
+              className="text-black group-hover:scale-110 transition-transform"
+            />
+          </div>
+          <div className="flex flex-col justify-center translate-y-[2px]">
+            <h1 className="text-2xl md:text-3xl text-white tracking-wide leading-none font-rye drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+              Trilha do Corte
+            </h1>
+            <div className="flex items-center gap-2 pl-1">
+              <span className="text-[10px] md:text-xs font-bold text-[#FFD700] uppercase tracking-[0.35em] drop-shadow-sm opacity-90 font-sans">
+                Barber Club
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-6">
+          <button
+            onClick={() => setShowFinancials(true)}
+            className="group flex items-center justify-center transition-transform hover:scale-110"
+          >
+            <AnimatedWallet className="w-10 h-10 text-white drop-shadow-xl filter brightness-110" />
+          </button>
+          <button
+            onClick={() => setShowProfileModal(true)}
+            className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-street-gray shadow-md hover:border-[#FFD700] transition-colors"
+          >
+            <img
+              src={barberProfile?.photoUrl || DEFAULT_BARBER_IMAGE}
+              alt="Profile"
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-street-dark animate-pulse"></div>
+          </button>
+        </div>
+      </header>
+
+      {/* BOTTOM NAV PIXEL PERFECT */}
+      <nav className="fixed bottom-0 left-0 right-0 h-20 bg-black border-t border-border-color z-50 flex justify-around items-center px-2 pb-2 transition-colors duration-300">
+        <button
+          onClick={() => navigate('/dashboard')}
+          className="flex flex-col items-center justify-center gap-1 w-16 h-16 rounded-xl group"
+        >
+          <ChairIcon
+            size={24}
+            className={`transition-colors animate-float-slow ${
+              currentView === 'home'
+                ? 'text-[#FFD700]'
+                : 'text-gray-400 group-hover:text-gray-600 dark:text-gray-500 dark:group-hover:text-gray-300'
+            }`}
+          />
+          <span
+            className={`text-[10px] font-bold uppercase tracking-wider transition-colors font-sf-pro ${
+              currentView === 'home'
+                ? 'text-[#FFD700]'
+                : 'text-gray-400 group-hover:text-gray-600 dark:text-gray-500 dark:group-hover:text-gray-300'
+            }`}
+          >
+            Dashboard
+          </span>
+        </button>
+
+        <button
+          onClick={() => navigate('/dashboard/clients')}
+          className="flex flex-col items-center justify-center gap-1 w-16 h-16 rounded-xl group"
+        >
+          <ClientsIcon
+            size={24}
+            className={`transition-colors animate-float-slow ${
+              currentView === 'clients'
+                ? 'text-[#FFD700]'
+                : 'text-gray-400 group-hover:text-gray-600 dark:text-gray-500 dark:group-hover:text-gray-300'
+            }`}
+          />
+          <span
+            className={`text-[10px] font-bold uppercase tracking-wider transition-colors font-sf-pro ${
+              currentView === 'clients'
+                ? 'text-[#FFD700]'
+                : 'text-gray-400 group-hover:text-gray-600 dark:text-gray-500 dark:group-hover:text-gray-300'
+            }`}
+          >
+            Clientes
+          </span>
+        </button>
+
+        <button
+          onClick={() => navigate('/dashboard/calendar')}
+          className="flex flex-col items-center justify-center gap-1 w-16 h-16 rounded-xl group"
+        >
+          <CalendarIcon
+            size={24}
+            className={`transition-colors animate-float-slow ${
+              currentView === 'calendar'
+                ? 'text-[#FFD700]'
+                : 'text-gray-400 group-hover:text-gray-600 dark:text-gray-500 dark:group-hover:text-gray-300'
+            }`}
+          />
+          <span
+            className={`text-[10px] font-bold uppercase tracking-wider transition-colors font-sf-pro ${
+              currentView === 'calendar'
+                ? 'text-[#FFD700]'
+                : 'text-gray-400 group-hover:text-gray-600 dark:text-gray-500 dark:group-hover:text-gray-300'
+            }`}
+          >
+            Agenda
+          </span>
+        </button>
+
+        <button
+          onClick={() => navigate('/dashboard/services')}
+          className="flex flex-col items-center justify-center gap-1 w-16 h-16 rounded-xl group"
+        >
+          <ServicesIcon
+            size={24}
+            className={`transition-colors animate-float-slow ${
+              currentView === 'services'
+                ? 'text-[#FFD700]'
+                : 'text-gray-400 group-hover:text-gray-600 dark:text-gray-500 dark:group-hover:text-gray-300'
+            }`}
+          />
+          <span
+            className={`text-[10px] font-bold uppercase tracking-wider transition-colors font-sf-pro ${
+              currentView === 'services'
+                ? 'text-[#FFD700]'
+                : 'text-gray-400 group-hover:text-gray-600 dark:text-gray-500 dark:group-hover:text-gray-300'
+            }`}
+          >
+            Oficina
+          </span>
+        </button>
+
+        <button
+          onClick={() => navigate('/dashboard/settings')}
+          className="flex flex-col items-center justify-center gap-1 w-16 h-16 rounded-xl group"
+        >
+          <SettingsIcon
+            size={24}
+            className={`transition-colors ${
+              currentView === 'settings'
+                ? 'text-[#FFD700]'
+                : 'text-gray-400 group-hover:text-gray-600 dark:text-gray-500 dark:group-hover:text-gray-300'
+            }`}
+          />
+          <span
+            className={`text-[10px] font-bold uppercase tracking-wider transition-colors font-sf-pro ${
+              currentView === 'settings'
+                ? 'text-[#FFD700]'
+                : 'text-gray-400 group-hover:text-gray-600 dark:text-gray-500 dark:group-hover:text-gray-300'
+            }`}
+          >
+            Ajustes
+          </span>
+        </button>
+      </nav>
+
+      {/* MAIN CONTENT AREA */}
+      <main className="pt-20 pb-24 px-4 min-h-screen bg-transparent relative overflow-hidden transition-colors duration-300">
+        <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.02)_25%,rgba(255,255,255,0.02)_50%,transparent_50%,transparent_75%,rgba(255,255,255,0.02)_75%,rgba(255,255,255,0.02)_100%)] bg-[length:24px_24px] opacity-20 pointer-events-none"></div>
+        <Outlet context={outletContext} />
+      </main>
+
+      {/* MODALS */}
+      <FinancialModal
+        isOpen={showFinancials}
+        onClose={() => setShowFinancials(false)}
+        todayRevenue={todayRevenue}
+        dailyGoal={dailyGoal}
+        setDailyGoal={setDailyGoal}
+        completedCount={completedCount}
+        finished={finished}
+      />
+
+      <ClientProfileModal
+        client={selectedClient}
+        onClose={() => setSelectedClient(null)}
+        onNewBooking={client => {
+          setSelectedClient(null);
+          navigate('/dashboard/calendar');
+        }}
+      />
+
+      {/* MODAL PERFIL (Header) */}
+      {showProfileModal && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/95 backdrop-blur-sm animate-[fadeIn_0.2s_ease-out]">
+          <div className="bg-[#111] border border-gray-800 w-full max-w-sm p-8 rounded-sm shadow-2xl relative flex flex-col items-center">
+            <button
+              onClick={() => setShowProfileModal(false)}
+              className="absolute top-4 right-4 text-gray-500 hover:text-white cursor-pointer"
+            >
+              <X />
+            </button>
+            <div className="text-center mb-6 w-full">
+              <span className="text-[10px] font-black text-neon-yellow uppercase tracking-[0.2em] border-b border-gray-800 pb-2 mb-4 block">
+                Identificação do Maquinista
+              </span>
+              <div
+                className="w-32 h-32 rounded-full border-4 border-neon-orange p-1 bg-black shadow-[0_0_30px_rgba(249,115,22,0.4)] mx-auto mb-4 relative group cursor-pointer"
+                onClick={() => profilePhotoInputRef.current?.click()}
+              >
+                <img
+                  src={barberProfile?.photoUrl || DEFAULT_BARBER_IMAGE}
+                  alt="Perfil"
+                  className="w-full h-full object-cover rounded-full filter contrast-110"
+                />
+                <div className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                  <span className="text-xs font-bold uppercase text-white">Alterar</span>
+                </div>
+                <input
+                  type="file"
+                  ref={profilePhotoInputRef}
+                  className="hidden"
+                  accept="image/*"
+                  onChange={handleProfilePhotoChange}
+                />
+              </div>
+              <h2 className="text-3xl font-graffiti text-white mb-1">{barberProfile?.name}</h2>
+              <p className="text-gray-500 font-mono text-xs uppercase tracking-widest">
+                {barberProfile?.email}
+              </p>
+            </div>
+            <div className="w-full space-y-3">
+              <button
+                onClick={() => {
+                  setShowProfileModal(false);
+                  navigate('/dashboard/settings');
+                }}
+                className="w-full bg-[#1a1a1a] hover:bg-[#222] text-white py-4 flex items-center justify-center gap-3 text-xs font-black uppercase tracking-widest border border-gray-800 transition-colors cursor-pointer"
+              >
+                <Settings size={16} /> Configurações do Trem
+              </button>
+              <button
+                onClick={() => {
+                  logout();
+                  navigate('/');
+                }}
+                className="w-full bg-red-900/10 hover:bg-red-900/30 text-red-500 hover:text-red-400 py-4 flex items-center justify-center gap-3 text-xs font-black uppercase tracking-widest border border-red-900/20 transition-colors cursor-pointer"
+              >
+                <LogOut size={16} /> Encerrar Turno
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL FINALIZAR */}
+      {finishingAppId && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/95 backdrop-blur-sm animate-[fadeIn_0.2s_ease-out]">
+          <div className="bg-[#111] border border-gray-800 w-full max-w-md flex flex-col shadow-2xl max-h-[90vh] rounded-sm">
+            <div className="p-4 md:p-6 border-b border-gray-800 flex justify-between items-center bg-[#151515]">
+              <h3 className="font-black text-white uppercase tracking-wider text-base md:text-lg">
+                Registrar Obra
+              </h3>
+              <button
+                onClick={() => setFinishingAppId(null)}
+                className="text-gray-500 hover:text-white"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-4 md:p-6 overflow-y-auto space-y-4 md:space-y-6">
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full aspect-video bg-[#050505] border-2 border-dashed border-gray-700 hover:border-neon-yellow cursor-pointer flex flex-col items-center justify-center transition-all group relative overflow-hidden rounded-sm"
+              >
+                {photoPreview ? (
+                  <>
+                    <img
+                      src={photoPreview}
+                      className="absolute inset-0 w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                      <span className="text-white font-bold uppercase text-xs">Trocar Foto</span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <Camera
+                      className="text-gray-600 group-hover:text-neon-yellow mb-2 transition-colors"
+                      size={24}
+                    />
+                    <span className="text-gray-600 text-[10px] font-bold uppercase tracking-widest group-hover:text-white">
+                      Adicionar Foto
+                    </span>
+                  </>
+                )}
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  className="hidden"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                />
+              </div>
+              <div>
+                <div className="flex justify-between mb-2 items-center">
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                    Observações do Maquinista
+                  </label>
+                  {hasSpeechSupport && (
+                    <button
+                      onClick={toggleRecording}
+                      className={`text-[9px] font-bold uppercase flex items-center gap-1 px-2 py-1 rounded transition-all ${
+                        isRecording
+                          ? 'bg-red-600 text-white animate-pulse'
+                          : 'bg-gray-800 text-gray-400 hover:text-white'
+                      }`}
+                    >
+                      {isRecording ? (
+                        <>
+                          <MicOff size={10} /> Gravando
+                        </>
+                      ) : (
+                        <>
+                          <Mic size={10} /> Voz
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+                <textarea
+                  value={barberNotes}
+                  onChange={e => setBarberNotes(e.target.value)}
+                  className={`w-full bg-[#050505] border p-3 text-sm text-white focus:outline-none focus:border-neon-yellow h-24 md:h-32 resize-none rounded-sm transition-colors ${
+                    isRecording ? 'border-red-600' : 'border-gray-700'
+                  }`}
+                  placeholder={
+                    isRecording ? 'Ouvindo sua voz...' : 'Descreva o corte, produtos usados...'
+                  }
+                />
+              </div>
+            </div>
+            <div className="p-4 border-t border-gray-800 bg-[#151515]">
+              <button
+                onClick={confirmFinish}
+                className="w-full bg-neon-yellow hover:bg-white text-black font-black uppercase py-3 md:py-4 tracking-widest transition-colors flex justify-center items-center gap-2 rounded-sm shadow-[0_0_20px_rgba(234,179,8,0.2)] hover:shadow-[0_0_30px_rgba(234,179,8,0.4)] text-sm md:text-base"
+              >
+                Confirmar e Liberar <Check size={16} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};

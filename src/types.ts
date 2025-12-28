@@ -138,6 +138,8 @@ export interface Appointment {
   price: number;
   photoUrl?: string; // URL da foto do corte finalizado
   notes?: string; // Notas técnicas do barbeiro
+  clientId?: string; // Link to ClientProfile
+  barberId?: string; // Link to BarberProfile
 }
 
 export interface SavedStyle extends AiConsultationResponse {
@@ -162,6 +164,7 @@ export interface ClientProfile {
 }
 
 export interface BarberProfile {
+  id: string;
   name: string;
   email: string;
   photoUrl?: string; // Foto do perfil do barbeiro

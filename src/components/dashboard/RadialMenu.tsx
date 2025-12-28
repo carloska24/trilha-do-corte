@@ -135,6 +135,16 @@ const RadialMenu: React.FC<RadialMenuProps> = ({
     },
   ];
 
+  // Interaction State for "Click Effect"
+  const [activeSlice, setActiveSlice] = React.useState<number | null>(null);
+
+  const handleSliceClick = (index: number, action: () => void) => {
+    setActiveSlice(index);
+    action();
+    // Reset after animation
+    setTimeout(() => setActiveSlice(null), 300);
+  };
+
   return (
     <div className="relative w-[260px] h-[260px] select-none scale-100 hover:scale-[1.02] transition-transform duration-500">
       {/* Container Background (Border Ring) */}
@@ -150,25 +160,41 @@ const RadialMenu: React.FC<RadialMenuProps> = ({
             <feComposite operator="in" in="color" in2="inverse" result="shadow" />
             <feComposite operator="over" in="shadow" in2="SourceGraphic" />
           </filter>
+          <filter id="glow-gold">
+            <feGaussianBlur stdDeviation="3.5" result="coloredBlur" />
+            <feMerge>
+              <feMergeNode in="coloredBlur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <filter id="glow-white">
+            <feGaussianBlur stdDeviation="4" result="coloredBlur" />
+            <feMerge>
+              <feMergeNode in="coloredBlur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
         </defs>
       </svg>
 
       {/* Slices Overlay via SVG (Clickable) */}
       <svg width={size} height={size} className="absolute inset-0 z-20">
-        {slices.map((slice, i) => (
-          <path
-            key={i}
-            d={createSlice(slice.start, slice.end)}
-            className={`cursor-pointer transition-all duration-200 stroke-[#111] stroke-[2px] ease-out
-              ${slice.color}
-              hover:stroke-white/20 active:brightness-125
-            `}
-            onClick={e => {
-              // Add a subtle pop effect logic if needed, or rely on CSS active
-              slice.action();
-            }}
-          />
-        ))}
+        {slices.map((slice, i) => {
+          const isActive = activeSlice === i;
+          return (
+            <path
+              key={i}
+              d={createSlice(slice.start, slice.end)}
+              className={`cursor-pointer transition-all duration-150 ease-out stroke-[#111] stroke-[2px]
+                  ${isActive ? 'brightness-150 saturate-150' : slice.color}
+                  ${isActive && slice.isPrimary ? 'filter-[url(#glow-gold)]' : ''}
+                  ${isActive && !slice.isPrimary ? 'fill-gray-600 filter-[url(#glow-white)]' : ''}
+                  hover:brightness-110
+                `}
+              onClick={() => handleSliceClick(i, slice.action)}
+            />
+          );
+        })}
         {/* Gold Gradient Def */}
         <defs>
           <linearGradient id="gold-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -181,16 +207,26 @@ const RadialMenu: React.FC<RadialMenuProps> = ({
 
       {/* Content (Icons & Text) - Absolute Positioned on top */}
       {slices.map((slice, i) => {
+        const isActive = activeSlice === i;
         const pos = getCentroid((slice.start + slice.end) / 2, textRadius - 20); // Adjust distance
         return (
           <div
             key={i}
-            className={`absolute pointer-events-none z-30 flex flex-col items-center justify-center text-center transform -translate-x-1/2 -translate-y-1/2
+            className={`absolute pointer-events-none z-30 flex flex-col items-center justify-center text-center transform -translate-x-1/2 -translate-y-1/2 transition-all duration-150
                    ${slice.isPrimary ? 'text-[#1a1a1a]' : 'text-gray-400'}
+                   ${
+                     isActive
+                       ? 'scale-110 text-white drop-shadow-[0_0_5px_rgba(255,255,255,0.8)]'
+                       : ''
+                   }
                `}
             style={{ left: pos.x, top: pos.y }}
           >
-            <slice.icon size={24} weight={slice.isPrimary ? 'fill' : 'regular'} className="mb-1" />
+            <slice.icon
+              size={24}
+              weight={slice.isPrimary || isActive ? 'fill' : 'regular'}
+              className="mb-1"
+            />
             <span
               className={`text-[9px] font-bold uppercase leading-tight whitespace-pre-line ${
                 slice.isPrimary ? 'font-black' : ''

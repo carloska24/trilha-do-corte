@@ -123,7 +123,7 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
         />
         {/* Badges Overlay on Image */}
-        <div className="absolute top-2 left-2 flex flex-col gap-1">
+        <div className="absolute inset-0 z-30 pointer-events-none">
           {service.badges && service.badges.length > 0
             ? service.badges.map((b, i) => <PromoBadge key={i} config={b} />)
             : service.badgeConfig && <PromoBadge config={service.badgeConfig} />}

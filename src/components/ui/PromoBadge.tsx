@@ -228,7 +228,6 @@ export const PromoBadge: React.FC<PromoBadgeProps> = ({ config, className }) => 
   // 4. Variant Rendering
   if (variant === 'ribbon') {
     // RIBBON STYLE (The "Faixa" - Horizontal Tab Style)
-
     // Check if it IS a full-width position (Center ones)
     const isFullWidth = position.includes('center') || position.includes('mid-center');
 
@@ -246,9 +245,31 @@ export const PromoBadge: React.FC<PromoBadgeProps> = ({ config, className }) => 
         'mid-center': '', // Full width
       }[position] || '';
 
+    // MARQUEE LOGIC
+    // We need to detect if text overflows the container
+    const containerRef = React.useRef<HTMLDivElement>(null);
+    const textRef = React.useRef<HTMLDivElement>(null);
+    const [isOverflowing, setIsOverflowing] = React.useState(false);
+
+    React.useEffect(() => {
+      const checkOverflow = () => {
+        if (textRef.current && containerRef.current) {
+          // Check if content width > container width
+          setIsOverflowing(textRef.current.scrollWidth > containerRef.current.clientWidth);
+        }
+      };
+
+      // Check immediately and on resize
+      checkOverflow();
+      // Also slight delay for font loading/layout
+      const timer = setTimeout(checkOverflow, 50);
+
+      return () => clearTimeout(timer);
+    }, [text, subText, position, variant]);
+
     return (
       <div
-        className={`absolute z-30 ${isFullWidth ? 'w-full' : 'max-w-[80%]'} ${
+        className={`absolute z-30 ${isFullWidth ? 'w-full' : 'max-w-[70%]'} ${
           positionClasses[position]
         } ${className}`}
       >
@@ -264,35 +285,63 @@ export const PromoBadge: React.FC<PromoBadgeProps> = ({ config, className }) => 
           {/* Content - with Marquee Effect */}
           <div className="relative flex items-center gap-2 w-full justify-center overflow-hidden h-full">
             {icon && (
-              <div style={textColorStyle} className={`${customTextClass} ${finalTextColorClass}`}>
+              <div
+                style={textColorStyle}
+                className={`shrink-0 ${customTextClass} ${finalTextColorClass}`}
+              >
                 <IconComponent />
               </div>
             )}
 
             {/* MARQUEE WRAPPER */}
             <div
+              ref={containerRef}
               className={`flex-1 overflow-hidden relative h-4 flex items-center ${
                 isFullWidth ? 'w-full' : ''
               }`}
             >
               <div
-                className={`whitespace-nowrap animate-ticker pl-1 ${customTextClass} ${finalTextColorClass}`}
-                style={textColorStyle}
+                ref={textRef}
+                className={`whitespace-nowrap ${
+                  isOverflowing ? 'animate-ticker pl-1' : ''
+                } ${customTextClass} ${finalTextColorClass}`}
+                style={{
+                  ...textColorStyle,
+                  width: isOverflowing ? 'auto' : '100%',
+                  display: 'flex',
+                }}
               >
                 <span className="font-black italic uppercase text-xs tracking-wider mr-4">
                   {text}
                 </span>
-                <span className="font-black italic uppercase text-xs tracking-wider mr-4">
-                  {text}
-                </span>
-                <span className="font-black italic uppercase text-xs tracking-wider mr-4">
-                  {text}
-                </span>
+
+                {/* Duplicates for Loop ONLY if overflowing */}
+                {isOverflowing && (
+                  <>
+                    <span className="font-black italic uppercase text-xs tracking-wider mr-4">
+                      {text}
+                    </span>
+                    <span className="font-black italic uppercase text-xs tracking-wider mr-4">
+                      {text}
+                    </span>
+                  </>
+                )}
               </div>
             </div>
 
+            {/* Subtext remains static usually, or we assume it flows? 
+                If we want subtext to also scroll, it should be inside the ticker.
+                For now, keeping subtext as separate static item "inert" unless requested otherwise. 
+                Wait, if text scrolls, subtext usually stays? Or maybe the whole line scrolls?
+                User said "texto ... se comporte como letreiro".
+                If I keep subtext outside, it might get crushed. 
+                Let's keep it simple: Text scrolls. Subtext stays for now as per original unless overflow happens there too?
+                Actually, the original design had subtext OUTSIDE the marquee wrapper. 
+                Let's stick to that but ensure shrink logic.
+            */}
+
             {subText && (
-              <>
+              <div className="shrink-0 flex items-center">
                 <span className={`opacity-50 mx-1 z-10 ${!customTextClass ? 'text-white' : ''}`}>
                   |
                 </span>
@@ -302,7 +351,7 @@ export const PromoBadge: React.FC<PromoBadgeProps> = ({ config, className }) => 
                 >
                   {subText}
                 </span>
-              </>
+              </div>
             )}
           </div>
         </div>

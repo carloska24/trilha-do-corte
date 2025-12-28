@@ -19,21 +19,25 @@ import {
 } from 'lucide-react';
 import { BarberProfile } from '../../types';
 
-interface SettingsViewProps {
-  barberProfile: BarberProfile;
-  onLogout: () => void;
-  onEditProfile: () => void;
-  isDarkMode: boolean;
-  toggleTheme: () => void;
+import { useAuth } from '../../contexts/AuthContext';
+import { useOutletContext } from 'react-router-dom';
+
+interface DashboardOutletContext {
+  openProfileModal: () => void;
 }
 
-export const SettingsView: React.FC<SettingsViewProps> = ({
-  barberProfile,
-  onLogout,
-  onEditProfile,
-  isDarkMode,
-  toggleTheme,
-}) => {
+export const SettingsView: React.FC = () => {
+  const { currentUser, logout } = useAuth();
+  const { openProfileModal } = useOutletContext<DashboardOutletContext>();
+
+  const barberProfile = currentUser as BarberProfile;
+  const onLogout = logout;
+  const onEditProfile = openProfileModal;
+
+  // Defaulting to Dark Mode as per "Zero Visual Changes" / Native Dark Mode rule
+  const isDarkMode = true;
+  const toggleTheme = () => console.log('Theme toggle deferred');
+
   // Local state for toggles with persistence initialization
   const [pushEnabled, setPushEnabled] = useState(() => {
     const saved = localStorage.getItem('settings_push');
@@ -101,16 +105,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   };
 
   // Common item styles - Updated for Semantic Colors
-  const containerClass =
-    'bg-white dark:bg-street-gray rounded-xl border border-gray-200 dark:border-border-color overflow-hidden shadow-sm dark:shadow-md';
+  const containerClass = 'bg-[#1E1E1E] rounded-xl border border-white/5 overflow-hidden shadow-md';
   const itemRowClass =
-    'flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors cursor-pointer group border-b border-gray-100 dark:border-white/5 last:border-b-0';
-  const labelClass =
-    'text-gray-900 dark:text-text-primary font-medium flex items-center gap-3 transition-colors';
-  const iconClass =
-    'text-gray-500 dark:text-text-primary group-hover:text-black dark:group-hover:text-[#FFD700] transition-colors';
+    'flex items-center justify-between p-4 hover:bg-white/5 transition-colors cursor-pointer group border-b border-white/5 last:border-b-0';
+  const labelClass = 'text-gray-100 font-medium flex items-center gap-3 transition-colors';
+  const iconClass = 'text-gray-400 group-hover:text-[#FFD700] transition-colors';
   const valueClass =
-    'text-gray-500 dark:text-text-secondary text-sm flex items-center gap-2 group-hover:text-gray-900 dark:group-hover:text-text-primary transition-colors';
+    'text-gray-500 text-sm flex items-center gap-2 group-hover:text-gray-200 transition-colors';
 
   // Toggle Switch Component
   const Toggle = ({ checked, onChange }: { checked: boolean; onChange: () => void }) => (
@@ -120,7 +121,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         onChange();
       }}
       className={`w-12 h-6 rounded-full p-1 cursor-pointer transition-colors duration-300 ease-in-out relative ${
-        checked ? 'bg-[#22C55E]' : 'bg-gray-300 dark:bg-gray-600'
+        checked ? 'bg-[#22C55E]' : 'bg-gray-700'
       }`}
     >
       <div
@@ -143,19 +144,19 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
       {/* HEADER */}
       <div className="text-center mb-6 pt-4">
-        <h2 className="text-4xl font-bebas text-transparent bg-clip-text bg-gradient-to-r from-gray-900 via-gray-700 to-gray-500 dark:text-white dark:bg-none tracking-widest uppercase mb-1 font-graffiti drop-shadow-sm dark:drop-shadow-none transition-all">
+        <h2 className="text-4xl font-bebas text-white tracking-widest uppercase mb-1 font-graffiti drop-shadow-sm transition-all">
           SETTINGS
         </h2>
       </div>
 
       {/* PROFILE */}
       <div className="mb-6">
-        <h3 className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-3 pl-1">
+        <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-3 pl-1">
           Profile
         </h3>
-        <div className="bg-white dark:bg-[#1E1E1E] rounded-xl p-4 flex items-center justify-between border border-gray-200 dark:border-white/5 shadow-md dark:shadow-lg transition-colors">
+        <div className="bg-[#1E1E1E] rounded-xl p-4 flex items-center justify-between border border-white/5 shadow-lg transition-colors">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-gray-100 dark:border-[#333]">
+            <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-[#333]">
               <img
                 src={
                   barberProfile.photoUrl ||
@@ -166,15 +167,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               />
             </div>
             <div>
-              <h4 className="text-gray-900 dark:text-white font-bold text-lg">
-                {barberProfile.name}
-              </h4>
+              <h4 className="text-white font-bold text-lg">{barberProfile.name}</h4>
               <p className="text-gray-500 text-xs truncate max-w-[150px]">{barberProfile.email}</p>
             </div>
           </div>
           <button
             onClick={onEditProfile}
-            className="bg-gray-100 hover:bg-gray-200 dark:bg-[#2A2A2A] dark:hover:bg-[#333] text-gray-900 dark:text-[#FFD700] text-xs font-bold px-4 py-2 rounded-lg border border-gray-200 dark:border-[#333] transition-colors hover:border-gray-300 dark:hover:border-[#FFD700]/50"
+            className="bg-[#2A2A2A] hover:bg-[#333] text-[#FFD700] text-xs font-bold px-4 py-2 rounded-lg border border-[#333] transition-colors hover:border-[#FFD700]/50"
           >
             Edit Profile
           </button>
@@ -183,7 +182,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
       {/* APP PREFERENCES */}
       <div className="mb-6">
-        <h3 className="text-sm font-bold text-gray-500 dark:text-text-secondary uppercase tracking-widest mb-3 pl-1">
+        <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-3 pl-1">
           App Preferences
         </h3>
         <div className={containerClass}>
@@ -221,7 +220,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
       {/* NOTIFICATIONS */}
       <div className="mb-6">
-        <h3 className="text-sm font-bold text-gray-500 dark:text-text-secondary uppercase tracking-widest mb-3 pl-1">
+        <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-3 pl-1">
           Notifications
         </h3>
         <div className={containerClass}>
@@ -248,7 +247,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
       {/* SYSTEM CONFIGURATION */}
       <div className="mb-6">
-        <h3 className="text-sm font-bold text-gray-500 dark:text-text-secondary uppercase tracking-widest mb-3 pl-1">
+        <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-3 pl-1">
           System Configuration
         </h3>
         <div className={containerClass}>
@@ -283,7 +282,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       <div className="mt-8">
         <button
           onClick={onLogout}
-          className="w-full bg-white dark:bg-street-gray hover:bg-red-50 dark:hover:bg-red-900/30 text-red-500 hover:text-red-600 dark:hover:text-red-400 py-4 rounded-xl border border-gray-200 dark:border-border-color font-bold uppercase tracking-widest transition-all shadow-md dark:shadow-lg flex items-center justify-center gap-2 group"
+          className="w-full bg-[#1E1E1E] hover:bg-red-900/30 text-red-500 hover:text-red-400 py-4 rounded-xl border border-white/5 font-bold uppercase tracking-widest transition-all shadow-lg flex items-center justify-center gap-2 group"
         >
           <LogOut size={20} className="group-hover:translate-x-1 transition-transform" /> Log Out
         </button>
@@ -296,21 +295,21 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           onClick={() => setActiveModal(null)}
         >
           <div
-            className="bg-white dark:bg-[#151515] border border-gray-200 dark:border-gray-800 w-full max-w-sm rounded-lg shadow-2xl overflow-hidden transition-colors"
+            className="bg-[#151515] border border-gray-800 w-full max-w-sm rounded-lg shadow-2xl overflow-hidden transition-colors"
             onClick={e => e.stopPropagation()}
           >
-            <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-[#111]">
-              <h3 className="font-bold text-gray-900 dark:text-white uppercase tracking-wider">
+            <div className="p-4 border-b border-gray-800 flex justify-between items-center bg-[#111]">
+              <h3 className="font-bold text-white uppercase tracking-wider">
                 {activeModal === 'privacy' ? 'Privacy Policy' : 'About Barber Pro'}
               </h3>
               <button
                 onClick={() => setActiveModal(null)}
-                className="text-gray-500 hover:text-gray-900 dark:text-gray-500 dark:hover:text-white"
+                className="text-gray-500 hover:text-white"
               >
                 <X size={20} />
               </button>
             </div>
-            <div className="p-6 text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
+            <div className="p-6 text-gray-400 text-sm leading-relaxed">
               {activeModal === 'privacy' ? (
                 <div className="space-y-4">
                   <p>
@@ -331,9 +330,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   <div className="w-16 h-16 bg-[#FFD700] rounded-lg flex items-center justify-center mx-auto mb-4 shadow-lg shadow-yellow-500/20">
                     <span className="font-black text-black text-xl">BP</span>
                   </div>
-                  <h4 className="text-gray-900 dark:text-white font-bold text-lg mb-1">
-                    Barber Pro System
-                  </h4>
+                  <h4 className="text-white font-bold text-lg mb-1">Barber Pro System</h4>
                   <p className="mb-4">Version 1.0.2 (Beta)</p>
                   <p>Sistema de gestão premium para barbearias de alto nível.</p>
                   <p className="mt-4 text-xs opacity-50">© 2025 Barber Pro. All rights reserved.</p>

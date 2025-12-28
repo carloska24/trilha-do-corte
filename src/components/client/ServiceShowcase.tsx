@@ -15,7 +15,7 @@ export const ServiceShowcase: React.FC<ServiceShowcaseProps> = ({ services, onBo
           if (!service || !service.name) return null;
           return (
             <div
-              key={service.id || index}
+              key={`${service.id}-${JSON.stringify(service.badges || [])}`}
               className="flex-shrink-0 w-[85vw] md:w-[320px] snap-center h-auto"
             >
               <ServiceCard

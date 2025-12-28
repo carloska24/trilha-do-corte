@@ -15,78 +15,67 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Auth Endpoints
-app.post('/api/login/client', (req, res) => {
-  const { emailOrPhone, password } = req.body;
+// Helper Wrapper for db.query to avoid repetitive try/catch if desired,
+// but using explicit try/catch in handlers is clearer for migration.
 
+// Auth Endpoints
+app.post('/api/login/client', async (req, res) => {
+  const { emailOrPhone, password } = req.body;
   console.log('📝 [Login Attempt] Client:', emailOrPhone);
 
-  // Try to clean phone input just in case (remove spaces, parens, dashes)
-  // But for now, let's just log what we have.
+  try {
+    const { rows } = await db.query('SELECT * FROM clients WHERE email = $1 OR phone = $2', [
+      emailOrPhone,
+      emailOrPhone,
+    ]);
+    const row = rows[0];
 
-  db.get(
-    'SELECT * FROM clients WHERE email = ? OR phone = ?',
-    [emailOrPhone, emailOrPhone],
-    async (err, row) => {
-      if (err) {
-        console.error('❌ Database connection error:', err);
-        res.status(500).json({ error: err.message });
-        return;
-      }
+    if (row) {
+      console.log('✅ User found:', row.name);
+      const match = await bcrypt.compare(password, row.password);
+      console.log('🔐 Match:', match);
 
-      if (row) {
-        console.log(
-          '✅ User found:',
-          row.name,
-          '| Stored Hash:',
-          row.password.substring(0, 15) + '...'
-        );
-        const match = await bcrypt.compare(password, row.password);
-        console.log('🔐 Password Match Result:', match);
-
-        if (match) {
-          console.log('🚀 Login Successful!');
-          const { password, ...userWithoutPass } = row;
-          res.json({ success: true, data: userWithoutPass });
-        } else {
-          console.log('⛔ Password Rejected.');
-          res.status(401).json({ error: 'Senha incorreta.' });
-        }
+      if (match) {
+        // Strip password
+        const { password, ...userWithoutPass } = row;
+        res.json({ success: true, data: userWithoutPass });
       } else {
-        console.log('⚠️ User NOT found for:', emailOrPhone);
-        res.status(401).json({ error: 'Usuário não encontrado.' });
+        res.status(401).json({ error: 'Senha incorreta.' });
       }
+    } else {
+      console.log('⚠️ User NOT found:', emailOrPhone);
+      res.status(401).json({ error: 'Usuário não encontrado.' });
     }
-  );
+  } catch (err) {
+    console.error('❌ Database error:', err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.post('/api/login/barber', (req, res) => {
+app.post('/api/login/barber', async (req, res) => {
   const { email, password } = req.body;
   console.log('💈 [Login Attempt] Barber:', email);
 
-  db.get('SELECT * FROM barbers WHERE email = ?', [email], async (err, row) => {
-    if (err) {
-      console.error('❌ Database Error:', err);
-      res.status(500).json({ error: err.message });
-      return;
-    }
+  try {
+    const { rows } = await db.query('SELECT * FROM barbers WHERE email = $1', [email]);
+    const row = rows[0];
+
     if (row) {
       console.log('✅ Barber found:', row.name);
       const match = await bcrypt.compare(password, row.password);
-      console.log('🔐 Password Match:', match);
-
       if (match) {
         const { password, ...userWithoutPass } = row;
         res.json({ success: true, data: userWithoutPass });
       } else {
-        console.log('⛔ Password Rejected.');
         res.status(401).json({ error: 'Credenciais inválidas' });
       }
     } else {
-      console.log('⚠️ Barber NOT found:', email);
       res.status(401).json({ error: 'Credenciais inválidas' });
     }
-  });
+  } catch (err) {
+    console.error('❌ Database Error:', err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.post('/api/register/client', async (req, res) => {
@@ -96,46 +85,51 @@ app.post('/api/register/client', async (req, res) => {
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
     const sql =
-      'INSERT INTO clients (id, name, phone, email, password, img, level, status, notes) VALUES (?,?,?,?,?,?, 1, "new", "")';
+      "INSERT INTO clients (id, name, phone, email, password, img, level, status, notes) VALUES ($1, $2, $3, $4, $5, $6, 1, 'new', '')";
     const params = [id, name, phone, email, hashedPassword, photoUrl];
 
-    db.run(sql, params, function (err) {
-      if (err) {
-        res.status(400).json({ error: err.message });
-        return;
-      }
-      res.json({
-        success: true,
-        data: { id, name, phone, email, img: photoUrl, level: 1, status: 'new' },
-      });
+    await db.query(sql, params);
+    res.json({
+      success: true,
+      data: { id, name, phone, email, img: photoUrl, level: 1, status: 'new' },
     });
   } catch (error) {
-    res.status(500).json({ error: 'Erro ao criar conta' });
+    console.error('Register Error:', error);
+    res.status(500).json({ error: 'Erro ao criar conta: ' + error.message });
   }
 });
 
 // Services
-app.get('/api/services', (req, res) => {
-  db.all('SELECT * FROM services', [], (err, rows) => {
-    if (err) {
-      res.status(400).json({ error: err.message });
-      return;
-    }
-    // Parse JSON string back to object
+app.get('/api/services', async (req, res) => {
+  try {
+    const { rows } = await db.query('SELECT * FROM services');
     const services = rows.map(row => ({
       ...row,
-      activePromo: row.activePromo ? JSON.parse(row.activePromo) : null,
+      activePromo: row.activepromo ? JSON.parse(row.activepromo) : null, // Postgres lowercases column names
+      badges: row.badges ? JSON.parse(row.badges) : [],
     }));
     res.json({ data: services });
-  });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
 });
 
-app.post('/api/services', (req, res) => {
-  const { name, price, priceValue, description, icon, image, activePromo, category, duration } =
-    req.body;
-  const id = Date.now().toString(); // Simple ID generation
+app.post('/api/services', async (req, res) => {
+  const {
+    name,
+    price,
+    priceValue,
+    description,
+    icon,
+    image,
+    activePromo,
+    category,
+    duration,
+    badges,
+  } = req.body;
+  const id = Date.now().toString();
   const sql =
-    'INSERT INTO services (id, name, price, priceValue, description, icon, image, activePromo, category, duration) VALUES (?,?,?,?,?,?,?,?,?,?)';
+    'INSERT INTO services (id, name, price, priceValue, description, icon, image, activePromo, category, duration, badges) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)';
   const params = [
     id,
     name,
@@ -147,26 +141,37 @@ app.post('/api/services', (req, res) => {
     activePromo ? JSON.stringify(activePromo) : null,
     category || 'Outros',
     duration || 30,
+    badges ? JSON.stringify(badges) : null,
   ];
 
-  db.run(sql, params, function (err) {
-    if (err) {
-      res.status(400).json({ error: err.message });
-      return;
-    }
+  try {
+    await db.query(sql, params);
     res.json({
       message: 'success',
-      data: { id, name, price, priceValue, description, icon, image, activePromo },
+      data: { id, name, price, priceValue, description, icon, image, activePromo, badges },
     });
-  });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
 });
 
-app.put('/api/services/:id', (req, res) => {
+app.put('/api/services/:id', async (req, res) => {
   const { id } = req.params;
-  const { name, price, priceValue, description, icon, image, activePromo, category, duration } =
-    req.body;
+  const {
+    name,
+    price,
+    priceValue,
+    description,
+    icon,
+    image,
+    activePromo,
+    category,
+    duration,
+    badges,
+  } = req.body;
+
   const sql =
-    'UPDATE services SET name = ?, price = ?, priceValue = ?, description = ?, icon = ?, image = ?, activePromo = ?, category = ?, duration = ? WHERE id = ?';
+    'UPDATE services SET name = $1, price = $2, priceValue = $3, description = $4, icon = $5, image = $6, activePromo = $7, category = $8, duration = $9, badges = $10 WHERE id = $11';
   const params = [
     name,
     price,
@@ -177,14 +182,12 @@ app.put('/api/services/:id', (req, res) => {
     activePromo ? JSON.stringify(activePromo) : null,
     category || 'Outros',
     duration || 30,
+    badges ? JSON.stringify(badges) : null,
     id,
   ];
 
-  db.run(sql, params, function (err) {
-    if (err) {
-      res.status(400).json({ error: err.message });
-      return;
-    }
+  try {
+    await db.query(sql, params);
     res.json({
       message: 'updated',
       data: {
@@ -198,140 +201,120 @@ app.put('/api/services/:id', (req, res) => {
         activePromo,
         category,
         duration,
+        badges,
       },
     });
-  });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
 });
 
-app.delete('/api/services/:id', (req, res) => {
+app.delete('/api/services/:id', async (req, res) => {
   const { id } = req.params;
-  const sql = 'DELETE FROM services WHERE id = ?';
-  db.run(sql, [id], function (err) {
-    if (err) {
-      res.status(400).json({ error: err.message });
-      return;
-    }
+  try {
+    await db.query('DELETE FROM services WHERE id = $1', [id]);
     res.json({ message: 'deleted', id });
-  });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
 });
 
 // Barbers
-app.get('/api/barbers', (req, res) => {
-  db.all('SELECT * FROM barbers', [], (err, rows) => {
-    if (err) {
-      res.status(400).json({ error: err.message });
-      return;
-    }
+app.get('/api/barbers', async (req, res) => {
+  try {
+    const { rows } = await db.query('SELECT * FROM barbers');
     res.json({ data: rows });
-  });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
 });
 
 // Clients
-app.get('/api/clients', (req, res) => {
-  db.all('SELECT * FROM clients', [], (err, rows) => {
-    if (err) {
-      res.status(400).json({ error: err.message });
-      return;
-    }
+app.get('/api/clients', async (req, res) => {
+  try {
+    const { rows } = await db.query('SELECT * FROM clients');
     res.json({ data: rows });
-  });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
 });
 
-app.post('/api/clients', (req, res) => {
+app.post('/api/clients', async (req, res) => {
   const { name, phone, level, lastVisit, img, status, notes } = req.body;
   const id = Date.now().toString();
   const sql =
-    'INSERT INTO clients (id, name, phone, level, lastVisit, img, status, notes) VALUES (?,?,?,?,?,?,?,?)';
+    'INSERT INTO clients (id, name, phone, level, lastVisit, img, status, notes) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)';
   const params = [id, name, phone, level, lastVisit, img, status, notes];
 
-  db.run(sql, params, function (err) {
-    if (err) {
-      res.status(400).json({ error: err.message });
-      return;
-    }
+  try {
+    await db.query(sql, params);
     res.json({
       message: 'success',
       data: { id, name, phone, level, lastVisit, img, status, notes },
     });
-  });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
 });
 
 // Appointments
-app.get('/api/appointments', (req, res) => {
-  db.all('SELECT * FROM appointments', [], (err, rows) => {
-    if (err) {
-      res.status(400).json({ error: err.message });
-      return;
-    }
+app.get('/api/appointments', async (req, res) => {
+  try {
+    const { rows } = await db.query('SELECT * FROM appointments');
     res.json({ data: rows });
-  });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
 });
 
-app.post('/api/appointments', (req, res) => {
+app.post('/api/appointments', async (req, res) => {
   const { clientName, serviceId, date, time, status, price, photoUrl, notes } = req.body;
 
-  // 1. Check for Double Booking
-  db.get(
-    'SELECT * FROM appointments WHERE date = ? AND time = ? AND status != "cancelled"',
-    [date, time],
-    (err, existing) => {
-      if (err) {
-        return res.status(500).json({ error: err.message });
-      }
+  try {
+    // 1. Check for Double Booking
+    const { rows: existingRows } = await db.query(
+      "SELECT * FROM appointments WHERE date = $1 AND time = $2 AND status != 'cancelled'",
+      [date, time]
+    );
 
-      if (existing) {
-        return res.status(409).json({ error: 'Horário já reservado por outro cliente.' });
-      }
-
-      // 2. Check Business Rules (Hours & Days)
-      try {
-        // Construct date object safely (handling potential format issues)
-        const dateObj = new Date(`${date}T${time}`);
-
-        // If date is invalid
-        if (isNaN(dateObj.getTime())) {
-          return res.status(400).json({ error: 'Data ou hora inválida.' });
-        }
-
-        const day = dateObj.getDay(); // 0 = Sunday, 1 = Monday...
-        const hour = parseInt(time.split(':')[0], 10);
-
-        // Rule: Closed on Sundays
-        if (day === 0) {
-          return res.status(400).json({ error: 'A barbearia não abre aos domingos!' });
-        }
-
-        // Rule: Hours 09:00 - 19:00
-        // Allows start times from 09:00 up to 18:00 (closing at 19:00)?
-        // Let's assume last slot is 18:XX so they finish by 19:00, or strict 19:00 limit.
-        // User rule: "08h-19h" (Memory says 08h-19h. Audit said 09h? Memory says "Seg-Sáb, 08h-19h")
-        // I will use 08h to 19h based on Memory.
-        if (hour < 8 || hour >= 19) {
-          return res.status(400).json({ error: 'Estamos fechados. Horário: 08h às 19h.' });
-        }
-
-        // Proceed to Insert
-        const id = Date.now().toString();
-        const sql =
-          'INSERT INTO appointments (id, clientName, serviceId, date, time, status, price, photoUrl, notes) VALUES (?,?,?,?,?,?,?,?,?)';
-        const params = [id, clientName, serviceId, date, time, status, price, photoUrl, notes];
-
-        db.run(sql, params, function (err2) {
-          if (err2) {
-            res.status(400).json({ error: err2.message });
-            return;
-          }
-          res.json({
-            message: 'success',
-            data: { id, clientName, serviceId, date, time, status, price, photoUrl, notes },
-          });
-        });
-      } catch (e) {
-        console.error(e);
-        return res.status(400).json({ error: 'Erro ao validar horário.' });
-      }
+    if (existingRows.length > 0) {
+      return res.status(409).json({ error: 'Horário já reservado por outro cliente.' });
     }
-  );
+
+    // 2. Check Business Rules
+    const dateObj = new Date(`${date}T${time}`);
+    if (isNaN(dateObj.getTime())) {
+      return res.status(400).json({ error: 'Data ou hora inválida.' });
+    }
+
+    const day = dateObj.getDay(); // 0 = Sunday
+    const hour = parseInt(time.split(':')[0], 10);
+
+    // Rule: Closed on Sundays
+    if (day === 0) {
+      return res.status(400).json({ error: 'A barbearia não abre aos domingos!' });
+    }
+
+    // Rule: Hours 08:00 - 19:00
+    if (hour < 8 || hour >= 19) {
+      return res.status(400).json({ error: 'Estamos fechados. Horário: 08h às 19h.' });
+    }
+
+    // Insert
+    const id = Date.now().toString();
+    const sql =
+      'INSERT INTO appointments (id, clientName, serviceId, date, time, status, price, photoUrl, notes) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)';
+    const params = [id, clientName, serviceId, date, time, status, price, photoUrl, notes];
+
+    await db.query(sql, params);
+    res.json({
+      message: 'success',
+      data: { id, clientName, serviceId, date, time, status, price, photoUrl, notes },
+    });
+  } catch (e) {
+    console.error(e);
+    return res.status(400).json({ error: 'Erro ao validar/salvar agendamento: ' + e.message });
+  }
 });
 
 app.listen(PORT, () => {

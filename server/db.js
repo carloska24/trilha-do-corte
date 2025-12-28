@@ -1,20 +1,29 @@
-import sqlite3 from 'sqlite3';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+import pg from 'pg';
 import bcrypt from 'bcryptjs';
+import dotenv from 'dotenv';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+dotenv.config();
 
-const dbPath = join(__dirname, 'database.sqlite');
-console.log('🔌 Conectando ao Banco de Dados em:', dbPath);
-const db = new sqlite3.Database(dbPath);
+const { Pool } = pg;
 
-// Pre-calculated hash for '123' to avoid async issues in top-level or sync delay
-// generated with bcrypt.hashSync('123', 10)
+console.log(
+  '🔌 Connecting to Postgres DB:',
+  process.env.DATABASE_URL?.split('@')[1] || 'Unknown Host'
+);
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false, // Required for Supabase in many environments
+  },
+});
+
+// Helper for single query
+export const query = (text, params) => pool.query(text, params);
+
+// Constants for Seeding
 const DEFAULT_PASS_HASH = bcrypt.hashSync('123', 10);
 
-// Initial Data (from constants.ts)
 const SERVICES = [
   {
     id: '1',
@@ -162,124 +171,141 @@ const CLIENTS = [
   },
 ];
 
-const today = new Date().toISOString().split('T')[0];
 const APPOINTMENTS = [];
 
-db.serialize(() => {
-  // Services Table
-  db.run(`CREATE TABLE IF NOT EXISTS services (
-    id TEXT PRIMARY KEY,
-    name TEXT,
-    price TEXT,
-    priceValue REAL,
-    description TEXT,
-    icon TEXT,
-    image TEXT,
-    category TEXT,
-    activePromo TEXT
-  )`);
+// Init DB
+(async () => {
+  try {
+    const client = await pool.connect();
+    try {
+      // Services
+      await client.query(`
+                CREATE TABLE IF NOT EXISTS services (
+                    id TEXT PRIMARY KEY,
+                    name TEXT,
+                    price TEXT,
+                    priceValue REAL,
+                    description TEXT,
+                    icon TEXT,
+                    image TEXT,
+                    category TEXT,
+                    activePromo TEXT,
+                    duration INTEGER,
+                    badges TEXT
+                )
+            `);
 
-  // Barbers Table
-  db.run(`CREATE TABLE IF NOT EXISTS barbers (
-    id TEXT PRIMARY KEY,
-    name TEXT,
-    specialty TEXT,
-    image TEXT,
-    email TEXT,
-    password TEXT
-  )`);
+      // Barbers
+      await client.query(`
+                CREATE TABLE IF NOT EXISTS barbers (
+                    id TEXT PRIMARY KEY,
+                    name TEXT,
+                    specialty TEXT,
+                    image TEXT,
+                    email TEXT,
+                    password TEXT
+                )
+            `);
 
-  // Clients Table
-  db.run(`CREATE TABLE IF NOT EXISTS clients (
-    id TEXT PRIMARY KEY,
-    name TEXT,
-    phone TEXT,
-    level INTEGER,
-    lastVisit TEXT,
-    img TEXT,
-    status TEXT,
-    notes TEXT,
-    password TEXT,
-    email TEXT
-  )`);
+      // Clients
+      await client.query(`
+                CREATE TABLE IF NOT EXISTS clients (
+                    id TEXT PRIMARY KEY,
+                    name TEXT,
+                    phone TEXT,
+                    level INTEGER,
+                    lastVisit TEXT,
+                    img TEXT,
+                    status TEXT,
+                    notes TEXT,
+                    password TEXT,
+                    email TEXT
+                )
+            `);
 
-  // Appointments Table
-  db.run(`CREATE TABLE IF NOT EXISTS appointments (
-    id TEXT PRIMARY KEY,
-    clientName TEXT,
-    serviceId TEXT,
-    date TEXT,
-    time TEXT,
-    status TEXT,
-    price REAL,
-    photoUrl TEXT,
-    notes TEXT
-  )`);
+      // Appointments
+      await client.query(`
+                CREATE TABLE IF NOT EXISTS appointments (
+                    id TEXT PRIMARY KEY,
+                    clientName TEXT,
+                    serviceId TEXT,
+                    date TEXT,
+                    time TEXT,
+                    status TEXT,
+                    price REAL,
+                    photoUrl TEXT,
+                    notes TEXT
+                )
+            `);
 
-  // Seed Data if empty
-  db.get('SELECT count(*) as count FROM services', (err, row) => {
-    if (row.count === 0) {
-      console.log('Seeding Services...');
-      const stmt = db.prepare('INSERT INTO services VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-      SERVICES.forEach(s =>
-        stmt.run(
-          s.id,
-          s.name,
-          s.price,
-          s.priceValue,
-          s.description,
-          s.icon,
-          s.image,
-          s.category,
-          s.duration,
-          null
-        )
-      );
-      stmt.finalize();
+      // Seeding
+      const servicesCheck = await client.query('SELECT count(*) as count FROM services');
+      if (parseInt(servicesCheck.rows[0].count) === 0) {
+        console.log('Seeding Services...');
+        for (const s of SERVICES) {
+          await client.query(
+            'INSERT INTO services VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)',
+            [
+              s.id,
+              s.name,
+              s.price,
+              s.priceValue,
+              s.description,
+              s.icon,
+              s.image,
+              s.category,
+              s.activePromo ? JSON.stringify(s.activePromo) : null,
+              s.duration,
+              null,
+            ]
+          );
+        }
+      }
+
+      const barbersCheck = await client.query('SELECT count(*) as count FROM barbers');
+      if (parseInt(barbersCheck.rows[0].count) === 0) {
+        console.log('Seeding Barbers...');
+        for (const b of BARBERS) {
+          await client.query('INSERT INTO barbers VALUES ($1, $2, $3, $4, $5, $6)', [
+            b.id,
+            b.name,
+            b.specialty,
+            b.image,
+            b.email,
+            b.password,
+          ]);
+        }
+      }
+
+      const clientsCheck = await client.query('SELECT count(*) as count FROM clients');
+      if (parseInt(clientsCheck.rows[0].count) === 0) {
+        console.log('Seeding Clients...');
+        for (const c of CLIENTS) {
+          await client.query(
+            'INSERT INTO clients VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)',
+            [
+              c.id,
+              c.name,
+              c.phone,
+              c.level,
+              c.lastVisit,
+              c.img,
+              c.status,
+              c.notes,
+              c.password,
+              c.email,
+            ]
+          );
+        }
+      }
+
+      console.log('✅ Database Initialized (Postgres/Supabase)');
+    } finally {
+      client.release();
     }
-  });
+  } catch (err) {
+    console.error('❌ Failed to initialize DB:', err);
+  }
+})();
 
-  db.get('SELECT count(*) as count FROM barbers', (err, row) => {
-    if (row.count === 0) {
-      console.log('Seeding Barbers...');
-      const stmt = db.prepare('INSERT INTO barbers VALUES (?, ?, ?, ?, ?, ?)');
-      BARBERS.forEach(b => stmt.run(b.id, b.name, b.specialty, b.image, b.email, b.password));
-      stmt.finalize();
-    }
-  });
-
-  db.get('SELECT count(*) as count FROM clients', (err, row) => {
-    if (row.count === 0) {
-      console.log('Seeding Clients...');
-      const stmt = db.prepare('INSERT INTO clients VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-      CLIENTS.forEach(c =>
-        stmt.run(
-          c.id,
-          c.name,
-          c.phone,
-          c.level,
-          c.lastVisit,
-          c.img,
-          c.status,
-          c.notes,
-          c.password,
-          c.email
-        )
-      );
-      stmt.finalize();
-    }
-  });
-
-  db.get('SELECT count(*) as count FROM appointments', (err, row) => {
-    if (row.count === 0) {
-      console.log('Seeding Appointments...');
-      const stmt = db.prepare('INSERT INTO appointments VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
-      APPOINTMENTS.forEach(a =>
-        stmt.run(a.id, a.clientName, a.serviceId, a.date, a.time, a.status, a.price, a.photoUrl, '')
-      );
-      stmt.finalize();
-    }
-  });
-});
-
-export default db;
+export default { query, pool };

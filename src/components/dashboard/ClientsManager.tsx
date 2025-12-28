@@ -2,18 +2,20 @@ import React, { useState } from 'react';
 import { Search, User, ChevronRight, Plus, X, Save, MessageCircle } from 'lucide-react';
 import { Client } from '../../types';
 import { generateId } from '../../utils';
+import { useData } from '../../contexts/DataContext';
+import { useOutletContext } from 'react-router-dom';
 
-interface ClientsManagerProps {
-  onSelectClient: (client: Client) => void;
-  clients: Client[];
-  onAddClient: (client: Client) => void;
+interface DashboardOutletContext {
+  setSelectedClient: (client: Client) => void;
 }
 
-export const ClientsManager: React.FC<ClientsManagerProps> = ({
-  onSelectClient,
-  clients,
-  onAddClient,
-}) => {
+export const ClientsManager: React.FC = () => {
+  const { clients, updateClients } = useData();
+  const { setSelectedClient } = useOutletContext<DashboardOutletContext>();
+
+  const onSelectClient = setSelectedClient;
+  const onAddClient = (client: Client) => updateClients([...clients, client]);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newClientData, setNewClientData] = useState({

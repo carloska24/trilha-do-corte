@@ -2,21 +2,26 @@ import React, { useState } from 'react';
 import { Appointment } from '../../types';
 import { SERVICES } from '../../constants';
 import { Wallet, Users, TrendingUp, BarChart3, Receipt, EyeOff } from 'lucide-react';
+import { useData } from '../../contexts/DataContext';
+import { useOutletContext } from 'react-router-dom';
 
-interface FinancialVaultProps {
-  todayRevenue: number;
+interface DashboardOutletContext {
   dailyGoal: number;
-  completedCount: number;
-  finished: Appointment[];
 }
 
-export const FinancialVault: React.FC<FinancialVaultProps> = ({
-  todayRevenue,
-  dailyGoal,
-  completedCount,
-  finished,
-}) => {
-  const [historyCleared, setHistoryCleared] = useState(false); // Local state for this view's history toggle?
+export const FinancialVault: React.FC = () => {
+  const { appointments } = useData();
+  const { dailyGoal } = useOutletContext<DashboardOutletContext>();
+
+  // Derived Data
+  const finished = appointments
+    .filter(a => a.status === 'completed')
+    .sort((a, b) => b.time.localeCompare(a.time));
+  const todayRevenue = finished.reduce((acc, curr) => acc + curr.price, 0);
+  const completedCount = finished.length;
+
+  const [historyCleared, setHistoryCleared] = useState(false); // Local state if needed
+
   // Actually the original code had `historyCleared` used in the MODAL.
   // Does the VIEW have a history list?
   // Line 1054: "Lista de Transações 'Log do Sistema'".

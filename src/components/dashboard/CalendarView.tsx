@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Appointment, BookingData, Service } from '../../types';
+import { Appointment, BookingData, Service, Client } from '../../types';
 import {
   ChevronLeft,
   ChevronRight,
@@ -12,20 +12,48 @@ import {
   CheckCircle2,
   AlertCircle,
 } from 'lucide-react';
+import { useData } from '../../contexts/DataContext';
+import { useOutletContext } from 'react-router-dom';
 
-interface CalendarViewProps {
-  appointments: Appointment[];
-  services: Service[];
-  onNewAppointment: (data: BookingData) => void;
-  onSelectClient: (clientName: string) => void;
+interface DashboardOutletContext {
+  setSelectedClient: (client: Client) => void;
 }
 
-export const CalendarView: React.FC<CalendarViewProps> = ({
-  appointments,
-  services,
-  onNewAppointment,
-  onSelectClient,
-}) => {
+export const CalendarView: React.FC = () => {
+  const { appointments, services, updateAppointments, clients } = useData();
+  const { setSelectedClient } = useOutletContext<DashboardOutletContext>();
+
+  const onNewAppointment = (data: BookingData) => {
+    // Basic implementation for adding appointment - in a real app this would generate ID etc.
+    // For now we assume the parent usually handled it.
+    // Let's create a partial appointment object compatible with the type
+    const newApp: Appointment = {
+      id: Math.random().toString(36).substr(2, 9),
+      ...data,
+      status: 'pending', // Default status
+      clientName: data.name,
+      price: services.find(s => s.id === data.serviceId)?.price || 0,
+      photoUrl: null, // Placeholder
+    };
+    updateAppointments([...appointments, newApp]);
+  };
+
+  const onSelectClient = (clientName: string) => {
+    const found =
+      clients.find(c => c.name.toLowerCase() === clientName.toLowerCase()) ||
+      ({
+        id: 'temp',
+        name: clientName,
+        phone: 'Sem cadastro',
+        level: 1,
+        lastVisit: 'Hoje',
+        img: null,
+        status: 'new',
+        notes: 'Agendamento rápido.',
+      } as Client);
+    setSelectedClient(found);
+  };
+
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [activeTab, setActiveTab] = useState<'daily' | 'weekly' | 'monthly'>('daily');
   const [currentMonth, setCurrentMonth] = useState(new Date());
