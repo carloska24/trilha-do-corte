@@ -87,19 +87,16 @@ export const VitrineDestaques: React.FC<VitrineDestaquesProps> = ({ services, on
               window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
             }
           }}
-          className="flex items-center gap-2 cursor-pointer select-none active:scale-95 transition-transform"
+          className="flex items-center gap-2 cursor-pointer select-none active:scale-95 transition-transform group"
         >
-          <Sparkles className="text-neon-yellow" size={20} />
-          <h2 className="text-xl font-black text-white uppercase tracking-tighter flex items-center gap-2">
+          <Sparkles className="text-neon-yellow group-hover:animate-spin-slow" size={20} />
+          <h2 className="text-xl font-black text-white uppercase tracking-tighter flex items-center gap-2 group-hover:text-gray-200 transition-colors">
             Destaques{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-neon-yellow to-neon-orange">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-neon-yellow to-neon-orange group-hover:brightness-110">
               Da Trilha
             </span>
           </h2>
         </div>
-        <button className="text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-white transition-colors flex items-center gap-1">
-          Ver tudo <ChevronRight size={12} />
-        </button>
       </div>
 
       <div

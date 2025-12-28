@@ -80,8 +80,9 @@ export const ClientHeader: React.FC<ClientHeaderProps> = ({
               size={22}
               className="text-gray-400 group-hover:text-[#FFD700] transition-colors"
             />
-            {unreadCount > 0 && (
-              <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-[#050505] animate-bounce"></span>
+            {/* Simulation or Real Count */}
+            {(unreadCount > 0 || true) && (
+              <span className="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[#050505] animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]"></span>
             )}
           </button>
 

@@ -65,10 +65,6 @@ export const PortfolioGallery = () => {
           </div>
         ))}
       </div>
-
-      <div className="mt-8 flex justify-center">
-        <div className="h-12 w-px bg-gradient-to-b from-gray-300 dark:from-gray-800 to-transparent"></div>
-      </div>
     </div>
   );
 };

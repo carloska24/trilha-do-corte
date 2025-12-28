@@ -337,12 +337,15 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
           <div className="lg:col-span-5 space-y-4">
             <div
               onClick={() => scrollToSection('wallet-section')}
-              className="flex items-center gap-2 w-fit cursor-pointer select-none active:scale-95 transition-transform"
+              className="flex items-center gap-2 w-fit cursor-pointer select-none active:scale-95 transition-transform group"
             >
-              <Wallet className="text-neon-yellow" size={20} />
-              <h2 className="text-xl font-black text-white uppercase tracking-tighter">
+              <Wallet
+                className="text-neon-yellow group-hover:drop-shadow-[0_0_8px_rgba(234,179,8,0.5)] transition-all"
+                size={20}
+              />
+              <h2 className="text-xl font-black text-white uppercase tracking-tighter group-hover:text-gray-200 transition-colors">
                 Trilha{' '}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-neon-yellow to-neon-orange">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-neon-yellow to-neon-orange group-hover:brightness-110">
                   Card
                 </span>
               </h2>
