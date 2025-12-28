@@ -268,7 +268,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
                     e.currentTarget.src =
                       'https://images.unsplash.com/photo-1634152962476-4b8a00e1915c?q=80&w=800&auto=format&fit=crop'; // Fallback texture
                   }}
-                  className="w-full h-full object-cover object-center filter grayscale group-hover:grayscale-0 transition-all duration-700"
+                  className="w-full h-full object-cover object-center transition-all duration-700"
                   alt="Background"
                 />
               </div>

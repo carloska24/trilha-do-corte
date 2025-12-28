@@ -373,8 +373,38 @@ body {
   }
 }
 
-
 /* Slant Clip Path for Price Tag */
 .clip-path-slant-left {
   clip-path: polygon(20% 0, 100% 0, 100% 100%, 0% 100%);
+}
+
+/* --- CUSTOM WALLET ANIMATIONS --- */
+@layer utilities {
+  @keyframes coin-bounce {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-3px);
+    }
+  }
+  @keyframes coin-enter {
+    0% {
+      transform: translateY(-10px);
+      opacity: 0;
+    }
+    50% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+}
+
+/* Custom class for the wallet glow */
+.wallet-glow {
+  filter: drop-shadow(0 0 5px rgba(234, 179, 8, 0.5));
 }

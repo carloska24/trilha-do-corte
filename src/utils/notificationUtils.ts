@@ -72,9 +72,13 @@ export const useNotifications = () => {
     // Listen for storage events (if tabs are different)
     window.addEventListener('storage', refresh);
 
+    // Polling fallback (robustness for demo)
+    const intervalId = setInterval(refresh, 3000);
+
     return () => {
       window.removeEventListener(EVENT_NAME, refresh);
       window.removeEventListener('storage', refresh);
+      clearInterval(intervalId);
     };
   }, []);
 

@@ -4,6 +4,7 @@ import { ClientsIcon } from './icons/ClientsIcon';
 import { CalendarIcon } from './icons/CalendarIcon';
 import { ServicesIcon } from './icons/ServicesIcon';
 import { SettingsIcon } from './icons/SettingsIcon';
+import { AnimatedWallet } from './icons/AnimatedWallet';
 import {
   Appointment,
   AppointmentStatus,
@@ -216,42 +217,39 @@ export const BarberDashboard: React.FC<BarberDashboardProps> = ({
   return (
     <div className="min-h-screen bg-transparent text-text-primary font-sans selection:bg-yellow-500 selection:text-black transition-colors duration-300">
       {/* HEADER PIXEL PERFECT */}
+      {/* HEADER PIXEL PERFECT - FLEX LAYOUT (User Approved) */}
       <header className="fixed top-0 left-0 right-0 h-16 bg-white dark:bg-street-dark z-40 flex items-center justify-between px-4 border-b border-border-color transition-colors duration-300">
+        {/* BRANDING (Left) */}
         <div className="flex items-center gap-3">
-          {/* Logo Yellow Square */}
           <div className="w-10 h-10 bg-[#FFD700] rounded-lg flex items-center justify-center shadow-lg shadow-yellow-500/20 overflow-hidden">
             <ChairIcon size={24} className="text-black animate-float-slow" />
           </div>
-          <div>
-            <h1 className="text-xl font-bold text-text-primary tracking-tight font-sans">
-              BARBER PRO
-            </h1>
-          </div>
+          <h1 className="text-xl font-bold text-text-primary tracking-tight font-sans hidden md:block">
+            BARBER PRO
+          </h1>
         </div>
 
-        <div className="flex items-center gap-4">
-          {/* Wallet Button */}
+        {/* ICONS GROUP (Right) */}
+        <div className="flex items-center gap-6">
+          {/* Wallet (Centered in its own space relative to group - Wrapper removed for strict flex alignment) */}
           <button
             onClick={() => setShowFinancials(true)}
             className="group flex items-center justify-center transition-transform hover:scale-110"
           >
-            <Wallet
-              size={40}
-              className="text-gray-400 group-hover:text-text-primary transition-colors drop-shadow-lg"
-            />
+            <AnimatedWallet className="w-10 h-10 text-text-primary drop-shadow-xl filter brightness-110" />
           </button>
 
-          {/* Profile with Status Dot */}
+          {/* Barber Profile (Prominent) */}
           <button
             onClick={() => setShowProfileModal(true)}
-            className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-gray-100 dark:border-street-gray"
+            className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-gray-100 dark:border-street-gray shadow-md hover:border-[#FFD700] transition-colors"
           >
             <img
               src={barberProfile.photoUrl || DEFAULT_BARBER_IMAGE}
               alt="Profile"
               className="w-full h-full object-cover"
             />
-            <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-street-dark"></div>
+            <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-white dark:border-street-dark animate-pulse"></div>
           </button>
         </div>
       </header>
