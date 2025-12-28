@@ -209,9 +209,12 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             className="flex items-center gap-2 mb-4 w-fit cursor-pointer select-none active:scale-95 transition-transform"
           >
-            <Ticket className="text-purple-500" size={20} />
+            <Ticket className="text-neon-yellow" size={20} />
             <h2 className="text-xl font-black text-white uppercase tracking-tighter">
-              Próximo <span className="text-gray-600">Embarque</span>
+              Próximo{' '}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-neon-yellow to-neon-orange">
+                Embarque
+              </span>
             </h2>
           </div>
 
@@ -314,9 +317,12 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
             onClick={() => scrollToSection('services-section')}
             className="px-4 py-4 flex items-center gap-2 cursor-pointer select-none active:scale-95 transition-transform w-fit"
           >
-            <Scissors className="text-neon-orange" size={20} />
+            <Scissors className="text-neon-yellow" size={20} />
             <h2 className="text-xl font-black text-white uppercase tracking-tighter">
-              Menu de <span className="text-neon-orange">Estilo</span>
+              Menu de{' '}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-neon-yellow to-neon-orange">
+                Estilo
+              </span>
             </h2>
           </div>
 
@@ -329,6 +335,18 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
           className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12 px-4 pt-0 relative"
         >
           <div className="lg:col-span-5 space-y-4">
+            <div
+              onClick={() => scrollToSection('wallet-section')}
+              className="flex items-center gap-2 w-fit cursor-pointer select-none active:scale-95 transition-transform"
+            >
+              <Wallet className="text-neon-yellow" size={20} />
+              <h2 className="text-xl font-black text-white uppercase tracking-tighter">
+                Trilha{' '}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-neon-yellow to-neon-orange">
+                  Card
+                </span>
+              </h2>
+            </div>
             <LoyaltyCard client={client} onClick={() => scrollToSection('wallet-section')} />
           </div>
 

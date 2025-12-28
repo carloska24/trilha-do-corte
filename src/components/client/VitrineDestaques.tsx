@@ -89,8 +89,8 @@ export const VitrineDestaques: React.FC<VitrineDestaquesProps> = ({ services, on
           }}
           className="flex items-center gap-2 cursor-pointer select-none active:scale-95 transition-transform"
         >
+          <Sparkles className="text-neon-yellow" size={20} />
           <h2 className="text-xl font-black text-white uppercase tracking-tighter flex items-center gap-2">
-            <Sparkles className="text-neon-yellow hidden md:block" size={20} />
             Destaques{' '}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-neon-yellow to-neon-orange">
               Da Trilha

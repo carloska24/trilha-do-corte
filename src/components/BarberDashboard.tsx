@@ -84,13 +84,6 @@ export const BarberDashboard: React.FC<BarberDashboardProps> = ({
   isDarkMode,
   toggleTheme,
 }) => {
-  // --- GLOBAL STATE (Managed by App.tsx now) ---
-  // const [currentView, setCurrentView] = useState<'home' | 'clients' | 'calendar' | 'financial' | 'services'>('home');
-  // const [appointments, setAppointments] = ...
-  // const [barberProfile, setBarberProfile] = ...
-
-  // const [services, setServices] = useState<Service[]>(INITIAL_SERVICES); // Still local for now, could be lifted later
-
   // UI State
   const [currentTime, setCurrentTime] = useState(new Date());
   const [showFinancials, setShowFinancials] = useState(false); // Modal toggle
@@ -113,8 +106,6 @@ export const BarberDashboard: React.FC<BarberDashboardProps> = ({
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
-
-  // Local storage effects removed as App.tsx handles persistence
 
   // --- HELPERS ---
   const getShopStatus = () => {
@@ -150,9 +141,6 @@ export const BarberDashboard: React.FC<BarberDashboardProps> = ({
   };
 
   const hasSpeechSupport = 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window;
-
-  // --- ACTIONS ---
-  // handleStatusChange, handleNewAppointment, handleUpdateProfile removed as they are now props
 
   const handleProfilePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -217,21 +205,34 @@ export const BarberDashboard: React.FC<BarberDashboardProps> = ({
   return (
     <div className="min-h-screen bg-transparent text-text-primary font-sans selection:bg-yellow-500 selection:text-black transition-colors duration-300">
       {/* HEADER PIXEL PERFECT */}
-      {/* HEADER PIXEL PERFECT - FLEX LAYOUT (User Approved) */}
       <header className="fixed top-0 left-0 right-0 h-16 bg-white dark:bg-street-dark z-40 flex items-center justify-between px-4 border-b border-border-color transition-colors duration-300">
         {/* BRANDING (Left) */}
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-[#FFD700] rounded-lg flex items-center justify-center shadow-lg shadow-yellow-500/20 overflow-hidden">
-            <ChairIcon size={24} className="text-black animate-float-slow" />
+          {/* Logo - Restored Chair in Yellow Box */}
+          <div className="w-12 h-12 bg-[#FFD700] rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(234,179,8,0.2)] group hover:shadow-[0_0_30px_rgba(234,179,8,0.4)] transition-all duration-300">
+            <ChairIcon
+              size={28}
+              className="text-black group-hover:scale-110 transition-transform"
+            />
           </div>
-          <h1 className="text-xl font-bold text-text-primary tracking-tight font-sans hidden md:block">
-            BARBER PRO
-          </h1>
+
+          <div className="flex flex-col justify-center translate-y-[2px]">
+            {/* Main Title with Glow */}
+            <h1 className="text-2xl md:text-3xl text-text-primary dark:text-white tracking-wide leading-none font-rye drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+              Trilha do Corte
+            </h1>
+            <div className="flex items-center gap-2 pl-1">
+              {/* Subtitle with brand color */}
+              <span className="text-[10px] md:text-xs font-bold text-[#FFD700] uppercase tracking-[0.35em] drop-shadow-sm opacity-90 font-sans">
+                Barber Club
+              </span>
+            </div>
+          </div>
         </div>
 
         {/* ICONS GROUP (Right) */}
         <div className="flex items-center gap-6">
-          {/* Wallet (Centered in its own space relative to group - Wrapper removed for strict flex alignment) */}
+          {/* Wallet */}
           <button
             onClick={() => setShowFinancials(true)}
             className="group flex items-center justify-center transition-transform hover:scale-110"
@@ -239,7 +240,7 @@ export const BarberDashboard: React.FC<BarberDashboardProps> = ({
             <AnimatedWallet className="w-10 h-10 text-text-primary drop-shadow-xl filter brightness-110" />
           </button>
 
-          {/* Barber Profile (Prominent) */}
+          {/* Barber Profile */}
           <button
             onClick={() => setShowProfileModal(true)}
             className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-gray-100 dark:border-street-gray shadow-md hover:border-[#FFD700] transition-colors"
@@ -572,9 +573,9 @@ export const BarberDashboard: React.FC<BarberDashboardProps> = ({
                 <input
                   type="file"
                   ref={fileInputRef}
-                  onChange={handleFileChange}
                   className="hidden"
                   accept="image/*"
+                  onChange={handleFileChange}
                 />
               </div>
               <div>
