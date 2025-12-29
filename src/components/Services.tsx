@@ -234,7 +234,7 @@ export const Services: React.FC<ServicesProps> = ({ onOpenBooking, services }) =
                       {promo && promo.discountValue ? (
                         <div className="flex flex-col leading-none">
                           <span className="text-[10px] line-through text-gray-500 font-bold opacity-80 decoration-red-500 decoration-2">
-                            {service.priceValue.toFixed(2)}
+                            {(service.priceValue || 0).toFixed(2)}
                           </span>
                           <span className="text-2xl font-black tracking-tighter text-neon-yellow animate-pulse">
                             {promo.discountValue.replace('R$', '').trim()}
@@ -242,7 +242,7 @@ export const Services: React.FC<ServicesProps> = ({ onOpenBooking, services }) =
                         </div>
                       ) : (
                         <span className="text-2xl font-black tracking-tighter text-neon-yellow">
-                          {service.priceValue.toFixed(2)}
+                          {(service.priceValue || 0).toFixed(2)}
                         </span>
                       )}
                     </div>

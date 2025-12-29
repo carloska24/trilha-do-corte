@@ -16,23 +16,14 @@ interface DataContextType {
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Initialize from LocalStorage for seamless UX before API loads
-  const [appointments, setAppointments] = useState<Appointment[]>(() => {
-    const saved = localStorage.getItem('appointments');
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  const [services, setServices] = useState<ServiceItem[]>(() => {
-    const saved = localStorage.getItem('services');
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  const [clients, setClients] = useState<Client[]>(() => {
-    const saved = localStorage.getItem('clients');
-    return saved ? JSON.parse(saved) : [];
-  });
+  // Initialize empty - Always fetch from API (Cloud First)
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [services, setServices] = useState<ServiceItem[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
 
   const [isLoading, setIsLoading] = useState(false);
+
+  // ... (refreshData definition remains same, just ensuring it's called)
 
   const refreshData = useCallback(async () => {
     setIsLoading(true);
@@ -43,16 +34,44 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         api.getClients(),
       ]);
 
-      // Only update if we don't have local data?
-      // For now, in "Mock Mode", we should probably NOT overwrite with API data if we want persistence.
-      // But let's leave this function as "Force Refresh" logic.
+      console.log('🔍 [DataContext] Raw Services from API:', fetchedServices);
 
-      setServices(fetchedServices);
+      const normalizedServices = fetchedServices.map((s: any) => {
+        // Handle Postgres lowercase keys
+        const priceVal = s.priceValue ?? s.pricevalue;
+        const priceRaw = s.price;
+
+        return {
+          ...s,
+          // Adapter for Backend Schema mismatch:
+          // Ensure priceValue is a number. Check both CamelCase and lowercase.
+          priceValue:
+            priceVal !== undefined && priceVal !== null
+              ? Number(priceVal)
+              : typeof priceRaw === 'number'
+              ? priceRaw
+              : 0,
+          // Ensure visual price string exists
+          price:
+            typeof priceRaw === 'string'
+              ? priceRaw
+              : `R$ ${(
+                  (priceVal !== undefined && priceVal !== null ? Number(priceVal) : 0) ||
+                  (typeof priceRaw === 'number' ? priceRaw : 0)
+                )
+                  .toFixed(2)
+                  .replace('.', ',')}`,
+          // Normalize activePromo if needed (handle lowercase from DB if not already handled by backend)
+          activePromo: s.activePromo || (s.activepromo ? JSON.parse(s.activepromo) : undefined),
+        };
+      });
+
+      setServices(normalizedServices);
       setAppointments(fetchedAppointments);
       setClients(fetchedClients);
 
-      // Update local storage
-      localStorage.setItem('services', JSON.stringify(fetchedServices));
+      // We can still save to LS for backup, but we won't read from it on init
+      localStorage.setItem('services', JSON.stringify(normalizedServices));
       localStorage.setItem('appointments', JSON.stringify(fetchedAppointments));
       localStorage.setItem('clients', JSON.stringify(fetchedClients));
     } catch (error) {
@@ -62,14 +81,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  // Initial Fetch - SMART STRATEGY
-  // If we have no services (empty localStorage), fetch default/mock data.
-  // If we have data, keep it (don't overwrite with mocks).
+  // Force Fetch on Mount
   useEffect(() => {
-    if (services.length === 0) {
-      refreshData();
-    }
-  }, [refreshData, services.length]);
+    refreshData();
+  }, [refreshData]);
 
   // Sync state changes to LoalStorage
   useEffect(() => {
