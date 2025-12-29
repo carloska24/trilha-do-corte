@@ -1,6 +1,7 @@
 import { ServiceItem, Barber, Client, Appointment } from '../types';
 
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+const BASE_URL = import.meta.env.VITE_API_URL || '';
+const API_URL = BASE_URL ? `${BASE_URL}/api` : '/api';
 
 export const api = {
   loginClient: async (emailOrPhone: string, password: string): Promise<Client | null> => {
