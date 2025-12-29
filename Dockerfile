@@ -21,8 +21,5 @@ COPY server/ ./server/
 # For now, we assume the server creates it if missing (db.js logic).
 
 # Expose the port Cloud Run expects
-ENV PORT=8080
-EXPOSE 8080
-
 # Start the server
 CMD ["node", "server/index.js"]
