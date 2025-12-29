@@ -1,34 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ServiceItem } from '../types';
-import {
-  Calendar,
-  Star,
-  Zap,
-  Crown,
-  Clock,
-  ArrowRight,
-  Sparkles,
-  Gift,
-  Ghost,
-  Sun,
-  Heart,
-  Percent,
-  PartyPopper,
-  Briefcase,
-  Flower2,
-  Tag,
-  Megaphone,
-  Rocket,
-} from 'lucide-react';
-
-const MOCK_IMAGES: Record<string, string> = {
-  default:
-    'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?q=80&w=400&auto=format&fit=crop',
-  Corte:
-    'https://images.unsplash.com/photo-1621605815971-fbc98d665033?q=80&w=400&auto=format&fit=crop',
-  Barba:
-    'https://images.unsplash.com/photo-1599351431202-1e0f0137899a?q=80&w=400&auto=format&fit=crop',
-};
+import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ServiceCard } from './ui/ServiceCard';
 
 interface ServicesProps {
   onOpenBooking: () => void;
@@ -36,252 +9,124 @@ interface ServicesProps {
 }
 
 export const Services: React.FC<ServicesProps> = ({ onOpenBooking, services }) => {
-  // Theme Configuration Mapping
-  const getThemeConfig = (theme: string) => {
-    switch (theme) {
-      case 'christmas':
-        return {
-          icon: Gift,
-          color:
-            'bg-gradient-to-r from-red-600 to-green-700 text-white border-b border-l border-white/20',
-        };
-      case 'easter':
-        return {
-          icon: PartyPopper,
-          color:
-            'bg-gradient-to-r from-pink-400 to-purple-400 text-white border-b border-l border-white/20',
-        }; // Lucide doesn't have Rabbit, using PartyPopper/Egg concept
-      case 'halloween':
-        return {
-          icon: Ghost,
-          color:
-            'bg-gradient-to-r from-orange-500 to-purple-900 text-white border-b border-l border-white/20',
-        };
-      case 'summer':
-        return {
-          icon: Sun,
-          color:
-            'bg-gradient-to-r from-yellow-400 to-orange-500 text-black border-b border-l border-white/20',
-        }; // Black text for contrast
-      case 'valentine':
-        return {
-          icon: Heart,
-          color:
-            'bg-gradient-to-r from-red-500 to-pink-500 text-white border-b border-l border-white/20',
-        };
-      case 'black_friday':
-        return {
-          icon: Tag,
-          color:
-            'bg-gradient-to-r from-black via-gray-900 to-black text-neon-yellow border-b border-l border-neon-yellow/50',
-        };
-      case 'fathers_day':
-        return {
-          icon: Briefcase,
-          color:
-            'bg-gradient-to-r from-blue-800 to-blue-600 text-white border-b border-l border-white/20',
-        };
-      case 'mothers_day':
-        return {
-          icon: Flower2,
-          color:
-            'bg-gradient-to-r from-pink-500 to-rose-400 text-white border-b border-l border-white/20',
-        };
-      case 'carnival':
-        return {
-          icon: PartyPopper,
-          color:
-            'bg-gradient-to-r from-purple-500 via-pink-500 to-yellow-500 text-white border-b border-l border-white/20',
-        };
-      case 'offer':
-        return {
-          icon: Rocket,
-          color:
-            'bg-gradient-to-r from-red-600 to-orange-500 text-white border-b border-l border-white/20 animate-pulse',
-        };
-      case 'premium':
-        return {
-          icon: Crown,
-          color:
-            'bg-gradient-to-r from-yellow-400 to-yellow-600 text-black border-b border-l border-white/20',
-        };
-      default:
-        return { icon: Megaphone, color: 'bg-neon-yellow text-black' }; // Default changed to Megaphone for general noise
-    }
+  const [showAll, setShowAll] = useState(false);
+
+  // Status Logic
+  const isOpen = () => {
+    const now = new Date();
+    const hour = now.getHours();
+    const day = now.getDay(); // 0 = Sunday
+    // Mon-Sat: 09:00 - 19:00
+    if (day === 0) return false;
+    return hour >= 9 && hour < 19;
   };
 
-  // Helper to determine badge (mock logic for visual impact)
-  const getBadge = (index: number, price: number, promo?: any) => {
-    // Priority 1: Backend Active Promo
-    if (promo && promo.text) {
-      // Return null here because we handle promo separately for the marquee effect
-      return null;
-    }
-    if (index === 0)
-      return { label: 'MAIS PEDIDO', icon: Crown, color: 'bg-neon-yellow text-black' };
-    if (index === 1) return { label: 'PREMIUM', icon: Star, color: 'bg-purple-500 text-white' };
-    if (price < 20)
-      return { label: 'FLASH PROMO', icon: Zap, color: 'bg-red-500 text-white animate-pulse' };
-    return null;
-  };
+  const shopOpen = isOpen();
+
+  // Filter logic: Show first 5 if not showAll
+  const displayedServices = showAll ? services : services.slice(0, 5);
 
   return (
-    <section id="services" className="py-16 md:py-24 bg-[#09090b] relative overflow-hidden">
-      {/* ... (background and header remain same) ... */}
+    <section
+      id="services"
+      className="py-16 md:py-24 bg-[#050505] relative overflow-hidden scroll-mt-24"
+    >
+      {/* Background Elements - Absolute Dark Mode */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-zinc-900/20 via-[#050505] to-[#050505] pointer-events-none"></div>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        {/* ... (header code) ... */}
-        <div className="flex flex-col md:flex-row justify-between items-end mb-12 border-b border-white/10 pb-6">
-          <div>
-            <span className="text-neon-yellow font-black text-xs uppercase tracking-widest mb-2 block">
-              Tabela Oficial 2024
+        {/* Header - No Container, Clean Layout */}
+        <div className="relative mb-16 pt-8">
+          {/* 1. Tabela 2026 - Absolute Left */}
+          <div className="absolute top-0 left-0 hidden md:block">
+            <span className="text-zinc-300 font-bold text-xs uppercase tracking-[0.2em] border-l-2 border-neon-yellow pl-3 drop-shadow-md">
+              Tabela Atualizada 2026
             </span>
-            <h2 className="text-4xl md:text-5xl font-graffiti text-white leading-none">
-              MENU DE{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-neon-yellow to-neon-orange">
-                ESTILO
+          </div>
+
+          {/* 2. Main Title - Centered */}
+          <div className="flex flex-col items-center justify-center text-center">
+            <div className="md:hidden self-start mb-4">
+              <span className="text-zinc-300 font-bold text-[10px] uppercase tracking-[0.2em] border-l-2 border-neon-yellow pl-3 drop-shadow-md">
+                Tabela 2026
+              </span>
+            </div>
+            <h2 className="text-5xl md:text-7xl font-graffiti text-white leading-none drop-shadow-2xl">
+              ESTILO{' '}
+              <span className="text-transparent bg-clip-text bg-gradient-to-br from-neon-yellow via-yellow-400 to-orange-500 drop-shadow-[0_0_15px_rgba(234,179,8,0.3)]">
+                TRILHA
               </span>
             </h2>
-          </div>
-          <div className="flex items-center gap-2 text-gray-400 text-xs font-mono uppercase tracking-widest mt-4 md:mt-0">
-            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-            Barbearia Aberta Agora
+
+            {/* 3. Status - Centered Below Title */}
+            <div
+              className={`mt-6 inline-flex items-center gap-3 px-4 py-1.5 rounded-full border ${
+                shopOpen ? 'bg-green-500/10 border-green-500/20' : 'bg-red-500/10 border-red-500/20'
+              } backdrop-blur-sm`}
+            >
+              <div className="relative">
+                <div
+                  className={`w-2 h-2 rounded-full ${
+                    shopOpen ? 'bg-green-500 animate-pulse' : 'bg-red-500'
+                  }`}
+                ></div>
+                {shopOpen && (
+                  <div className="absolute inset-0 rounded-full bg-green-500 animate-ping opacity-75"></div>
+                )}
+              </div>
+              <span
+                className={`text-[10px] font-mono uppercase tracking-widest font-bold ${
+                  shopOpen ? 'text-green-400' : 'text-red-400'
+                }`}
+              >
+                {shopOpen ? 'Barbearia Aberta Agora' : 'Fechado no Momento'}
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* Grid de Cards Compactos */}
+        {/* Services Grid using ServiceCard */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {services.map((service, index) => {
-            const badge = getBadge(index, service.priceValue, service.activePromo);
-            const promo = service.activePromo;
+          {displayedServices.map(service => (
+            <div key={service.id} className="w-full">
+              <ServiceCard service={service} onClick={onOpenBooking} variant="default" />
+            </div>
+          ))}
+        </div>
 
-            return (
-              <div
-                key={service.id}
-                className="group relative bg-[#121212] rounded-xl overflow-hidden border border-white/10 hover:border-neon-yellow transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_10px_30px_-10px_rgba(234,179,8,0.3)] flex flex-col"
-              >
-                {/* Badge de Marketing (Static) */}
-                {badge && (
-                  <div
-                    className={`absolute top-0 right-0 z-30 px-3 py-1 rounded-bl-xl font-black text-[10px] uppercase tracking-wider flex items-center gap-1 shadow-lg ${badge.color}`}
-                  >
-                    <badge.icon size={10} fill="currentColor" />
-                    {badge.label}
-                  </div>
+        {/* View More / View Less Button */}
+        {services.length > 5 && (
+          <div className="mt-12 flex justify-center">
+            <button
+              onClick={() => setShowAll(!showAll)}
+              className="group relative px-8 py-3 bg-transparent border border-white/20 text-white font-black uppercase tracking-widest text-xs hover:border-neon-yellow hover:text-neon-yellow transition-all duration-300 flex items-center gap-2"
+            >
+              <span className="absolute inset-0 bg-neon-yellow/10 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300"></span>
+              <span className="relative z-10 flex items-center gap-2">
+                {showAll ? (
+                  <>
+                    Ver Menos <ChevronUp size={14} />
+                  </>
+                ) : (
+                  <>
+                    Ver Todos os Serviços <ChevronDown size={14} />
+                  </>
                 )}
-
-                {/* PROMO MARQUEE BADGE (Dynamic) */}
-                {promo && promo.text && (
-                  <div
-                    className={`absolute top-0 right-0 z-30 pl-4 pr-2 py-1.5 rounded-bl-2xl shadow-lg flex items-center gap-2 max-w-[85%] overflow-hidden ${
-                      getThemeConfig(promo.theme || 'standard').color
-                    }`}
-                  >
-                    <span className="text-sm font-bold shrink-0 z-10 drop-shadow-md">
-                      {(() => {
-                        const Icon = getThemeConfig(promo.theme || 'standard').icon;
-                        return <Icon size={14} fill="currentColor" />;
-                      })()}
-                    </span>
-                    <div className="overflow-hidden relative w-full flex">
-                      <div className="animate-ticker flex whitespace-nowrap">
-                        <span className="text-[10px] font-black uppercase tracking-widest mr-4">
-                          {promo.text}
-                        </span>
-                        <span className="text-[10px] font-black uppercase tracking-widest mr-4">
-                          {promo.text}
-                        </span>
-                        <span className="text-[10px] font-black uppercase tracking-widest mr-4">
-                          {promo.text}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Imagem Compacta (Aspect Ratio menor) */}
-                <div className="relative h-40 overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#121212] via-transparent to-transparent z-10"></div>
-                  <img
-                    src={`/services/${service.name
-                      .toLowerCase()
-                      .replace(/\s+/g, '-')
-                      .normalize('NFD')
-                      .replace(/[\u0300-\u036f]/g, '')}.jpg`}
-                    onError={e => {
-                      const target = e.currentTarget;
-                      if (target.src.includes('.jpg')) {
-                        target.src = target.src.replace('.jpg', '.png');
-                      } else {
-                        // Fallback to MOCK_IMAGES or the service.image if exists, or global default
-                        target.src =
-                          MOCK_IMAGES[service.name.split(' ')[0]] ||
-                          service.image ||
-                          MOCK_IMAGES.default;
-                        target.onerror = null;
-                      }
-                    }}
-                    alt={service.name}
-                    className="w-full h-full object-contain bg-black transform group-hover:scale-105 transition-transform duration-500"
-                  />
-
-                  {/* Preço em Destaque na Imagem */}
-                  <div className="absolute bottom-2 left-3 z-20">
-                    <div className="flex items-baseline gap-2 text-white drop-shadow-md">
-                      <span className="text-xs font-bold text-gray-400">R$</span>
-
-                      {/* Price Logic: Show discounted price if exists */}
-                      {promo && promo.discountValue ? (
-                        <div className="flex flex-col leading-none">
-                          <span className="text-[10px] line-through text-gray-500 font-bold opacity-80 decoration-red-500 decoration-2">
-                            {(service.priceValue || 0).toFixed(2)}
-                          </span>
-                          <span className="text-2xl font-black tracking-tighter text-neon-yellow animate-pulse">
-                            {promo.discountValue.replace('R$', '').trim()}
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="text-2xl font-black tracking-tighter text-neon-yellow">
-                          {(service.priceValue || 0).toFixed(2)}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Conteúdo */}
-                <div className="p-4 flex flex-col flex-1">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-xl font-black text-white uppercase leading-none group-hover:text-neon-yellow transition-colors">
-                      {service.name}
-                    </h3>
-                  </div>
-
-                  <p className="text-gray-500 text-xs leading-relaxed mb-4 line-clamp-2 font-medium">
-                    {service.description}
-                  </p>
-
-                  <div className="mt-auto pt-3 border-t border-white/5 flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-1.5 text-gray-400 text-[10px] font-mono uppercase">
-                      <Clock size={12} className="text-neon-orange" />
-                      <span>30-50 min</span>
-                    </div>
-
-                    <button
-                      onClick={onOpenBooking}
-                      className="bg-white text-black hover:bg-neon-yellow font-black text-[10px] uppercase tracking-widest py-2 px-4 rounded transition-colors flex items-center gap-2 group/btn"
-                    >
-                      Reservar
-                      <ArrowRight
-                        size={12}
-                        className="group-hover/btn:translate-x-1 transition-transform"
-                      />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+              </span>
+            </button>
+          </div>
+        )}
+        {/* Mobile Navigation Arrow */}
+        <div className="md:hidden flex justify-center mt-12 pb-4">
+          <button
+            onClick={() =>
+              document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })
+            }
+            className="animate-bounce text-white/30 hover:text-neon-yellow transition-colors cursor-pointer bg-transparent border-none p-2 outline-none"
+            aria-label="Ir para Rodapé"
+          >
+            <ChevronDown size={24} />
+          </button>
         </div>
       </div>
     </section>

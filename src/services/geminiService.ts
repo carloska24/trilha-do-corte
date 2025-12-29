@@ -15,8 +15,8 @@ export const getStyleConsultation = async (
   if (!genAI) return mockOfflineResponse();
 
   try {
-    // CORREÇÃO: Usando o modelo atual e estável (2.5 Flash)
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    // CORREÇÃO: Usando o modelo experimental atualizado (2.0 Flash Exp)
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
 
     const prompt = `
       Você é 'O Maquinista', barbeiro especialista.
@@ -42,8 +42,8 @@ export const getStyleConsultationWithImage = async (
   if (!genAI) return mockOfflineResponse();
 
   try {
-    // CORREÇÃO: Gemini 2.5 Flash aceita imagens e é o padrão agora
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    // CORREÇÃO: Usando o modelo experimental atualizado (2.0 Flash Exp)
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
 
     const prompt = `
       Analise a foto do rosto e o pedido: "${userDescription}", Cabelo: "${hairType}".
@@ -66,7 +66,8 @@ export const getStyleConsultationWithImage = async (
 // --- 3. GERAÇÃO DE IMAGEM (Com Retry Inteligente) ---
 export const generateHairstyleImage = async (
   description: string,
-  styleName: string
+  styleName: string,
+  userImageBase64?: string | null
 ): Promise<string | null> => {
   if (!genAI) return null;
 
@@ -78,23 +79,46 @@ export const generateHairstyleImage = async (
       const modelName = 'gemini-2.0-flash-exp';
       const model = genAI.getGenerativeModel({ model: modelName });
 
-      // PROMPT NANO BANANA RESTAURADO
-      const prompt = `
-        Create a high-quality, photorealistic portrait of a man with this specific haircut: "${styleName}".
-        
-        Details:
-        - Haircut Style: ${styleName}
-        - Analysis/Vibe: ${description}
-        - Setting: Modern, cinematic urban barber shop with neon lighting (Nano Banana style).
-        - Lighting: Vibrant, high contrast, neon accents (purple/yellow).
-        - Quality: 8k, highly detailed, professional photography.
-        - Subject: Male model fitting the description.
-        
-        Generate ONLY the image.
-      `;
+      let prompt = '';
+      let payload: any[] = [];
+
+      if (userImageBase64) {
+        prompt = `
+          Edit this photo to apply the following haircut: "${styleName}".
+          
+          Instructions:
+          - Keep the person's face EXACTLY as it is.
+          - Only modification should be the hair.
+          - Apply this style: ${styleName} - ${description}.
+          - Maintain the original lighting and angle if possible, or enhance to a "Cyberpunk Barber Shop" vibe if the background is plain.
+          - High realism, 8k resolution.
+          
+          Generate the modified image.
+        `;
+        // Remove header data:image/jpeg;base64, if present for the API payload
+        const base64Data = userImageBase64.split(',')[1] || userImageBase64;
+
+        payload = [prompt, { inlineData: { mimeType: 'image/jpeg', data: base64Data } }];
+      } else {
+        // PROMPT NANO BANANA RESTAURADO (Fallback)
+        prompt = `
+          Create a high-quality, photorealistic portrait of a man with this specific haircut: "${styleName}".
+          
+          Details:
+          - Haircut Style: ${styleName}
+          - Analysis/Vibe: ${description}
+          - Setting: Modern, cinematic urban barber shop with neon lighting (Nano Banana style).
+          - Lighting: Vibrant, high contrast, neon accents (purple/yellow).
+          - Quality: 8k, highly detailed, professional photography.
+          - Subject: Male model fitting the description.
+          
+          Generate ONLY the image.
+        `;
+        payload = [prompt];
+      }
 
       console.log(`Gerando imagem (${i + 1}/${MAX_RETRIES})...`);
-      const result = await model.generateContent(prompt);
+      const result = await model.generateContent(payload);
       const response = await result.response;
 
       // EXTRAÇÃO DE DADOS REAL (CRUCIAL)
@@ -105,9 +129,16 @@ export const generateHairstyleImage = async (
     } catch (error: any) {
       // Erro 429 = Cota excedida (espera e tenta de novo)
       // Erro 503 = Servidor ocupado
-      if (error.message?.includes('429') || error.status === 429 || error.status === 503) {
-        console.warn(`API Ocupada/Limite. Esperando ${(i + 1) * 2}s...`);
-        await wait(2000 * (i + 1));
+      if (
+        error.message?.includes('429') ||
+        error.status === 429 ||
+        error.status === 503 ||
+        error.status === 500
+      ) {
+        // Backoff exponencial agressivo: 4s, 8s, 12s para garantir
+        const delay = (i + 1) * 4000;
+        console.warn(`API Ocupada/Limite. Esperando ${delay / 1000}s...`);
+        await wait(delay);
       } else {
         console.error('Erro fatal imagem:', error);
         break; // Outros erros (404, 400) não adianta insistir
@@ -144,8 +175,8 @@ const mockErrorResponse = (msg = 'Tente novamente.') => ({
 export const generatePromoPhrase = async (serviceName: string, price: number, context?: string) => {
   if (!genAI) return { text: 'PROMOÇÃO TOP', theme: 'standard' };
   try {
-    // Usando 2.5 Flash como solicitado (Estável e Rápido)
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    // Usando 2.0 Flash Exp
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
 
     const prompt = `
       Atue como um especialista em marketing para barbearias.
@@ -208,7 +239,7 @@ export const generateServiceDescription = async (
   if (!genAI) return 'Serviço premium com acabamento impecável.';
 
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
 
     const prompt = `
       Você é um Barbeiro Expert e Copywriter de Luxo para a "Barber Pro System".

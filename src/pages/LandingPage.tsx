@@ -12,12 +12,12 @@ export const LandingPage: React.FC = () => {
   const { services } = useData();
 
   return (
-    <>
+    <div className="select-none">
       <Hero onOpenBooking={() => openBooking()} />
       <Services services={services} onOpenBooking={() => openBooking()} />
-      <Gallery />
-      <AiConsultant onOpenBooking={() => openBooking()} />
+      {/* <Gallery /> (Removed at user request) */}
+      {/* <AiConsultant onOpenBooking={() => openBooking()} /> (Removed at user request) */}
       <Footer />
-    </>
+    </div>
   );
 };

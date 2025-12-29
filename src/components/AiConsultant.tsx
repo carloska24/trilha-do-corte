@@ -16,6 +16,7 @@ import {
   CheckCircle2,
   Camera,
   RefreshCw,
+  ChevronDown,
 } from 'lucide-react';
 
 interface AiConsultantProps {
@@ -75,7 +76,11 @@ export const AiConsultant: React.FC<AiConsultantProps> = ({ onOpenBooking, onSav
       // Trigger Image Generation if we have a valid style name
       if (response && response.styleName) {
         // Call directly now
-        const img = await generateHairstyleImage(response.suggestion, response.styleName);
+        const img = await generateHairstyleImage(
+          response.suggestion,
+          response.styleName,
+          selectedImage
+        );
         setGeneratedImage(img);
       }
     } catch (error) {
@@ -93,7 +98,10 @@ export const AiConsultant: React.FC<AiConsultantProps> = ({ onOpenBooking, onSav
   };
 
   return (
-    <section id="ai-consultant" className="py-16 md:py-24 bg-[#050505] relative overflow-hidden">
+    <section
+      id="ai-consultant"
+      className="py-16 md:py-24 bg-[#050505] relative overflow-hidden scroll-mt-24"
+    >
       {/* Tech Background Elements */}
       <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/circuit-board.png')] opacity-10 pointer-events-none"></div>
       <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-purple-900/10 to-transparent pointer-events-none"></div>
@@ -369,6 +377,18 @@ export const AiConsultant: React.FC<AiConsultantProps> = ({ onOpenBooking, onSav
               </div>
             )}
           </div>
+        </div>
+        {/* Mobile Navigation Arrow */}
+        <div className="md:hidden flex justify-center mt-12 pb-4">
+          <button
+            onClick={() =>
+              document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })
+            }
+            className="animate-bounce text-white/30 hover:text-neon-yellow transition-colors cursor-pointer bg-transparent border-none p-2 outline-none"
+            aria-label="Ir para Rodapé"
+          >
+            <ChevronDown size={24} />
+          </button>
         </div>
       </div>
     </section>
