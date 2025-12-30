@@ -4,6 +4,7 @@ import { BookingData } from '../types';
 import {
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   Clock,
   CheckCircle2,
   User,
@@ -66,6 +67,8 @@ export const PublicAgenda: React.FC = () => {
   // --- LOGICA DE HORARIOS ---
   const generateTimeSlots = () => {
     // Check for exceptions for the selected date
+    if (selectedDate.getDay() === 0) return []; // Block Sundays
+
     const dateKey =
       selectedDate.getFullYear() +
       '-' +
@@ -144,18 +147,21 @@ export const PublicAgenda: React.FC = () => {
   return (
     <section
       id="agenda"
-      className="py-12 bg-[#050505] relative border-t border-white/5 overflow-hidden"
+      className="py-4 pb-8 bg-[#050505] relative border-t border-white/5 overflow-hidden scroll-mt-20"
     >
       {/* Background Elements */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,var(--tw-gradient-stops))] from-zinc-900/20 via-[#050505] to-[#050505] pointer-events-none"></div>
 
       <div className="max-w-md mx-auto px-4 relative z-10">
         {/* HEADER COMPACTO */}
-        <div className="text-center mb-6">
-          <span className="text-zinc-500 font-bold text-[10px] uppercase tracking-[0.2em] mb-1 block">
+        <div
+          className="text-center mb-6 cursor-pointer group"
+          onClick={() => document.getElementById('agenda')?.scrollIntoView({ behavior: 'smooth' })}
+        >
+          <span className="text-zinc-500 font-bold text-[10px] uppercase tracking-[0.2em] mb-1 block group-hover:text-neon-yellow transition-colors">
             Agendamento Expresso
           </span>
-          <h2 className="text-3xl font-graffiti text-white leading-none drop-shadow-lg">
+          <h2 className="text-3xl font-graffiti text-white leading-none drop-shadow-lg group-hover:scale-105 transition-transform duration-300">
             AGENDA <span className="text-neon-yellow">TRILHA</span>
           </h2>
         </div>
@@ -332,6 +338,19 @@ export const PublicAgenda: React.FC = () => {
             })}
           </div>
         )}
+
+        {/* Navigation Arrow to Estilo Trilha */}
+        <div className="flex justify-center mt-8">
+          <button
+            onClick={() =>
+              document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' })
+            }
+            className="animate-bounce text-white/50 hover:text-neon-yellow transition-colors cursor-pointer bg-transparent border-none p-2 outline-none"
+            aria-label="Ir para Estilo Trilha"
+          >
+            <ChevronDown size={24} />
+          </button>
+        </div>
       </div>
 
       {/* MODAL CALENDARIO (IGUAL BARBEIRO) */}

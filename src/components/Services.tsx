@@ -29,14 +29,14 @@ export const Services: React.FC<ServicesProps> = ({ onOpenBooking, services }) =
   return (
     <section
       id="services"
-      className="py-16 md:py-24 bg-[#050505] relative overflow-hidden scroll-mt-24"
+      className="py-4 md:py-12 bg-[#050505] relative overflow-hidden scroll-mt-20"
     >
       {/* Background Elements - Absolute Dark Mode */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,var(--tw-gradient-stops))] from-zinc-900/20 via-[#050505] to-[#050505] pointer-events-none"></div>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Header - No Container, Clean Layout */}
-        <div className="relative mb-16 pt-8">
+        <div className="relative mb-8 pt-0">
           {/* 1. Tabela 2026 - Absolute Left */}
           <div className="absolute top-0 left-0 hidden md:block">
             <span className="text-zinc-300 font-bold text-xs uppercase tracking-[0.2em] border-l-2 border-neon-yellow pl-3 drop-shadow-md">
@@ -44,14 +44,23 @@ export const Services: React.FC<ServicesProps> = ({ onOpenBooking, services }) =
             </span>
           </div>
 
-          {/* 2. Main Title - Centered */}
-          <div className="flex flex-col items-center justify-center text-center">
-            <div className="md:hidden self-start mb-4">
+          {/* 2. Main Title - Centered - Clickable */}
+          <div
+            className="flex flex-col items-center justify-center text-center cursor-pointer group"
+            onClick={() =>
+              document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' })
+            }
+          >
+            <div className="md:hidden self-start mb-1">
               <span className="text-zinc-300 font-bold text-[10px] uppercase tracking-[0.2em] border-l-2 border-neon-yellow pl-3 drop-shadow-md">
                 Tabela 2026
               </span>
             </div>
-            <h2 className="text-5xl md:text-7xl font-graffiti text-white leading-none drop-shadow-2xl">
+
+            {/* Top Connector Line (Visual) */}
+            <div className="w-px h-4 bg-gradient-to-b from-transparent to-neon-yellow/30 mb-2"></div>
+
+            <h2 className="text-5xl md:text-7xl font-graffiti text-white leading-none drop-shadow-2xl group-hover:scale-105 transition-transform duration-300">
               ESTILO{' '}
               <span className="text-transparent bg-clip-text bg-linear-to-br from-neon-yellow via-yellow-400 to-orange-500 drop-shadow-[0_0_15px_rgba(234,179,8,0.3)]">
                 TRILHA

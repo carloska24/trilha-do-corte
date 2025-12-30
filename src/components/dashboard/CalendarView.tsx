@@ -180,6 +180,8 @@ export const CalendarView: React.FC = () => {
 
   const getTimeSlots = () => {
     // Check for today's exceptions first
+    if (selectedDate.getDay() === 0) return []; // Block Sundays
+
     const dateKey = getLocalISODate(selectedDate);
     const exception = shopSettings.exceptions?.[dateKey];
 
@@ -258,23 +260,27 @@ export const CalendarView: React.FC = () => {
             const isSelected = day.toDateString() === selectedDate.toDateString();
             const isToday = day.toDateString() === new Date().toDateString();
             const dateKey = getLocalISODate(day);
+            const isSunday = day.getDay() === 0;
             const isClosed = shopSettings.exceptions?.[dateKey]?.closed;
 
             return (
               <div
                 key={day.toISOString()}
                 onClick={() => {
+                  if (isSunday) return;
                   setSelectedDate(day);
                   setActiveTab('daily');
                 }}
                 className={`
-                  aspect-square rounded-xl border flex flex-col items-center justify-center cursor-pointer transition-all hover:scale-105 group relative
+                  aspect-square rounded-xl border flex flex-col items-center justify-center transition-all group relative
                   ${
-                    isClosed
-                      ? 'bg-red-900/20 border-red-900/50 text-red-500'
+                    isSunday
+                      ? 'bg-zinc-900/30 border-white/5 text-zinc-700 cursor-not-allowed opacity-50 grayscale hover:scale-100' // Sunday Style
+                      : isClosed
+                      ? 'bg-red-900/20 border-red-900/50 text-red-500 cursor-pointer hover:scale-105'
                       : isSelected
-                      ? 'bg-neon-yellow border-neon-yellow text-black'
-                      : 'bg-[#1a1a1a] border-gray-800 text-white hover:border-gray-600'
+                      ? 'bg-neon-yellow border-neon-yellow text-black cursor-pointer hover:scale-105'
+                      : 'bg-[#1a1a1a] border-gray-800 text-white hover:border-gray-600 cursor-pointer hover:scale-105'
                   }
                 `}
               >
@@ -457,21 +463,26 @@ export const CalendarView: React.FC = () => {
                             showToast(`Horário padrão atualizado!`);
                           }
                         } else if (action.type === 'SET_CLOSED') {
-                          // "Dia X Fechado"
-                          if (action.payload.date) {
-                            const dateKey = action.payload.date;
-                            const currentException = shopSettings.exceptions?.[dateKey] || {};
+                          // "Dia X Fechado" (Now handling multiple dates)
+                          if (action.payload.dates && action.payload.dates.length > 0) {
+                            const newExceptions = { ...shopSettings.exceptions };
+                            const formattedDates: string[] = [];
+
+                            action.payload.dates.forEach(dateKey => {
+                              const currentException = shopSettings.exceptions?.[dateKey] || {};
+                              newExceptions[dateKey] = { ...currentException, closed: true };
+
+                              const [y, m, d] = dateKey.split('-');
+                              formattedDates.push(`${d}/${m}`);
+                            });
 
                             updateShopSettings({
                               ...shopSettings,
-                              exceptions: {
-                                ...shopSettings.exceptions,
-                                [dateKey]: { ...currentException, closed: true },
-                              },
+                              exceptions: newExceptions,
                             });
 
-                            const [y, m, d] = dateKey.split('-');
-                            showToast(`🚫 Dia ${d}/${m} definido como FECHADO!`);
+                            const datesString = formattedDates.join(', ');
+                            showToast(`🚫 Dias ${datesString} definidos como FECHADO!`);
                           }
                         } else if (action.type === 'RESET_EXCEPTIONS') {
                           updateShopSettings({

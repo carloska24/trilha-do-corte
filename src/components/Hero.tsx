@@ -57,10 +57,10 @@ export const Hero: React.FC<HeroProps> = ({ onOpenBooking }) => {
             <span className="skew-x-[10deg] block">Embarcar Agora</span>
           </button>
           <a
-            href="#services"
+            href="#agenda"
             onClick={e => {
               e.preventDefault();
-              document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' });
+              document.getElementById('agenda')?.scrollIntoView({ behavior: 'smooth' });
             }}
             className="px-8 py-4 border-2 border-white/20 text-white font-bold text-lg uppercase tracking-wider hover:border-neon-orange hover:text-neon-orange transition-all skew-x-[-10deg] cursor-pointer inline-block"
           >
@@ -71,7 +71,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenBooking }) => {
 
       {/* Scroll Indicator */}
       <button
-        onClick={() => document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' })}
+        onClick={() => document.getElementById('agenda')?.scrollIntoView({ behavior: 'smooth' })}
         className="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce text-white/50 hover:text-neon-yellow transition-colors cursor-pointer bg-transparent border-none p-2 outline-none"
         aria-label="Rolar para baixo"
       >

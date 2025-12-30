@@ -35,7 +35,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   const navLinks = [
     { name: 'A Estação', href: '#home' },
     { name: 'Serviços', href: '#services' },
-    { name: 'O Maquinista (IA)', href: '#ai-consultant' },
     { name: 'Localização', href: '#contact' },
   ];
 
