@@ -108,7 +108,7 @@ const QueueTicker = React.memo(
 
 export const DashboardHome: React.FC = () => {
   const { appointments, services, updateAppointments } = useData();
-  const { currentTime, shopStatus } = useShopStatus();
+  const { currentTime, shopStatus } = useShopStatus(); // Using Centralized Logic
   const { initiateFinish } = useOutletContext<DashboardOutletContext>();
 
   const onInitiateFinish = initiateFinish;
@@ -151,13 +151,6 @@ export const DashboardHome: React.FC = () => {
     [currentTime.toDateString()]
   );
 
-  // Shop Status Logic
-  const { isShopOpen } = React.useMemo(() => {
-    const hour = currentTime.getHours();
-    const day = currentTime.getDay();
-    return { isShopOpen: day !== 0 && hour >= 8 && hour < 21 }; // Re-using local logic for visual toggle, although hook provides status too
-  }, [currentTime.getHours(), currentTime.getDay()]);
-
   return (
     <div className="flex flex-col items-center w-full max-w-md mx-auto h-full animate-[fadeIn_0.5s_ease-out] transition-colors duration-300">
       {/* 1. CLOCK & DATE */}
@@ -182,26 +175,38 @@ export const DashboardHome: React.FC = () => {
           {/* 1. STATUS SIGNAGE (TOP ABSOLUTE) - Hide when In Progress */}
           {!inProgress && (
             <>
-              {/* NEW RED NEON SIGN (TOP LEFT) - PIXEL PERFECT MATCH */}
+              {/* STATUS NEON SIGNS */}
               <div className="absolute top-8 left-2 z-30 pointer-events-none transform rotate-[-8deg] scale-[0.6] origin-top-left">
                 {/* Main Frame Container */}
                 <div className="relative rounded-2xl px-10 py-3 bg-black/90 flex flex-col items-center">
-                  {/* PULSING GLOW & BORDER LAYER (Separated from Text) */}
-                  <div className="absolute inset-0 border-[5px] border-[#ff0000] rounded-2xl shadow-[0_0_25px_rgba(255,0,0,0.6),inset_0_0_15px_rgba(255,0,0,0.4)] animate-pulse z-0"></div>
+                  {/* PULSING GLOW & BORDER LAYER */}
+                  <div
+                    className={`absolute inset-0 border-[5px] rounded-2xl animate-pulse z-0
+                                  ${
+                                    shopStatus.isOpen
+                                      ? 'border-[#00ff00] shadow-[0_0_25px_rgba(0,255,0,0.6),inset_0_0_15px_rgba(0,255,0,0.4)]'
+                                      : 'border-[#ff0000] shadow-[0_0_25px_rgba(255,0,0,0.6),inset_0_0_15px_rgba(255,0,0,0.4)]'
+                                  }`}
+                  ></div>
 
-                  {/* Inner White/Pinkish Line (Tube Center) */}
-                  <div className="absolute inset-[3px] rounded-[14px] border-[2px] border-[#ff9999] opacity-70 z-0"></div>
+                  {/* Inner White/Pastel Line (Tube Center) */}
+                  <div
+                    className={`absolute inset-[3px] rounded-[14px] border-[2px] opacity-70 z-0
+                                  ${shopStatus.isOpen ? 'border-[#ccffcc]' : 'border-[#ff9999]'}`}
+                  ></div>
 
-                  {/* Text - Yellow Neon with Red Glow (Static on top) */}
+                  {/* Text */}
                   <h2
-                    className="relative z-10 text-5xl font-bold text-[#ffff00] tracking-widest leading-none"
+                    className={`relative z-10 text-5xl font-bold tracking-widest leading-none
+                               ${shopStatus.isOpen ? 'text-[#ccffcc]' : 'text-[#ffcccc]'}`}
                     style={{
                       fontFamily: '"Tilt Neon", "Neon", sans-serif',
-                      textShadow:
-                        '0 0 5px #ffff00, 0 0 10px #ff0000, 0 0 20px #ff0000, 0 0 40px #ff0000',
+                      textShadow: shopStatus.isOpen
+                        ? '0 0 5px #00ff00, 0 0 10px #00ff00, 0 0 20px #00ff00, 0 0 40px #00ff00'
+                        : '0 0 5px #ff0000, 0 0 10px #ff0000, 0 0 20px #ff0000, 0 0 40px #ff0000',
                     }}
                   >
-                    ABERTO
+                    {shopStatus.isOpen ? 'ABERTO' : 'FECHADO'}
                   </h2>
                 </div>
               </div>
@@ -326,31 +331,31 @@ export const DashboardHome: React.FC = () => {
               {/* Background Atmosphere */}
               <div
                 className={`absolute inset-0 transition-opacity duration-1000 ${
-                  isShopOpen ? 'opacity-30 bg-blue-900/20' : 'opacity-20 bg-red-900/10'
+                  shopStatus.isOpen ? 'opacity-30 bg-blue-900/20' : 'opacity-20 bg-red-900/10'
                 }`}
               ></div>
 
               {/* Chair Image (Full Cover, Full Color) */}
               <img
-                src={isShopOpen ? '/chair-open.png' : '/chair-closed.png'}
+                src={shopStatus.isOpen ? '/chair-open.png' : '/chair-closed.png'}
                 className={`
                       w-full h-full object-center transition-all duration-1000 transform
                       ${
-                        isShopOpen
+                        shopStatus.isOpen
                           ? 'object-contain scale-100 drop-shadow-[0_0_50px_rgba(0,100,255,0.2)]'
                           : 'object-cover scale-100 contrast-110 saturate-110'
                       }
                     `}
                 alt="Cadeira"
                 onError={e => {
-                  e.currentTarget.src = isShopOpen
+                  e.currentTarget.src = shopStatus.isOpen
                     ? 'https://png.pngtree.com/png-vector/20230906/ourmid/pngtree-barber-shop-chair-3d-illustration-png-image_9963953.png'
                     : 'https://png.pngtree.com/png-vector/20230906/ourmid/pngtree-vintage-barber-chair-3d-illustration-png-image_9963943.png';
                 }}
               />
 
               {/* Closed Overlay Effect */}
-              {!isShopOpen && (
+              {!shopStatus.isOpen && (
                 <div className="absolute inset-0 bg-black/40 bg-[url('https://www.transparenttextures.com/patterns/diagmonds-light.png')] opacity-50 mix-blend-overlay pointer-events-none"></div>
               )}
             </div>
@@ -399,7 +404,7 @@ export const DashboardHome: React.FC = () => {
               </div>
             </div>
           </button>
-        ) : (
+        ) : shopStatus.isOpen ? (
           <button
             onClick={() => {
               if (nextClient) {
@@ -494,7 +499,7 @@ export const DashboardHome: React.FC = () => {
               </div>
             )}
           </button>
-        )}
+        ) : null}
       </div>
 
       {/* 4. QUEUE TICKER (ISOLATED) */}

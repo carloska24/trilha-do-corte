@@ -222,4 +222,13 @@ export interface ShopSettings {
   startHour: number;
   endHour: number;
   slotInterval: number; // in minutes (e.g., 30, 60)
+  exceptions?: Record<
+    string,
+    {
+      // Key: 'YYYY-MM-DD'
+      startHour?: number;
+      endHour?: number;
+      closed?: boolean;
+    }
+  >;
 }

@@ -12,9 +12,12 @@ import {
   CheckCircle2,
   AlertCircle,
   Minus,
+  Mic,
+  MicOff,
 } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
 import { useOutletContext } from 'react-router-dom';
+import { useVoiceCommand } from '../../hooks/useVoiceCommand';
 
 interface DashboardOutletContext {
   setSelectedClient: (client: Client) => void;
@@ -75,6 +78,9 @@ export const CalendarView: React.FC = () => {
     setToastMsg(msg);
     setTimeout(() => setToastMsg(null), 3000);
   };
+
+  // Voice Command Hook
+  const { isListening, startListening, stopListening } = useVoiceCommand();
 
   // Form State
   const [clientName, setClientName] = useState('');
@@ -164,11 +170,31 @@ export const CalendarView: React.FC = () => {
     setIsQuickAddOpen(true);
   };
 
-  const getTimeSlots = () =>
-    Array.from(
-      { length: shopSettings.endHour - shopSettings.startHour },
-      (_, i) => i + shopSettings.startHour
-    );
+  // Helper for Local YYYY-MM-DD (Safe Key)
+  const getLocalISODate = (d: Date) => {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const getTimeSlots = () => {
+    // Check for today's exceptions first
+    const dateKey = getLocalISODate(selectedDate);
+    const exception = shopSettings.exceptions?.[dateKey];
+
+    // Use exception values if present, otherwise defaults
+    const start = exception?.startHour ?? shopSettings.startHour;
+    const end = exception?.endHour ?? shopSettings.endHour;
+
+    // Handle closed day (future feature but good to support data structure)
+    if (exception?.closed) return [];
+
+    // Safe guard against invalid range
+    if (start >= end) return [];
+
+    return Array.from({ length: end - start }, (_, i) => i + start);
+  };
 
   // Helper to get service details
   const getServiceDetails = (id: string) => {
@@ -231,6 +257,8 @@ export const CalendarView: React.FC = () => {
             const count = getAppointmentsForDate(day).length;
             const isSelected = day.toDateString() === selectedDate.toDateString();
             const isToday = day.toDateString() === new Date().toDateString();
+            const dateKey = getLocalISODate(day);
+            const isClosed = shopSettings.exceptions?.[dateKey]?.closed;
 
             return (
               <div
@@ -242,7 +270,9 @@ export const CalendarView: React.FC = () => {
                 className={`
                   aspect-square rounded-xl border flex flex-col items-center justify-center cursor-pointer transition-all hover:scale-105 group relative
                   ${
-                    isSelected
+                    isClosed
+                      ? 'bg-red-900/20 border-red-900/50 text-red-500'
+                      : isSelected
                       ? 'bg-neon-yellow border-neon-yellow text-black'
                       : 'bg-[#1a1a1a] border-gray-800 text-white hover:border-gray-600'
                   }
@@ -373,14 +403,115 @@ export const CalendarView: React.FC = () => {
               {/* Subtle Gradient Glow */}
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-neon-yellow to-transparent opacity-50"></div>
 
-              <div className="p-6 border-b border-white/5 bg-[#1E1E1E]">
-                <h3 className="text-white font-black uppercase tracking-widest flex items-center gap-3 text-lg">
-                  <Clock size={20} className="text-neon-yellow" />
-                  Configuração
-                </h3>
-                <p className="text-xs text-gray-500 font-medium mt-1 uppercase tracking-wider pl-8">
-                  Defina o horário de funcionamento
-                </p>
+              <div className="p-6 border-b border-white/5 bg-[#1E1E1E] flex items-center justify-between">
+                <div>
+                  <h3 className="text-white font-black uppercase tracking-widest flex items-center gap-3 text-lg">
+                    <Clock size={20} className="text-neon-yellow" />
+                    Configuração
+                  </h3>
+                  <p className="text-xs text-gray-500 font-medium mt-1 uppercase tracking-wider pl-8">
+                    Defina o horário de funcionamento
+                  </p>
+                </div>
+
+                {/* Voice Command Button */}
+                <button
+                  onClick={() => {
+                    if (isListening) {
+                      stopListening();
+                    } else {
+                      startListening(action => {
+                        if (!action) return;
+
+                        if (action.type === 'SET_HOURS') {
+                          // Check if specific date
+                          if (action.payload.date) {
+                            const dateKey = action.payload.date;
+                            const currentException = shopSettings.exceptions?.[dateKey] || {};
+
+                            const newException = { ...currentException };
+                            if (action.payload.start !== undefined)
+                              newException.startHour = action.payload.start;
+                            if (action.payload.end !== undefined)
+                              newException.endHour = action.payload.end;
+
+                            const newExceptions = {
+                              ...shopSettings.exceptions,
+                              [dateKey]: newException,
+                            };
+                            updateShopSettings({ ...shopSettings, exceptions: newExceptions });
+
+                            const fmtDate = new Date(dateKey + 'T12:00:00').toLocaleDateString(
+                              'pt-BR',
+                              { day: '2-digit', month: '2-digit' }
+                            );
+                            showToast(`📅 Dia ${fmtDate} atualizado!`);
+                          } else {
+                            // Global Setting
+                            const updates: any = {};
+                            if (action.payload.start !== undefined)
+                              updates.startHour = action.payload.start;
+                            if (action.payload.end !== undefined)
+                              updates.endHour = action.payload.end;
+                            updateShopSettings({ ...shopSettings, ...updates });
+                            showToast(`Horário padrão atualizado!`);
+                          }
+                        } else if (action.type === 'SET_CLOSED') {
+                          // "Dia X Fechado"
+                          if (action.payload.date) {
+                            const dateKey = action.payload.date;
+                            const currentException = shopSettings.exceptions?.[dateKey] || {};
+
+                            updateShopSettings({
+                              ...shopSettings,
+                              exceptions: {
+                                ...shopSettings.exceptions,
+                                [dateKey]: { ...currentException, closed: true },
+                              },
+                            });
+
+                            const [y, m, d] = dateKey.split('-');
+                            showToast(`🚫 Dia ${d}/${m} definido como FECHADO!`);
+                          }
+                        } else if (action.type === 'RESET_EXCEPTIONS') {
+                          updateShopSettings({
+                            ...shopSettings,
+                            startHour: 9,
+                            endHour: 19,
+                            exceptions: {},
+                          });
+                          showToast(`♻️ Todos os dias resetados para o padrão (9-19h)!`);
+                        } else if (action.type === 'SET_INTERVAL') {
+                          updateShopSettings({
+                            ...shopSettings,
+                            slotInterval: action.payload.minutes,
+                          });
+                          showToast(`Intervalo de ${action.payload.minutes}min definido!`);
+                        } else {
+                          // Use a visual cue for failure (if toast allows HTML/ReactNode, otherwise just a different text prefix)
+                          showToast(`❌ Não entendi: "${action.transcript}"`);
+                        }
+                      });
+                    }
+                  }}
+                  className={`
+                    w-12 h-12 rounded-full flex items-center justify-center transition-all relative overflow-hidden group
+                    ${
+                      isListening
+                        ? 'bg-red-500 text-white shadow-[0_0_20px_rgba(239,68,68,0.6)] animate-pulse'
+                        : 'bg-[#111] text-neon-yellow border border-neon-yellow/30 hover:bg-neon-yellow hover:text-black shadow-[0_0_10px_rgba(234,179,8,0.2)]'
+                    }
+                  `}
+                >
+                  {isListening ? (
+                    <>
+                      <div className="absolute inset-0 bg-red-500 animate-ping opacity-20"></div>
+                      <MicOff size={20} />
+                    </>
+                  ) : (
+                    <Mic size={20} />
+                  )}
+                </button>
               </div>
 
               <div className="p-2">

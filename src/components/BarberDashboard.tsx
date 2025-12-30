@@ -40,6 +40,7 @@ import { ServiceConfig } from './dashboard/ServiceConfig';
 import { FinancialModal } from './dashboard/FinancialModal';
 import { ClientProfileModal } from './dashboard/ClientProfileModal';
 import { SettingsView } from './dashboard/SettingsView';
+import { useShopStatus } from '../hooks/useShopStatus';
 
 const DEFAULT_BARBER_IMAGE =
   'https://images.unsplash.com/photo-1618077553780-75539862f629?q=80&w=400&auto=format&fit=crop';

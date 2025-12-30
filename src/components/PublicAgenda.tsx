@@ -65,10 +65,24 @@ export const PublicAgenda: React.FC = () => {
 
   // --- LOGICA DE HORARIOS ---
   const generateTimeSlots = () => {
+    // Check for exceptions for the selected date
+    const dateKey =
+      selectedDate.getFullYear() +
+      '-' +
+      String(selectedDate.getMonth() + 1).padStart(2, '0') +
+      '-' +
+      String(selectedDate.getDate()).padStart(2, '0');
+    const exception = shopSettings.exceptions?.[dateKey];
+
+    const startH = exception?.startHour ?? shopSettings.startHour;
+    const endH = exception?.endHour ?? shopSettings.endHour;
+
+    if (exception?.closed || startH >= endH) return [];
+
     const slots = [];
     const interval = shopSettings.slotInterval || 60;
-    const startMin = shopSettings.startHour * 60;
-    const endMin = shopSettings.endHour * 60;
+    const startMin = startH * 60;
+    const endMin = endH * 60;
 
     for (let time = startMin; time < endMin; time += interval) {
       const h = Math.floor(time / 60);
@@ -79,6 +93,15 @@ export const PublicAgenda: React.FC = () => {
   };
 
   const timeSlots = generateTimeSlots();
+
+  // Is current day closed?
+  const dateKey =
+    selectedDate.getFullYear() +
+    '-' +
+    String(selectedDate.getMonth() + 1).padStart(2, '0') +
+    '-' +
+    String(selectedDate.getDate()).padStart(2, '0');
+  const isClosed = shopSettings.exceptions?.[dateKey]?.closed;
 
   const getSlotStatus = (timeStr: string) => {
     const dateStr = selectedDate.toISOString().split('T')[0];
@@ -140,7 +163,14 @@ export const PublicAgenda: React.FC = () => {
         {/* DATA SELECIONADA (DISPARADOR DO MODAL) */}
         <div
           onClick={() => setIsCalendarOpen(true)}
-          className="bg-[#111] border border-gray-800 rounded-xl p-3 mb-6 flex justify-between items-center cursor-pointer hover:border-neon-yellow transition-all group shadow-lg"
+          className={`
+            bg-[#111] border rounded-xl p-3 mb-6 flex justify-between items-center cursor-pointer transition-all group shadow-lg
+            ${
+              isClosed
+                ? 'border-red-900/50 bg-red-900/10'
+                : 'border-gray-800 hover:border-neon-yellow'
+            }
+          `}
         >
           <button className="p-2 text-gray-400 group-hover:text-neon-yellow transition-colors">
             <ChevronLeft size={18} />
@@ -150,8 +180,15 @@ export const PublicAgenda: React.FC = () => {
               DATA SELECIONADA
             </span>
             <div className="flex items-center justify-center gap-2">
-              <CalendarIcon size={16} className="text-neon-yellow" />
-              <span className="text-lg font-black text-white uppercase tracking-wider group-hover:text-neon-yellow transition-colors">
+              <CalendarIcon
+                size={16}
+                className={`${isClosed ? 'text-red-500' : 'text-neon-yellow'}`}
+              />
+              <span
+                className={`text-lg font-black uppercase tracking-wider transition-colors ${
+                  isClosed ? 'text-red-500' : 'text-white group-hover:text-neon-yellow'
+                }`}
+              >
                 {selectedDate
                   .toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })
                   .replace('.', '')
@@ -160,6 +197,11 @@ export const PublicAgenda: React.FC = () => {
               {selectedDate.toDateString() === new Date().toDateString() && (
                 <span className="bg-green-500/20 text-green-500 text-[9px] font-bold px-1.5 py-0.5 rounded border border-green-500/30">
                   HOJE
+                </span>
+              )}
+              {isClosed && (
+                <span className="bg-red-500/20 text-red-500 text-[9px] font-bold px-1.5 py-0.5 rounded border border-red-500/30 ml-2">
+                  FECHADO
                 </span>
               )}
             </div>
@@ -178,13 +220,26 @@ export const PublicAgenda: React.FC = () => {
             const isSelected = day.toDateString() === selectedDate.toDateString();
             const isToday = day.toDateString() === new Date().toDateString();
 
+            // Helper local date key
+            const dKey =
+              day.getFullYear() +
+              '-' +
+              String(day.getMonth() + 1).padStart(2, '0') +
+              '-' +
+              String(day.getDate()).padStart(2, '0');
+            const dayClosed = shopSettings.exceptions?.[dKey]?.closed;
+
             return (
               <button
                 key={day.toISOString()}
                 onClick={() => setSelectedDate(day)}
                 className={`flex-shrink-0 w-16 h-20 rounded-xl flex flex-col items-center justify-center border transition-all snap-center
                             ${
-                              isSelected
+                              dayClosed
+                                ? isSelected
+                                  ? 'bg-red-900/30 border-red-500 text-red-500'
+                                  : 'bg-[#150505] border-red-900/30 text-red-700 opacity-70'
+                                : isSelected
                                 ? 'bg-neon-yellow border-neon-yellow text-black scale-105 shadow-[0_0_15px_rgba(234,179,8,0.4)]'
                                 : 'bg-[#111] border-gray-800 text-gray-500 hover:border-gray-600 hover:bg-[#151515] hover:text-white'
                             }
@@ -193,11 +248,24 @@ export const PublicAgenda: React.FC = () => {
                 <span className="text-[10px] font-bold uppercase">
                   {day.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '')}
                 </span>
-                <span className={`text-2xl font-black ${isSelected ? 'text-black' : 'text-white'}`}>
+                <span
+                  className={`text-2xl font-black ${
+                    isSelected
+                      ? dayClosed
+                        ? 'text-red-500'
+                        : 'text-black'
+                      : dayClosed
+                      ? 'text-red-700'
+                      : 'text-white'
+                  }`}
+                >
                   {day.getDate()}
                 </span>
                 {isToday && !isSelected && (
                   <div className="w-1 h-1 bg-green-500 rounded-full mt-1"></div>
+                )}
+                {dayClosed && !isToday && (
+                  <div className="text-[8px] uppercase mt-0.5 font-bold">OFF</div>
                 )}
               </button>
             );
@@ -205,55 +273,65 @@ export const PublicAgenda: React.FC = () => {
         </div>
 
         {/* GRADE DE HORARIOS COMPACTA */}
-        <div className="grid grid-cols-4 gap-2">
-          {timeSlots.map(timeStr => {
-            const status = getSlotStatus(timeStr);
+        {isClosed ? (
+          <div className="flex flex-col items-center justify-center py-12 border border-dashed border-red-900/30 rounded-xl bg-red-900/5">
+            <X size={32} className="text-red-500 mb-2 opacity-50" />
+            <span className="text-red-500 font-bold uppercase tracking-widest text-sm">
+              Não haverá atendimento
+            </span>
+            <span className="text-red-800 text-xs mt-1">Selecione outro dia</span>
+          </div>
+        ) : (
+          <div className="grid grid-cols-4 gap-2">
+            {timeSlots.map(timeStr => {
+              const status = getSlotStatus(timeStr);
 
-            let baseClasses =
-              'flex flex-col items-center justify-center py-3 rounded-lg border transition-all duration-300';
+              let baseClasses =
+                'flex flex-col items-center justify-center py-3 rounded-lg border transition-all duration-300';
 
-            if (status === 'passed') {
+              if (status === 'passed') {
+                return (
+                  <div
+                    key={timeStr}
+                    className={`${baseClasses} bg-[#0a0a0a] border-transparent opacity-30 cursor-not-allowed`}
+                  >
+                    <span className="text-sm font-bold text-gray-500 font-mono line-through">
+                      {timeStr}
+                    </span>
+                    <span className="text-[8px] font-bold uppercase text-gray-600">Encerrado</span>
+                  </div>
+                );
+              }
+
+              if (status === 'occupied') {
+                return (
+                  <div
+                    key={timeStr}
+                    className={`${baseClasses} bg-red-900/5 border-red-900/20 opacity-50 cursor-not-allowed`}
+                  >
+                    <span className="text-sm font-bold text-red-800 font-mono">{timeStr}</span>
+                    <span className="text-[8px] font-bold uppercase text-red-900">Ocupado</span>
+                  </div>
+                );
+              }
+
               return (
-                <div
+                <button
                   key={timeStr}
-                  className={`${baseClasses} bg-[#0a0a0a] border-transparent opacity-30 cursor-not-allowed`}
+                  onClick={() => handleSlotClick(timeStr)}
+                  className={`${baseClasses} bg-[#111] border-gray-800 text-white hover:bg-neon-yellow hover:text-black hover:border-neon-yellow hover:shadow-[0_0_15px_rgba(234,179,8,0.3)] active:scale-95 group`}
                 >
-                  <span className="text-sm font-bold text-gray-500 font-mono line-through">
+                  <span className="text-sm font-bold font-mono group-hover:font-black">
                     {timeStr}
                   </span>
-                  <span className="text-[8px] font-bold uppercase text-gray-600">Encerrado</span>
-                </div>
+                  <span className="text-[8px] font-bold uppercase text-green-500 group-hover:text-black mt-0.5">
+                    Livre
+                  </span>
+                </button>
               );
-            }
-
-            if (status === 'occupied') {
-              return (
-                <div
-                  key={timeStr}
-                  className={`${baseClasses} bg-red-900/5 border-red-900/20 opacity-50 cursor-not-allowed`}
-                >
-                  <span className="text-sm font-bold text-red-800 font-mono">{timeStr}</span>
-                  <span className="text-[8px] font-bold uppercase text-red-900">Ocupado</span>
-                </div>
-              );
-            }
-
-            return (
-              <button
-                key={timeStr}
-                onClick={() => handleSlotClick(timeStr)}
-                className={`${baseClasses} bg-[#111] border-gray-800 text-white hover:bg-neon-yellow hover:text-black hover:border-neon-yellow hover:shadow-[0_0_15px_rgba(234,179,8,0.3)] active:scale-95 group`}
-              >
-                <span className="text-sm font-bold font-mono group-hover:font-black">
-                  {timeStr}
-                </span>
-                <span className="text-[8px] font-bold uppercase text-green-500 group-hover:text-black mt-0.5">
-                  Livre
-                </span>
-              </button>
-            );
-          })}
-        </div>
+            })}
+          </div>
+        )}
       </div>
 
       {/* MODAL CALENDARIO (IGUAL BARBEIRO) */}
@@ -305,6 +383,15 @@ export const PublicAgenda: React.FC = () => {
                   const isSelected = day.toDateString() === selectedDate.toDateString();
                   const isToday = day.toDateString() === new Date().toDateString();
 
+                  // Closed check
+                  const dKey =
+                    day.getFullYear() +
+                    '-' +
+                    String(day.getMonth() + 1).padStart(2, '0') +
+                    '-' +
+                    String(day.getDate()).padStart(2, '0');
+                  const dayClosed = shopSettings.exceptions?.[dKey]?.closed;
+
                   return (
                     <button
                       key={idx}
@@ -315,12 +402,14 @@ export const PublicAgenda: React.FC = () => {
                       className={`
                                         aspect-square rounded-lg flex items-center justify-center text-sm font-bold transition-all
                                         ${
-                                          isSelected
+                                          dayClosed
+                                            ? 'bg-red-900/20 text-red-500 border border-red-900/30'
+                                            : isSelected
                                             ? 'bg-neon-yellow text-black shadow-[0_0_10px_rgba(234,179,8,0.5)]'
                                             : 'bg-[#1a1a1a] text-white hover:bg-[#222]'
                                         }
                                         ${
-                                          isToday && !isSelected
+                                          isToday && !isSelected && !dayClosed
                                             ? 'border border-blue-500 text-blue-500'
                                             : ''
                                         }
