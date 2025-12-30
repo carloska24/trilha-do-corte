@@ -11,7 +11,7 @@ import { useUI } from './contexts/UIContext';
 // Inner component to access UIContext & DataContext
 const GlobalBookingModal = () => {
   const { isBookingOpen, closeBooking, bookingInitialData } = useUI();
-  const { services } = useData();
+  const { services, appointments, updateAppointments } = useData();
 
   if (!isBookingOpen) return null;
 
@@ -21,6 +21,26 @@ const GlobalBookingModal = () => {
       onClose={closeBooking}
       initialData={bookingInitialData}
       services={services}
+      onSubmit={data => {
+        // Create new appointment object
+        const newAppointment = {
+          id: Math.random().toString(36).substr(2, 9),
+          ...data,
+          status: 'pending' as const, // Force status type
+          clientName: data.name,
+          price: services.find(s => s.id === data.serviceId)?.priceValue || 0,
+          photoUrl: undefined,
+          notes: 'Agendamento Online',
+        };
+
+        // Update Context (Syncs to LocalStorage & Barber Dashboard)
+        updateAppointments([...appointments, newAppointment]);
+
+        // Close Modal
+        // Note: BookingModal handles its own success state/delay before calling onSubmit usually,
+        // or we can close it here. The modal implementation shows it has a success step.
+        // Let's allow the modal to finish its flow if needed, but here we just update data.
+      }}
     />
   );
 };

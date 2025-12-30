@@ -1,16 +1,18 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { Appointment, ServiceItem, Client } from '../types';
+import { Appointment, ServiceItem, Client, ShopSettings } from '../types';
 import { api } from '../services/api';
 
 interface DataContextType {
   appointments: Appointment[];
   services: ServiceItem[];
   clients: Client[];
+  shopSettings: ShopSettings;
   isLoading: boolean;
   refreshData: () => Promise<void>;
   updateAppointments: (appointments: Appointment[]) => void;
   updateServices: (services: ServiceItem[]) => void;
   updateClients: (clients: Client[]) => void;
+  updateShopSettings: (settings: ShopSettings) => void;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -20,6 +22,12 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [services, setServices] = useState<ServiceItem[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
+
+  // Settings with defaults (09:00 - 20:00, 60min interval)
+  const [shopSettings, setShopSettings] = useState<ShopSettings>(() => {
+    const saved = localStorage.getItem('shopSettings');
+    return saved ? JSON.parse(saved) : { startHour: 9, endHour: 20, slotInterval: 60 };
+  });
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -99,6 +107,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem('clients', JSON.stringify(clients));
   }, [clients]);
 
+  useEffect(() => {
+    localStorage.setItem('shopSettings', JSON.stringify(shopSettings));
+  }, [shopSettings]);
+
   // LISTEN FOR CROSS-TAB CHANGES (Multi-Tab Sync)
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
@@ -110,6 +122,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       if (e.key === 'clients' && e.newValue) {
         setClients(JSON.parse(e.newValue));
+      }
+      if (e.key === 'shopSettings' && e.newValue) {
+        setShopSettings(JSON.parse(e.newValue));
       }
     };
 
@@ -123,11 +138,13 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         appointments,
         services,
         clients,
+        shopSettings,
         isLoading,
         refreshData,
         updateAppointments: setAppointments,
         updateServices: setServices,
         updateClients: setClients,
+        updateShopSettings: setShopSettings,
       }}
     >
       {children}

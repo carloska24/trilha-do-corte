@@ -217,3 +217,9 @@ export interface Combo {
   image?: string;
   duration?: number; // Total duration in minutes
 }
+
+export interface ShopSettings {
+  startHour: number;
+  endHour: number;
+  slotInterval: number; // in minutes (e.g., 30, 60)
+}

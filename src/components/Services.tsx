@@ -32,7 +32,7 @@ export const Services: React.FC<ServicesProps> = ({ onOpenBooking, services }) =
       className="py-16 md:py-24 bg-[#050505] relative overflow-hidden scroll-mt-24"
     >
       {/* Background Elements - Absolute Dark Mode */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-zinc-900/20 via-[#050505] to-[#050505] pointer-events-none"></div>
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,var(--tw-gradient-stops))] from-zinc-900/20 via-[#050505] to-[#050505] pointer-events-none"></div>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Header - No Container, Clean Layout */}
@@ -53,7 +53,7 @@ export const Services: React.FC<ServicesProps> = ({ onOpenBooking, services }) =
             </div>
             <h2 className="text-5xl md:text-7xl font-graffiti text-white leading-none drop-shadow-2xl">
               ESTILO{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-br from-neon-yellow via-yellow-400 to-orange-500 drop-shadow-[0_0_15px_rgba(234,179,8,0.3)]">
+              <span className="text-transparent bg-clip-text bg-linear-to-br from-neon-yellow via-yellow-400 to-orange-500 drop-shadow-[0_0_15px_rgba(234,179,8,0.3)]">
                 TRILHA
               </span>
             </h2>

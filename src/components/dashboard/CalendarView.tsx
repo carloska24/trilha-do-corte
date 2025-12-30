@@ -11,6 +11,7 @@ import {
   Clock,
   CheckCircle2,
   AlertCircle,
+  Minus,
 } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
 import { useOutletContext } from 'react-router-dom';
@@ -20,7 +21,8 @@ interface DashboardOutletContext {
 }
 
 export const CalendarView: React.FC = () => {
-  const { appointments, services, updateAppointments, clients } = useData();
+  const { appointments, services, updateAppointments, clients, shopSettings, updateShopSettings } =
+    useData();
   const { setSelectedClient } = useOutletContext<DashboardOutletContext>();
 
   const onNewAppointment = (data: BookingData) => {
@@ -32,8 +34,13 @@ export const CalendarView: React.FC = () => {
       ...data,
       status: 'pending', // Default status
       clientName: data.name,
-      price: services.find(s => s.id === data.serviceId)?.price || 0,
-      photoUrl: null, // Placeholder
+      price: parseFloat(
+        services
+          .find(s => s.id === data.serviceId)
+          ?.price.replace('R$', '')
+          .replace(',', '.') || '0'
+      ),
+      photoUrl: undefined, // Placeholder
     };
     updateAppointments([...appointments, newApp]);
   };
@@ -47,7 +54,7 @@ export const CalendarView: React.FC = () => {
         phone: 'Sem cadastro',
         level: 1,
         lastVisit: 'Hoje',
-        img: null,
+        img: undefined,
         status: 'new',
         notes: 'Agendamento rápido.',
       } as Client);
@@ -55,12 +62,19 @@ export const CalendarView: React.FC = () => {
   };
 
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [activeTab, setActiveTab] = useState<'daily' | 'weekly' | 'monthly'>('daily');
+  const [activeTab, setActiveTab] = useState<'daily' | 'weekly' | 'monthly' | 'config'>('daily');
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
   // Quick Add State with Context
   const [quickAddSlot, setQuickAddSlot] = useState<{ date: Date; time: string } | null>(null);
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
+
+  // Helper for Toasts (Local implementation since CalendarView doesn't have the full toast system of Settings yet, or we can use a simple alert/log for now, user asked for toast feedback in settingsView, duplicating minimal toast here or omitting if not strictly required, but let's add a simple one)
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const showToast = (msg: string) => {
+    setToastMsg(msg);
+    setTimeout(() => setToastMsg(null), 3000);
+  };
 
   // Form State
   const [clientName, setClientName] = useState('');
@@ -71,7 +85,10 @@ export const CalendarView: React.FC = () => {
     if (activeTab === 'daily') {
       const currentHour = new Date().getHours();
       // Ensure we target a valid slot within our range (8-21)
-      const targetHour = Math.max(8, Math.min(currentHour, 21));
+      const targetHour = Math.max(
+        shopSettings.startHour,
+        Math.min(currentHour, shopSettings.endHour - 1)
+      );
 
       // Delay slightly to ensure render
       setTimeout(() => {
@@ -81,7 +98,7 @@ export const CalendarView: React.FC = () => {
         }
       }, 100);
     }
-  }, [activeTab, selectedDate]);
+  }, [activeTab, selectedDate, shopSettings]);
 
   // Ticker Style Injection
   useEffect(() => {
@@ -147,7 +164,11 @@ export const CalendarView: React.FC = () => {
     setIsQuickAddOpen(true);
   };
 
-  const getTimeSlots = () => Array.from({ length: 14 }, (_, i) => i + 8); // 8:00 - 21:00
+  const getTimeSlots = () =>
+    Array.from(
+      { length: shopSettings.endHour - shopSettings.startHour },
+      (_, i) => i + shopSettings.startHour
+    );
 
   // Helper to get service details
   const getServiceDetails = (id: string) => {
@@ -267,8 +288,27 @@ export const CalendarView: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#111] text-white">
-      {/* 1. HEADER */}
+    <div className="flex flex-col h-full bg-[#111] text-white relative">
+      <style>
+        {`
+          @keyframes fade-in-down {
+            0% { opacity: 0; transform: translate(-50%, -20px); }
+            100% { opacity: 1; transform: translate(-50%, 0); }
+          }
+          .animate-fade-in-down {
+            animation: fade-in-down 0.3s ease-out forwards;
+          }
+        `}
+      </style>
+
+      {/* Toast Overlay */}
+      {toastMsg && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-green-500 text-black font-bold px-4 py-2 rounded-full shadow-[0_0_20px_rgba(34,197,94,0.6)] animate-fade-in-down flex items-center gap-2 pointer-events-none">
+          <CheckCircle2 size={16} /> {toastMsg}
+        </div>
+      )}
+
+      {/* HEADER */}
       <div className="pt-6 px-4 md:px-6 bg-[#111] border-b border-gray-800">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl md:text-4xl font-graffiti text-white tracking-wide drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">
@@ -276,7 +316,6 @@ export const CalendarView: React.FC = () => {
           </h1>
           <button
             onClick={() => {
-              // Determine next reasonable slot
               const now = new Date();
               const nextHour = now.getHours() + 1;
               const time = `${String(nextHour).padStart(2, '0')}:00`;
@@ -289,37 +328,183 @@ export const CalendarView: React.FC = () => {
           </button>
         </div>
 
-        <div className="flex items-center gap-6 md:gap-8">
+        {/* TABS */}
+        <div className="flex items-center gap-6 md:gap-8 overflow-x-auto custom-scrollbar pb-1">
           <button
             onClick={() => setActiveTab('daily')}
-            className={`pb-3 text-xs font-black uppercase tracking-[0.2em] transition-all relative ${
-              activeTab === 'daily' ? 'text-neon-yellow' : 'text-gray-500 hover:text-white'
+            className={`pb-3 border-b-2 text-sm md:text-base font-bold tracking-widest transition-all whitespace-nowrap ${
+              activeTab === 'daily'
+                ? 'border-neon-yellow text-neon-yellow'
+                : 'border-transparent text-gray-500 hover:text-white'
             }`}
           >
-            Diário
-            {activeTab === 'daily' && (
-              <div className="absolute bottom-0 left-0 w-full h-0.5 bg-neon-yellow shadow-[0_0_15px_#EAB308]"></div>
-            )}
+            DIÁRIO
           </button>
           <button
-            onClick={() => setActiveTab('weekly')}
-            className={`pb-3 text-xs font-black uppercase tracking-[0.2em] transition-all relative ${
-              activeTab === 'weekly' || activeTab === 'monthly'
-                ? 'text-neon-yellow'
-                : 'text-gray-500 hover:text-white'
+            onClick={() => setActiveTab('monthly')}
+            className={`pb-3 border-b-2 text-sm md:text-base font-bold tracking-widest transition-all whitespace-nowrap ${
+              activeTab === 'monthly'
+                ? 'border-neon-yellow text-neon-yellow'
+                : 'border-transparent text-gray-500 hover:text-white'
             }`}
           >
-            Calendário
-            {(activeTab === 'weekly' || activeTab === 'monthly') && (
-              <div className="absolute bottom-0 left-0 w-full h-0.5 bg-neon-yellow shadow-[0_0_15px_#EAB308]"></div>
-            )}
+            CALENDÁRIO
+          </button>
+          <button
+            onClick={() => setActiveTab('config')}
+            className={`pb-3 border-b-2 text-sm md:text-base font-bold tracking-widest transition-all whitespace-nowrap ${
+              activeTab === 'config'
+                ? 'border-neon-yellow text-neon-yellow'
+                : 'border-transparent text-gray-500 hover:text-white'
+            }`}
+          >
+            AJUSTES
           </button>
         </div>
       </div>
 
-      {/* 2. BODY */}
+      {/* CONTENT BODY */}
       <div className="flex-1 overflow-y-auto custom-scrollbar relative">
-        {activeTab === 'daily' ? (
+        {activeTab === 'config' ? (
+          // --- SETTINGS VIEW (REFINED) ---
+          <div className="p-6 max-w-lg mx-auto animate-fade-in-up">
+            {/* Main Card */}
+            <div className="bg-[#1A1A1A] rounded-2xl border border-white/5 overflow-hidden shadow-2xl relative">
+              {/* Subtle Gradient Glow */}
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-neon-yellow to-transparent opacity-50"></div>
+
+              <div className="p-6 border-b border-white/5 bg-[#1E1E1E]">
+                <h3 className="text-white font-black uppercase tracking-widest flex items-center gap-3 text-lg">
+                  <Clock size={20} className="text-neon-yellow" />
+                  Configuração
+                </h3>
+                <p className="text-xs text-gray-500 font-medium mt-1 uppercase tracking-wider pl-8">
+                  Defina o horário de funcionamento
+                </p>
+              </div>
+
+              <div className="p-2">
+                {/* Start Hour */}
+                <div className="flex items-center justify-between p-4 rounded-xl hover:bg-white/5 transition-colors group mb-2">
+                  <div>
+                    <span className="text-gray-400 font-bold uppercase text-[10px] tracking-widest block mb-1">
+                      Abertura
+                    </span>
+                    <span className="text-white font-black text-2xl group-hover:text-neon-yellow transition-colors">
+                      {String(shopSettings.startHour).padStart(2, '0')}:00
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 bg-black/40 p-1.5 rounded-lg border border-white/5">
+                    <button
+                      onClick={e => {
+                        e.stopPropagation();
+                        const newStart = Math.max(0, shopSettings.startHour - 1);
+                        updateShopSettings({ ...shopSettings, startHour: newStart });
+                        showToast('Abertura salva!');
+                      }}
+                      className="w-10 h-10 rounded-md bg-[#111] hover:bg-neon-yellow hover:text-black border border-white/10 flex items-center justify-center transition-all active:scale-95 text-gray-400 hover:text-black"
+                    >
+                      <Minus size={18} strokeWidth={3} />
+                    </button>
+                    <button
+                      onClick={e => {
+                        e.stopPropagation();
+                        const newStart = Math.min(
+                          shopSettings.endHour - 1,
+                          shopSettings.startHour + 1
+                        );
+                        updateShopSettings({ ...shopSettings, startHour: newStart });
+                        showToast('Abertura salva!');
+                      }}
+                      className="w-10 h-10 rounded-md bg-[#111] hover:bg-neon-yellow hover:text-black border border-white/10 flex items-center justify-center transition-all active:scale-95 text-gray-400 hover:text-black"
+                    >
+                      <Plus size={18} strokeWidth={3} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* End Hour */}
+                <div className="flex items-center justify-between p-4 rounded-xl hover:bg-white/5 transition-colors group">
+                  <div>
+                    <span className="text-gray-400 font-bold uppercase text-[10px] tracking-widest block mb-1">
+                      Fechamento
+                    </span>
+                    <span className="text-white font-black text-2xl group-hover:text-neon-yellow transition-colors">
+                      {String(shopSettings.endHour).padStart(2, '0')}:00
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 bg-black/40 p-1.5 rounded-lg border border-white/5">
+                    <button
+                      onClick={e => {
+                        e.stopPropagation();
+                        const newEnd = Math.max(
+                          shopSettings.startHour + 1,
+                          shopSettings.endHour - 1
+                        );
+                        updateShopSettings({ ...shopSettings, endHour: newEnd });
+                        showToast('Fechamento salvo!');
+                      }}
+                      className="w-10 h-10 rounded-md bg-[#111] hover:bg-neon-yellow hover:text-black border border-white/10 flex items-center justify-center transition-all active:scale-95 text-gray-400 hover:text-black"
+                    >
+                      <Minus size={18} strokeWidth={3} />
+                    </button>
+                    <button
+                      onClick={e => {
+                        e.stopPropagation();
+                        const newEnd = Math.min(23, shopSettings.endHour + 1);
+                        updateShopSettings({ ...shopSettings, endHour: newEnd });
+                        showToast('Fechamento salvo!');
+                      }}
+                      className="w-10 h-10 rounded-md bg-[#111] hover:bg-neon-yellow hover:text-black border border-white/10 flex items-center justify-center transition-all active:scale-95 text-gray-400 hover:text-black"
+                    >
+                      <Plus size={18} strokeWidth={3} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Interval Section */}
+              <div className="p-6 bg-[#151515] border-t border-white/5">
+                <span className="text-gray-500 font-bold uppercase text-[10px] tracking-widest block mb-4 flex items-center gap-2">
+                  <Clock size={12} /> Intervalo entre cortes
+                </span>
+                <div className="grid grid-cols-4 gap-3">
+                  {[60, 30, 20, 15].map(min => (
+                    <button
+                      key={min}
+                      onClick={e => {
+                        e.stopPropagation();
+                        updateShopSettings({ ...shopSettings, slotInterval: min });
+                        showToast(`${min}min salvo!`);
+                      }}
+                      className={`
+                                        flex flex-col items-center justify-center py-3 rounded-xl border transition-all active:scale-95 group/btn
+                                        ${
+                                          (shopSettings.slotInterval || 60) === min
+                                            ? 'bg-neon-yellow border-neon-yellow text-black shadow-[0_0_15px_rgba(234,179,8,0.3)]'
+                                            : 'bg-[#111] border-gray-800 text-gray-500 hover:border-gray-600 hover:bg-[#1A1A1A] hover:text-white'
+                                        }
+                                    `}
+                    >
+                      <span className="text-lg font-black">{min}</span>
+                      <span
+                        className={`text-[8px] font-bold uppercase ${
+                          (shopSettings.slotInterval || 60) === min
+                            ? 'text-black/70'
+                            : 'text-gray-600 group-hover/btn:text-gray-400'
+                        }`}
+                      >
+                        MIN
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : activeTab === 'monthly' ? (
+          renderCalendarGrid()
+        ) : (
           <>
             {/* Daily Nav */}
             <div className="flex items-center justify-between px-4 md:px-6 py-4 bg-[#151515] border-b border-gray-800 sticky top-0 z-20 shadow-xl">
@@ -482,8 +667,6 @@ export const CalendarView: React.FC = () => {
               })}
             </div>
           </>
-        ) : (
-          renderCalendarGrid()
         )}
       </div>
 

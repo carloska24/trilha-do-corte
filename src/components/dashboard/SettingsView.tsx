@@ -16,10 +16,12 @@ import {
   X,
   CheckCircle,
   Download,
+  Clock,
 } from 'lucide-react';
 import { BarberProfile } from '../../types';
 
 import { useAuth } from '../../contexts/AuthContext';
+import { useData } from '../../contexts/DataContext';
 import { useOutletContext } from 'react-router-dom';
 
 interface DashboardOutletContext {
@@ -28,6 +30,7 @@ interface DashboardOutletContext {
 
 export const SettingsView: React.FC = () => {
   const { currentUser, logout } = useAuth();
+  const { shopSettings, updateShopSettings } = useData();
   const { openProfileModal } = useOutletContext<DashboardOutletContext>();
 
   const barberProfile = currentUser as BarberProfile;
