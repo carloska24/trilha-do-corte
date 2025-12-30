@@ -98,6 +98,33 @@ export const BookingModal: React.FC<BookingModalProps> = ({
     if (step > 1) setStep(step - 1);
   };
 
+  const sendWhatsAppMessage = () => {
+    const dateParts = formData.date.split('-');
+    const formattedDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
+    const mapLink = 'https://bit.ly/44RCRah';
+
+    // Fully percent-encoded emojis for universal compatibility
+    // ⚡ = %E2%9A%A1 | 👤 = %F0%9F%91%A4 | 🎫 = %F0%9F%8E%AB | ✅ = %E2%9C%85
+    // ✂️ = %E2%9C%82%EF%B8%8F | 📅 = %F0%9F%93%85 | ⏰ = %E2%8F%B0
+    // 📍 = %F0%9F%93%8D | 🗺️ = %F0%9F%97%BA%EF%B8%8F | ⚠️ = %E2%9A%A0%EF%B8%8F | 🚀 = %F0%9F%9A%80
+
+    const msg =
+      `%E2%9A%A1%20*TRILHA%20DO%20CORTE*%20%E2%9A%A1%0A%0A` +
+      `%F0%9F%91%A4%20*Passageiro:*%20${encodeURIComponent(formData.name)}%0A` +
+      `%F0%9F%8E%AB%20*Status:*%20CONFIRMADO%20%E2%9C%85%0A%0A` +
+      `%E2%9C%82%EF%B8%8F%20*Servi%C3%A7o:*%20${encodeURIComponent(
+        selectedService?.name || ''
+      )}%0A` +
+      `%F0%9F%93%85%20*Data:*%20${encodeURIComponent(formattedDate)}%0A` +
+      `%E2%8F%B0%20*Hor%C3%A1rio:*%20${encodeURIComponent(formData.time)}%0A` +
+      `%F0%9F%93%8D%20*Unidade:*%20Jardim%20S%C3%A3o%20Marcos%0A` +
+      `%F0%9F%97%BA%EF%B8%8F%20*Localiza%C3%A7%C3%A3o:*%20${encodeURIComponent(mapLink)}%0A%0A` +
+      `%E2%9A%A0%EF%B8%8F%20_Chegue%20com%2010min%20de%20anteced%C3%AAncia%20para%20o%20check-in._%0A` +
+      `%F0%9F%9A%80%20_Prepare-se%20para%20o%20upgrade._`;
+
+    window.open(`https://wa.me/55${formData.phone.replace(/\D/g, '')}?text=${msg}`, '_blank');
+  };
+
   const handleSubmit = () => {
     setIsLoading(true);
     // Simulate API call
@@ -107,6 +134,12 @@ export const BookingModal: React.FC<BookingModalProps> = ({
       }
       setIsLoading(false);
       setStep(4); // Success step
+
+      // Auto-send WhatsApp message
+      // Small timeout to allow state updates and avoid browser blocking immediate popups in some cases
+      setTimeout(() => {
+        sendWhatsAppMessage();
+      }, 500);
     }, 1500);
   };
 
@@ -393,28 +426,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
 
                 <div className="mb-2 flex justify-center w-full shrink-0">
                   <button
-                    onClick={() => {
-                      const dateParts = formData.date.split('-');
-                      const formattedDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
-                      const mapLink = 'https://bit.ly/44RCRah';
-
-                      const msg =
-                        `\u26A1 *TRILHA DO CORTE* \u26A1%0A%0A` +
-                        `\u{1F464} *Passageiro:* ${formData.name}%0A` +
-                        `\u{1F3AB} *Status:* CONFIRMADO \u2705%0A%0A` +
-                        `\u2702\uFE0F *Serviço:* ${selectedService?.name}%0A` +
-                        `\u{1F4C5} *Data:* ${formattedDate}%0A` +
-                        `\u23F0 *Horário:* ${formData.time}%0A` +
-                        `\u{1F4CD} *Unidade:* Jardim São Marcos%0A` +
-                        `\u{1F5FA}\uFE0F *Localização:* ${mapLink}%0A%0A` +
-                        `\u26A0\uFE0F _Chegue com 10min de antecedência para o check-in._%0A` +
-                        `\u{1F680} _Prepare-se para o upgrade._`;
-
-                      window.open(
-                        `https://wa.me/55${formData.phone.replace(/\D/g, '')}?text=${msg}`,
-                        '_blank'
-                      );
-                    }}
+                    onClick={sendWhatsAppMessage}
                     className="text-[10px] text-neon-yellow hover:text-white underline decoration-dashed underline-offset-4 flex items-center gap-1.5"
                   >
                     <span>Não recebeu? Reenviar no WhatsApp</span>
