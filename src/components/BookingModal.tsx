@@ -399,19 +399,22 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                       const mapLink = 'https://bit.ly/44RCRah';
 
                       const msg =
-                        `⚡ *TRILHA DO CORTE* ⚡%0A%0A` +
-                        `👤 *Passageiro:* ${formData.name}%0A` +
-                        `🎫 *Status:* CONFIRMADO ✅%0A%0A` +
-                        `✂️ *Serviço:* ${selectedService?.name}%0A` +
-                        `📅 *Data:* ${formattedDate}%0A` +
-                        `⏰ *Horário:* ${formData.time}%0A` +
-                        `📍 *Unidade:* Jardim São Marcos%0A` +
-                        `🗺️ *Localização:* ${mapLink}%0A%0A` +
-                        `⚠️ _Chegue com 10min de antecedência para o check-in._%0A` +
+                        `⚡ *TRILHA DO CORTE* ⚡\n\n` +
+                        `👤 *Passageiro:* ${formData.name}\n` +
+                        `🎫 *Status:* CONFIRMADO ✅\n\n` +
+                        `✂️ *Serviço:* ${selectedService?.name}\n` +
+                        `📅 *Data:* ${formattedDate}\n` +
+                        `⏰ *Horário:* ${formData.time}\n` +
+                        `📍 *Unidade:* Jardim São Marcos\n` +
+                        `🗺️ *Localização:* ${mapLink}\n\n` +
+                        `⚠️ _Chegue com 10min de antecedência para o check-in._\n` +
                         `🚀 _Prepare-se para o upgrade._`;
 
                       window.open(
-                        `https://wa.me/55${formData.phone.replace(/\D/g, '')}?text=${msg}`,
+                        `https://wa.me/55${formData.phone.replace(
+                          /\D/g,
+                          ''
+                        )}?text=${encodeURIComponent(msg)}`,
                         '_blank'
                       );
                     }}
