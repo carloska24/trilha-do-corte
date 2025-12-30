@@ -84,7 +84,7 @@ const QueueTicker = React.memo(
                         </div>
 
                         <span className="text-white font-black text-lg uppercase truncate leading-none tracking-tight group-hover/card:text-transparent group-hover/card:bg-clip-text group-hover/card:bg-gradient-to-r group-hover/card:from-white group-hover/card:to-cyan-200 transition-all">
-                          {client.clientName.split(' ')[0]}
+                          {client.clientName ? client.clientName.split(' ')[0] : 'Cliente'}
                         </span>
 
                         <div className="flex items-center gap-2 mt-1.5">
@@ -311,7 +311,7 @@ export const DashboardHome: React.FC = () => {
                   {/* Client Name */}
                   <div className="flex flex-col items-center relative z-10 w-full mt-1">
                     <h2 className="text-3xl font-black text-white uppercase tracking-tighter text-center leading-none drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]">
-                      {inProgress.clientName.split(' ')[0]}
+                      {inProgress.clientName ? inProgress.clientName.split(' ')[0] : 'Cliente'}
                     </h2>
                     {/* Underline/Decoration */}
                     <div className="w-1/2 h-[2px] bg-gradient-to-r from-transparent via-green-500 to-transparent mt-1 mb-1"></div>
