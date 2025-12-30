@@ -399,22 +399,19 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                       const mapLink = 'https://bit.ly/44RCRah';
 
                       const msg =
-                        `⚡ *TRILHA DO CORTE* ⚡\n\n` +
-                        `👤 *Passageiro:* ${formData.name}\n` +
-                        `🎫 *Status:* CONFIRMADO ✅\n\n` +
-                        `✂️ *Serviço:* ${selectedService?.name}\n` +
-                        `📅 *Data:* ${formattedDate}\n` +
-                        `⏰ *Horário:* ${formData.time}\n` +
-                        `📍 *Unidade:* Jardim São Marcos\n` +
-                        `🗺️ *Localização:* ${mapLink}\n\n` +
-                        `⚠️ _Chegue com 10min de antecedência para o check-in._\n` +
-                        `🚀 _Prepare-se para o upgrade._`;
+                        `\u26A1 *TRILHA DO CORTE* \u26A1%0A%0A` +
+                        `\u{1F464} *Passageiro:* ${formData.name}%0A` +
+                        `\u{1F3AB} *Status:* CONFIRMADO \u2705%0A%0A` +
+                        `\u2702\uFE0F *Serviço:* ${selectedService?.name}%0A` +
+                        `\u{1F4C5} *Data:* ${formattedDate}%0A` +
+                        `\u23F0 *Horário:* ${formData.time}%0A` +
+                        `\u{1F4CD} *Unidade:* Jardim São Marcos%0A` +
+                        `\u{1F5FA}\uFE0F *Localização:* ${mapLink}%0A%0A` +
+                        `\u26A0\uFE0F _Chegue com 10min de antecedência para o check-in._%0A` +
+                        `\u{1F680} _Prepare-se para o upgrade._`;
 
                       window.open(
-                        `https://wa.me/55${formData.phone.replace(
-                          /\D/g,
-                          ''
-                        )}?text=${encodeURIComponent(msg)}`,
+                        `https://wa.me/55${formData.phone.replace(/\D/g, '')}?text=${msg}`,
                         '_blank'
                       );
                     }}
