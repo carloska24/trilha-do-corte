@@ -394,7 +394,22 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                 <div className="mb-2 flex justify-center w-full shrink-0">
                   <button
                     onClick={() => {
-                      const msg = `*Trilha do Corte* - Reserva Confirmada!%0A%0AOlá *${formData.name}*! ✂️%0A%0ASua reserva para *${selectedService?.name}* foi confirmada com sucesso.%0A📅 Data: ${formData.date}%0A⏰ Horário: ${formData.time}%0A📍 Unidade: Central - SP%0A%0APor favor, chegue com 10 minutos de antecedência.`;
+                      const dateParts = formData.date.split('-');
+                      const formattedDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
+                      const mapLink = 'https://bit.ly/44RCRah';
+
+                      const msg =
+                        `⚡ *TRILHA DO CORTE* ⚡%0A%0A` +
+                        `👤 *Passageiro:* ${formData.name}%0A` +
+                        `🎫 *Status:* CONFIRMADO ✅%0A%0A` +
+                        `✂️ *Serviço:* ${selectedService?.name}%0A` +
+                        `📅 *Data:* ${formattedDate}%0A` +
+                        `⏰ *Horário:* ${formData.time}%0A` +
+                        `📍 *Unidade:* Jardim São Marcos%0A` +
+                        `🗺️ *Localização:* ${mapLink}%0A%0A` +
+                        `⚠️ _Chegue com 10min de antecedência para o check-in._%0A` +
+                        `🚀 _Prepare-se para o upgrade._`;
+
                       window.open(
                         `https://wa.me/55${formData.phone.replace(/\D/g, '')}?text=${msg}`,
                         '_blank'
