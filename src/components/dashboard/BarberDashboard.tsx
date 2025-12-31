@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChairIcon } from './icons/ChairIcon';
-import { ClientsIcon } from './icons/ClientsIcon';
-import { CalendarIcon } from './icons/CalendarIcon';
-import { ServicesIcon } from './icons/ServicesIcon';
-import { SettingsIcon } from './icons/SettingsIcon';
-import { AnimatedWallet } from './icons/AnimatedWallet';
+import { ChairIcon } from '../icons/ChairIcon';
+import { ClientsIcon } from '../icons/ClientsIcon';
+import { CalendarIcon } from '../icons/CalendarIcon';
+import { ServicesIcon } from '../icons/ServicesIcon';
+import { SettingsIcon } from '../icons/SettingsIcon';
+import { AnimatedWallet } from '../icons/AnimatedWallet';
 import {
   Appointment,
   AppointmentStatus,
@@ -12,7 +12,7 @@ import {
   Service,
   DashboardView,
   Client,
-} from '../types';
+} from '../../types';
 import {
   Wallet,
   Settings,
@@ -31,16 +31,18 @@ import {
   Briefcase,
 } from 'lucide-react';
 
-// Sub-components
-import { DashboardHome } from './dashboard/DashboardHome';
-import { ClientsManager } from './dashboard/ClientsManager';
-import { CalendarView } from './dashboard/CalendarView';
-import { FinancialVault } from './dashboard/FinancialVault';
-import { ServiceConfig } from './dashboard/ServiceConfig';
-import { FinancialModal } from './dashboard/FinancialModal';
-import { ClientProfileModal } from './dashboard/ClientProfileModal';
-import { SettingsView } from './dashboard/SettingsView';
-import { useShopStatus } from '../hooks/useShopStatus';
+// Sub-components - Now Siblings
+import { DashboardHome } from './DashboardHome';
+import { ClientsManager } from './ClientsManager';
+import { CalendarView } from './CalendarView';
+import { FinancialVault } from './FinancialVault';
+import { ServiceConfig } from './ServiceConfig';
+import { FinancialModal } from './FinancialModal';
+import { ClientProfileModal } from './ClientProfileModal';
+import { SettingsView } from './SettingsView';
+import { useShopStatus } from '../../hooks/useShopStatus';
+import { Button } from '../ui/Button';
+import { Card } from '../ui/Card';
 
 const DEFAULT_BARBER_IMAGE =
   'https://images.unsplash.com/photo-1618077553780-75539862f629?q=80&w=400&auto=format&fit=crop';
@@ -473,7 +475,11 @@ export const BarberDashboard: React.FC<BarberDashboardProps> = ({
       {/* MODAL PERFIL (Header) */}
       {showProfileModal && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/95 backdrop-blur-sm animate-[fadeIn_0.2s_ease-out]">
-          <div className="bg-[#111] border border-gray-800 w-full max-w-sm p-8 rounded-sm shadow-2xl relative flex flex-col items-center">
+          <Card
+            variant="default"
+            padding="lg"
+            className="w-full max-w-sm relative flex flex-col items-center"
+          >
             <button
               onClick={() => setShowProfileModal(false)}
               className="absolute top-4 right-4 text-gray-500 hover:text-white cursor-pointer"
@@ -510,30 +516,33 @@ export const BarberDashboard: React.FC<BarberDashboardProps> = ({
               </p>
             </div>
             <div className="w-full space-y-3">
-              <button
+              <Button
+                variant="secondary"
+                size="lg"
+                fullWidth
                 onClick={() => {
                   setShowProfileModal(false);
                   onViewChange('services');
                 }}
-                className="w-full bg-[#1a1a1a] hover:bg-[#222] text-white py-4 flex items-center justify-center gap-3 text-xs font-black uppercase tracking-widest border border-gray-800 transition-colors cursor-pointer"
               >
                 <Settings size={16} /> Configurações do Trem
-              </button>
-              <button
-                onClick={onLogout}
-                className="w-full bg-red-900/10 hover:bg-red-900/30 text-red-500 hover:text-red-400 py-4 flex items-center justify-center gap-3 text-xs font-black uppercase tracking-widest border border-red-900/20 transition-colors cursor-pointer"
-              >
+              </Button>
+              <Button variant="danger" size="lg" fullWidth onClick={onLogout}>
                 <LogOut size={16} /> Encerrar Turno
-              </button>
+              </Button>
             </div>
-          </div>
+          </Card>
         </div>
       )}
 
       {/* MODAL FINALIZAR (Used by DashboardHome) */}
       {finishingAppId && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/95 backdrop-blur-sm animate-[fadeIn_0.2s_ease-out]">
-          <div className="bg-[#111] border border-gray-800 w-full max-w-md flex flex-col shadow-2xl max-h-[90vh] rounded-sm">
+          <Card
+            variant="default"
+            padding="none"
+            className="w-full max-w-md flex flex-col max-h-[90vh]"
+          >
             <div className="p-4 md:p-6 border-b border-gray-800 flex justify-between items-center bg-[#151515]">
               <h3 className="font-black text-white uppercase tracking-wider text-base md:text-lg">
                 Registrar Obra
@@ -618,14 +627,11 @@ export const BarberDashboard: React.FC<BarberDashboardProps> = ({
               </div>
             </div>
             <div className="p-4 border-t border-gray-800 bg-[#151515]">
-              <button
-                onClick={confirmFinish}
-                className="w-full bg-neon-yellow hover:bg-white text-black font-black uppercase py-3 md:py-4 tracking-widest transition-colors flex justify-center items-center gap-2 rounded-sm shadow-[0_0_20px_rgba(234,179,8,0.2)] hover:shadow-[0_0_30px_rgba(234,179,8,0.4)] text-sm md:text-base"
-              >
+              <Button variant="primary" size="lg" fullWidth onClick={confirmFinish}>
                 Confirmar e Liberar <Check size={16} />
-              </button>
+              </Button>
             </div>
-          </div>
+          </Card>
         </div>
       )}
     </div>

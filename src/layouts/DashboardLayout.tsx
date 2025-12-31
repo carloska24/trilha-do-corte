@@ -21,16 +21,9 @@ const DEFAULT_BARBER_IMAGE =
 
 export const DashboardLayout: React.FC = () => {
   // Contexts
-  const { currentUser, logout } = useAuth();
-  const {
-    appointments,
-    clients,
-    services,
-    updateAppointments,
-    updateClients,
-    updateServices,
-    updateProfile,
-  } = useData();
+  const { currentUser, logout, updateProfile } = useAuth();
+  const { appointments, clients, services, updateAppointments, updateClients, updateServices } =
+    useData();
   const navigate = useNavigate();
   const location = useLocation();
 

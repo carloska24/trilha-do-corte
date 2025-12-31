@@ -15,6 +15,7 @@ import {
   Search,
 } from 'lucide-react';
 import { ServiceItem, BookingData, Appointment } from '../types';
+import { SERVICES as ALL_SERVICES } from '../constants';
 import { PromoBadge } from './ui/PromoBadge';
 import { TicketCard } from './ui/TicketCard';
 import { ServiceCard } from './ui/ServiceCard';
@@ -98,7 +99,10 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   const filteredServices = services.filter(s =>
     s.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
-  const selectedService = services.find(s => s.id === formData.serviceId);
+  // Fallback to ALL_SERVICES if not found in the passed prop (handle 'Platinado' case)
+  const selectedService =
+    services.find(s => s.id === formData.serviceId) ||
+    ALL_SERVICES.find(s => s.id === formData.serviceId);
 
   const handleNext = () => {
     if (step === 1 && formData.serviceId) setStep(2);
@@ -385,8 +389,14 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                     {selectedService?.name}
                   </p>
                   <p className="text-neon-yellow font-mono text-xs">
-                    {formData.date ? new Date(formData.date).toLocaleDateString() : ''} às{' '}
-                    {formData.time}
+                    {formData.date
+                      ? new Date(formData.date + 'T12:00:00').toLocaleDateString('pt-BR', {
+                          year: '2-digit',
+                          month: '2-digit',
+                          day: '2-digit',
+                        })
+                      : ''}{' '}
+                    às {formData.time}
                   </p>
                 </div>
               </div>
@@ -453,6 +463,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                   data={formData}
                   service={selectedService}
                   ticketId={Math.random().toString(36).substr(2, 6).toUpperCase()}
+                  rating={1} // Default to Level 1 (Basic) for new bookings in this modal
                   className="w-full max-w-sm"
                 />
               </div>

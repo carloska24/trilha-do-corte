@@ -416,17 +416,88 @@ app.post('/api/appointments', async (req, res) => {
       price,
       photoUrl,
       notes,
-      req.body.clientId,
+      req.body.clientId || null,
     ];
 
-    await db.query(sql, params);
+    const result = await db.query(sql, params);
+
+    console.log(`✅ [POST] Appointment Created: ID=${id} | Rows: ${result.rowCount}`);
+
     res.json({
       message: 'success',
       data: { id, clientName, serviceId, date, time, status, price, photoUrl, notes },
     });
   } catch (e) {
-    console.error(e);
+    console.error('❌ [POST] Error Creating Appointment:', e);
     return res.status(400).json({ error: 'Erro ao validar/salvar agendamento: ' + e.message });
+  }
+});
+
+// Update Appointment (Cancel, Reschedule, etc.)
+app.put('/api/appointments/:id', async (req, res) => {
+  const { id } = req.params;
+  const { status, date, time, notes, price, serviceId } = req.body;
+
+  console.log(`📝 [PUT] Updating Appointment ${id} | Body:`, req.body);
+
+  try {
+    const fields = [];
+    const params = [];
+    let idx = 1;
+
+    // Build dynamic query
+    if (status !== undefined) {
+      fields.push(`status = $${idx++}`);
+      params.push(status);
+    }
+    if (date !== undefined) {
+      fields.push(`date = $${idx++}`);
+      params.push(date);
+    }
+    if (time !== undefined) {
+      fields.push(`time = $${idx++}`);
+      params.push(time);
+    }
+    if (notes !== undefined) {
+      fields.push(`notes = $${idx++}`);
+      params.push(notes);
+    }
+    if (price !== undefined) {
+      fields.push(`price = $${idx++}`);
+      params.push(price);
+    }
+    if (serviceId !== undefined) {
+      fields.push(`serviceId = $${idx++}`);
+      params.push(serviceId);
+    }
+
+    if (fields.length === 0) {
+      return res.status(400).json({ error: 'No fields provided for update.' });
+    }
+
+    params.push(id);
+    const sql = `UPDATE appointments SET ${fields.join(', ')} WHERE id = $${idx}`;
+    console.log(`🛠️ Executing SQL: ${sql} | Params:`, params);
+
+    const result = await db.query(sql, params);
+    console.log(`✅ Result: ${result.rowCount} rows updated`);
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Agendamento não encontrado.' });
+    }
+
+    // Fetch the updated record to return
+    const { rows: updatedRows } = await db.query('SELECT * FROM appointments WHERE id = $1', [id]);
+    const updatedAppointment = updatedRows[0];
+
+    res.json({
+      success: true,
+      message: 'Agendamento atualizado com sucesso.',
+      data: updatedAppointment,
+    });
+  } catch (err) {
+    console.error('❌ Update Appointment Error:', err);
+    res.status(500).json({ error: err.message });
   }
 });
 

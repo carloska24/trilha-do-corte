@@ -1,6 +1,7 @@
 import React from 'react';
 import { ChairIcon } from '../icons/ChairIcon';
 import { Appointment, AppointmentStatus, ServiceItem } from '../../types';
+import { SERVICES as ALL_SERVICES } from '../../constants';
 import { Armchair, ChevronRight, User, Star } from 'lucide-react';
 import { sendBroadcastNotification } from '../../utils/notificationUtils';
 import { useData } from '../../contexts/DataContext';
@@ -45,7 +46,9 @@ const QueueTicker = React.memo(
             <div className="flex animate-ticker items-center pl-4 py-2 hover:pause-animation will-change-transform">
               {[...queue, ...queue].map((client, i) => {
                 // Find Service Name
-                const service = services.find(s => s.id === client.serviceId);
+                const service =
+                  services.find(s => s.id === client.serviceId) ||
+                  ALL_SERVICES.find(s => s.id === client.serviceId);
                 const serviceName = service ? service.name : 'Corte & Estilo';
                 // const servicePrice = service ? service.price : 'R$ -';
 

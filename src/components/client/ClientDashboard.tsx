@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Appointment, ClientProfile, ServiceItem, Combo } from '../types';
-import { MOCK_COMBOS } from '../constants';
-import { ComboBookingModal } from './ComboBookingModal';
+import { Appointment, ClientProfile, ServiceItem, Combo } from '../../types';
+import { MOCK_COMBOS, SERVICES as ALL_SERVICES } from '../../constants';
+import { ComboBookingModal } from '../ComboBookingModal';
 import {
   Scissors,
   Ticket,
@@ -16,22 +16,35 @@ import {
   User,
   LogOut,
   Star,
-  Wallet, // Wallet was previously imported separately but already in lucide-react imports? No, added here.
+  Wallet,
   Gift,
 } from 'lucide-react';
-import { PromotionsCarousel } from './client/PromotionsCarousel';
-import { ClientFooter } from './client/ClientFooter';
-import { ServiceShowcase } from './client/ServiceShowcase';
-import { PortfolioGallery } from './client/PortfolioGallery';
-import { ClientHeader } from './client/ClientHeader';
-import { VitrineDestaques } from './client/VitrineDestaques';
-import { ClientBottomNav } from './client/ClientBottomNav';
-import { ClientMobileDrawer } from './client/ClientMobileDrawer';
-import { NotificationsSheet } from './client/NotificationsSheet';
-import { LoyaltyCard } from './client/LoyaltyCard';
-import { TicketCard } from './ui/TicketCard';
+import { PromotionsCarousel } from './PromotionsCarousel';
+import { ClientFooter } from './ClientFooter';
+import { ServiceShowcase } from './ServiceShowcase';
+import { PortfolioGallery } from './PortfolioGallery';
+import { ClientHeader } from './ClientHeader';
+import { VitrineDestaques } from './VitrineDestaques';
+import { ClientBottomNav } from './ClientBottomNav';
+import { ClientMobileDrawer } from './ClientMobileDrawer';
+import { NotificationsSheet } from './NotificationsSheet';
+import { LoyaltyCard } from './LoyaltyCard';
+import { TicketCard } from '../ui/TicketCard';
 
-import { ClientProfileSettings } from './client/ClientProfileSettings';
+import { ClientProfileSettings } from './ClientProfileSettings';
+
+interface ClientDashboardProps {
+  client: ClientProfile;
+  appointments: Appointment[];
+  allAppointments: Appointment[];
+  onOpenBooking: (preselected?: { serviceId?: string }) => void;
+  onCancelBooking: (id: string) => void;
+  onRebook: (appointment: Appointment) => void;
+  services: ServiceItem[];
+  onLogout: () => void;
+  promotions?: any[];
+  onUpdateProfile: (data: Partial<ClientProfile>) => void;
+}
 
 export const ClientDashboard: React.FC<ClientDashboardProps> = ({
   client,
@@ -228,7 +241,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
               {upcoming.map(app => (
                 <div
                   key={app.id}
-                  className="w-[85vw] sm:w-[350px] snap-center relative flex justify-center py-4 shrink-0 transition-transform"
+                  className="w-full sm:w-[350px] snap-center relative flex justify-center py-4 shrink-0 transition-transform"
                 >
                   <TicketCard
                     data={{
@@ -238,9 +251,13 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
                       date: app.date,
                       time: app.time,
                     }}
-                    service={services.find(s => String(s.id) === String(app.serviceId))}
+                    service={
+                      services.find(s => String(s.id) === String(app.serviceId)) ||
+                      ALL_SERVICES.find(s => String(s.id) === String(app.serviceId))
+                    }
                     ticketId={`COD-${app.id.substring(0, 6)}`}
                     rating={client.level || 1}
+                    className="w-full max-w-none" // Overriding default max-w-[340px]
                   />
 
                   {/* Cancel Button Overlaid or Below */}

@@ -8,6 +8,7 @@ interface AuthContextType {
   currentUser: ClientProfile | BarberProfile | null;
   login: (type: 'client' | 'barber', profile: ClientProfile | BarberProfile) => void;
   logout: () => void;
+  updateProfile: (data: Partial<ClientProfile | BarberProfile>) => void;
   isAuthenticated: boolean;
 }
 
@@ -50,6 +51,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setCurrentUser(null);
   };
 
+  const updateProfile = (data: Partial<ClientProfile | BarberProfile>) => {
+    setCurrentUser(prev => {
+      if (!prev) return null;
+      // TS might complain about mixing types, but simpler merge is fine for now or explicit cast
+      return { ...prev, ...data } as ClientProfile | BarberProfile;
+    });
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -57,6 +66,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         currentUser,
         login,
         logout,
+        updateProfile,
         isAuthenticated: !!userType,
       }}
     >

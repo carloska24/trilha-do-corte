@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Appointment, BookingData, Service, Client } from '../../types';
+import { SERVICES as ALL_SERVICES } from '../../constants';
+import { api } from '../../services/api';
 import {
   ChevronLeft,
   ChevronRight,
@@ -57,7 +59,7 @@ export const CalendarView: React.FC = () => {
 
   const onSelectClient = (clientName: string) => {
     const found =
-      clients.find(c => c.name.toLowerCase() === clientName.toLowerCase()) ||
+      clients.find(c => c.name && c.name.toLowerCase() === clientName.toLowerCase()) ||
       ({
         id: 'temp',
         name: clientName,
@@ -231,7 +233,7 @@ export const CalendarView: React.FC = () => {
     window.open(`https://wa.me/?text=${msg}`, '_blank');
   };
 
-  const handleCancelAppointment = (id: string, e: React.MouseEvent) => {
+  const handleCancelAppointment = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent opening modal
     if (!window.confirm('Cancelar este agendamento?')) return;
 
@@ -239,6 +241,9 @@ export const CalendarView: React.FC = () => {
       a.id === id ? { ...a, status: 'cancelled' as const } : a
     );
     updateAppointments(updated);
+
+    // Persist to API
+    await api.updateAppointment(id, { status: 'cancelled' });
     showToast('Agendamento cancelado.');
   };
 
@@ -277,7 +282,7 @@ export const CalendarView: React.FC = () => {
 
   // Helper to get service details
   const getServiceDetails = (id: string) => {
-    const s = services.find(serv => serv.id === id);
+    const s = services.find(serv => serv.id === id) || ALL_SERVICES.find(serv => serv.id === id);
     return s || { name: 'Serviço', category: 'Geral', icon: 'scissors', price: 'R$-' };
   };
 

@@ -33,7 +33,7 @@ export const TicketCard: React.FC<TicketCardProps> = ({
   const formatDate = (dateStr: string) => {
     if (!dateStr) return '---';
     const [year, month, day] = dateStr.split('-');
-    return `${day}/${month}/${year}`;
+    return `${day}/${month}/${year.slice(-2)}`;
   };
 
   // --- DYNAMIC STYLES FOR CRISPNESS ---
@@ -89,11 +89,23 @@ export const TicketCard: React.FC<TicketCardProps> = ({
           style={frontFaceStyle}
         >
           {/* Main Card Frame */}
-          <div className="relative bg-gradient-to-b from-[#b88a44] via-[#F4D079] to-[#74541e] p-[2px] rounded-[24px] shadow-[0_15px_40px_-5px_rgba(0,0,0,0.6)] overflow-hidden">
+          <div
+            className={`relative p-[2px] rounded-[24px] shadow-[0_15px_40px_-5px_rgba(0,0,0,0.6)] overflow-hidden ${
+              rating <= 1
+                ? 'bg-gradient-to-b from-[#4a4a4a] via-[#8a8a8a] to-[#2a2a2a]' // Iron/Silver Gradient
+                : 'bg-gradient-to-b from-[#b88a44] via-[#F4D079] to-[#74541e]' // Gold Gradient
+            }`}
+          >
             <div className="bg-[#141009] relative rounded-[22px] overflow-hidden flex flex-col min-h-[160px] backface-hidden antialiased">
-              {/* Metallic Texture */}
+              {/* Texture Layer */}
               <div className="absolute inset-0 z-0 pointer-events-none">
-                <div className="absolute inset-0 bg-gradient-to-br from-[#ae8b47] via-[#cfab59] to-[#8a6e34] opacity-100"></div>
+                <div
+                  className={`absolute inset-0 opacity-100 ${
+                    rating <= 1
+                      ? 'bg-gradient-to-br from-[#333] via-[#555] to-[#222]' // Iron Base
+                      : 'bg-gradient-to-br from-[#ae8b47] via-[#cfab59] to-[#8a6e34]' // Gold Base
+                  }`}
+                ></div>
                 {/* Micro-noise for texture without blur */}
                 <div
                   className="absolute inset-0 opacity-[0.15] mix-blend-overlay"
@@ -105,11 +117,23 @@ export const TicketCard: React.FC<TicketCardProps> = ({
               </div>
 
               {/* TOP STRIP */}
-              <div className="relative z-10 h-16 w-full bg-[#0a0a0a] border-b border-[#F4D079]/50 shadow-md flex items-center justify-between px-6">
-                <span className="font-graffiti text-xl text-[#F4D079] tracking-wider drop-shadow-[0_2px_0_rgba(0,0,0,1)]">
+              <div
+                className={`relative z-10 h-16 w-full bg-[#0a0a0a] border-b shadow-md flex items-center justify-between px-6 ${
+                  rating <= 1 ? 'border-gray-600/50' : 'border-[#F4D079]/50'
+                }`}
+              >
+                <span
+                  className={`font-graffiti text-xl tracking-wider drop-shadow-[0_2px_0_rgba(0,0,0,1)] ${
+                    rating <= 1 ? 'text-gray-300' : 'text-[#F4D079]'
+                  }`}
+                >
                   TRILHA<span className="text-[#fff]">CARD</span>
                 </span>
-                <span className="font-mono font-bold text-[#F4D079] text-sm tracking-widest drop-shadow-[0_1px_0_rgba(0,0,0,1)]">
+                <span
+                  className={`font-mono font-bold text-sm tracking-widest drop-shadow-[0_1px_0_rgba(0,0,0,1)] ${
+                    rating <= 1 ? 'text-gray-400' : 'text-[#F4D079]'
+                  }`}
+                >
                   {ticketId}
                 </span>
               </div>
@@ -118,7 +142,11 @@ export const TicketCard: React.FC<TicketCardProps> = ({
               <div className="relative z-10 p-6 flex-grow flex flex-col justify-between">
                 <div className="flex justify-between items-end mb-4">
                   <div className="flex flex-col">
-                    <span className="text-[10px] font-black text-[#2a1e0b] uppercase tracking-[0.2em] mb-1 drop-shadow-sm">
+                    <span
+                      className={`text-[10px] font-black uppercase tracking-[0.2em] mb-1 drop-shadow-sm ${
+                        rating <= 1 ? 'text-black/70' : 'text-[#2a1e0b]'
+                      }`}
+                    >
                       Passageiro
                     </span>
                     <h3 className="text-3xl font-black text-[#fff] uppercase tracking-wide drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] shadow-black text-shadow-gold leading-none pb-1">
@@ -226,33 +254,67 @@ export const TicketCard: React.FC<TicketCardProps> = ({
           className="absolute inset-0 backface-hidden rotate-y-180 z-20 h-full w-full ring-1 ring-white/10 rounded-[24px]"
           style={backFaceStyle}
         >
-          <div className="relative bg-gradient-to-b from-[#8E6E34] via-[#F4D079] to-[#584015] p-[3px] rounded-[24px] shadow-2xl overflow-hidden h-full">
+          <div
+            className={`relative p-[3px] rounded-[24px] shadow-2xl overflow-hidden h-full ${
+              rating <= 1
+                ? 'bg-gradient-to-b from-[#4a4a4a] via-[#8a8a8a] to-[#2a2a2a]' // Iron
+                : 'bg-gradient-to-b from-[#8E6E34] via-[#F4D079] to-[#584015]' // Gold
+            }`}
+          >
             <div className="bg-[#1a150c] relative rounded-[21px] overflow-hidden h-full flex flex-col backface-hidden antialiased">
               {/* Metallic Texture (Same as front) */}
               <div className="absolute inset-0 z-0 transform scale-x-[-1] pointer-events-none">
-                <div className="absolute inset-0 bg-gradient-to-bl from-[#ae8b47] via-[#cfab59] to-[#8a6e34] opacity-100"></div>
+                <div
+                  className={`absolute inset-0 opacity-100 ${
+                    rating <= 1
+                      ? 'bg-gradient-to-bl from-[#333] via-[#555] to-[#222]' // Iron Base
+                      : 'bg-gradient-to-bl from-[#ae8b47] via-[#cfab59] to-[#8a6e34]' // Gold Base
+                  }`}
+                ></div>
                 <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/brushed-alum-dark.png')] opacity-40 mix-blend-multiply"></div>
                 <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-transparent to-black/30 mix-blend-overlay"></div>
               </div>
 
               {/* TOP STRIP - BACK */}
-              <div className="relative z-10 h-14 w-full bg-[#0a0a0a] border-b border-[#F4D079]/50 flex items-center justify-center shrink-0">
-                <span className="font-graffiti text-base text-[#F4D079] tracking-wider drop-shadow-sm">
+              <div
+                className={`relative z-10 h-14 w-full bg-[#0a0a0a] border-b flex items-center justify-center shrink-0 ${
+                  rating <= 1 ? 'border-gray-600/50' : 'border-[#F4D079]/50'
+                }`}
+              >
+                <span
+                  className={`font-graffiti text-base tracking-wider drop-shadow-sm ${
+                    rating <= 1 ? 'text-gray-300' : 'text-[#F4D079]'
+                  }`}
+                >
                   REGRAS & <span className="text-[#fff]">POLÍTICA</span>
                 </span>
               </div>
 
               {/* BODY - BACK */}
-              <div className="relative z-10 p-6 flex-1 flex flex-col justify-center items-center">
-                <div className="space-y-6 text-center w-full">
+              <div className="relative z-10 p-4 flex-1 flex flex-col justify-center items-center">
+                <div className="space-y-3 text-center w-full">
                   {/* Warning Icon/Text */}
-                  <div className="bg-[#2a1e0b]/90 border border-[#b88a44] rounded-xl p-4 shadow-lg w-full">
-                    <p className="text-[11px] text-[#F4D079] font-black uppercase tracking-[0.2em] mb-2 border-b border-[#F4D079]/20 pb-1">
+                  <div
+                    className={`bg-[#2a1e0b]/90 border rounded-xl p-4 shadow-lg w-full ${
+                      rating <= 1 ? 'border-gray-600' : 'border-[#b88a44]'
+                    }`}
+                  >
+                    <p
+                      className={`text-[11px] font-black uppercase tracking-[0.2em] mb-2 border-b pb-1 ${
+                        rating <= 1
+                          ? 'text-gray-400 border-gray-600/50'
+                          : 'text-[#F4D079] border-[#F4D079]/20'
+                      }`}
+                    >
                       Cancelamento
                     </p>
                     <p className="text-xs leading-relaxed text-[#f0f0f0] font-bold">
                       O cancelamento deve ser feito com no mínimo <br />
-                      <span className="text-[#F4D079] text-base decoration-clone drop-shadow-md">
+                      <span
+                        className={`text-base decoration-clone drop-shadow-md ${
+                          rating <= 1 ? 'text-gray-300' : 'text-[#F4D079]'
+                        }`}
+                      >
                         30 minutos
                       </span>
                       <br /> de antecedência.
@@ -263,12 +325,12 @@ export const TicketCard: React.FC<TicketCardProps> = ({
                   <div className="flex flex-col gap-2 w-full">
                     <div className="flex items-center justify-center gap-2 opacity-80">
                       <div className="h-[2px] bg-[#5c4013] w-12"></div>
-                      <span className="text-[9px] font-black uppercase tracking-widest text-[#3d2b0f]">
+                      <span className="text-[9px] font-black uppercase tracking-widest text-white/80">
                         Penalidades
                       </span>
                       <div className="h-[2px] bg-[#5c4013] w-12"></div>
                     </div>
-                    <p className="text-[10px] leading-tight text-[#3d2b0f] font-bold px-4">
+                    <p className="text-[10px] leading-tight text-white/90 font-bold px-4">
                       O não cumprimento acarretará na perda de pontos de fidelidade e rebaixamento
                       de nível.
                     </p>

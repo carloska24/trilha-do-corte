@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BarberDashboard } from '../BarberDashboard';
+import { BarberDashboard } from '../dashboard/BarberDashboard';
 import { useAuth } from '../../contexts/AuthContext';
 import { useData } from '../../contexts/DataContext';
 import {

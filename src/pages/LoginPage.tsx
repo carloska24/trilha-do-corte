@@ -1,5 +1,5 @@
 import React from 'react';
-import { AuthScreen } from '../components/AuthScreen';
+import { AuthScreen } from '../components/auth/AuthScreen';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 

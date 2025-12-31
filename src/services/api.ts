@@ -189,6 +189,9 @@ export const api = {
         ...appt,
         clientId: appt.clientId || appt.clientid,
         barberId: appt.barberId || appt.barberid,
+        serviceId: appt.serviceId || appt.serviceid,
+        clientName: appt.clientName || appt.clientname,
+        photoUrl: appt.photoUrl || appt.photourl,
       }));
     } catch (error) {
       console.error('Error fetching appointments:', error);
@@ -209,6 +212,27 @@ export const api = {
       return json.data;
     } catch (error) {
       console.error('Error creating appointment:', error);
+      return null;
+    }
+  },
+
+  updateAppointment: async (
+    id: string,
+    data: Partial<Appointment>
+  ): Promise<Appointment | null> => {
+    try {
+      const response = await fetch(`${API_URL}/appointments/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) return null;
+      const json = await response.json();
+      return json.data;
+    } catch (error) {
+      console.error('Error updating appointment:', error);
       return null;
     }
   },
