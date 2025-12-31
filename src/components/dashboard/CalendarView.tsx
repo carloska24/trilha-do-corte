@@ -22,6 +22,7 @@ import {
   Edit,
   Bot,
   Sparkles,
+  X,
 } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
 import { useOutletContext } from 'react-router-dom';
@@ -74,6 +75,7 @@ export const CalendarView: React.FC = () => {
   };
 
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [longPressedId, setLongPressedId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'daily' | 'weekly' | 'monthly' | 'config'>('daily');
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
@@ -144,19 +146,74 @@ export const CalendarView: React.FC = () => {
   }, []);
 
   const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
+  const [draggedAppId, setDraggedAppId] = useState<string | null>(null);
 
-  const handleSaveAppointment = () => {
+  const handleMoveAppointment = async (appId: string, newTime: string) => {
+    const app = appointments.find(a => a.id === appId);
+    if (!app || app.time === newTime) return;
+
+    // Optimistic Update
+    const updated = appointments.map(a => (a.id === appId ? { ...a, time: newTime } : a));
+    updateAppointments(updated);
+    showToast(`Agendamento movido para ${newTime}`);
+
+    // API Update
+    try {
+      await api.updateAppointment(appId, { time: newTime });
+    } catch (err) {
+      console.error(err);
+      showToast('Erro ao salvar alteração');
+    }
+  };
+
+  const [editId, setEditId] = useState<string | null>(null);
+
+  const handleSaveAppointment = async () => {
     if (!clientName.trim() || !quickAddSlot || !selectedService) return;
 
-    const bookingData = {
-      name: clientName,
-      phone: '',
-      serviceId: selectedService,
-      date: quickAddSlot.date.toISOString(),
-      time: quickAddSlot.time,
-    };
+    if (editId) {
+      // UPDATE EXISTING
+      const updated = appointments.map(app =>
+        app.id === editId
+          ? {
+              ...app,
+              clientName,
+              serviceId: selectedService,
+              date: quickAddSlot.date.toISOString(),
+              time: quickAddSlot.time,
+            }
+          : app
+      );
+      updateAppointments(updated);
 
-    onNewAppointment(bookingData);
+      // API Call (Mocked/Real)
+      try {
+        await api.updateAppointment(editId, {
+          clientName,
+          serviceId: selectedService,
+          date: quickAddSlot.date.toISOString(),
+          time: quickAddSlot.time,
+        });
+        showToast('Agendamento atualizado!');
+      } catch (error) {
+        console.error(error);
+        showToast('Erro ao atualizar (API)');
+      }
+
+      setEditId(null);
+    } else {
+      // CREATE NEW
+      const bookingData = {
+        name: clientName,
+        phone: '',
+        serviceId: selectedService,
+        date: quickAddSlot.date.toISOString(),
+        time: quickAddSlot.time,
+      };
+      onNewAppointment(bookingData);
+      showToast('Agendamento criado!');
+    }
+
     setClientName('');
     setIsQuickAddOpen(false);
   };
@@ -183,6 +240,7 @@ export const CalendarView: React.FC = () => {
   };
 
   const handleSlotClick = (hour: number) => {
+    setEditId(null); // Reset edit mode
     const time = `${String(hour).padStart(2, '0')}:00`;
     setQuickAddSlot({ date: selectedDate, time });
     setIsQuickAddOpen(true);
@@ -249,15 +307,11 @@ export const CalendarView: React.FC = () => {
 
   const handleEditAppointment = (app: Appointment, e: React.MouseEvent) => {
     e.stopPropagation();
-    // Ideally open a full edit modal, for now populating quick add as a "re-book" or simple edit mock
+    setEditId(app.id);
     setClientName(app.clientName);
     setSelectedService(app.serviceId);
     setQuickAddSlot({ date: new Date(app.date), time: app.time });
     setIsQuickAddOpen(true);
-    // Note: This logic currently creates a NEW appointment on save.
-    // Real edit would need ID persistence in the modal.
-    // For this task scope (visual swipe), this is a placeholder action.
-    showToast('Modo de edição (cria novo por enquanto)');
   };
 
   const getTimeSlots = () => {
@@ -830,9 +884,33 @@ export const CalendarView: React.FC = () => {
                   <div
                     key={hour}
                     id={`hour-${hour}`}
-                    className={`flex min-h-[110px] border-b border-gray-800/30 group ${
+                    className={`flex min-h-[110px] border-b border-gray-800/30 group relative transition-colors duration-200 ${
                       isPast ? 'opacity-60 bg-black/40' : ''
                     }`}
+                    onDragOver={e => {
+                      e.preventDefault(); // Allow Drop
+                      e.currentTarget.classList.add('bg-white/5');
+                      e.currentTarget.classList.add('border-dashed');
+                      e.currentTarget.classList.add('border-neon-yellow/50');
+                    }}
+                    onDragLeave={e => {
+                      e.currentTarget.classList.remove('bg-white/5');
+                      e.currentTarget.classList.remove('border-dashed');
+                      e.currentTarget.classList.remove('border-neon-yellow/50');
+                    }}
+                    onDrop={e => {
+                      e.preventDefault();
+                      e.currentTarget.classList.remove('bg-white/5');
+                      e.currentTarget.classList.remove('border-dashed');
+                      e.currentTarget.classList.remove('border-neon-yellow/50');
+
+                      const appId = draggedAppId;
+                      if (appId) {
+                        const newTime = `${String(hour).padStart(2, '0')}:00`;
+                        handleMoveAppointment(appId, newTime);
+                        setDraggedAppId(null);
+                      }
+                    }}
                   >
                     {/* Time Column */}
                     <div className="w-16 md:w-20 py-4 pl-2 md:pl-4 text-xs md:text-sm font-mono font-bold text-gray-500 flex flex-col items-start border-r border-gray-800/50 bg-[#111]">
@@ -840,137 +918,225 @@ export const CalendarView: React.FC = () => {
                     </div>
 
                     {/* Content Column */}
-                    <div className="flex-1 p-2 md:p-3 bg-[#111] relative">
-                      {apps.length > 0 ? (
-                        apps.map(app => {
-                          const service = getServiceDetails(app.serviceId);
-                          // Mock Payment Status logic (random for display if not real)
-                          const isPaid = app.status === 'confirmed';
+                    <div className="flex-1 p-2 md:p-3 bg-transparent relative pointer-events-none">
+                      <div className="pointer-events-auto contents">
+                        {apps.length > 0 ? (
+                          apps.map(app => {
+                            const service = getServiceDetails(app.serviceId);
+                            // Mock Payment Status logic (random for display if not real)
+                            const isPaid = app.status === 'confirmed';
 
-                          return (
-                            <div
-                              key={app.id}
-                              className="mb-3 last:mb-0 relative group/swipe wrapper overflow-hidden rounded-xl bg-black"
-                            >
-                              {/* Horizontal Scroller for Swipe */}
-                              <div className="flex w-full overflow-x-auto snap-x snap-mandatory no-scrollbar">
-                                {/* 1. MAIN CARD (Full Width) */}
-                                <div
-                                  className="min-w-full snap-center bg-[#1A1A1A] border border-gray-800 hover:border-neon-yellow transition-all duration-300 shadow-lg relative rounded-xl"
-                                  onClick={() => onSelectClient(app.clientName)}
-                                >
-                                  {/* Left Status Bar */}
+                            return (
+                              <div
+                                key={app.id}
+                                draggable
+                                onDragStart={() => {
+                                  setDraggedAppId(app.id);
+                                  setLongPressedId(null);
+                                }}
+                                onDragEnd={() => setDraggedAppId(null)}
+                                className={`mb-3 last:mb-0 relative group/card-wrapper select-none touch-none
+                                ${draggedAppId === app.id ? 'opacity-40 scale-95 grayscale' : ''}
+                                transition-all duration-200
+                              `}
+                                onContextMenu={e => e.preventDefault()} // Disable native context menu
+                              >
+                                {longPressedId === app.id ? (
+                                  /* --- ACTION OVERLAY (Revealed on Long Press) --- */
                                   <div
-                                    className={`absolute left-0 top-0 bottom-0 w-1 ${
+                                    draggable
+                                    onDragStart={e => {
+                                      // Allow dragging from the overlay
+                                      e.stopPropagation();
+                                      setDraggedAppId(app.id);
+                                      setLongPressedId(null);
+                                    }}
+                                    onDragEnd={() => setDraggedAppId(null)}
+                                    className="absolute inset-0 z-20 bg-black/90 backdrop-blur-sm rounded-2xl flex items-center justify-around p-2 animate-[fadeIn_0.2s_ease-out] border border-gray-800 cursor-grab active:cursor-grabbing"
+                                  >
+                                    <button
+                                      onClick={e => {
+                                        e.stopPropagation();
+                                        handleCancelAppointment(app.id, e);
+                                        setLongPressedId(null);
+                                      }}
+                                      className="flex flex-col items-center justify-center gap-1 text-red-500 hover:text-red-400 active:scale-95 transition-all"
+                                    >
+                                      <div className="w-10 h-10 rounded-full bg-red-900/20 flex items-center justify-center border border-red-900/50 pointer-events-none">
+                                        <Trash2 size={20} />
+                                      </div>
+                                      <span className="text-[9px] font-black uppercase tracking-widest pointer-events-none">
+                                        Cancelar
+                                      </span>
+                                    </button>
+
+                                    <div className="w-[1px] h-10 bg-gray-800"></div>
+
+                                    <button
+                                      onClick={e => {
+                                        e.stopPropagation();
+                                        handleEditAppointment(app, e);
+                                        setLongPressedId(null);
+                                      }}
+                                      className="flex flex-col items-center justify-center gap-1 text-blue-500 hover:text-blue-400 active:scale-95 transition-all"
+                                    >
+                                      <div className="w-10 h-10 rounded-full bg-blue-900/20 flex items-center justify-center border border-blue-900/50 pointer-events-none">
+                                        <Edit size={20} />
+                                      </div>
+                                      <span className="text-[9px] font-black uppercase tracking-widest pointer-events-none">
+                                        Editar
+                                      </span>
+                                    </button>
+
+                                    {/* Close Overlay Button */}
+                                    <button
+                                      onClick={e => {
+                                        e.stopPropagation();
+                                        setLongPressedId(null);
+                                      }}
+                                      className="absolute top-1 right-2 text-gray-600 hover:text-white"
+                                    >
+                                      <X size={14} />
+                                    </button>
+
+                                    {/* Drag Hint inside Overlay */}
+                                    <div className="absolute bottom-1 w-full text-center pointer-events-none">
+                                      <div className="w-8 h-1 bg-gray-700 rounded-full mx-auto opacity-50"></div>
+                                    </div>
+                                  </div>
+                                ) : null}
+
+                                {/* --- MAIN CARD --- */}
+                                <div
+                                  className={`w-full bg-[#151515] border transition-all duration-300 shadow-xl relative rounded-2xl overflow-hidden cursor-grab active:cursor-grabbing
+                                    ${
+                                      longPressedId === app.id
+                                        ? 'opacity-0'
+                                        : 'hover:border-gray-600 border-gray-800'
+                                    }
+                                  `}
+                                  // Long Press Handlers
+                                  onPointerDown={() => {
+                                    if (draggedAppId) return;
+                                    const timer = setTimeout(() => {
+                                      setLongPressedId(app.id);
+                                      if (navigator.vibrate) navigator.vibrate(50);
+                                    }, 600);
+                                    (window as any)._longPressTimer = timer;
+                                  }}
+                                  onPointerUp={() => {
+                                    if ((window as any)._longPressTimer)
+                                      clearTimeout((window as any)._longPressTimer);
+                                  }}
+                                  onPointerLeave={() => {
+                                    if ((window as any)._longPressTimer)
+                                      clearTimeout((window as any)._longPressTimer);
+                                  }}
+                                  onPointerMove={() => {
+                                    if ((window as any)._longPressTimer)
+                                      clearTimeout((window as any)._longPressTimer);
+                                  }}
+                                  onClick={e => {
+                                    if (!longPressedId) onSelectClient(app.clientName);
+                                  }}
+                                >
+                                  {/* Left Status Bar with Glow */}
+                                  <div
+                                    className={`absolute left-0 top-0 bottom-0 w-1.5 ${
                                       app.status === 'confirmed'
-                                        ? 'bg-neon-yellow'
+                                        ? 'bg-neon-yellow shadow-[0_0_10px_rgba(234,179,8,0.5)]'
                                         : app.status === 'in_progress'
-                                        ? 'bg-blue-500'
-                                        : 'bg-gray-600'
+                                        ? 'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]'
+                                        : 'bg-zinc-700'
                                     }`}
                                   ></div>
 
-                                  <div className="flex flex-row justify-between items-center p-3 gap-2">
-                                    <div className="flex-1 min-w-0 pl-2">
+                                  <div className="flex flex-row justify-between items-center p-4 gap-3">
+                                    <div className="flex-1 min-w-0 pl-3">
                                       {/* Client Name + Time */}
-                                      <div className="flex items-center gap-2 mb-1">
-                                        <h4 className="font-black text-white text-base md:text-lg truncate leading-tight">
+                                      <div className="flex items-center gap-3 mb-2">
+                                        <h4 className="font-black text-white text-lg md:text-xl truncate leading-none tracking-wide uppercase drop-shadow-md">
                                           {app.clientName}
                                         </h4>
-                                        <span className="text-[10px] font-mono text-gray-500 bg-black px-1 rounded border border-gray-800">
+                                        <span className="text-[10px] font-black text-black bg-white/90 px-1.5 py-0.5 rounded-[4px] border border-gray-400">
                                           {app.time}
                                         </span>
                                       </div>
 
                                       {/* Service Ticker & Price */}
-                                      <div className="flex flex-wrap items-center gap-2 mt-1">
-                                        <div className="flex items-center gap-2 text-gray-300 text-[10px] md:text-xs font-bold uppercase tracking-wider bg-black/40 px-2 py-1 rounded border border-gray-800">
+                                      <div className="flex flex-wrap items-center gap-2">
+                                        <div className="flex items-center gap-1.5 text-neon-yellow text-[10px] md:text-xs font-black uppercase tracking-widest bg-yellow-900/10 px-2 py-1 rounded border border-neon-yellow/20">
                                           {service.category === 'Barba' ? (
-                                            <Zap size={10} className="text-neon-yellow" />
+                                            <Zap
+                                              size={10}
+                                              className="text-neon-yellow fill-neon-yellow"
+                                            />
                                           ) : (
-                                            <Scissors size={10} className="text-neon-yellow" />
+                                            <Scissors
+                                              size={10}
+                                              className="text-neon-yellow fill-neon-yellow"
+                                            />
                                           )}
-                                          <span className="truncate max-w-[100px]">
+                                          <span className="truncate max-w-[120px]">
                                             {service.name}
                                           </span>
                                         </div>
-                                        <div className="text-[10px] font-mono text-green-400 font-bold bg-green-950/30 px-1.5 py-0.5 rounded border border-green-900/50">
+                                        <div className="text-[10px] font-mono text-green-400 font-bold bg-green-900/10 px-2 py-1 rounded border border-green-500/20">
                                           {service.price}
                                         </div>
                                       </div>
                                     </div>
 
                                     {/* Right Side Info: Payment & Status */}
-                                    <div className="text-right flex flex-col items-end gap-1.5 shrink-0">
+                                    <div className="text-right flex flex-col items-end gap-2 shrink-0">
                                       {/* Payment Badge */}
                                       <div
-                                        className={`flex items-center gap-1 text-[9px] font-bold uppercase px-1.5 py-0.5 rounded ${
+                                        className={`flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded border ${
                                           isPaid
-                                            ? 'text-green-500 bg-green-500/10'
-                                            : 'text-zinc-500 bg-zinc-800'
+                                            ? 'text-green-400 bg-green-950/30 border-green-500/30'
+                                            : 'text-zinc-500 bg-zinc-900/50 border-zinc-800'
                                         }`}
                                       >
                                         <Wallet size={10} />
                                         {isPaid ? 'PAGO' : 'PEND.'}
                                       </div>
 
-                                      {/* Status Text + Arrow Hint */}
-                                      <div className="flex items-center gap-1">
-                                        <div
-                                          className={`px-1.5 py-0.5 rounded-[4px] text-[8px] md:text-[10px] font-black uppercase tracking-widest border ${
-                                            app.status === 'confirmed'
-                                              ? 'bg-green-900/20 text-green-500 border-green-900'
-                                              : 'bg-yellow-900/20 text-yellow-500 border-yellow-900'
-                                          }`}
-                                        >
-                                          {app.status === 'confirmed' ? 'Confirmado' : 'Pendente'}
-                                        </div>
-                                        {/* Swipe Hint Arrow */}
-                                        <ChevronLeft
-                                          size={12}
-                                          className="text-gray-600 animate-pulse hidden md:hidden phone:block"
-                                        />
+                                      {/* Status Text */}
+                                      <div
+                                        className={`px-2 py-1 rounded-[4px] text-[9px] font-black uppercase tracking-widest border shadow-sm ${
+                                          app.status === 'confirmed'
+                                            ? 'bg-neon-yellow text-black border-neon-yellow'
+                                            : 'text-zinc-400 border-zinc-700 bg-zinc-800'
+                                        }`}
+                                      >
+                                        {app.status === 'confirmed' ? 'Confirmado' : 'Pendente'}
                                       </div>
                                     </div>
                                   </div>
-                                </div>
 
-                                {/* 2. ACTIONS (Hidden by default, revealed on scroll) */}
-                                <div className="min-w-[70px] bg-red-900/20 snap-center flex flex-col gap-1 p-1">
-                                  <button
-                                    onClick={e => handleCancelAppointment(app.id, e)}
-                                    className="flex-1 bg-red-600 rounded-lg flex items-center justify-center text-white shadow-lg active:scale-95 transition-transform"
-                                  >
-                                    <Trash2 size={18} />
-                                  </button>
-                                </div>
-
-                                <div className="min-w-[70px] bg-blue-900/20 snap-center flex flex-col gap-1 p-1 pr-0">
-                                  <button
-                                    onClick={e => handleEditAppointment(app, e)}
-                                    className="flex-1 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-lg active:scale-95 transition-transform"
-                                  >
-                                    <Edit size={18} />
-                                  </button>
+                                  {/* Press Hint (Visual cue) */}
+                                  <div className="absolute right-0 bottom-0 p-1 opacity-20 pointer-events-none">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-gray-500"></div>
+                                  </div>
                                 </div>
                               </div>
+                            );
+                          })
+                        ) : (
+                          // Empty Slot Interaction (Ghost Slot)
+                          <div
+                            onClick={() => handleSlotClick(hour)}
+                            className="w-full h-full flex items-center justify-center rounded-xl border border-dashed border-gray-800/50 hover:border-gray-600 hover:bg-[#151515] transition-all cursor-pointer group/empty opacity-50 hover:opacity-100"
+                          >
+                            <div className="flex items-center gap-2 text-gray-700 group-hover/empty:text-gray-400 transition-colors">
+                              <Plus size={18} />
+                              <span className="text-[10px] md:text-xs font-black uppercase tracking-widest hidden group-hover/empty:inline-block">
+                                Disponível
+                              </span>
                             </div>
-                          );
-                        })
-                      ) : (
-                        // Empty Slot Interaction (Ghost Slot)
-                        <div
-                          onClick={() => handleSlotClick(hour)}
-                          className="w-full h-full flex items-center justify-center rounded-xl border border-dashed border-gray-800/50 hover:border-gray-600 hover:bg-[#151515] transition-all cursor-pointer group/empty opacity-50 hover:opacity-100"
-                        >
-                          <div className="flex items-center gap-2 text-gray-700 group-hover/empty:text-gray-400 transition-colors">
-                            <Plus size={18} />
-                            <span className="text-[10px] md:text-xs font-black uppercase tracking-widest hidden group-hover/empty:inline-block">
-                              Disponível
-                            </span>
                           </div>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
                   </div>
                 );
@@ -988,7 +1154,7 @@ export const CalendarView: React.FC = () => {
 
             <div className="flex justify-between items-center mb-8 mt-2">
               <h3 className="text-2xl font-black text-white uppercase italic tracking-wider">
-                Novo
+                {editId ? 'Editar' : 'Novo'}
                 <br />
                 Agendamento
               </h3>
@@ -1001,22 +1167,38 @@ export const CalendarView: React.FC = () => {
             </div>
 
             <div className="space-y-5">
-              <div className="bg-[#151515] p-4 rounded-xl border border-gray-800 flex justify-between items-center">
-                <div>
-                  <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">
+              <div className="bg-[#151515] p-4 rounded-xl border border-gray-800 flex justify-between items-center gap-4">
+                <div className="flex-1">
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">
                     Data
-                  </span>
-                  <span className="text-white font-bold">
-                    {quickAddSlot?.date.toLocaleDateString('pt-BR')}
-                  </span>
+                  </label>
+                  <input
+                    type="date"
+                    value={quickAddSlot ? getLocalISODate(quickAddSlot.date) : ''}
+                    onChange={e => {
+                      if (e.target.valueAsDate && quickAddSlot) {
+                        // Correct date timezone issue by using valueAsDate or manual parsing if needed,
+                        // but simple string split is safer for local date input
+                        const [y, m, d] = e.target.value.split('-').map(Number);
+                        const newDate = new Date(y, m - 1, d);
+                        setQuickAddSlot({ ...quickAddSlot, date: newDate });
+                      }
+                    }}
+                    className="bg-transparent text-white font-bold w-full focus:outline-none focus:text-neon-yellow transition-colors"
+                  />
                 </div>
-                <div className="text-right">
-                  <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">
+                <div className="text-right w-24">
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">
                     Horário
-                  </span>
-                  <span className="text-neon-yellow font-mono font-bold text-lg">
-                    {quickAddSlot?.time}
-                  </span>
+                  </label>
+                  <input
+                    type="time"
+                    value={quickAddSlot?.time || ''}
+                    onChange={e => {
+                      if (quickAddSlot) setQuickAddSlot({ ...quickAddSlot, time: e.target.value });
+                    }}
+                    className="bg-transparent text-neon-yellow font-mono font-bold text-lg text-right w-full focus:outline-none"
+                  />
                 </div>
               </div>
 
@@ -1060,7 +1242,8 @@ export const CalendarView: React.FC = () => {
                 onClick={handleSaveAppointment}
                 className="w-full py-4 bg-neon-yellow text-black font-black uppercase tracking-widest rounded-xl hover:bg-yellow-400 hover:shadow-[0_0_20px_rgba(234,179,8,0.4)] transition-all mt-4 flex justify-center items-center gap-2"
               >
-                Confirmar <ChevronRight size={16} strokeWidth={3} />
+                {editId ? 'Salvar Alterações' : 'Confirmar'}{' '}
+                <ChevronRight size={16} strokeWidth={3} />
               </button>
             </div>
           </div>

@@ -466,6 +466,8 @@ export const BarberDashboard: React.FC<BarberDashboardProps> = ({
       <ClientProfileModal
         client={selectedClient}
         onClose={() => setSelectedClient(null)}
+        appointments={appointments}
+        services={services}
         onNewBooking={client => {
           setSelectedClient(null);
           onViewChange('calendar');

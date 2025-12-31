@@ -4,25 +4,29 @@ import {
   X,
   Edit,
   Calendar,
-  Scissors,
   Phone,
-  Clock,
   Star,
-  MapPin,
   MessageSquare,
+  Clock,
+  History,
+  CheckCircle2,
 } from 'lucide-react';
-import { Client } from '../types';
+import { Client, Appointment, Service } from '../types';
 
 interface ClientProfileModalProps {
   client: Client;
   onClose: () => void;
   onNewBooking?: (client: Client) => void;
+  appointments: Appointment[];
+  services: Service[];
 }
 
 export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({
   client,
   onClose,
   onNewBooking,
+  appointments = [],
+  services = [],
 }) => {
   if (!client) return null;
 
@@ -40,37 +44,45 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({
       onNewBooking(client);
     } else {
       onClose();
-      // Ideally trigger booking modal here if prop provided
     }
   };
 
   const handleSaveNotes = () => {
     setIsEditingNotes(false);
     // In a real app, we would call an API here.
-    // onUpdateClient({ ...client, notes });
   };
 
-  /* Logic for Status/Rating Calculation */
-  const rating = (4.0 + (client.level || 1) * 0.1).toFixed(1); // Mock Rating based on Level
-  const isVip = (client.level || 1) >= 5;
+  // --- REAL DATA LOGIC ---
 
-  // Parse last visit for "3d" logic
-  let daysSinceVisit = '0d';
-  if (
-    client.lastVisit &&
-    client.lastVisit !== 'Nunca' &&
-    client.lastVisit !== 'Hoje' &&
-    client.lastVisit !== 'Ontem'
-  ) {
-    // simplified calculation or just display text
-    daysSinceVisit = '5d'; // constant for demo if parsing is complex without date lib, or use '3d' as requested style
-  } else if (client.lastVisit === 'Ontem') {
-    daysSinceVisit = '1d';
-  } else if (client.lastVisit === 'Hoje') {
-    daysSinceVisit = '0d';
-  } else {
-    daysSinceVisit = '-';
-  }
+  // 1. Filter Appointments for this Client
+  const clientApps = appointments.filter(
+    app => app.clientName.toLowerCase() === client.name.toLowerCase()
+  );
+
+  // 2. Find Next Appointment (Future)
+  const now = new Date();
+  const futureApps = clientApps
+    .filter(app => {
+      const appDate = new Date(`${app.date}T${app.time}:00`);
+      return appDate >= now && app.status !== 'cancelled' && app.status !== 'completed';
+    })
+    .sort(
+      (a, b) =>
+        new Date(`${a.date}T${a.time}:00`).getTime() - new Date(`${b.date}T${b.time}:00`).getTime()
+    );
+
+  const nextApp = futureApps[0];
+
+  // 3. Calculate Stats
+  const totalVisits = clientApps.filter(a => a.status === 'completed').length;
+  // Mock rating based on visits if generic
+  const dynamicRating = Math.min(5, 4.0 + totalVisits * 0.1).toFixed(1);
+
+  // Helper to get Service Name
+  const getServiceName = (id: string) => {
+    const s = services.find(serv => serv.id === id);
+    return s ? s.name : 'Serviço Personalizado';
+  };
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/95 backdrop-blur-md animate-fade-in overflow-hidden">
@@ -87,13 +99,6 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({
         <div className="relative pt-10 pb-6 flex flex-col items-center bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-gray-800/30 via-[#0a0a0a] to-[#0a0a0a]">
           {/* Avatar */}
           <div className="relative mb-3 group cursor-pointer">
-            {/* Glow matches level */}
-            <div
-              className={`absolute inset-0 rounded-full blur-2xl opacity-30 ${
-                isVip ? 'bg-yellow-500' : 'bg-blue-500'
-              } group-hover:opacity-50 transition-opacity`}
-            ></div>
-
             <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-[#121212] shadow-2xl relative z-10">
               <img
                 src={
@@ -105,48 +110,35 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({
               />
             </div>
 
-            {/* Level Badge - Pill Shape */}
-            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 z-20 bg-[#FFD700] text-black text-[10px] font-black px-3 py-1 rounded-md shadow-lg uppercase tracking-widest border-2 border-[#0a0a0a]">
-              NÍVEL {client.level || 1}
+            {/* Updated ID Badge (Replaces Level for cleanliness) */}
+            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 z-20 bg-[#151515] text-gray-400 text-[9px] font-mono font-bold px-3 py-1 rounded-full shadow-lg border border-gray-800 whitespace-nowrap">
+              ID: {String(client.id || '0000').slice(-4)}
             </div>
           </div>
 
           {/* Name */}
-          <h2 className="text-3xl font-black text-white italic uppercase tracking-wider text-center px-4 leading-none mb-2 drop-shadow-md">
+          <h2 className="text-2xl md:text-3xl font-black text-white italic uppercase tracking-wider text-center px-4 leading-none mb-4 drop-shadow-md mt-2">
             {client.name}
           </h2>
 
-          {/* ID Pill */}
-          <span className="text-gray-500 font-mono text-[10px] tracking-[0.2em] bg-[#151515] px-4 py-1.5 rounded-full border border-gray-800 shadow-inner">
-            ID: {String(client.id || '0000').slice(-4)}
-          </span>
-
-          {/* Stats Grid */}
-          <div className="grid grid-cols-3 gap-3 w-full px-6 mt-8">
-            <div className="bg-[#111] border border-gray-800 rounded-xl p-3 flex flex-col items-center justify-center hover:border-gray-700 transition-colors">
-              <span className="text-[#FFD700] font-black text-xl leading-none mb-1">{rating}</span>
-              <span className="text-[8px] font-bold text-gray-500 uppercase tracking-widest">
+          {/* Stats Grid - CLEANER UX */}
+          <div className="grid grid-cols-2 gap-3 w-full px-12 mt-4">
+            <div className="bg-[#111] border border-gray-800 rounded-xl p-2 flex flex-col items-center justify-center hover:border-gray-700 transition-colors">
+              <div className="flex items-center gap-1 mb-1">
+                <Star size={12} className="text-yellow-500 fill-yellow-500" />
+                <span className="text-white font-black text-lg leading-none">{dynamicRating}</span>
+              </div>
+              <span className="text-[8px] font-bold text-gray-600 uppercase tracking-widest">
                 RATING
               </span>
             </div>
-            <div className="bg-[#111] border border-gray-800 rounded-xl p-3 flex flex-col items-center justify-center hover:border-gray-700 transition-colors">
-              <span className="text-white font-black text-xl leading-none mb-1">
-                {daysSinceVisit}
-              </span>
-              <span className="text-[8px] font-bold text-gray-500 uppercase tracking-widest">
-                DESDE VISITA
-              </span>
-            </div>
-            <div className="bg-[#111] border border-gray-800 rounded-xl p-3 flex flex-col items-center justify-center hover:border-gray-700 transition-colors">
-              <span
-                className={`font-black text-xl leading-none mb-1 ${
-                  isVip ? 'text-purple-500' : 'text-blue-500'
-                }`}
-              >
-                {isVip ? 'VIP' : 'REG'}
-              </span>
-              <span className="text-[8px] font-bold text-gray-500 uppercase tracking-widest">
-                STATUS
+            <div className="bg-[#111] border border-gray-800 rounded-xl p-2 flex flex-col items-center justify-center hover:border-gray-700 transition-colors">
+              <div className="flex items-center gap-1 mb-1">
+                <History size={12} className="text-blue-500" />
+                <span className="text-white font-black text-lg leading-none">{totalVisits}</span>
+              </div>
+              <span className="text-[8px] font-bold text-gray-600 uppercase tracking-widest">
+                VISITAS
               </span>
             </div>
           </div>
@@ -158,16 +150,16 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({
           <div className="flex gap-4">
             <a
               href={`tel:${client.phone}`}
-              className="flex-1 flex items-center justify-center gap-2 text-white font-bold text-xs uppercase tracking-wider hover:text-gray-300 transition-colors py-2"
+              className="flex-1 flex items-center justify-center gap-2 text-white font-bold text-xs uppercase tracking-wider hover:text-gray-300 transition-colors py-3 bg-[#111] rounded-xl border border-gray-800 hover:border-gray-600"
             >
-              <Phone size={16} className="text-white" />
-              {client.phone}
+              <Phone size={14} className="text-gray-400" />
+              Ligar
             </a>
             <button
               onClick={handleWhatsApp}
-              className="flex-1 flex items-center justify-center gap-2 text-white font-bold text-xs uppercase tracking-wider hover:text-green-400 transition-colors py-2"
+              className="flex-1 flex items-center justify-center gap-2 text-white font-bold text-xs uppercase tracking-wider hover:text-green-400 transition-colors py-3 bg-[#111] rounded-xl border border-gray-800 hover:border-green-900/50"
             >
-              <MessageSquare size={16} />
+              <MessageSquare size={14} className="text-green-500" />
               WhatsApp
             </button>
           </div>
@@ -180,8 +172,8 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({
               }`}
             >
               <div className="flex justify-between items-center mb-3">
-                <div className="flex items-center gap-2 text-[10px] font-bold text-yellow-500 uppercase tracking-widest">
-                  <Star size={10} fill="currentColor" /> Notas do Barbeiro
+                <div className="flex items-center gap-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                  Notas do Cliente
                 </div>
                 <button
                   onClick={() => (isEditingNotes ? handleSaveNotes() : setIsEditingNotes(true))}
@@ -200,40 +192,59 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({
                 />
               ) : (
                 <p className="text-gray-300 text-sm italic font-medium leading-relaxed">
-                  "{notes || 'Sem observações registradas.'}"
+                  "{notes || 'Sem observações.'}"
                 </p>
               )}
             </div>
           </div>
 
-          {/* History Timeline */}
+          {/* Next Appointment / History Wrapper */}
           <div>
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
-                Histórico de Viagens
+                Próximas Viagens
               </h3>
-              <span className="bg-[#151515] text-gray-500 text-[9px] font-mono px-2 py-0.5 rounded border border-gray-800">
-                TOTAL: {client.history?.length || 0}
-              </span>
             </div>
 
-            <div className="pl-2 space-y-4 border-l border-gray-800 ml-2">
-              {/* Active/Today Appointment (Mock or Real) */}
-              <div className="relative pl-6">
-                <div className="absolute -left-[5px] top-2 w-2.5 h-2.5 rounded-full bg-yellow-500 border-2 border-[#0a0a0a] shadow-[0_0_10px_#eab308] z-10"></div>
-                <div className="bg-[#111] border border-yellow-500/30 rounded-xl p-4 flex justify-between items-center hover:bg-[#151515] transition-colors group cursor-pointer shadow-[inset_0_0_20px_rgba(234,179,8,0.05)]">
-                  <div>
-                    <h4 className="text-yellow-500 text-[10px] font-black uppercase tracking-wider mb-1">
-                      Agendado (Hoje)
-                    </h4>
-                    <p className="text-white font-bold text-sm">Corte + Barba</p>
-                  </div>
-                  <div className="text-right">
-                    <span className="block text-gray-500 text-[10px] font-mono mb-0.5">14:00</span>
-                    <span className="block text-white font-mono font-bold text-xs">R$ 60,00</span>
+            <div className="space-y-3">
+              {nextApp ? (
+                /* Dynamic Next Appointment */
+                <div className="relative">
+                  <div className="absolute -left-[1px] top-1/2 -translate-y-1/2 w-1 h-8 rounded-r-full bg-neon-yellow shadow-[0_0_10px_#eab308]"></div>
+                  <div className="bg-[#111] border border-yellow-500/20 rounded-xl p-4 flex justify-between items-center hover:bg-[#151515] transition-colors group cursor-pointer ml-1">
+                    <div>
+                      <h4 className="text-neon-yellow text-[10px] font-black uppercase tracking-wider mb-1 flex items-center gap-2">
+                        <Calendar size={10} />
+                        {new Date(nextApp.date)
+                          .toLocaleDateString('pt-BR', {
+                            weekday: 'short',
+                            day: '2-digit',
+                            month: 'short',
+                          })
+                          .toUpperCase()}
+                      </h4>
+                      <p className="text-white font-bold text-sm">
+                        {getServiceName(nextApp.serviceId)}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <span className="block text-gray-500 text-[10px] font-mono mb-0.5">
+                        {nextApp.time}
+                      </span>
+                      <span className="block text-white font-mono font-bold text-xs">
+                        R$ {nextApp.price.toFixed(2)}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
+              ) : (
+                /* Empty State */
+                <div className="text-center py-6 border border-dashed border-gray-800 rounded-xl">
+                  <p className="text-gray-600 text-xs font-medium uppercase tracking-wider">
+                    Nenhum agendamento futuro
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>
