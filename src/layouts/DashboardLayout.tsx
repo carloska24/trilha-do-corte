@@ -10,7 +10,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 import { useUI } from '../contexts/UIContext';
 import { AppointmentStatus, BarberProfile, Client, Service } from '../types';
-import { LogOut, Check, X, Camera, Mic, MicOff, Settings } from 'lucide-react';
+import { LogOut, Check, X, Camera, Mic, MicOff, Settings, Briefcase } from 'lucide-react';
+import { useVoiceInterpreter } from '../hooks/useVoiceInterpreter';
+import { api } from '../services/api';
 
 // Sub-components (Modals only, as views are now Routes)
 import { FinancialModal } from '../components/dashboard/FinancialModal';
@@ -38,6 +40,250 @@ export const DashboardLayout: React.FC = () => {
   };
 
   const currentView = getCurrentView();
+
+  // AI VOICE STATE
+  const { isListening, transcript, startListening, stopListening } = useVoiceInterpreter();
+  const [voiceProcessing, setVoiceProcessing] = useState(false);
+  const [aiResponse, setAiResponse] = useState<string | null>(null);
+
+  // Prevent multiple executions for the same transcript
+  const [lastProcessedTranscript, setLastProcessedTranscript] = useState('');
+
+  useEffect(() => {
+    if (!isListening && transcript && transcript !== lastProcessedTranscript) {
+      handleVoiceCommand(transcript);
+    }
+  }, [isListening, transcript, lastProcessedTranscript]);
+
+  const handleVoiceCommand = async (text: string) => {
+    if (!text || voiceProcessing) {
+      console.log('⚠️ Ignorando comando: vazio ou processamento em andamento.');
+      return;
+    }
+
+    // Additional Safety: If Text is too short, ignore
+    if (text.length < 4) return;
+
+    setVoiceProcessing(true);
+    setLastProcessedTranscript(text); // Mark as processed
+    setAiResponse('Processando...');
+
+    try {
+      const { processVoiceCommand } = await import('../utils/aiCommandProcessor');
+      // Pass available services to AI for context
+      const result = await processVoiceCommand(text, services);
+
+      if (result.action === 'schedule') {
+        // New AI returns ISO date YYYY-MM-DD directly
+        const appointmentDate = result.data.date || new Date().toISOString().split('T')[0];
+        const time = result.data.time || '12:00';
+        const clientName = result.data.clientName || 'Cliente Voz';
+
+        // 1. Find Client via Fuzzy Search
+        // We need the latest clients list. Use `clients` from context.
+        const targetName = (result.data.clientName || '').toLowerCase();
+        let foundClient = clients.find(c => c.name.toLowerCase().includes(targetName));
+
+        // If not found, try to fallback to a generic "Guest" or "Cliente Voz" if it exists, prevents 400 error
+        if (!foundClient) {
+          foundClient = clients.find(
+            c => c.name.toLowerCase().includes('voz') || c.name.toLowerCase().includes('convidado')
+          );
+        }
+
+        // AUTO-CREATE CLIENT (Fix 400 Bad Request)
+        if (!foundClient && result.data.clientName) {
+          console.log(`[AI] Creating new client: ${result.data.clientName}`);
+          setAiResponse(`🆕 Criando cadastro para ${result.data.clientName}...`);
+          try {
+            const newClient = await api.createClient({
+              name: result.data.clientName,
+              phone: '00000000000', // Placeholder
+              email: `cliente.${Date.now()}@temp.com`,
+              photoUrl: `https://ui-avatars.com/api/?name=${result.data.clientName}&background=random`,
+            });
+            if (newClient) {
+              foundClient = newClient;
+              // Refresh clients list if possible, or assume context updates eventually
+              // For now, allow flow to proceed with newClient.id
+            }
+          } catch (err) {
+            console.error('Failed to auto-create client', err);
+          }
+        }
+
+        // If still no client, we can't schedule without an ID (assuming backend requires it).
+        // Or we assume the backend CAN create one if we send a special flag?
+        // Based on previous logs, 'voice_temp' failed. So let's require a client.
+
+        let finalClientId = foundClient ? foundClient.id : 'temp_id_placeholder';
+        // NOTE: If 'temp_id_placeholder' triggers 400, we MUST have a valid ID.
+        // Strategy: If no client found, don't schedule, ask user to register.
+
+        if (!foundClient) {
+          setAiResponse(`⚠️ Cliente "${result.data.clientName}" não encontrado.`);
+          setTimeout(() => setAiResponse(null), 4000);
+          return;
+        }
+
+        // finalClientId is already declared above.
+        // If we reached here, foundClient is guaranteed to exist due to the check at 123.
+        finalClientId = foundClient.id;
+        const finalClientName = foundClient.name;
+
+        // Find Service
+        let serviceId = '1'; // Default
+        let servicePrice = 35;
+        let serviceName = 'Corte';
+
+        if (result.data.serviceName) {
+          const foundService = services.find(
+            s =>
+              s.name.toLowerCase() === result.data.serviceName.toLowerCase() ||
+              s.name.toLowerCase().includes(result.data.serviceName.toLowerCase())
+          );
+          if (foundService) {
+            serviceId = foundService.id;
+            servicePrice = foundService.priceValue;
+            serviceName = foundService.name;
+          }
+        }
+
+        const newApptPayload = {
+          clientId: finalClientId,
+          clientName: finalClientName,
+          serviceId: serviceId,
+          date: appointmentDate,
+          time: time,
+          status: 'pending' as const,
+          price: servicePrice,
+          notes: 'Agendado via IA de Voz',
+        };
+
+        setAiResponse(`⏳ Agendando para ${clientName}...`);
+
+        // 2. Call API
+        const created = await api.createAppointment(newApptPayload);
+
+        if (created) {
+          setAiResponse(`✅ Agendado: ${clientName} às ${time}`);
+          // 3. Update Local State (Optimistic or from response)
+          // We need to fetch fresh data or append. Appending is faster.
+          updateAppointments([...appointments, created]);
+        } else {
+          setAiResponse('❌ Falha ao criar agendamento.');
+        }
+
+        setTimeout(() => setAiResponse(null), 4000);
+      } else if (result.action === 'cancel' || result.action === 'cancel_specific') {
+        const targetName = result.data.clientName;
+        // AI returns ISO now, or fallback today
+        const targetDate = result.data.date || new Date().toISOString().split('T')[0];
+
+        setAiResponse(`🔍 Procurando por ${targetName} para cancelar...`);
+
+        // Fuzzy search for client name in pending appointments
+        const toCancel = appointments.filter(
+          a =>
+            a.status === 'pending' &&
+            a.clientName.toLowerCase().includes(targetName.toLowerCase()) &&
+            a.date === targetDate // Strict date match from AI
+        );
+
+        if (toCancel.length === 0) {
+          setAiResponse(
+            `⚠️ Não achei agendamento para ${targetName} ${result.data.date.toLowerCase()}.`
+          );
+        } else {
+          await Promise.all(
+            toCancel.map(app => api.updateAppointment(app.id, { status: 'cancelled' }))
+          );
+
+          // Refresh
+          const freshApps = await api.getAppointments();
+          updateAppointments(freshApps);
+
+          setAiResponse(`✅ Agendamento de ${targetName} cancelado!`);
+        }
+        setTimeout(() => setAiResponse(null), 4000);
+      } else if (result.action === 'reschedule') {
+        // Logic for Rescheduling
+        const targetName = result.data.client_name;
+        const newDate = result.data.date;
+        const newTime = result.data.time;
+
+        setAiResponse(`🔄 Tentando remarcar ${targetName}...`);
+
+        // Find pending appt
+        const apptToReschedule = appointments.find(
+          a =>
+            a.status === 'pending' && a.clientName.toLowerCase().includes(targetName.toLowerCase())
+        );
+
+        if (apptToReschedule) {
+          await api.updateAppointment(apptToReschedule.id, {
+            date: newDate,
+            time: newTime,
+          });
+          setAiResponse(`✅ Remarcado: ${targetName} para ${newDate} às ${newTime}`);
+          const fresh = await api.getAppointments();
+          updateAppointments(fresh);
+        } else {
+          setAiResponse(`⚠️ Não achei agendamento de ${targetName} para remarcar.`);
+        }
+        setTimeout(() => setAiResponse(null), 5000);
+      } else if (result.action === 'manage_shop') {
+        // Shop Management Logic
+        setAiResponse(`🛠️ Comando Administrativo: ${result.data.action_type || 'Geral'}`);
+        console.log('Shop Management Command:', result.data);
+        // Placeholder for actual implementation (requires backend)
+        setTimeout(() => setAiResponse(null), 4000);
+      } else if (result.action === 'cancel_all') {
+        setAiResponse('🗑️ Cancelando tudo...');
+        // Loop through all PENDING appointments and cancel them
+        const pending = appointments.filter(a => a.status === 'pending');
+
+        if (pending.length === 0) {
+          setAiResponse('⚠️ Nenhum agendamento pendente para cancelar.');
+        } else {
+          await Promise.all(
+            pending.map(
+              app => api.updateAppointment(app.id, { status: 'cancelled' }) // Assuming updateAppointment exists
+            )
+          );
+
+          // Refresh data
+          const freshApps = await api.getAppointments();
+          updateAppointments(freshApps);
+
+          setAiResponse(`✅ ${pending.length} agendamentos cancelados.`);
+        }
+        setTimeout(() => setAiResponse(null), 4000);
+      } else if (result.action === 'update_hours') {
+        setAiResponse(`🕒 ${result.message}`);
+        setTimeout(() => setAiResponse(null), 4000);
+      } else {
+        setAiResponse(`❓ ${result.message}`);
+        setTimeout(() => setAiResponse(null), 4000);
+      }
+    } catch (error) {
+      console.error(error);
+      // Check for Conflict 409
+      if (
+        typeof error === 'object' &&
+        error !== null &&
+        'status' in error &&
+        (error as any).status === 409
+      ) {
+        setAiResponse('⚠️ Horário já ocupado!');
+      } else {
+        setAiResponse('Erro ao processar comando.');
+      }
+      setTimeout(() => setAiResponse(null), 3000);
+    } finally {
+      setVoiceProcessing(false);
+    }
+  };
 
   // UI State
   const [showFinancials, setShowFinancials] = useState(false);
@@ -179,6 +425,60 @@ export const DashboardLayout: React.FC = () => {
         </div>
       </header>
 
+      {/* AI VOICE BUTTON - Fixed Bottom Right (above nav) */}
+      <button
+        onClick={isListening ? stopListening : startListening}
+        onTouchEnd={e => {
+          e.preventDefault(); // Prevent ghost click
+          isListening ? stopListening() : startListening();
+        }}
+        style={{ zIndex: 9999, touchAction: 'none' }} // touch-action: none prevents scrolling/zooming on the button
+        className={`fixed bottom-24 right-4 w-16 h-16 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(0,0,0,0.5)] transition-all duration-300 border-2 cursor-pointer active:scale-90 ${
+          isListening
+            ? 'bg-red-600 border-white text-white animate-pulse scale-110'
+            : 'bg-[#FFD700] border-white text-black hover:scale-110'
+        }`}
+        aria-label="Assistente de Voz IA"
+      >
+        {isListening ? <MicOff size={28} /> : <Mic size={28} />}
+        {isListening && (
+          <span className="absolute inset-0 rounded-full animate-ping bg-red-500/40"></span>
+        )}
+      </button>
+
+      {/* AI Voice Feedback Toast */}
+      {(isListening || aiResponse) && (
+        <div className="fixed bottom-32 left-1/2 -translate-x-1/2 md:bottom-10 md:left-1/2 md:-translate-x-1/2 z-[1000] flex flex-col items-center gap-2 pointer-events-none w-full px-4">
+          {isListening && (
+            <div className="bg-black/90 backdrop-blur-md text-white px-6 py-3 rounded-full border border-neon-yellow/30 shadow-[0_0_30px_rgba(234,179,8,0.2)] flex items-center gap-3 animate-fade-in-up">
+              <div className="flex gap-1 h-3 items-end">
+                <div className="w-1 bg-neon-yellow animate-[music-bar_0.5s_ease-in-out_infinite] h-full"></div>
+                <div className="w-1 bg-neon-yellow animate-[music-bar_0.7s_ease-in-out_infinite] h-2/3"></div>
+                <div className="w-1 bg-neon-yellow animate-[music-bar_0.4s_ease-in-out_infinite] h-full"></div>
+              </div>
+              <span className="font-mono text-sm tracking-widest uppercase text-neon-yellow">
+                Ouvindo...
+              </span>
+              <span className="text-xs text-gray-400 max-w-[150px] truncate">"{transcript}"</span>
+            </div>
+          )}
+
+          {aiResponse && (
+            <div className="bg-[#111] text-white px-6 py-4 rounded-xl border border-gray-700 shadow-2xl flex items-center gap-3 animate-fade-in-up w-auto min-w-[300px]">
+              <div className="bg-blue-500/20 p-2 rounded-full">
+                <Briefcase size={18} className="text-blue-400" />
+              </div>
+              <div className="flex flex-col text-left">
+                <span className="text-[10px] uppercase font-bold text-gray-500 tracking-wider">
+                  Maquinista AI
+                </span>
+                <span className="font-medium text-sm text-balance">{aiResponse}</span>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* BOTTOM NAV PIXEL PERFECT */}
       <nav className="fixed bottom-0 left-0 right-0 h-20 bg-black border-t border-border-color z-50 flex justify-around items-center px-2 pb-2 transition-colors duration-300">
         <button
@@ -316,6 +616,8 @@ export const DashboardLayout: React.FC = () => {
 
       <ClientProfileModal
         client={selectedClient}
+        appointments={appointments}
+        services={services}
         onClose={() => setSelectedClient(null)}
         onNewBooking={client => {
           setSelectedClient(null);

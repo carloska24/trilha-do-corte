@@ -41,6 +41,7 @@ import { FinancialModal } from './FinancialModal';
 import { ClientProfileModal } from './ClientProfileModal';
 import { SettingsView } from './SettingsView';
 import { useShopStatus } from '../../hooks/useShopStatus';
+import { useVoiceInterpreter } from '../../hooks/useVoiceInterpreter';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 
@@ -87,6 +88,55 @@ export const BarberDashboard: React.FC<BarberDashboardProps> = ({
   isDarkMode,
   toggleTheme,
 }) => {
+  // --- AI VOICE STATE ---
+  const { isListening, transcript, startListening, stopListening } = useVoiceInterpreter();
+  const [voiceProcessing, setVoiceProcessing] = useState(false);
+  const [aiResponse, setAiResponse] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isListening && transcript) {
+      handleVoiceCommand(transcript);
+    }
+  }, [isListening, transcript]);
+
+  const handleVoiceCommand = async (text: string) => {
+    if (!text) return;
+    setVoiceProcessing(true);
+    setAiResponse('Processando...');
+
+    try {
+      const { processVoiceCommand } = await import('../../utils/aiCommandProcessor');
+      const result = await processVoiceCommand(text);
+
+      if (result.action === 'schedule') {
+        const fakeDate =
+          result.data.date === 'Amanhã'
+            ? new Date(Date.now() + 86400000).toISOString().split('T')[0]
+            : new Date().toISOString().split('T')[0];
+
+        setAiResponse(`✅ ${result.message}`);
+        onNewAppointment({
+          clientName: result.data.clientName,
+          serviceId: '1',
+          date: fakeDate,
+          time: result.data.time,
+        });
+        setTimeout(() => setAiResponse(null), 4000);
+      } else if (result.action === 'update_hours') {
+        setAiResponse(`🕒 ${result.message}`);
+        setTimeout(() => setAiResponse(null), 4000);
+      } else {
+        setAiResponse(`❓ ${result.message}`);
+        setTimeout(() => setAiResponse(null), 4000);
+      }
+    } catch (error) {
+      setAiResponse('Erro ao processar comando.');
+      setTimeout(() => setAiResponse(null), 3000);
+    } finally {
+      setVoiceProcessing(false);
+    }
+  };
+
   // UI State
   const [currentTime, setCurrentTime] = useState(new Date());
   const [showFinancials, setShowFinancials] = useState(false); // Modal toggle
@@ -207,6 +257,28 @@ export const BarberDashboard: React.FC<BarberDashboardProps> = ({
 
   return (
     <div className="min-h-screen bg-transparent text-text-primary font-sans selection:bg-yellow-500 selection:text-black transition-colors duration-300">
+      {/* --- SUPER DEBUG/VOICE BUTTON --- */}
+      <button
+        onClick={() => (isListening ? stopListening() : startListening())}
+        style={{
+          position: 'fixed',
+          bottom: '120px',
+          right: '20px',
+          width: '64px',
+          height: '64px',
+          borderRadius: '50%',
+          backgroundColor: isListening ? '#ef4444' : '#fbbf24',
+          border: '4px solid white',
+          zIndex: 999999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 0 20px rgba(0,0,0,0.5)',
+        }}
+      >
+        {isListening ? <MicOff color="white" size={32} /> : <Mic color="black" size={32} />}
+      </button>
+
       {/* HEADER PIXEL PERFECT */}
       <header className="fixed top-0 left-0 right-0 h-16 bg-street-dark z-40 flex items-center justify-between px-4 border-b border-border-color transition-colors duration-300">
         {/* BRANDING (Left) */}
@@ -258,8 +330,21 @@ export const BarberDashboard: React.FC<BarberDashboardProps> = ({
         </div>
       </header>
 
+      {/* FLOATING ACTION BUTTON (AI VOICE) */}
+
       {/* BOTTOM NAV PIXEL PERFECT */}
-      <nav className="fixed bottom-0 left-0 right-0 h-20 bg-street-dark border-t border-border-color z-50 flex justify-around items-center px-2 pb-2 transition-colors duration-300">
+      <nav className="fixed bottom-0 left-0 right-0 h-20 bg-street-dark border-t border-border-color z-50 flex justify-around items-center px-2 pb-2 transition-colors duration-300 relative">
+        {/* AI VOICE BUTTON (Piggybacked) */}
+        <button
+          onClick={isListening ? stopListening : startListening}
+          className={`absolute bottom-24 right-4 w-14 h-14 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(0,0,0,0.6)] border-2 z-[60] ${
+            isListening
+              ? 'bg-red-600 border-white text-white animate-pulse'
+              : 'bg-[#FFD700] border-white text-black'
+          }`}
+        >
+          {isListening ? <MicOff size={24} /> : <Mic size={24} />}
+        </button>
         <button
           onClick={() => onViewChange('home')}
           className="flex flex-col items-center justify-center gap-1 w-16 h-16 rounded-xl group"
@@ -451,6 +536,55 @@ export const BarberDashboard: React.FC<BarberDashboardProps> = ({
           />
         )}
       </main>
+
+      {/* EMERGENCY VOICE BUTTON - TOP RIGHT */}
+      <button
+        onClick={() => {
+          console.log('Voice Button Clicked');
+          isListening ? stopListening() : startListening();
+        }}
+        style={{ zIndex: 99999 }}
+        className={`fixed top-20 right-4 w-14 h-14 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(0,0,0,0.8)] transition-all duration-300 border-2 ${
+          isListening
+            ? 'bg-red-600 border-white text-white animate-pulse'
+            : 'bg-[#FFD700] border-white text-black'
+        }`}
+      >
+        {isListening ? <MicOff size={24} /> : <Mic size={24} />}
+      </button>
+
+      {/* AI Voice Feedback Toast */}
+      {(isListening || aiResponse) && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 md:bottom-10 md:left-1/2 md:-translate-x-1/2 z-[100] flex flex-col items-center gap-2 pointer-events-none">
+          {isListening && (
+            <div className="bg-black/90 backdrop-blur-md text-white px-6 py-3 rounded-full border border-neon-yellow/30 shadow-[0_0_30px_rgba(234,179,8,0.2)] flex items-center gap-3 animate-fade-in-up">
+              <div className="flex gap-1 h-3 items-end">
+                <div className="w-1 bg-neon-yellow animate-[music-bar_0.5s_ease-in-out_infinite] h-full"></div>
+                <div className="w-1 bg-neon-yellow animate-[music-bar_0.7s_ease-in-out_infinite] h-2/3"></div>
+                <div className="w-1 bg-neon-yellow animate-[music-bar_0.4s_ease-in-out_infinite] h-full"></div>
+              </div>
+              <span className="font-mono text-sm tracking-widest uppercase text-neon-yellow">
+                Ouvindo...
+              </span>
+              <span className="text-xs text-gray-400 max-w-[200px] truncate">"{transcript}"</span>
+            </div>
+          )}
+
+          {aiResponse && (
+            <div className="bg-[#111] text-white px-6 py-4 rounded-xl border border-gray-700 shadow-2xl flex items-center gap-3 animate-fade-in-up min-w-[300px]">
+              <div className="bg-blue-500/20 p-2 rounded-full">
+                <Briefcase size={18} className="text-blue-400" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[10px] uppercase font-bold text-gray-500 tracking-wider">
+                  Maquinista AI
+                </span>
+                <span className="font-medium text-sm">{aiResponse}</span>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* MODALS */}
       <FinancialModal
