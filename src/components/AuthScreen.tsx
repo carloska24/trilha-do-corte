@@ -90,17 +90,29 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ type, onLoginSuccess, on
 
       if (authMode === 'login') {
         if (type === 'client') {
-          userData = await api.loginClient(formData.phone, formData.password);
+          userData = await api.loginClient(
+            formData.phone || formData.email, // Try both for client login flexibility
+            formData.password
+          );
         } else {
           userData = await api.loginBarber(formData.email, formData.password);
         }
       } else {
-        // Register (Only Client for now based on UI)
+        // REGISTER
         if (type === 'client') {
           userData = await api.registerClient({
             name: formData.name,
             phone: formData.phone,
-            email: formData.email, // Optional for client login but good to have
+            email: formData.email,
+            password: formData.password,
+            photoUrl: photoPreview,
+          });
+        } else {
+          // REGISTER BARBER
+          userData = await api.registerBarber({
+            name: formData.name,
+            phone: formData.phone,
+            email: formData.email, // Required for Barber
             password: formData.password,
             photoUrl: photoPreview,
           });
@@ -109,6 +121,8 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ type, onLoginSuccess, on
 
       if (userData) {
         onLoginSuccess({
+          // @ts-ignore
+          id: userData.id,
           name: userData.name,
           photoUrl: userData.img || userData.image, // Handle different DB field names
           emailOrPhone: type === 'client' ? userData.phone || userData.email : userData.email,
@@ -271,35 +285,52 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ type, onLoginSuccess, on
               )}
 
               {/* Email/Phone */}
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider ml-1">
-                  {isClient ? 'Celular / WhatsApp' : 'Email Profissional'}
-                </label>
-                <div className="relative group">
-                  {isClient ? (
-                    <Phone
-                      className="absolute left-3 top-3.5 text-gray-600 group-focus-within:text-white transition-colors"
-                      size={18}
-                    />
-                  ) : (
-                    <Mail
-                      className="absolute left-3 top-3.5 text-gray-600 group-focus-within:text-white transition-colors"
-                      size={18}
-                    />
-                  )}
-                  <input
-                    type={isClient ? 'tel' : 'email'}
-                    required
-                    className="w-full bg-black/40 border border-white/10 rounded-lg px-10 py-3 text-white focus:outline-none focus:border-white/30 transition-all placeholder-gray-700 font-medium"
-                    placeholder={isClient ? '(00) 00000-0000' : 'seu@email.com'}
-                    value={isClient ? formData.phone : formData.email}
-                    onChange={e =>
-                      isClient
-                        ? setFormData({ ...formData, phone: e.target.value })
-                        : setFormData({ ...formData, email: e.target.value })
-                    }
-                  />
-                </div>
+              <div className="space-y-4">
+                {/* Phone Display Logic: Show if Client OR if Registering (Any Type) */}
+                {(isClient || authMode === 'register') && (
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider ml-1">
+                      Celular / WhatsApp
+                    </label>
+                    <div className="relative group">
+                      <Phone
+                        className="absolute left-3 top-3.5 text-gray-600 group-focus-within:text-white transition-colors"
+                        size={18}
+                      />
+                      <input
+                        type="tel"
+                        required={isClient || authMode === 'register'}
+                        className="w-full bg-black/40 border border-white/10 rounded-lg px-10 py-3 text-white focus:outline-none focus:border-white/30 transition-all placeholder-gray-700 font-medium"
+                        placeholder="(00) 00000-0000"
+                        value={formData.phone}
+                        onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Email Display Logic: Show if Barber OR if Registering (Any Type) */}
+                {(!isClient || authMode === 'register') && (
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider ml-1">
+                      Email {isClient ? 'Pessoal' : 'Profissional'}
+                    </label>
+                    <div className="relative group">
+                      <Mail
+                        className="absolute left-3 top-3.5 text-gray-600 group-focus-within:text-white transition-colors"
+                        size={18}
+                      />
+                      <input
+                        type="email"
+                        required={!isClient || authMode === 'register'}
+                        className="w-full bg-black/40 border border-white/10 rounded-lg px-10 py-3 text-white focus:outline-none focus:border-white/30 transition-all placeholder-gray-700 font-medium"
+                        placeholder="seu@email.com"
+                        value={formData.email}
+                        onChange={e => setFormData({ ...formData, email: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Password */}

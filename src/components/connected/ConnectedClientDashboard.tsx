@@ -5,9 +5,10 @@ import { useData } from '../../contexts/DataContext';
 import { useUI } from '../../contexts/UIContext';
 import { ClientProfile } from '../../types';
 import { useNavigate } from 'react-router-dom';
+import { api } from '../../services/api';
 
 export const ConnectedClientDashboard: React.FC = () => {
-  const { currentUser, logout } = useAuth();
+  const { currentUser, logout, updateProfile } = useAuth();
   const { appointments, services, updateAppointments } = useData();
   const { openBooking } = useUI();
   const navigate = useNavigate();
@@ -25,8 +26,24 @@ export const ConnectedClientDashboard: React.FC = () => {
     });
   };
 
+  const handleUpdateProfile = async (data: Partial<ClientProfile>) => {
+    if (!currentUser?.id) return;
+    // Map photoUrl to img for the API
+    const apiData = {
+      ...data,
+      img: data.photoUrl,
+    };
+    const updated = await api.updateClient(currentUser.id, apiData);
+    if (updated && updateProfile) {
+      updateProfile({ ...data, id: currentUser.id });
+    }
+  };
+
   // Filter appointments for this client
-  const clientAppointments = appointments.filter(a => a.clientId === currentUser?.id);
+  const clientAppointments = appointments.filter(a => {
+    const isMatch = String(a.clientId) === String(currentUser?.id);
+    return isMatch;
+  });
 
   return (
     <ClientDashboard
@@ -41,8 +58,8 @@ export const ConnectedClientDashboard: React.FC = () => {
         logout();
         navigate('/');
       }}
-      promotions={[]} // Implement promotions in DataContext later
-      onUpdateProfile={() => {}} // Implement profile update
+      promotions={[]}
+      onUpdateProfile={handleUpdateProfile}
     />
   );
 };

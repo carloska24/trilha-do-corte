@@ -14,10 +14,17 @@ import {
   Minus,
   Mic,
   MicOff,
+  MessageCircle, // WhatsApp Icon
+  Share2,
+  Trash2,
+  Edit,
+  Bot,
+  Sparkles,
 } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
 import { useOutletContext } from 'react-router-dom';
 import { useVoiceCommand } from '../../hooks/useVoiceCommand';
+import { ConfirmModal } from '../ui/ConfirmModal';
 
 interface DashboardOutletContext {
   setSelectedClient: (client: Client) => void;
@@ -72,6 +79,9 @@ export const CalendarView: React.FC = () => {
   const [quickAddSlot, setQuickAddSlot] = useState<{ date: Date; time: string } | null>(null);
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
 
+  // Export Modal State
+  const [isExportOpen, setIsExportOpen] = useState(false);
+
   // Helper for Toasts (Local implementation since CalendarView doesn't have the full toast system of Settings yet, or we can use a simple alert/log for now, user asked for toast feedback in settingsView, duplicating minimal toast here or omitting if not strictly required, but let's add a simple one)
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const showToast = (msg: string) => {
@@ -120,12 +130,18 @@ export const CalendarView: React.FC = () => {
         animation: marquee 15s linear infinite;
         padding-left: 0;
       }
+      @keyframes shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+      }
     `;
     document.head.appendChild(style);
     return () => {
       document.head.removeChild(style); // Safe cleanup
     };
   }, []);
+
+  const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
 
   const handleSaveAppointment = () => {
     if (!clientName.trim() || !quickAddSlot || !selectedService) return;
@@ -176,6 +192,67 @@ export const CalendarView: React.FC = () => {
     const month = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
+  };
+
+  // WhatsApp Export Logic
+  const handleExportWhatsApp = () => {
+    const dailyApps = getAppointmentsForDate(selectedDate).sort((a, b) =>
+      a.time.localeCompare(b.time)
+    );
+
+    if (dailyApps.length === 0) {
+      showToast('Nenhum agendamento para exportar.');
+      return;
+    }
+
+    const dateStr = selectedDate.toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+    });
+
+    // 📅 = %F0%9F%93%85 | 💈 = %F0%9F%92%88 | ✂️ = %E2%9C%82%EF%B8%8F | ✅ = %E2%9C%85 | ⏳ = %E2%8F%B3
+
+    let msg = `%F0%9F%93%85%20*AGENDA%20-%20${encodeURIComponent(dateStr)}*%0A%0A`;
+
+    dailyApps.forEach(app => {
+      const service = getServiceDetails(app.serviceId);
+      // Pre-encoded icons to prevent diamong-question-marks issue
+      const icon = service.category === 'Barba' ? '%F0%9F%92%88' : '%E2%9C%82%EF%B8%8F';
+      const statusIcon = app.status === 'confirmed' ? '%E2%9C%85' : '%E2%8F%B3';
+
+      const clientName = encodeURIComponent((app.clientName || 'Cliente').split(' ')[0]);
+      const serviceName = encodeURIComponent(service.name);
+
+      msg += `${app.time}%20-%20${clientName}%20${icon}%20${serviceName}%20${statusIcon}%0A`;
+    });
+
+    msg += `%0A_%20Trilha%20do%20Corte%20_`;
+
+    window.open(`https://wa.me/?text=${msg}`, '_blank');
+  };
+
+  const handleCancelAppointment = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent opening modal
+    if (!window.confirm('Cancelar este agendamento?')) return;
+
+    const updated = appointments.map(a =>
+      a.id === id ? { ...a, status: 'cancelled' as const } : a
+    );
+    updateAppointments(updated);
+    showToast('Agendamento cancelado.');
+  };
+
+  const handleEditAppointment = (app: Appointment, e: React.MouseEvent) => {
+    e.stopPropagation();
+    // Ideally open a full edit modal, for now populating quick add as a "re-book" or simple edit mock
+    setClientName(app.clientName);
+    setSelectedService(app.serviceId);
+    setQuickAddSlot({ date: new Date(app.date), time: app.time });
+    setIsQuickAddOpen(true);
+    // Note: This logic currently creates a NEW appointment on save.
+    // Real edit would need ID persistence in the modal.
+    // For this task scope (visual swipe), this is a placeholder action.
+    showToast('Modo de edição (cria novo por enquanto)');
   };
 
   const getTimeSlots = () => {
@@ -395,6 +472,15 @@ export const CalendarView: React.FC = () => {
             }`}
           >
             AJUSTES
+          </button>
+
+          {/* WhatsApp Export Button (Right Aligned or Inline) */}
+          <button
+            onClick={() => setIsExportOpen(true)}
+            className="ml-auto pb-3 text-green-500 hover:text-green-400 transition-colors flex items-center gap-2 font-bold tracking-widest text-xs md:text-sm uppercase whitespace-nowrap"
+          >
+            <Share2 size={18} />
+            <span className="hidden md:inline">Exportar</span>
           </button>
         </div>
       </div>
@@ -642,6 +728,47 @@ export const CalendarView: React.FC = () => {
                   ))}
                 </div>
               </div>
+
+              {/* AI COMMAND ZONE */}
+              <div className="p-6 bg-[#151515] border-t border-white/5">
+                <button
+                  onClick={async () => {
+                    if (
+                      window.confirm(
+                        '🤖 IA SYSTEM: \n\nAtenção, operador. O protocolo de reset irá WIPE em toda a base de dados temporal (agenda). \n\nConfirmar execução?'
+                      )
+                    ) {
+                      const success = await import('../../services/api').then(m =>
+                        m.api.clearAppointments()
+                      );
+                      if (success) {
+                        alert('✅ Execução concluída. Sistema reiniciando...');
+                        window.location.reload();
+                      } else {
+                        alert('❌ Erro no protocolo de comunicação.');
+                      }
+                    }
+                  }}
+                  className="w-full bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white py-4 flex items-center justify-center gap-3 rounded-xl shadow-[0_0_25px_rgba(139,92,246,0.5)] transition-all transform hover:scale-[1.02] group mt-4 border border-white/10 relative overflow-hidden"
+                >
+                  {/* Animated Glare */}
+                  <div className="absolute top-0 left-[-100%] w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:animate-[shimmer_1.5s_infinite]"></div>
+
+                  <Bot
+                    size={24}
+                    className="text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]"
+                  />
+                  <div className="flex flex-col items-start leading-none">
+                    <span className="text-[10px] font-bold text-purple-200 uppercase tracking-[0.2em] mb-0.5">
+                      Protocolo de Limpeza
+                    </span>
+                    <span className="text-sm font-black uppercase tracking-widest drop-shadow-md">
+                      AI SYSTEM RESET
+                    </span>
+                  </div>
+                  <Sparkles size={16} className="text-purple-300 animate-pulse ml-1" />
+                </button>
+              </div>
             </div>
           </div>
         ) : activeTab === 'monthly' ? (
@@ -718,72 +845,108 @@ export const CalendarView: React.FC = () => {
                           return (
                             <div
                               key={app.id}
-                              onClick={() => onSelectClient(app.clientName)}
-                              className="mb-3 last:mb-0 relative overflow-hidden rounded-xl border border-gray-800 bg-[#1A1A1A] hover:border-neon-yellow transition-all duration-300 cursor-pointer group/card shadow-lg hover:-translate-y-1 block"
+                              className="mb-3 last:mb-0 relative group/swipe wrapper overflow-hidden rounded-xl bg-black"
                             >
-                              {/* Left Status Bar */}
-                              <div
-                                className={`absolute left-0 top-0 bottom-0 w-1 ${
-                                  app.status === 'confirmed'
-                                    ? 'bg-neon-yellow'
-                                    : app.status === 'in_progress'
-                                    ? 'bg-blue-500'
-                                    : 'bg-gray-600'
-                                }`}
-                              ></div>
+                              {/* Horizontal Scroller for Swipe */}
+                              <div className="flex w-full overflow-x-auto snap-x snap-mandatory no-scrollbar">
+                                {/* 1. MAIN CARD (Full Width) */}
+                                <div
+                                  className="min-w-full snap-center bg-[#1A1A1A] border border-gray-800 hover:border-neon-yellow transition-all duration-300 shadow-lg relative rounded-xl"
+                                  onClick={() => onSelectClient(app.clientName)}
+                                >
+                                  {/* Left Status Bar */}
+                                  <div
+                                    className={`absolute left-0 top-0 bottom-0 w-1 ${
+                                      app.status === 'confirmed'
+                                        ? 'bg-neon-yellow'
+                                        : app.status === 'in_progress'
+                                        ? 'bg-blue-500'
+                                        : 'bg-gray-600'
+                                    }`}
+                                  ></div>
 
-                              <div className="flex flex-row justify-between items-center p-3 gap-2">
-                                <div className="flex-1 min-w-0 pl-2">
-                                  {/* Client Name + Time */}
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <h4 className="font-black text-white text-base md:text-lg truncate leading-tight">
-                                      {app.clientName}
-                                    </h4>
-                                    <span className="text-[10px] font-mono text-gray-500 bg-black px-1 rounded border border-gray-800">
-                                      {app.time}
-                                    </span>
-                                  </div>
+                                  <div className="flex flex-row justify-between items-center p-3 gap-2">
+                                    <div className="flex-1 min-w-0 pl-2">
+                                      {/* Client Name + Time */}
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <h4 className="font-black text-white text-base md:text-lg truncate leading-tight">
+                                          {app.clientName}
+                                        </h4>
+                                        <span className="text-[10px] font-mono text-gray-500 bg-black px-1 rounded border border-gray-800">
+                                          {app.time}
+                                        </span>
+                                      </div>
 
-                                  {/* Service Ticker & Price */}
-                                  <div className="flex flex-wrap items-center gap-2 mt-1">
-                                    <div className="flex items-center gap-2 text-gray-300 text-[10px] md:text-xs font-bold uppercase tracking-wider bg-black/40 px-2 py-1 rounded border border-gray-800">
-                                      {service.category === 'Barba' ? (
-                                        <Zap size={10} className="text-neon-yellow" />
-                                      ) : (
-                                        <Scissors size={10} className="text-neon-yellow" />
-                                      )}
-                                      <span className="truncate max-w-[100px]">{service.name}</span>
+                                      {/* Service Ticker & Price */}
+                                      <div className="flex flex-wrap items-center gap-2 mt-1">
+                                        <div className="flex items-center gap-2 text-gray-300 text-[10px] md:text-xs font-bold uppercase tracking-wider bg-black/40 px-2 py-1 rounded border border-gray-800">
+                                          {service.category === 'Barba' ? (
+                                            <Zap size={10} className="text-neon-yellow" />
+                                          ) : (
+                                            <Scissors size={10} className="text-neon-yellow" />
+                                          )}
+                                          <span className="truncate max-w-[100px]">
+                                            {service.name}
+                                          </span>
+                                        </div>
+                                        <div className="text-[10px] font-mono text-green-400 font-bold bg-green-950/30 px-1.5 py-0.5 rounded border border-green-900/50">
+                                          {service.price}
+                                        </div>
+                                      </div>
                                     </div>
-                                    <div className="text-[10px] font-mono text-green-400 font-bold bg-green-950/30 px-1.5 py-0.5 rounded border border-green-900/50">
-                                      {service.price}
+
+                                    {/* Right Side Info: Payment & Status */}
+                                    <div className="text-right flex flex-col items-end gap-1.5 shrink-0">
+                                      {/* Payment Badge */}
+                                      <div
+                                        className={`flex items-center gap-1 text-[9px] font-bold uppercase px-1.5 py-0.5 rounded ${
+                                          isPaid
+                                            ? 'text-green-500 bg-green-500/10'
+                                            : 'text-zinc-500 bg-zinc-800'
+                                        }`}
+                                      >
+                                        <Wallet size={10} />
+                                        {isPaid ? 'PAGO' : 'PEND.'}
+                                      </div>
+
+                                      {/* Status Text + Arrow Hint */}
+                                      <div className="flex items-center gap-1">
+                                        <div
+                                          className={`px-1.5 py-0.5 rounded-[4px] text-[8px] md:text-[10px] font-black uppercase tracking-widest border ${
+                                            app.status === 'confirmed'
+                                              ? 'bg-green-900/20 text-green-500 border-green-900'
+                                              : 'bg-yellow-900/20 text-yellow-500 border-yellow-900'
+                                          }`}
+                                        >
+                                          {app.status === 'confirmed' ? 'Confirmado' : 'Pendente'}
+                                        </div>
+                                        {/* Swipe Hint Arrow */}
+                                        <ChevronLeft
+                                          size={12}
+                                          className="text-gray-600 animate-pulse hidden md:hidden phone:block"
+                                        />
+                                      </div>
                                     </div>
                                   </div>
                                 </div>
 
-                                {/* Right Side Info: Payment & Status */}
-                                <div className="text-right flex flex-col items-end gap-1.5 shrink-0">
-                                  {/* Payment Badge */}
-                                  <div
-                                    className={`flex items-center gap-1 text-[9px] font-bold uppercase px-1.5 py-0.5 rounded ${
-                                      isPaid
-                                        ? 'text-green-500 bg-green-500/10'
-                                        : 'text-zinc-500 bg-zinc-800'
-                                    }`}
+                                {/* 2. ACTIONS (Hidden by default, revealed on scroll) */}
+                                <div className="min-w-[70px] bg-red-900/20 snap-center flex flex-col gap-1 p-1">
+                                  <button
+                                    onClick={e => handleCancelAppointment(app.id, e)}
+                                    className="flex-1 bg-red-600 rounded-lg flex items-center justify-center text-white shadow-lg active:scale-95 transition-transform"
                                   >
-                                    <Wallet size={10} />
-                                    {isPaid ? 'PAGO' : 'PEND.'}
-                                  </div>
+                                    <Trash2 size={18} />
+                                  </button>
+                                </div>
 
-                                  {/* Status Text */}
-                                  <div
-                                    className={`px-1.5 py-0.5 rounded-[4px] text-[8px] md:text-[10px] font-black uppercase tracking-widest border ${
-                                      app.status === 'confirmed'
-                                        ? 'bg-green-900/20 text-green-500 border-green-900'
-                                        : 'bg-yellow-900/20 text-yellow-500 border-yellow-900'
-                                    }`}
+                                <div className="min-w-[70px] bg-blue-900/20 snap-center flex flex-col gap-1 p-1 pr-0">
+                                  <button
+                                    onClick={e => handleEditAppointment(app, e)}
+                                    className="flex-1 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-lg active:scale-95 transition-transform"
                                   >
-                                    {app.status === 'confirmed' ? 'Confirmado' : 'Pendente'}
-                                  </div>
+                                    <Edit size={18} />
+                                  </button>
                                 </div>
                               </div>
                             </div>
@@ -895,6 +1058,48 @@ export const CalendarView: React.FC = () => {
                 Confirmar <ChevronRight size={16} strokeWidth={3} />
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* EXPORT MODAL */}
+      {isExportOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in">
+          <div className="bg-[#111] w-full max-w-sm rounded-2xl border border-gray-800 shadow-2xl p-6 relative overflow-hidden">
+            {/* Neon Top Bar */}
+            <div className="absolute top-0 left-0 w-full h-1 bg-green-500 shadow-[0_0_20px_#22c55e]"></div>
+
+            <div className="flex justify-between items-center mb-6 mt-2">
+              <h3 className="text-xl font-black text-white uppercase tracking-wider flex items-center gap-2">
+                <Share2 size={24} className="text-green-500" />
+                Exportar Agenda
+              </h3>
+              <button
+                onClick={() => setIsExportOpen(false)}
+                className="bg-gray-800 p-2 rounded-lg text-gray-400 hover:text-white transition-colors"
+              >
+                <ChevronLeft size={20} className="rotate-180" />
+              </button>
+            </div>
+
+            <p className="text-gray-400 text-sm mb-6 leading-relaxed">
+              Deseja gerar a lista de agendamentos do dia{' '}
+              <strong className="text-white">{selectedDate.toLocaleDateString('pt-BR')}</strong> e
+              abrir no WhatsApp?
+            </p>
+
+            <button
+              onClick={() => {
+                handleExportWhatsApp();
+                setIsExportOpen(false);
+              }}
+              className="w-full py-4 bg-green-600 text-white font-black uppercase tracking-widest rounded-xl hover:bg-green-500 hover:shadow-[0_0_20px_rgba(34,197,94,0.4)] transition-all flex justify-center items-center gap-2 relative overflow-hidden group"
+            >
+              <span className="relative z-10 flex items-center gap-2">
+                <MessageCircle size={20} fill="currentColor" />
+                Abrir no WhatsApp
+              </span>
+            </button>
           </div>
         </div>
       )}

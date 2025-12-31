@@ -154,7 +154,7 @@ export const TicketCard: React.FC<TicketCardProps> = ({
                     <span className="text-[10px] font-black text-[#2a1e0b] uppercase tracking-[0.2em] mb-1 drop-shadow-sm">
                       Serviço
                     </span>
-                    <h3 className="text-lg font-black text-[#fff] uppercase tracking-wider drop-shadow-[0_2px_2px_rgba(0,0,0,0.9)] text-shadow-gold">
+                    <h3 className="text-lg font-black text-[#fff] uppercase tracking-wider drop-shadow-[0_2px_2px_rgba(0,0,0,0.9)] text-shadow-gold text-right">
                       {service?.name || 'Corte'}
                     </h3>
                   </div>
@@ -266,11 +266,20 @@ export const TicketCard: React.FC<TicketCardProps> = ({
             </div>
           </div>
         </div>
+
+        {/* Wrapper Close was missing? No, BackFace Close, Inner Close, Content Close. */}
+        {/* We need:
+          1. Close Content (Done inside BackFace logic usually)
+          2. Close Inner (Done)
+          3. Close BackFace (Done)
+          4. Close Wrapper (Need this one)
+      */}
       </div>
 
-      <style jsx>{`
+      <style>{`
         .backface-hidden {
           backface-visibility: hidden;
+          -webkit-backface-visibility: hidden;
         }
         .text-shadow-gold {
           text-shadow: 0 0 10px rgba(244, 208, 121, 0.5), 0 0 20px rgba(244, 208, 121, 0.3);

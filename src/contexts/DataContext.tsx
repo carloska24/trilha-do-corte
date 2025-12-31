@@ -44,8 +44,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         api.getClients(),
       ]);
 
-      console.log('🔍 [DataContext] Raw Services from API:', fetchedServices);
-
       const normalizedServices = fetchedServices.map((s: any) => {
         // Handle Postgres lowercase keys
         const priceVal = s.priceValue ?? s.pricevalue;

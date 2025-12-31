@@ -12,8 +12,7 @@ import { api } from './services/api';
 // Inner component to access UIContext & DataContext
 const GlobalBookingModal = () => {
   const { isBookingOpen, closeBooking, bookingInitialData } = useUI();
-  const { services, appointments, updateAppointments } = useData();
-  console.log('GlobalBookingModal rendering, useAuth:', useAuth);
+  const { services, appointments, updateAppointments, refreshData } = useData();
   const { currentUser } = useAuth(); // Get current user
 
   if (!isBookingOpen) return null;
@@ -31,6 +30,7 @@ const GlobalBookingModal = () => {
       onClose={closeBooking}
       initialData={mergedInitialData}
       services={services}
+      appointments={appointments}
       onSubmit={async data => {
         // Prepare payload for API (omit ID, let backend generate it)
         const appointmentPayload = {
@@ -49,26 +49,25 @@ const GlobalBookingModal = () => {
 
           if (createdAppointment) {
             // Update Context with the REAL appointment from DB
-            updateAppointments([...appointments, createdAppointment]);
-          } else {
-            // Fallback (Offline?): Use local ID if API fails?
-            // For now, let's assume connectivity or at least optimistic update
-            // But if API fails, createdAppointment is null.
-            console.error('Failed to create appointment via API');
-            // We could add a local-only one but that leads to sync issues.
-            // Let's create an optimistic one just in case, or show error?
-            // User requested persistence, so falling back to local storage (via updateAppointments) is better than nothing,
-            // but the ID will be wrong if we sync later.
-            // Let's stick to API first logic as per DataContext "Cloud First".
-            // If it fails, maybe we should alert.
-            // But for this step, just logging.
+            // DEFENSIVE: Ensure clientId is present locally even if API response omits it (common with some backend framworks)
+            const confirmedAppt = { ...createdAppointment, clientId: currentUser?.id };
 
-            // Actually, keep the optimistic update behavior for responsiveness?
-            // "Disappearing on F5" means it wasn't saved. API call fixes that.
-            // If API fails, it WILL disappear on F5 regardless.
+            // IMPORTANT: Immediately refresh data from API to ensure sync and persistence verification
+            // This fixes the "disappearing on refresh" issue by ensuring what we have in UI is what IS in the DB
+            await refreshData();
+
+            // As a fallback/optimistic update, we also update state directly if for some reason refresh fails
+            // but refreshData is the source of truth
+            // updateAppointments([...appointments, confirmedAppt]);
+          } else {
+            throw new Error(
+              'Falha ao criar agendamento (retorno nulo API). Verifique conflitos de horário.'
+            );
           }
-        } catch (error) {
-          console.error('Error creating appointment:', error);
+        } catch (err) {
+          console.error('Failed to create appointment via API', err);
+          // Re-throw so BookingModal knows it failed
+          throw err;
         }
       }}
     />

@@ -219,49 +219,57 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
           </div>
 
           {upcoming.length > 0 ? (
-            upcoming.map(app => (
-              <div key={app.id} className="relative w-full flex justify-center py-4">
-                <TicketCard
-                  data={{
-                    name: client.name,
-                    phone: client.phone,
-                    serviceId: app.serviceId,
-                    date: app.date,
-                    time: app.time,
-                  }}
-                  service={services.find(s => s.id === app.serviceId)}
-                  ticketId={`RID-${app.id.substring(0, 6)}`}
-                  rating={5} // Hardcoded 5 stars as "Premium Client" simulation for now, or use Math.min(5, Math.floor(client.totalVisits / 5))
-                />
+            <div
+              className={`flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 custom-scrollbar w-full ${
+                upcoming.length === 1 ? 'justify-center' : 'px-[calc(50%-42.5%)] sm:px-4'
+              }`}
+            >
+              {upcoming.map(app => (
+                <div
+                  key={app.id}
+                  className="min-w-[85%] sm:min-w-[350px] snap-center relative flex justify-center py-4 shrink-0 transition-transform"
+                >
+                  <TicketCard
+                    data={{
+                      name: client.name,
+                      phone: client.phone,
+                      serviceId: app.serviceId,
+                      date: app.date,
+                      time: app.time,
+                    }}
+                    service={services.find(s => String(s.id) === String(app.serviceId))}
+                    ticketId={`COD-${app.id.substring(0, 6)}`}
+                    rating={client.level || 1}
+                  />
 
-                {/* Cancel Button Overlaid or Below */}
-                <div className="absolute bottom-[-10px] z-20">
-                  <button
-                    onClick={() => handleCancelClick(app.id)}
-                    className={`py-2 px-6 text-[10px] font-bold uppercase tracking-widest rounded-full shadow-xl transition-all flex items-center justify-center gap-2 border
-                                ${
-                                  cancelConfirmId === app.id
-                                    ? 'bg-red-600 text-white border-red-500 animate-pulse'
-                                    : 'bg-[#111] text-gray-500 border-white/10 hover:text-white hover:border-white'
-                                }`}
-                  >
-                    {cancelConfirmId === app.id ? (
-                      'Confirmar Cancelamento?'
-                    ) : (
-                      <>
-                        <X size={12} /> Cancelar Reserva
-                      </>
-                    )}
-                  </button>
+                  {/* Cancel Button Overlaid or Below */}
+                  <div className="absolute bottom-[-10px] z-20">
+                    <button
+                      onClick={() => handleCancelClick(app.id)}
+                      className={`py-2 px-6 text-[10px] font-bold uppercase tracking-widest rounded-full shadow-xl transition-all flex items-center justify-center gap-2 border
+                                  ${
+                                    cancelConfirmId === app.id
+                                      ? 'bg-red-600 text-white border-red-500 animate-pulse'
+                                      : 'bg-[#111] text-gray-500 border-white/10 hover:text-white hover:border-white'
+                                  }`}
+                    >
+                      {cancelConfirmId === app.id ? (
+                        'Confirmar Cancelamento?'
+                      ) : (
+                        <>
+                          <X size={12} /> Cancelar Reserva
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))
+              ))}
+            </div>
           ) : (
             <div
               onClick={onOpenBooking}
               className="bg-[#101010] border border-gray-800/50 rounded-xl p-8 flex flex-col items-center justify-center text-center group cursor-pointer hover:border-neon-yellow/50 transition-all relative overflow-hidden min-h-[250px]"
             >
-              {/* Background Image Layer */}
               {/* Background Image Layer */}
               <div className="absolute inset-0 z-0 opacity-40 group-hover:opacity-60 transition-opacity duration-500">
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent z-10"></div>

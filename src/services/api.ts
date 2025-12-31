@@ -52,6 +52,38 @@ export const api = {
     }
   },
 
+  registerBarber: async (data: any): Promise<Barber | null> => {
+    try {
+      const response = await fetch(`${API_URL}/register/barber`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) return null;
+      const json = await response.json();
+      return json.data;
+    } catch (error) {
+      console.error('Register Barber error:', error);
+      return null;
+    }
+  },
+
+  updateClient: async (id: string, data: Partial<Client>): Promise<Client | null> => {
+    try {
+      const response = await fetch(`${API_URL}/clients/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) return null;
+      const json = await response.json();
+      return json.data;
+    } catch (error) {
+      console.error('Update Client error:', error);
+      return null;
+    }
+  },
+
   getServices: async (): Promise<ServiceItem[]> => {
     try {
       const response = await fetch(`${API_URL}/services?_t=${Date.now()}`);
@@ -152,7 +184,12 @@ export const api = {
     try {
       const response = await fetch(`${API_URL}/appointments`);
       const json = await response.json();
-      return json.data;
+      // Handle Postgres lowercase return for clientId if needed
+      return json.data.map((appt: any) => ({
+        ...appt,
+        clientId: appt.clientId || appt.clientid,
+        barberId: appt.barberId || appt.barberid,
+      }));
     } catch (error) {
       console.error('Error fetching appointments:', error);
       return [];
@@ -173,6 +210,18 @@ export const api = {
     } catch (error) {
       console.error('Error creating appointment:', error);
       return null;
+    }
+  },
+
+  clearAppointments: async (): Promise<boolean> => {
+    try {
+      const response = await fetch(`${API_URL}/appointments`, {
+        method: 'DELETE',
+      });
+      return response.ok;
+    } catch (error) {
+      console.error('Error clearing appointments:', error);
+      return false;
     }
   },
 };

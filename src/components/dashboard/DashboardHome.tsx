@@ -404,7 +404,7 @@ export const DashboardHome: React.FC = () => {
               </div>
             </div>
           </button>
-        ) : shopStatus.isOpen ? (
+        ) : shopStatus.isOpen || nextClient ? (
           <button
             onClick={() => {
               if (nextClient) {
@@ -454,7 +454,7 @@ export const DashboardHome: React.FC = () => {
                       PRÓXIMO DA FILA
                     </span>
                     <span className="text-3xl font-black text-white uppercase leading-none drop-shadow-md tracking-tighter truncate w-full">
-                      {nextClient.clientName}
+                      {nextClient.clientName ? nextClient.clientName.split(' ')[0] : 'CLIENTE'}
                     </span>
                   </div>
                   {/* Arrow Icon */}

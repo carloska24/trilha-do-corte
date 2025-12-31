@@ -16,8 +16,12 @@ export const LoginPage: React.FC = () => {
     //Ideally we should fetch the full profile here or ensure AuthScreen returns it
 
     // Construct a profile object (simplified for now to match types)
+    if (!userData.id) {
+      console.error('CRITICAL: User data missing ID', userData);
+      // Fallback or error handling - for now we want to know if this happens
+    }
     const profile = {
-      id: userData.id || 'temp-id',
+      id: userData.id || 'temp-id', // Keep fallback but now we log error
       name: userData.name,
       email: userData.emailOrPhone.includes('@') ? userData.emailOrPhone : undefined,
       phone: !userData.emailOrPhone.includes('@') ? userData.emailOrPhone : undefined,

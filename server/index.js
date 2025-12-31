@@ -84,9 +84,45 @@ app.post('/api/login/barber', async (req, res) => {
   }
 });
 
-app.post('/api/register/client', async (req, res) => {
+app.post('/api/register/barber', async (req, res) => {
   const { name, phone, email, password, photoUrl } = req.body;
   const id = Date.now().toString();
+
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    // Note: 'specialty' is optional or can be set to default
+    const sql =
+      'INSERT INTO barbers (id, name, specialty, image, email, password, phone) VALUES ($1, $2, $3, $4, $5, $6, $7)';
+    const params = [id, name, 'Barbeiro', photoUrl, email, hashedPassword, phone];
+
+    await db.query(sql, params);
+    res.json({
+      success: true,
+      data: { id, name, specialty: 'Barbeiro', image: photoUrl, email, phone },
+    });
+  } catch (err) {
+    console.error('❌ Register Barber Error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/register/client', async (req, res) => {
+  const { name, phone, email, password, photoUrl } = req.body;
+
+  // Sequential ID Logic: Find max ID < 1,000,000 (to exclude timestamps)
+  let id = '0';
+  try {
+    const { rows } = await db.query('SELECT id FROM clients');
+    const existingIds = rows.map(r => parseInt(r.id, 10)).filter(n => !isNaN(n) && n < 1000000); // Filter out timestamp IDs
+
+    if (existingIds.length > 0) {
+      const maxId = Math.max(...existingIds);
+      id = (maxId + 1).toString();
+    }
+  } catch (e) {
+    console.error('Error generating ID, using timestamp fallback:', e);
+    id = Date.now().toString();
+  }
 
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -245,6 +281,58 @@ app.get('/api/clients', async (req, res) => {
   }
 });
 
+// UPDATE CLIENT PROFILE
+app.put('/api/clients/:id', async (req, res) => {
+  const { id } = req.params;
+  const { name, phone, email, img, preferences } = req.body;
+  console.log(`[PUT /api/clients/${id}]`, req.body);
+
+  try {
+    // Only update fields that are provided
+    const updates = [];
+    const params = [];
+    let paramIdx = 1;
+
+    if (name !== undefined) {
+      updates.push(`name = $${paramIdx++}`);
+      params.push(name);
+    }
+    if (phone !== undefined) {
+      updates.push(`phone = $${paramIdx++}`);
+      params.push(phone);
+    }
+    if (email !== undefined) {
+      updates.push(`email = $${paramIdx++}`);
+      params.push(email);
+    }
+    if (img !== undefined) {
+      updates.push(`img = $${paramIdx++}`);
+      params.push(img);
+    }
+    // 'preferences' is not a direct column but we could store it as JSON or notes
+    // For now, we can ignore or store preferences.notes in 'notes'
+    if (preferences?.notes !== undefined) {
+      updates.push(`notes = $${paramIdx++}`);
+      params.push(preferences.notes);
+    }
+
+    if (updates.length === 0) {
+      return res.status(400).json({ error: 'No valid fields to update.' });
+    }
+
+    params.push(id); // Last param is the ID for WHERE clause
+    const sql = `UPDATE clients SET ${updates.join(', ')} WHERE id = $${paramIdx}`;
+    await db.query(sql, params);
+
+    // Return updated row
+    const { rows } = await db.query('SELECT * FROM clients WHERE id = $1', [id]);
+    res.json({ success: true, data: rows[0] });
+  } catch (err) {
+    console.error('Update Client Error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.post('/api/clients', async (req, res) => {
   const { name, phone, level, lastVisit, img, status, notes } = req.body;
   const id = Date.now().toString();
@@ -283,7 +371,15 @@ app.post('/api/appointments', async (req, res) => {
       [date, time]
     );
 
+    console.log(`[DEBUG] Booking Check: Date=${date}, Time=${time}, Found=${existingRows.length}`);
+    console.log('[DEBUG] Incoming Appointment Payload:', {
+      clientName,
+      serviceId,
+      clientId: req.body.clientId,
+    });
+
     if (existingRows.length > 0) {
+      console.log('[DEBUG] Conflict found!');
       return res.status(409).json({ error: 'Horário já reservado por outro cliente.' });
     }
 
@@ -307,10 +403,21 @@ app.post('/api/appointments', async (req, res) => {
     }
 
     // Insert
-    const id = Date.now().toString();
+    const id = Date.now().toString(); // clientId is passed in body
     const sql =
-      'INSERT INTO appointments (id, clientName, serviceId, date, time, status, price, photoUrl, notes) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)';
-    const params = [id, clientName, serviceId, date, time, status, price, photoUrl, notes];
+      'INSERT INTO appointments (id, clientName, serviceId, date, time, status, price, photoUrl, notes, clientId) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)';
+    const params = [
+      id,
+      clientName,
+      serviceId,
+      date,
+      time,
+      status,
+      price,
+      photoUrl,
+      notes,
+      req.body.clientId,
+    ];
 
     await db.query(sql, params);
     res.json({
@@ -320,6 +427,18 @@ app.post('/api/appointments', async (req, res) => {
   } catch (e) {
     console.error(e);
     return res.status(400).json({ error: 'Erro ao validar/salvar agendamento: ' + e.message });
+  }
+});
+
+// Clear All Appointments (Reset)
+app.delete('/api/appointments', async (req, res) => {
+  try {
+    await db.query('DELETE FROM appointments');
+    console.log('🗑️ [API] All appointments deleted by request.');
+    res.json({ message: 'Agenda limpa com sucesso.' });
+  } catch (err) {
+    console.error('❌ Error clearing appointments:', err);
+    res.status(500).json({ error: err.message });
   }
 });
 

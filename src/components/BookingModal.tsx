@@ -14,7 +14,7 @@ import {
   Crown,
   Search,
 } from 'lucide-react';
-import { ServiceItem, BookingData } from '../types';
+import { ServiceItem, BookingData, Appointment } from '../types';
 import { PromoBadge } from './ui/PromoBadge';
 import { TicketCard } from './ui/TicketCard';
 import { ServiceCard } from './ui/ServiceCard';
@@ -25,6 +25,7 @@ interface BookingModalProps {
   onSubmit?: (data: BookingData) => void;
   initialData?: Partial<BookingData>;
   services: ServiceItem[];
+  appointments?: Appointment[];
 }
 
 const TIME_SLOTS = ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
@@ -51,6 +52,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   onSubmit,
   initialData,
   services,
+  appointments = [],
 }) => {
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
@@ -65,6 +67,15 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   const dateInputRef = useRef<HTMLInputElement>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Helper to check blocked slots
+  const getOccupiedSlots = (date: string) => {
+    return appointments
+      .filter(app => app.date === date && app.status !== 'cancelled')
+      .map(app => app.time);
+  };
+
+  const occupiedSlots = getOccupiedSlots(formData.date);
+
   // Initialize data
   useEffect(() => {
     if (isOpen) {
@@ -78,7 +89,8 @@ export const BookingModal: React.FC<BookingModalProps> = ({
       }));
       setStep(1);
     }
-  }, [isOpen, initialData, services]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -125,22 +137,26 @@ export const BookingModal: React.FC<BookingModalProps> = ({
     window.open(`https://wa.me/55${formData.phone.replace(/\D/g, '')}?text=${msg}`, '_blank');
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
+
+    try {
       if (onSubmit) {
-        onSubmit(formData);
+        console.log('[BookingModal] Submitting Payload:', formData);
+        await onSubmit(formData);
       }
+
+      // Only proceed on success
       setIsLoading(false);
       setStep(4); // Success step
 
-      // Auto-send WhatsApp message
-      // Small timeout to allow state updates and avoid browser blocking immediate popups in some cases
-      setTimeout(() => {
-        sendWhatsAppMessage();
-      }, 500);
-    }, 1500);
+      // Removed Auto-send WhatsApp message to allow user to see the ticket
+    } catch (error) {
+      console.error('Booking failed:', error);
+      setIsLoading(false);
+      // Simple alert for now - could be a toast if available
+      alert('Ops! Horário indisponível ou erro ao agendar. Tente outro horário.');
+    }
   };
 
   const formatPrice = (value: number) =>
@@ -277,20 +293,26 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                   Horário de Embarque
                 </label>
                 <div className="grid grid-cols-4 gap-3">
-                  {TIME_SLOTS.map(time => (
-                    <button
-                      key={time}
-                      onClick={() => setFormData({ ...formData, time })}
-                      className={`py-3 rounded-lg text-sm font-bold font-mono transition-all duration-300 border
-                             ${
-                               formData.time === time
-                                 ? 'bg-neon-yellow border-neon-yellow text-black shadow-[0_0_10px_rgba(234,179,8,0.3)] scale-105'
-                                 : 'bg-[#1a1a1a] border-gray-800 text-gray-400 hover:border-gray-600 hover:text-white'
-                             }`}
-                    >
-                      {time}
-                    </button>
-                  ))}
+                  {TIME_SLOTS.map(time => {
+                    const isOccupied = occupiedSlots.includes(time);
+                    return (
+                      <button
+                        key={time}
+                        disabled={isOccupied}
+                        onClick={() => setFormData({ ...formData, time })}
+                        className={`py-3 rounded-lg text-sm font-bold font-mono transition-all duration-300 border
+                               ${
+                                 isOccupied
+                                   ? 'bg-red-900/10 border-red-900/30 text-gray-600 opacity-50 cursor-not-allowed decoration-line-through'
+                                   : formData.time === time
+                                   ? 'bg-neon-yellow border-neon-yellow text-black shadow-[0_0_10px_rgba(234,179,8,0.3)] scale-105'
+                                   : 'bg-[#1a1a1a] border-gray-800 text-gray-400 hover:border-gray-600 hover:text-white'
+                               }`}
+                      >
+                        {time}
+                      </button>
+                    );
+                  })}
                 </div>
                 {!formData.time && formData.date && (
                   <p className="text-xs text-red-500 mt-2 animate-pulse">* Selecione um horário</p>
@@ -372,7 +394,6 @@ export const BookingModal: React.FC<BookingModalProps> = ({
           )}
 
           {/* STEP 4: CONFIRMATION (Ticket) */}
-          {/* STEP 4: CONFIRMATION (Ticket) */}
           {step === 4 && (
             <div className="flex flex-col items-center justify-between h-full py-2 animate-[popIn_0.5s_cubic-bezier(0.175,0.885,0.32,1.275)]">
               {/* Top Content Group */}
@@ -423,15 +444,6 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                 <h2 className="text-2xl font-black font-graffiti text-transparent bg-clip-text bg-gradient-to-r from-[#AA8238] via-[#F4D079] to-[#866223] mb-1 drop-shadow-sm text-center shrink-0 leading-none">
                   RESERVA CONFIRMADA!
                 </h2>
-
-                <div className="mb-2 flex justify-center w-full shrink-0">
-                  <button
-                    onClick={sendWhatsAppMessage}
-                    className="text-[10px] text-neon-yellow hover:text-white underline decoration-dashed underline-offset-4 flex items-center gap-1.5"
-                  >
-                    <span>Não recebeu? Reenviar no WhatsApp</span>
-                  </button>
-                </div>
               </div>
 
               {/* Ticket Stub Visual - Main Focus */}
@@ -445,13 +457,23 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                 />
               </div>
 
-              {/* Close Button */}
-              <button
-                onClick={onClose}
-                className="w-full max-w-sm bg-gradient-to-b from-[#F4D079] via-[#cfab59] to-[#AA8238] text-[#1a150c] font-black uppercase tracking-widest py-3 rounded-xl shadow-[0_4px_15px_rgba(234,179,8,0.2)] hover:shadow-[0_6px_20px_rgba(234,179,8,0.4)] hover:brightness-110 active:scale-[0.98] transition-all duration-300 border-t border-[#fff]/40 text-sm shrink-0"
-              >
-                Fechar Bilheteria
-              </button>
+              {/* Action Buttons */}
+              <div className="w-full max-w-sm space-y-3 shrink-0">
+                <button
+                  onClick={sendWhatsAppMessage}
+                  className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white font-black uppercase tracking-widest py-3 rounded-xl shadow-[0_0_15px_rgba(37,211,102,0.4)] hover:shadow-[0_0_25px_rgba(37,211,102,0.6)] active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-2"
+                >
+                  <Smartphone size={20} />
+                  Enviar no WhatsApp
+                </button>
+
+                <button
+                  onClick={onClose}
+                  className="w-full bg-gradient-to-b from-[#F4D079] via-[#cfab59] to-[#AA8238] text-[#1a150c] font-black uppercase tracking-widest py-3 rounded-xl shadow-[0_4px_15px_rgba(234,179,8,0.2)] hover:shadow-[0_6px_20px_rgba(234,179,8,0.4)] hover:brightness-110 active:scale-[0.98] transition-all duration-300 border-t border-[#fff]/40 text-sm"
+                >
+                  Concluir
+                </button>
+              </div>
             </div>
           )}
         </div>
