@@ -63,7 +63,8 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
       setSelectedCombo(combo);
     } else {
       // Simple fallback if not a combo found in mocks
-      onOpenBooking();
+      // Assume it is a service ID
+      onOpenBooking({ serviceId: id });
     }
   };
 
@@ -227,7 +228,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
               {upcoming.map(app => (
                 <div
                   key={app.id}
-                  className="min-w-[85%] sm:min-w-[350px] snap-center relative flex justify-center py-4 shrink-0 transition-transform"
+                  className="w-[85vw] sm:w-[350px] snap-center relative flex justify-center py-4 shrink-0 transition-transform"
                 >
                   <TicketCard
                     data={{
@@ -334,7 +335,10 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
             </h2>
           </div>
 
-          <ServiceShowcase services={services} onBookService={s => onOpenBooking()} />
+          <ServiceShowcase
+            services={services}
+            onBookService={s => onOpenBooking({ serviceId: s.id })}
+          />
         </section>
 
         {/* 4. LOYALTY & UPCOMING (Grid) */}

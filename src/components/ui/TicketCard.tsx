@@ -154,9 +154,32 @@ export const TicketCard: React.FC<TicketCardProps> = ({
                     <span className="text-[10px] font-black text-[#2a1e0b] uppercase tracking-[0.2em] mb-1 drop-shadow-sm">
                       Serviço
                     </span>
-                    <h3 className="text-lg font-black text-[#fff] uppercase tracking-wider drop-shadow-[0_2px_2px_rgba(0,0,0,0.9)] text-shadow-gold text-right">
-                      {service?.name || 'Corte'}
-                    </h3>
+                    {(() => {
+                      const name = service?.name || 'Corte';
+                      const isLong = name.length > 15 || name.includes(' + ');
+
+                      if (isLong) {
+                        const parts = name.split(name.includes(' + ') ? ' + ' : ' ');
+                        return (
+                          <div className="flex flex-col items-end leading-[0.9] gap-0.5">
+                            {parts.map((part, i) => (
+                              <h3
+                                key={i}
+                                className="text-sm font-black text-[#fff] uppercase tracking-wider drop-shadow-[0_2px_2px_rgba(0,0,0,0.9)] text-shadow-gold text-right"
+                              >
+                                {part}
+                              </h3>
+                            ))}
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <h3 className="text-lg font-black text-[#fff] uppercase tracking-wider drop-shadow-[0_2px_2px_rgba(0,0,0,0.9)] text-shadow-gold text-right">
+                          {name}
+                        </h3>
+                      );
+                    })()}
                   </div>
                 </div>
 
