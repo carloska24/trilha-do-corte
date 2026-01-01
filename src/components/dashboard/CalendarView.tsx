@@ -50,12 +50,14 @@ export const CalendarView: React.FC = () => {
         date: data.date,
         time: data.time,
         status: 'pending' as const,
-        price: parseFloat(
-          services
-            .find(s => s.id === data.serviceId)
-            ?.price.replace('R$', '')
-            .replace(',', '.') || '0'
-        ),
+        price:
+          services.find(s => s.id === data.serviceId)?.priceValue ||
+          parseFloat(
+            services
+              .find(s => s.id === data.serviceId)
+              ?.price.replace('R$', '')
+              .replace(',', '.') || '0'
+          ),
         clientId: foundClient?.id, // Link to existing client if found
       };
 
@@ -210,7 +212,7 @@ export const CalendarView: React.FC = () => {
               ...app,
               clientName,
               serviceId: selectedService,
-              date: quickAddSlot.date.toISOString(),
+              date: getLocalISODate(quickAddSlot.date),
               time: quickAddSlot.time,
             }
           : app
@@ -222,7 +224,7 @@ export const CalendarView: React.FC = () => {
         await api.updateAppointment(editId, {
           clientName,
           serviceId: selectedService,
-          date: quickAddSlot.date.toISOString(),
+          date: getLocalISODate(quickAddSlot.date),
           time: quickAddSlot.time,
         });
         showToast('Agendamento atualizado!');
@@ -238,7 +240,7 @@ export const CalendarView: React.FC = () => {
         name: clientName,
         phone: '',
         serviceId: selectedService,
-        date: quickAddSlot.date.toISOString(),
+        date: getLocalISODate(quickAddSlot.date),
         time: quickAddSlot.time,
       };
       const success = await onNewAppointment(bookingData);
