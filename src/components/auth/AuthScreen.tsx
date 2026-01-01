@@ -19,15 +19,27 @@ interface AuthScreenProps {
   type: 'client' | 'barber';
   onLoginSuccess: (userData?: { name: string; photoUrl?: string; emailOrPhone: string }) => void;
   onGoBack: () => void;
+  initialData?: {
+    name?: string;
+    phone?: string;
+  };
 }
 
-export const AuthScreen: React.FC<AuthScreenProps> = ({ type, onLoginSuccess, onGoBack }) => {
-  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+export const AuthScreen: React.FC<AuthScreenProps> = ({
+  type,
+  onLoginSuccess,
+  onGoBack,
+  initialData,
+}) => {
+  // If initialData exists (from invite link), default to REGISTER mode
+  const [authMode, setAuthMode] = useState<'login' | 'register'>(
+    initialData?.name || initialData?.phone ? 'register' : 'login'
+  );
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
-    name: '',
-    phone: '',
+    name: initialData?.name ? decodeURIComponent(initialData.name) : '',
+    phone: initialData?.phone ? decodeURIComponent(initialData.phone) : '',
     email: '',
     password: '',
     adminCode: '', // Apenas para barbeiros (Desativado temporariamente)

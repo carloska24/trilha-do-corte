@@ -68,14 +68,27 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
     setIsGeneratingDesc(false);
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData(prev => ({ ...prev, image: reader.result as string }));
-      };
-      reader.readAsDataURL(file);
+      const formData = new FormData();
+      formData.append('image', file);
+
+      try {
+        const res = await fetch('http://localhost:3000/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+        const data = await res.json();
+
+        if (data.url) {
+          setFormData(prev => ({ ...prev, image: data.url }));
+        } else {
+          console.error('Upload failed:', data.error);
+        }
+      } catch (error) {
+        console.error('Error uploading image:', error);
+      }
     }
   };
 

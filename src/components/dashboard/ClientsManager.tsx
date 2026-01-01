@@ -5,6 +5,8 @@ import { generateId } from '../../utils';
 import { useData } from '../../contexts/DataContext';
 import { useOutletContext } from 'react-router-dom';
 
+import { api } from '../../services/api';
+
 interface DashboardOutletContext {
   setSelectedClient: (client: Client) => void;
 }
@@ -24,26 +26,46 @@ export const ClientsManager: React.FC = () => {
     notes: '',
   });
 
-  const handleSaveNewClient = () => {
+  const handleSaveNewClient = async () => {
     if (!newClientData.name || !newClientData.phone) {
       alert('Nome e Telefone são obrigatórios!');
       return;
     }
 
-    const newClient: Client = {
-      id: generateId(),
+    const tempId = generateId();
+    const newClientPayload = {
       name: newClientData.name,
       phone: newClientData.phone,
       level: 1,
       lastVisit: 'Nunca',
       img: null,
-      status: 'new',
+      status: 'new' as const,
       notes: newClientData.notes,
     };
 
-    onAddClient(newClient);
+    // Optimistic UI Update
+    const optimisticClient = { ...newClientPayload, id: tempId };
+    onAddClient(optimisticClient);
     setIsAddModalOpen(false);
     setNewClientData({ name: '', phone: '', notes: '' });
+
+    // Backend Call
+    try {
+      const created = await api.createClient(newClientPayload);
+      if (created) {
+        // Replace temp ID with real ID in context (if needed)
+        // For simple arrays, we might just reload or update the item
+        // But for now, ensuring it creates on backend is the priority
+        // Ideally we update the specific item in state with the real ID
+        const updated = clients.map(c => (c.id === tempId ? created : c));
+        if (clients.find(c => c.id === tempId)) {
+          updateClients([...clients.filter(c => c.id !== tempId), created]);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to create client:', error);
+      alert('Erro ao salvar cliente no servidor. Verifique sua conexão.');
+    }
   };
 
   const filteredClients = clients.filter(client => {
@@ -254,9 +276,38 @@ export const ClientsManager: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* ARROW ICON (Right Side) */}
-                  <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-zinc-500 group-hover:bg-neon-yellow group-hover:text-black transition-all">
-                    <ChevronRight size={18} strokeWidth={3} />
+                  {/* ACTIONS GROUP */}
+                  <div className="flex items-center gap-2">
+                    {/* Invite Button (Only if phone exists and is likely mobile) */}
+                    {client.phone && client.phone.length > 8 && (
+                      <button
+                        onClick={e => {
+                          e.stopPropagation();
+                          // Generate Invite Link
+                          const baseUrl = window.location.origin;
+                          const inviteLink = `${baseUrl}/login?type=client&name=${encodeURIComponent(
+                            client.name
+                          )}&phone=${encodeURIComponent(client.phone)}`;
+                          const message = `Olá ${client.name}! 💈\n\nFinalize seu cadastro no App da Trilha do Corte para agendar seus horários online:\n\n${inviteLink}`;
+
+                          // Open WhatsApp
+                          const cleanPhone = client.phone.replace(/\D/g, '');
+                          const waUrl = `https://wa.me/55${cleanPhone}?text=${encodeURIComponent(
+                            message
+                          )}`;
+                          window.open(waUrl, '_blank');
+                        }}
+                        className="w-8 h-8 rounded-lg bg-green-500/10 border border-green-500/30 flex items-center justify-center text-green-500 hover:bg-green-500 hover:text-black transition-all"
+                        title="Enviar Convite"
+                      >
+                        <MessageCircle size={16} />
+                      </button>
+                    )}
+
+                    {/* ARROW ICON */}
+                    <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-zinc-500 group-hover:bg-neon-yellow group-hover:text-black transition-all">
+                      <ChevronRight size={18} strokeWidth={3} />
+                    </div>
                   </div>
                 </div>
               </div>

@@ -39,24 +39,40 @@ export const CalendarView: React.FC = () => {
     useData();
   const { setSelectedClient } = useOutletContext<DashboardOutletContext>();
 
-  const onNewAppointment = (data: BookingData) => {
-    // Basic implementation for adding appointment - in a real app this would generate ID etc.
-    // For now we assume the parent usually handled it.
-    // Let's create a partial appointment object compatible with the type
-    const newApp: Appointment = {
-      id: Math.random().toString(36).substr(2, 9),
-      ...data,
-      status: 'pending', // Default status
-      clientName: data.name,
-      price: parseFloat(
-        services
-          .find(s => s.id === data.serviceId)
-          ?.price.replace('R$', '')
-          .replace(',', '.') || '0'
-      ),
-      photoUrl: undefined, // Placeholder
-    };
-    updateAppointments([...appointments, newApp]);
+  const onNewAppointment = async (data: BookingData) => {
+    try {
+      // Find client ID if exists to link profile
+      const foundClient = clients.find(c => c.name.toLowerCase() === data.name.toLowerCase());
+
+      const payload = {
+        clientName: data.name,
+        serviceId: data.serviceId,
+        date: data.date,
+        time: data.time,
+        status: 'pending' as const,
+        price: parseFloat(
+          services
+            .find(s => s.id === data.serviceId)
+            ?.price.replace('R$', '')
+            .replace(',', '.') || '0'
+        ),
+        clientId: foundClient?.id, // Link to existing client if found
+      };
+
+      const created = await api.createAppointment(payload);
+
+      if (created) {
+        updateAppointments([...appointments, created]);
+        return true;
+      } else {
+        showToast('Erro ao criar na API');
+        return false;
+      }
+    } catch (error) {
+      console.error('Error creating appointment:', error);
+      showToast('Erro de conexão');
+      return false;
+    }
   };
 
   const onSelectClient = (clientName: string) => {
@@ -68,7 +84,7 @@ export const CalendarView: React.FC = () => {
         phone: 'Sem cadastro',
         level: 1,
         lastVisit: 'Hoje',
-        img: undefined,
+        img: null,
         status: 'new',
         notes: 'Agendamento rápido.',
       } as Client);
@@ -85,7 +101,8 @@ export const CalendarView: React.FC = () => {
   // Quick Add State with Context
   const [quickAddSlot, setQuickAddSlot] = useState<{ date: Date; time: string } | null>(null);
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
-  const [isServiceListOpen, setIsServiceListOpen] = useState(false); // Custom Dropdown State
+  const [isServiceListOpen, setIsServiceListOpen] = useState(false);
+  const [isTimeListOpen, setIsTimeListOpen] = useState(false); // Custom Dropdown State
 
   // Export Modal State
   const [isExportOpen, setIsExportOpen] = useState(false);
@@ -224,8 +241,10 @@ export const CalendarView: React.FC = () => {
         date: quickAddSlot.date.toISOString(),
         time: quickAddSlot.time,
       };
-      onNewAppointment(bookingData);
-      showToast('Agendamento criado!');
+      const success = await onNewAppointment(bookingData);
+      if (success) {
+        showToast('Agendamento criado!');
+      }
     }
 
     setClientName('');
@@ -351,7 +370,9 @@ export const CalendarView: React.FC = () => {
   // Helper to get service details
   const getServiceDetails = (id: string) => {
     const s = services.find(serv => serv.id === id) || ALL_SERVICES.find(serv => serv.id === id);
-    return s || { name: 'Serviço', category: 'Geral', icon: 'scissors', price: 'R$-' };
+    return (
+      s || { name: 'Serviço', category: 'Geral', icon: 'scissors', price: 'R$-', duration: 30 }
+    );
   };
 
   // CALENDAR GRID LOGIC
@@ -948,9 +969,10 @@ export const CalendarView: React.FC = () => {
                             const isPaid = app.status === 'confirmed';
 
                             const startMinutes = parseInt(app.time.split(':')[1]);
-                            const duration = service.duration;
+                            const duration = service.duration || 30;
                             const top = (startMinutes / 60) * 110; // 110px per hour
-                            const height = (duration / 60) * 110;
+                            // Fix: Ensure minimum height of 80px so content doesn't break for short services
+                            const height = Math.max((duration / 60) * 110, 80);
 
                             return (
                               <div
@@ -973,7 +995,7 @@ export const CalendarView: React.FC = () => {
                                     <button
                                       onClick={e => {
                                         e.stopPropagation();
-                                        handleDelete(app.id);
+                                        handleCancelAppointment(app.id, e);
                                         setSwipedAppId(null);
                                       }}
                                       className="w-10 h-10 rounded-full bg-red-500/10 border border-red-500/50 flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-colors"
@@ -983,7 +1005,7 @@ export const CalendarView: React.FC = () => {
                                     <button
                                       onClick={e => {
                                         e.stopPropagation();
-                                        handleEdit(app);
+                                        handleEditAppointment(app, e);
                                         setSwipedAppId(null);
                                       }}
                                       className="w-10 h-10 rounded-full bg-blue-500/10 border border-blue-500/50 flex items-center justify-center text-blue-500 hover:bg-blue-500 hover:text-white transition-colors"
@@ -1123,15 +1145,23 @@ export const CalendarView: React.FC = () => {
                         ) : (
                           // Empty Slot Interaction (Ghost Slot)
                           <div
-                            onClick={() => handleSlotClick(hour)}
-                            className="w-full h-full flex items-center justify-center rounded-xl border border-dashed border-gray-800/50 hover:border-gray-600 hover:bg-[#151515] transition-all cursor-pointer group/empty opacity-50 hover:opacity-100"
+                            onClick={() => {
+                              if (!isPast) handleSlotClick(hour);
+                            }}
+                            className={`w-full h-full flex items-center justify-center rounded-xl border border-dashed border-gray-800/50 transition-all group/empty ${
+                              isPast
+                                ? 'cursor-not-allowed opacity-30 bg-white/5'
+                                : 'hover:border-gray-600 hover:bg-[#151515] hover:opacity-100 cursor-pointer opacity-50'
+                            }`}
                           >
-                            <div className="flex items-center gap-2 text-gray-700 group-hover/empty:text-gray-400 transition-colors">
-                              <Plus size={18} />
-                              <span className="text-[10px] md:text-xs font-black uppercase tracking-widest hidden group-hover/empty:inline-block">
-                                Disponível
-                              </span>
-                            </div>
+                            {!isPast && (
+                              <div className="flex items-center gap-2 text-gray-700 group-hover/empty:text-gray-400 transition-colors">
+                                <Plus size={18} />
+                                <span className="text-[10px] md:text-xs font-black uppercase tracking-widest hidden group-hover/empty:inline-block">
+                                  Disponível
+                                </span>
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
@@ -1167,38 +1197,107 @@ export const CalendarView: React.FC = () => {
             <div className="space-y-5">
               <div className="bg-[#151515] p-4 rounded-xl border border-gray-800 flex justify-between items-center gap-4">
                 <div className="flex-1">
-                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-2">
                     Data
                   </label>
-                  <input
-                    type="date"
-                    style={{ colorScheme: 'dark' }}
-                    value={quickAddSlot ? getLocalISODate(quickAddSlot.date) : ''}
-                    onChange={e => {
-                      if (e.target.valueAsDate && quickAddSlot) {
-                        // Correct date timezone issue by using valueAsDate or manual parsing if needed,
-                        // but simple string split is safer for local date input
-                        const [y, m, d] = e.target.value.split('-').map(Number);
-                        const newDate = new Date(y, m - 1, d);
-                        setQuickAddSlot({ ...quickAddSlot, date: newDate });
-                      }
-                    }}
-                    className="bg-transparent text-white font-bold w-full focus:outline-none focus:text-neon-yellow transition-colors cursor-pointer"
-                  />
+                  {/* CUSTOM DATE SELECTOR */}
+                  <div className="flex items-center justify-between bg-[#0a0a0a] border border-gray-800 rounded-xl p-2">
+                    <button
+                      onClick={() => {
+                        if (quickAddSlot) {
+                          const d = new Date(quickAddSlot.date);
+                          d.setDate(d.getDate() - 1);
+                          setQuickAddSlot({ ...quickAddSlot, date: d });
+                        }
+                      }}
+                      className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+                    >
+                      <ChevronLeft size={16} />
+                    </button>
+
+                    <span className="text-white font-bold text-sm uppercase">
+                      {quickAddSlot?.date
+                        .toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
+                        .replace('.', '')}
+                    </span>
+
+                    <button
+                      onClick={() => {
+                        if (quickAddSlot) {
+                          const d = new Date(quickAddSlot.date);
+                          d.setDate(d.getDate() + 1);
+                          setQuickAddSlot({ ...quickAddSlot, date: d });
+                        }
+                      }}
+                      className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+                    >
+                      <ChevronRight size={16} />
+                    </button>
+                  </div>
                 </div>
-                <div className="text-right w-24">
+
+                <div className="text-right w-32">
                   <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">
                     Horário
                   </label>
-                  <input
-                    type="time"
-                    style={{ colorScheme: 'dark' }}
-                    value={quickAddSlot?.time || ''}
-                    onChange={e => {
-                      if (quickAddSlot) setQuickAddSlot({ ...quickAddSlot, time: e.target.value });
-                    }}
-                    className="bg-transparent text-neon-yellow font-mono font-bold text-lg text-right w-full focus:outline-none cursor-pointer"
-                  />
+                  {/* CUSTOM TIME SELECTOR */}
+                  <div className="relative">
+                    {/* Trigger Button */}
+                    <button
+                      onClick={() => setIsTimeListOpen(!isTimeListOpen)}
+                      className="w-full bg-transparent text-neon-yellow font-mono font-bold text-2xl text-right focus:outline-none flex items-center justify-end gap-2"
+                    >
+                      {quickAddSlot?.time || '--:--'}
+                      <ChevronLeft
+                        size={16}
+                        className={`transition-transform duration-300 ${
+                          isTimeListOpen ? 'rotate-90' : '-rotate-90'
+                        }`}
+                      />
+                    </button>
+
+                    {/* Dropdown Grid */}
+                    {isTimeListOpen && (
+                      <div className="absolute top-full right-0 mt-2 bg-[#0a0a0a] border border-gray-700 rounded-xl overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.9)] z-50 w-48 max-h-48 overflow-y-auto custom-scrollbar p-1">
+                        <div className="grid grid-cols-2 gap-1">
+                          {Array.from(
+                            {
+                              length:
+                                (shopSettings.endHour - shopSettings.startHour) *
+                                (60 / (shopSettings.slotInterval || 60)),
+                            },
+                            (_, i) => {
+                              const totalMinutes =
+                                shopSettings.startHour * 60 + i * (shopSettings.slotInterval || 60);
+                              const h = Math.floor(totalMinutes / 60);
+                              const m = totalMinutes % 60;
+                              const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(
+                                2,
+                                '0'
+                              )}`;
+                              return (
+                                <button
+                                  key={timeStr}
+                                  onClick={() => {
+                                    if (quickAddSlot)
+                                      setQuickAddSlot({ ...quickAddSlot, time: timeStr });
+                                    setIsTimeListOpen(false);
+                                  }}
+                                  className={`px-2 py-2 text-sm font-mono font-bold rounded-lg transition-colors ${
+                                    quickAddSlot?.time === timeStr
+                                      ? 'bg-neon-yellow text-black'
+                                      : 'text-gray-400 hover:text-white hover:bg-white/10'
+                                  }`}
+                                >
+                                  {timeStr}
+                                </button>
+                              );
+                            }
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 

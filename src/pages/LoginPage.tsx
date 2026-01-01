@@ -9,6 +9,8 @@ export const LoginPage: React.FC = () => {
   const [searchParams] = useSearchParams();
 
   const type = (searchParams.get('type') as 'client' | 'barber') || 'client';
+  const name = searchParams.get('name') || undefined;
+  const phone = searchParams.get('phone') || undefined;
 
   const handleLoginSuccess = (userData: any) => {
     // Map userData to ClientProfile or BarberProfile
@@ -47,6 +49,11 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <AuthScreen type={type} onLoginSuccess={handleLoginSuccess} onGoBack={() => navigate('/')} />
+    <AuthScreen
+      type={type}
+      onLoginSuccess={handleLoginSuccess}
+      onGoBack={() => navigate('/')}
+      initialData={{ name, phone }}
+    />
   );
 };

@@ -141,16 +141,22 @@ export const ServiceConfig: React.FC = () => {
     setIsAddModalOpen(false);
   };
 
-  const handleDelete = (id: string, e: React.MouseEvent) => {
+  const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (window.confirm('Tem certeza que deseja remover este serviço?')) {
+      // Optimistic Update
       const updated = services.filter(s => s.id !== id);
       onUpdateServices(updated);
 
-      // Backend call...
-      import('../../services/api').then(({ api }) => {
-        api.deleteService(id);
-      });
+      // Backend Call
+      try {
+        const { api } = await import('../../services/api');
+        await api.deleteService(id);
+      } catch (error) {
+        console.error('Failed to delete service:', error);
+        alert('Erro ao excluir do servidor.');
+        // Revert if needed (optional)
+      }
     }
   };
 

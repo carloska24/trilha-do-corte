@@ -119,26 +119,28 @@ export const BookingModal: React.FC<BookingModalProps> = ({
     const formattedDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
     const mapLink = 'https://bit.ly/44RCRah';
 
-    // Fully percent-encoded emojis for universal compatibility
-    // ⚡ = %E2%9A%A1 | 👤 = %F0%9F%91%A4 | 🎫 = %F0%9F%8E%AB | ✅ = %E2%9C%85
-    // ✂️ = %E2%9C%82%EF%B8%8F | 📅 = %F0%9F%93%85 | ⏰ = %E2%8F%B0
-    // 📍 = %F0%9F%93%8D | 🗺️ = %F0%9F%97%BA%EF%B8%8F | ⚠️ = %E2%9A%A0%EF%B8%8F | 🚀 = %F0%9F%9A%80
+    // Using direct emojis to avoid encoding issues (The "losangulos")
+    // Plug 🔌 | Rocket 🚀 | Folder 📂 | Check ✅
 
     const msg =
-      `%E2%9A%A1%20*TRILHA%20DO%20CORTE*%20%E2%9A%A1%0A%0A` +
-      `%F0%9F%91%A4%20*Passageiro:*%20${encodeURIComponent(formData.name)}%0A` +
-      `%F0%9F%8E%AB%20*Status:*%20CONFIRMADO%20%E2%9C%85%0A%0A` +
-      `%E2%9C%82%EF%B8%8F%20*Servi%C3%A7o:*%20${encodeURIComponent(
-        selectedService?.name || ''
-      )}%0A` +
-      `%F0%9F%93%85%20*Data:*%20${encodeURIComponent(formattedDate)}%0A` +
-      `%E2%8F%B0%20*Hor%C3%A1rio:*%20${encodeURIComponent(formData.time)}%0A` +
-      `%F0%9F%93%8D%20*Unidade:*%20Jardim%20S%C3%A3o%20Marcos%0A` +
-      `%F0%9F%97%BA%EF%B8%8F%20*Localiza%C3%A7%C3%A3o:*%20${encodeURIComponent(mapLink)}%0A%0A` +
-      `%E2%9A%A0%EF%B8%8F%20_Chegue%20com%2010min%20de%20anteced%C3%AAncia%20para%20o%20check-in._%0A` +
-      `%F0%9F%9A%80%20_Prepare-se%20para%20o%20upgrade._`;
+      `💈 *TRILHA DO CORTE* 💈\n\n` +
+      `👤 *Passageiro:* ${formData.name}\n` +
+      `✅ *Status:* CONFIRMADO\n\n` +
+      `✂️ *Serviço:* ${selectedService?.name || ''}\n` +
+      `📅 *Data:* ${formattedDate}\n` +
+      `⏰ *Horário:* ${formData.time}\n` +
+      `🏢 *Unidade:* Jardim São Marcos\n` +
+      `📍 *Localização:* ${mapLink}\n\n` +
+      `⚠️ _Chegue com 10min de antecedência para o check-in._\n` +
+      `✨ _Prepare-se para o upgrade._`;
 
-    window.open(`https://wa.me/55${formData.phone.replace(/\D/g, '')}?text=${msg}`, '_blank');
+    // Encode the entire message at once ensures correct UTF-8 handling
+    const encodedMsg = encodeURIComponent(msg);
+
+    window.open(
+      `https://wa.me/55${formData.phone.replace(/\D/g, '')}?text=${encodedMsg}`,
+      '_blank'
+    );
   };
 
   const handleSubmit = async () => {

@@ -76,6 +76,9 @@ html {
 /* Global Barber Pole Background */
 body {
   background-color: #050505;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 
   /* HIGH IMPACT TEXTURE: Carbon Grid */
   background-image:
