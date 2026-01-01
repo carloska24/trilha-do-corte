@@ -1,3 +1,4 @@
+// MARKER_SEARCH_TEST
 import React, { useState, useEffect } from 'react';
 import { Appointment, BookingData, Service, Client } from '../../types';
 import { SERVICES as ALL_SERVICES } from '../../constants';
@@ -76,12 +77,15 @@ export const CalendarView: React.FC = () => {
 
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [longPressedId, setLongPressedId] = useState<string | null>(null);
+  const [swipedAppId, setSwipedAppId] = useState<string | null>(null); // New Swipe State
+  const [touchStartX, setTouchStartX] = useState<number | null>(null); // Swipe detection
   const [activeTab, setActiveTab] = useState<'daily' | 'weekly' | 'monthly' | 'config'>('daily');
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
   // Quick Add State with Context
   const [quickAddSlot, setQuickAddSlot] = useState<{ date: Date; time: string } | null>(null);
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
+  const [isServiceListOpen, setIsServiceListOpen] = useState(false); // Custom Dropdown State
 
   // Export Modal State
   const [isExportOpen, setIsExportOpen] = useState(false);
@@ -147,6 +151,16 @@ export const CalendarView: React.FC = () => {
 
   const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
   const [draggedAppId, setDraggedAppId] = useState<string | null>(null);
+
+  const handleDragStart = (e: React.DragEvent, app: Appointment) => {
+    e.stopPropagation();
+    setDraggedAppId(app.id);
+    setLongPressedId(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedAppId(null);
+  };
 
   const handleMoveAppointment = async (appId: string, newTime: string) => {
     const app = appointments.find(a => a.id === appId);
@@ -837,8 +851,11 @@ export const CalendarView: React.FC = () => {
             {/* Daily Nav */}
             <div className="flex items-center justify-between px-4 md:px-6 py-4 bg-[#151515] border-b border-gray-800 sticky top-0 z-20 shadow-xl">
               <button
-                onClick={() => changeDate(-1)}
-                className="text-gray-400 hover:text-white transition-colors bg-[#0a0a0a] p-2 rounded-lg border border-gray-800"
+                onClick={e => {
+                  e.stopPropagation();
+                  changeDate(-1);
+                }}
+                className="text-gray-400 hover:text-white transition-colors bg-[#0a0a0a] p-2 rounded-lg border border-gray-800 relative z-50"
               >
                 <ChevronLeft size={20} />
               </button>
@@ -860,8 +877,12 @@ export const CalendarView: React.FC = () => {
                 )}
               </div>
               <button
-                onClick={() => changeDate(1)}
-                className="text-gray-400 hover:text-white transition-colors bg-[#0a0a0a] p-2 rounded-lg border border-gray-800"
+                onClick={e => {
+                  e.stopPropagation();
+                  console.log('Next Day Clicked');
+                  changeDate(1);
+                }}
+                className="text-gray-400 hover:text-white transition-colors bg-[#0a0a0a] p-2 rounded-lg border border-gray-800 relative z-50"
               >
                 <ChevronRight size={20} />
               </button>
@@ -926,197 +947,174 @@ export const CalendarView: React.FC = () => {
                             // Mock Payment Status logic (random for display if not real)
                             const isPaid = app.status === 'confirmed';
 
+                            const startMinutes = parseInt(app.time.split(':')[1]);
+                            const duration = service.duration;
+                            const top = (startMinutes / 60) * 110; // 110px per hour
+                            const height = (duration / 60) * 110;
+
                             return (
                               <div
                                 key={app.id}
-                                draggable
-                                onDragStart={() => {
-                                  setDraggedAppId(app.id);
-                                  setLongPressedId(null);
+                                className="absolute left-1 right-1 rounded-2xl shadow-sm select-none"
+                                style={{
+                                  top: `${top}px`,
+                                  height: `${height}px`,
+                                  zIndex: draggedAppId === app.id ? 50 : 10,
                                 }}
-                                onDragEnd={() => setDraggedAppId(null)}
-                                className={`mb-3 last:mb-0 relative group/card-wrapper select-none touch-none
-                                ${draggedAppId === app.id ? 'opacity-40 scale-95 grayscale' : ''}
-                                transition-all duration-200
-                              `}
-                                onContextMenu={e => e.preventDefault()} // Disable native context menu
                               >
-                                {longPressedId === app.id ? (
-                                  /* --- ACTION OVERLAY (Revealed on Long Press) --- */
+                                {/* SWIPE CONTAINER */}
+                                <div className="relative w-full h-full group/card">
+                                  {/* BACK ACTIONS (Revealed on Swipe) */}
                                   <div
-                                    draggable
-                                    onDragStart={e => {
-                                      // Allow dragging from the overlay
-                                      e.stopPropagation();
-                                      setDraggedAppId(app.id);
-                                      setLongPressedId(null);
-                                    }}
-                                    onDragEnd={() => setDraggedAppId(null)}
-                                    className="absolute inset-0 z-20 bg-black/90 backdrop-blur-sm rounded-2xl flex items-center justify-around p-2 animate-[fadeIn_0.2s_ease-out] border border-gray-800 cursor-grab active:cursor-grabbing"
+                                    className={`absolute inset-0 flex items-center justify-start gap-3 pl-4 bg-zinc-900/50 rounded-2xl border border-white/5 z-0 transition-opacity duration-300 ${
+                                      swipedAppId === app.id ? 'opacity-100' : 'opacity-0'
+                                    }`}
                                   >
                                     <button
                                       onClick={e => {
                                         e.stopPropagation();
-                                        handleCancelAppointment(app.id, e);
-                                        setLongPressedId(null);
+                                        handleDelete(app.id);
+                                        setSwipedAppId(null);
                                       }}
-                                      className="flex flex-col items-center justify-center gap-1 text-red-500 hover:text-red-400 active:scale-95 transition-all"
+                                      className="w-10 h-10 rounded-full bg-red-500/10 border border-red-500/50 flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-colors"
                                     >
-                                      <div className="w-10 h-10 rounded-full bg-red-900/20 flex items-center justify-center border border-red-900/50 pointer-events-none">
-                                        <Trash2 size={20} />
-                                      </div>
-                                      <span className="text-[9px] font-black uppercase tracking-widest pointer-events-none">
-                                        Cancelar
-                                      </span>
+                                      <Trash2 size={18} />
                                     </button>
-
-                                    <div className="w-[1px] h-10 bg-gray-800"></div>
-
                                     <button
                                       onClick={e => {
                                         e.stopPropagation();
-                                        handleEditAppointment(app, e);
-                                        setLongPressedId(null);
+                                        handleEdit(app);
+                                        setSwipedAppId(null);
                                       }}
-                                      className="flex flex-col items-center justify-center gap-1 text-blue-500 hover:text-blue-400 active:scale-95 transition-all"
+                                      className="w-10 h-10 rounded-full bg-blue-500/10 border border-blue-500/50 flex items-center justify-center text-blue-500 hover:bg-blue-500 hover:text-white transition-colors"
                                     >
-                                      <div className="w-10 h-10 rounded-full bg-blue-900/20 flex items-center justify-center border border-blue-900/50 pointer-events-none">
-                                        <Edit size={20} />
-                                      </div>
-                                      <span className="text-[9px] font-black uppercase tracking-widest pointer-events-none">
-                                        Editar
-                                      </span>
+                                      <Edit size={18} />
                                     </button>
-
-                                    {/* Close Overlay Button */}
-                                    <button
-                                      onClick={e => {
-                                        e.stopPropagation();
-                                        setLongPressedId(null);
-                                      }}
-                                      className="absolute top-1 right-2 text-gray-600 hover:text-white"
-                                    >
-                                      <X size={14} />
-                                    </button>
-
-                                    {/* Drag Hint inside Overlay */}
-                                    <div className="absolute bottom-1 w-full text-center pointer-events-none">
-                                      <div className="w-8 h-1 bg-gray-700 rounded-full mx-auto opacity-50"></div>
-                                    </div>
+                                    {/* Close Swipe Zone */}
+                                    <div
+                                      className="flex-1 h-full"
+                                      onClick={() => setSwipedAppId(null)}
+                                    ></div>
                                   </div>
-                                ) : null}
 
-                                {/* --- MAIN CARD --- */}
-                                <div
-                                  className={`w-full bg-[#151515] border transition-all duration-300 shadow-xl relative rounded-2xl overflow-hidden cursor-grab active:cursor-grabbing
-                                    ${
-                                      longPressedId === app.id
-                                        ? 'opacity-0'
-                                        : 'hover:border-gray-600 border-gray-800'
-                                    }
-                                  `}
-                                  // Long Press Handlers
-                                  onPointerDown={() => {
-                                    if (draggedAppId) return;
-                                    const timer = setTimeout(() => {
-                                      setLongPressedId(app.id);
-                                      if (navigator.vibrate) navigator.vibrate(50);
-                                    }, 600);
-                                    (window as any)._longPressTimer = timer;
-                                  }}
-                                  onPointerUp={() => {
-                                    if ((window as any)._longPressTimer)
-                                      clearTimeout((window as any)._longPressTimer);
-                                  }}
-                                  onPointerLeave={() => {
-                                    if ((window as any)._longPressTimer)
-                                      clearTimeout((window as any)._longPressTimer);
-                                  }}
-                                  onPointerMove={() => {
-                                    if ((window as any)._longPressTimer)
-                                      clearTimeout((window as any)._longPressTimer);
-                                  }}
-                                  onClick={e => {
-                                    if (!longPressedId) onSelectClient(app.clientName);
-                                  }}
-                                >
-                                  {/* Left Status Bar with Glow */}
+                                  {/* MAIN CARD (Draggable / Swipeable) */}
                                   <div
-                                    className={`absolute left-0 top-0 bottom-0 w-1.5 ${
-                                      app.status === 'confirmed'
-                                        ? 'bg-neon-yellow shadow-[0_0_10px_rgba(234,179,8,0.5)]'
-                                        : app.status === 'in_progress'
-                                        ? 'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]'
-                                        : 'bg-zinc-700'
-                                    }`}
-                                  ></div>
+                                    className={`w-full h-full bg-[#151515] border transition-transform duration-300 shadow-xl relative rounded-2xl overflow-hidden cursor-grab active:cursor-grabbing hover:border-gray-600 border-gray-800 z-10`}
+                                    style={{
+                                      transform:
+                                        swipedAppId === app.id
+                                          ? 'translateX(120px)'
+                                          : 'translateX(0)',
+                                    }}
+                                    // TOUCH HANDLERS (Swipe)
+                                    onTouchStart={e => {
+                                      setTouchStartX(e.touches[0].clientX);
+                                    }}
+                                    onTouchEnd={e => {
+                                      if (touchStartX === null) return;
+                                      const endX = e.changedTouches[0].clientX;
+                                      const diff = endX - touchStartX;
+                                      // Threshold for Swipe Right (> 50px)
+                                      if (diff > 50) {
+                                        setSwipedAppId(app.id);
+                                      } else if (diff < -50) {
+                                        setSwipedAppId(null); // Swipe Left to close
+                                      }
+                                      setTouchStartX(null);
+                                    }}
+                                    // DRAG HANDLERS (Desktop)
+                                    draggable={!swipedAppId} // Disable drag if swiped open
+                                    onDragStart={e => {
+                                      if (swipedAppId) {
+                                        e.preventDefault();
+                                        return;
+                                      }
+                                      handleDragStart(e, app);
+                                    }}
+                                    onDragEnd={handleDragEnd}
+                                    onClick={() => {
+                                      if (swipedAppId === app.id) setSwipedAppId(null);
+                                      else onSelectClient(app.clientName);
+                                    }}
+                                  >
+                                    {/* Left Status Bar with Glow */}
+                                    <div
+                                      className={`absolute left-0 top-0 bottom-0 w-1.5 ${
+                                        app.status === 'confirmed'
+                                          ? 'bg-neon-yellow shadow-[0_0_10px_rgba(234,179,8,0.5)]'
+                                          : app.status === 'in_progress'
+                                          ? 'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]'
+                                          : 'bg-zinc-700'
+                                      }`}
+                                    ></div>
 
-                                  <div className="flex flex-row justify-between items-center p-4 gap-3">
-                                    <div className="flex-1 min-w-0 pl-3">
-                                      {/* Client Name + Time */}
-                                      <div className="flex items-center gap-3 mb-2">
-                                        <h4 className="font-black text-white text-lg md:text-xl truncate leading-none tracking-wide uppercase drop-shadow-md">
-                                          {app.clientName}
-                                        </h4>
-                                        <span className="text-[10px] font-black text-black bg-white/90 px-1.5 py-0.5 rounded-[4px] border border-gray-400">
-                                          {app.time}
-                                        </span>
-                                      </div>
-
-                                      {/* Service Ticker & Price */}
-                                      <div className="flex flex-wrap items-center gap-2">
-                                        <div className="flex items-center gap-1.5 text-neon-yellow text-[10px] md:text-xs font-black uppercase tracking-widest bg-yellow-900/10 px-2 py-1 rounded border border-neon-yellow/20">
-                                          {service.category === 'Barba' ? (
-                                            <Zap
-                                              size={10}
-                                              className="text-neon-yellow fill-neon-yellow"
-                                            />
-                                          ) : (
-                                            <Scissors
-                                              size={10}
-                                              className="text-neon-yellow fill-neon-yellow"
-                                            />
-                                          )}
-                                          <span className="truncate max-w-[120px]">
-                                            {service.name}
+                                    <div className="flex flex-row justify-between items-center p-4 gap-3">
+                                      <div className="flex-1 min-w-0 pl-3">
+                                        {/* Client Name + Time */}
+                                        <div className="flex items-center gap-3 mb-2">
+                                          <h4 className="font-black text-white text-lg md:text-xl truncate leading-none tracking-wide uppercase drop-shadow-md">
+                                            {app.clientName}
+                                          </h4>
+                                          <span className="text-[10px] font-black text-black bg-white/90 px-1.5 py-0.5 rounded-[4px] border border-gray-400">
+                                            {app.time}
                                           </span>
                                         </div>
-                                        <div className="text-[10px] font-mono text-green-400 font-bold bg-green-900/10 px-2 py-1 rounded border border-green-500/20">
-                                          {service.price}
+
+                                        {/* Service Ticker & Price */}
+                                        <div className="flex flex-wrap items-center gap-2">
+                                          <div className="flex items-center gap-1.5 text-neon-yellow text-[10px] md:text-xs font-black uppercase tracking-widest bg-yellow-900/10 px-2 py-1 rounded border border-neon-yellow/20">
+                                            {service.category === 'Barba' ? (
+                                              <Zap
+                                                size={10}
+                                                className="text-neon-yellow fill-neon-yellow"
+                                              />
+                                            ) : (
+                                              <Scissors
+                                                size={10}
+                                                className="text-neon-yellow fill-neon-yellow"
+                                              />
+                                            )}
+                                            <span className="truncate max-w-[120px]">
+                                              {service.name}
+                                            </span>
+                                          </div>
+                                          <div className="text-[10px] font-mono text-green-400 font-bold bg-green-900/10 px-2 py-1 rounded border border-green-500/20">
+                                            {service.price}
+                                          </div>
+                                        </div>
+                                      </div>
+
+                                      {/* Right Side Info: Payment & Status */}
+                                      <div className="text-right flex flex-col items-end gap-2 shrink-0">
+                                        {/* Payment Badge */}
+                                        <div
+                                          className={`flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded border ${
+                                            isPaid
+                                              ? 'text-green-400 bg-green-950/30 border-green-500/30'
+                                              : 'text-zinc-500 bg-zinc-900/50 border-zinc-800'
+                                          }`}
+                                        >
+                                          <Wallet size={10} />
+                                          {isPaid ? 'PAGO' : 'PEND.'}
+                                        </div>
+
+                                        {/* Status Text */}
+                                        <div
+                                          className={`px-2 py-1 rounded-[4px] text-[9px] font-black uppercase tracking-widest border shadow-sm ${
+                                            app.status === 'confirmed'
+                                              ? 'bg-neon-yellow text-black border-neon-yellow'
+                                              : 'text-zinc-400 border-zinc-700 bg-zinc-800'
+                                          }`}
+                                        >
+                                          {app.status === 'confirmed' ? 'Confirmado' : 'Pendente'}
                                         </div>
                                       </div>
                                     </div>
 
-                                    {/* Right Side Info: Payment & Status */}
-                                    <div className="text-right flex flex-col items-end gap-2 shrink-0">
-                                      {/* Payment Badge */}
-                                      <div
-                                        className={`flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded border ${
-                                          isPaid
-                                            ? 'text-green-400 bg-green-950/30 border-green-500/30'
-                                            : 'text-zinc-500 bg-zinc-900/50 border-zinc-800'
-                                        }`}
-                                      >
-                                        <Wallet size={10} />
-                                        {isPaid ? 'PAGO' : 'PEND.'}
-                                      </div>
-
-                                      {/* Status Text */}
-                                      <div
-                                        className={`px-2 py-1 rounded-[4px] text-[9px] font-black uppercase tracking-widest border shadow-sm ${
-                                          app.status === 'confirmed'
-                                            ? 'bg-neon-yellow text-black border-neon-yellow'
-                                            : 'text-zinc-400 border-zinc-700 bg-zinc-800'
-                                        }`}
-                                      >
-                                        {app.status === 'confirmed' ? 'Confirmado' : 'Pendente'}
-                                      </div>
+                                    {/* Swipe Hint (Visual cue) */}
+                                    <div className="absolute left-1 bottom-1/2 translate-y-1/2 p-1 opacity-10 pointer-events-none group-hover/card:opacity-30 transition-opacity">
+                                      <div className="w-1 h-8 rounded-full bg-gray-500"></div>
                                     </div>
-                                  </div>
-
-                                  {/* Press Hint (Visual cue) */}
-                                  <div className="absolute right-0 bottom-0 p-1 opacity-20 pointer-events-none">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-gray-500"></div>
                                   </div>
                                 </div>
                               </div>
@@ -1174,6 +1172,7 @@ export const CalendarView: React.FC = () => {
                   </label>
                   <input
                     type="date"
+                    style={{ colorScheme: 'dark' }}
                     value={quickAddSlot ? getLocalISODate(quickAddSlot.date) : ''}
                     onChange={e => {
                       if (e.target.valueAsDate && quickAddSlot) {
@@ -1184,7 +1183,7 @@ export const CalendarView: React.FC = () => {
                         setQuickAddSlot({ ...quickAddSlot, date: newDate });
                       }
                     }}
-                    className="bg-transparent text-white font-bold w-full focus:outline-none focus:text-neon-yellow transition-colors"
+                    className="bg-transparent text-white font-bold w-full focus:outline-none focus:text-neon-yellow transition-colors cursor-pointer"
                   />
                 </div>
                 <div className="text-right w-24">
@@ -1193,11 +1192,12 @@ export const CalendarView: React.FC = () => {
                   </label>
                   <input
                     type="time"
+                    style={{ colorScheme: 'dark' }}
                     value={quickAddSlot?.time || ''}
                     onChange={e => {
                       if (quickAddSlot) setQuickAddSlot({ ...quickAddSlot, time: e.target.value });
                     }}
-                    className="bg-transparent text-neon-yellow font-mono font-bold text-lg text-right w-full focus:outline-none"
+                    className="bg-transparent text-neon-yellow font-mono font-bold text-lg text-right w-full focus:outline-none cursor-pointer"
                   />
                 </div>
               </div>
@@ -1220,21 +1220,58 @@ export const CalendarView: React.FC = () => {
                   Serviço
                 </label>
                 <div className="relative">
-                  <select
-                    value={selectedService}
-                    onChange={e => setSelectedService(e.target.value)}
-                    className="w-full bg-[#151515] border border-gray-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-neon-yellow transition-colors appearance-none font-bold"
+                  {/* Trigger Button */}
+                  <button
+                    onClick={() => setIsServiceListOpen(!isServiceListOpen)}
+                    className="w-full bg-[#151515] border border-gray-800 rounded-xl px-4 py-3 text-white text-left font-bold flex items-center justify-between focus:outline-none focus:border-neon-yellow transition-all hover:bg-[#1a1a1a]"
                   >
-                    {services.map(s => (
-                      <option key={s.id} value={s.id}>
-                        {s.name} - {s.price}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronLeft
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 -rotate-90 pointer-events-none"
-                    size={16}
-                  />
+                    <span className="truncate mr-2">
+                      {services.find(s => s.id === selectedService)?.name
+                        ? `${services.find(s => s.id === selectedService)?.name} - ${
+                            services.find(s => s.id === selectedService)?.price
+                          }`
+                        : 'Selecione um serviço'}
+                    </span>
+                    <ChevronLeft
+                      className={`text-neon-yellow transition-transform duration-300 ${
+                        isServiceListOpen ? 'rotate-90' : '-rotate-90'
+                      }`}
+                      size={16}
+                    />
+                  </button>
+
+                  {/* Dropdown List */}
+                  {isServiceListOpen && (
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-[#0a0a0a] border border-gray-700 rounded-xl overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.9)] z-50 max-h-48 overflow-y-auto custom-scrollbar">
+                      {services.map(s => (
+                        <button
+                          key={s.id}
+                          onClick={() => {
+                            setSelectedService(s.id);
+                            setIsServiceListOpen(false);
+                          }}
+                          className={`w-full text-left px-4 py-3 text-sm font-bold border-b border-white/5 transition-colors flex justify-between items-center group
+                            ${
+                              selectedService === s.id
+                                ? 'bg-neon-yellow/10 text-neon-yellow'
+                                : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                            }
+                          `}
+                        >
+                          <span>{s.name}</span>
+                          <span
+                            className={`text-xs opacity-50 ${
+                              selectedService === s.id
+                                ? 'text-neon-yellow'
+                                : 'group-hover:text-white'
+                            }`}
+                          >
+                            {s.price}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 

@@ -190,6 +190,7 @@ export interface Client {
   img: string | null;
   status: ClientStatus;
   notes: string;
+  isGuest?: boolean;
 }
 
 // COMBO / HIGHLIGHTS SYSTEM

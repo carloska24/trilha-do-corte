@@ -46,9 +46,27 @@ export const ClientsManager: React.FC = () => {
     setNewClientData({ name: '', phone: '', notes: '' });
   };
 
-  const filteredClients = clients.filter(client =>
-    client.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredClients = clients.filter(client => {
+    const matchesSearch = client.name.toLowerCase().includes(searchTerm.toLowerCase());
+
+    // STRICT FILTER: Exclude Guest/Temporary clients only
+    // Real clients (like CARLOS A) might have 'UNDEFINED' lastVisit but valid phones
+    const isGuest =
+      (client as any).isGuest ||
+      String(client.id).startsWith('temp') ||
+      !client.phone ||
+      client.phone.toLowerCase().trim() === 'sem cadastro' ||
+      client.phone.trim() === '' ||
+      client.phone.toLowerCase().trim() === 'undefined' ||
+      client.phone.replace(/\D/g, '').length < 8 || // Filter out short/placeholder phones
+      /^0+$/.test(client.phone.replace(/\D/g, '')) || // Filter out '000000', '00000000000'
+      (client.notes && client.notes.includes('Agendamento rápido'));
+
+    // Debug log to help diagnose persistent ghost clients if needed
+    // console.log('Client:', client.name, 'Phone:', client.phone, 'Guest:', isGuest);
+
+    return matchesSearch && !isGuest;
+  });
 
   // --- UX HELPERS ---
   const getLevelStyle = (level: number) => {
@@ -226,7 +244,9 @@ export const ClientsManager: React.FC = () => {
                       {/* VISIT TEXT */}
                       <div className="flex flex-col leading-none">
                         <span className="text-[8px] font-bold text-zinc-500 uppercase tracking-wider">
-                          {client.lastVisit === 'Nunca'
+                          {!client.lastVisit ||
+                          client.lastVisit === 'Nunca' ||
+                          String(client.lastVisit).toLowerCase() === 'undefined'
                             ? 'NOVO CLIENTE'
                             : `VISITOU: ${client.lastVisit}`}
                         </span>
@@ -262,7 +282,7 @@ export const ClientsManager: React.FC = () => {
       {/* Floating Add Button (Neon Pulse) */}
       <button
         onClick={() => setIsAddModalOpen(true)}
-        className="fixed bottom-24 right-6 w-16 h-16 bg-neon-yellow rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(227,253,0,0.4)] hover:shadow-[0_0_50px_rgba(227,253,0,0.6)] hover:scale-110 transition-all z-40 text-black animate-pulse-slow group"
+        className="fixed bottom-24 left-6 w-16 h-16 bg-neon-yellow rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(227,253,0,0.4)] hover:shadow-[0_0_50px_rgba(227,253,0,0.6)] hover:scale-110 transition-all z-40 text-black animate-pulse-slow group"
       >
         <Plus
           size={32}
@@ -273,8 +293,8 @@ export const ClientsManager: React.FC = () => {
 
       {/* MODAL ADICIONAR CLIENTE */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 dark:bg-black/90 backdrop-blur-md animate-fade-in">
-          <div className="bg-white dark:bg-[#0a0a0a] w-full max-w-md p-8 rounded-xl shadow-[0_0_50px_rgba(0,0,0,0.8)] relative border border-white/10 transition-colors">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in">
+          <div className="bg-zinc-950 w-full max-w-md p-8 rounded-xl shadow-[0_0_50px_rgba(0,0,0,0.8)] relative border border-white/10 transition-colors">
             <button
               onClick={() => setIsAddModalOpen(false)}
               className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
@@ -324,7 +344,7 @@ export const ClientsManager: React.FC = () => {
 
               <button
                 onClick={handleSaveNewClient}
-                className="w-full bg-neon-yellow hover:bg-white text-black font-black text-lg py-4 rounded-lg transition-all flex justify-center items-center gap-3 mt-4 shadow-[0_0_20px_rgba(227,253,0,0.2)] hover:shadow-[0_0_30px_rgba(227,253,0,0.4)] uppercase tracking-widest"
+                className="w-full bg-neon-yellow hover:brightness-110 text-black font-black text-lg py-4 rounded-lg transition-all flex justify-center items-center gap-3 mt-4 shadow-[0_0_20px_rgba(227,253,0,0.2)] hover:shadow-[0_0_30px_rgba(227,253,0,0.4)] uppercase tracking-widest"
               >
                 <Save size={20} /> Cadastrar
               </button>
