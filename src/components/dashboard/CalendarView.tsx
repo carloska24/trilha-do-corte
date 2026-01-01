@@ -970,9 +970,8 @@ export const CalendarView: React.FC = () => {
 
                             const startMinutes = parseInt(app.time.split(':')[1]);
                             const duration = service.duration || 30;
-                            const top = (startMinutes / 60) * 110; // 110px per hour
-                            // Fix: Ensure minimum height of 80px so content doesn't break for short services
-                            const height = Math.max((duration / 60) * 110, 60);
+                            // Fix: Ensure standard height mapping (110px per 60min) without clamping to prevent overlap
+                            const height = (duration / 60) * 110;
 
                             return (
                               <div
