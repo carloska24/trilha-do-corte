@@ -972,7 +972,7 @@ export const CalendarView: React.FC = () => {
                             const duration = service.duration || 30;
                             const top = (startMinutes / 60) * 110; // 110px per hour
                             // Fix: Ensure minimum height of 80px so content doesn't break for short services
-                            const height = Math.max((duration / 60) * 110, 80);
+                            const height = Math.max((duration / 60) * 110, 60);
 
                             return (
                               <div
@@ -1070,65 +1070,48 @@ export const CalendarView: React.FC = () => {
                                       }`}
                                     ></div>
 
-                                    <div className="flex flex-row justify-between items-center p-4 gap-3">
-                                      <div className="flex-1 min-w-0 pl-3">
+                                    <div className="flex flex-row justify-between items-center p-2 gap-2 h-full">
+                                      <div className="flex-1 min-w-0 pl-2">
                                         {/* Client Name + Time */}
-                                        <div className="flex items-center gap-3 mb-2">
-                                          <h4 className="font-black text-white text-lg md:text-xl truncate leading-none tracking-wide uppercase drop-shadow-md">
+                                        <div className="flex items-center gap-2 mb-0.5">
+                                          <h4 className="font-black text-white text-sm truncate leading-none uppercase tracking-wide">
                                             {app.clientName}
                                           </h4>
-                                          <span className="text-[10px] font-black text-black bg-white/90 px-1.5 py-0.5 rounded-[4px] border border-gray-400">
+                                          <span className="text-[10px] font-bold text-black bg-white/90 px-1 py-px rounded-[2px]">
                                             {app.time}
                                           </span>
                                         </div>
 
                                         {/* Service Ticker & Price */}
-                                        <div className="flex flex-wrap items-center gap-2">
-                                          <div className="flex items-center gap-1.5 text-neon-yellow text-[10px] md:text-xs font-black uppercase tracking-widest bg-yellow-900/10 px-2 py-1 rounded border border-neon-yellow/20">
-                                            {service.category === 'Barba' ? (
-                                              <Zap
-                                                size={10}
-                                                className="text-neon-yellow fill-neon-yellow"
-                                              />
-                                            ) : (
-                                              <Scissors
-                                                size={10}
-                                                className="text-neon-yellow fill-neon-yellow"
-                                              />
-                                            )}
-                                            <span className="truncate max-w-[120px]">
-                                              {service.name}
-                                            </span>
-                                          </div>
-                                          <div className="text-[10px] font-mono text-green-400 font-bold bg-green-900/10 px-2 py-1 rounded border border-green-500/20">
+                                        <div className="flex items-center gap-2 text-[10px] text-gray-400 font-medium">
+                                          <span className="truncate max-w-[100px] text-neon-yellow">
+                                            {service.name}
+                                          </span>
+                                          <span className="text-green-400 border-l border-white/10 pl-2">
                                             {service.price}
-                                          </div>
+                                          </span>
                                         </div>
                                       </div>
 
                                       {/* Right Side Info: Payment & Status */}
-                                      <div className="text-right flex flex-col items-end gap-2 shrink-0">
-                                        {/* Payment Badge */}
-                                        <div
-                                          className={`flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded border ${
-                                            isPaid
-                                              ? 'text-green-400 bg-green-950/30 border-green-500/30'
-                                              : 'text-zinc-500 bg-zinc-900/50 border-zinc-800'
-                                          }`}
-                                        >
-                                          <Wallet size={10} />
-                                          {isPaid ? 'PAGO' : 'PEND.'}
-                                        </div>
+                                      <div className="flex flex-col items-end gap-1 shrink-0">
+                                        {/* Only show Payment Badge if PAID */}
+                                        {isPaid && (
+                                          <div className="flex items-center gap-1 text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded text-green-400 bg-green-950/30 border border-green-500/30">
+                                            <Wallet size={8} />
+                                            PAGO
+                                          </div>
+                                        )}
 
-                                        {/* Status Text */}
+                                        {/* Status Text - Compact */}
                                         <div
-                                          className={`px-2 py-1 rounded-[4px] text-[9px] font-black uppercase tracking-widest border shadow-sm ${
+                                          className={`px-1.5 py-0.5 rounded-[2px] text-[8px] font-black uppercase tracking-widest border ${
                                             app.status === 'confirmed'
                                               ? 'bg-neon-yellow text-black border-neon-yellow'
-                                              : 'text-zinc-400 border-zinc-700 bg-zinc-800'
+                                              : 'text-zinc-500 border-zinc-800 bg-zinc-900/50'
                                           }`}
                                         >
-                                          {app.status === 'confirmed' ? 'Confirmado' : 'Pendente'}
+                                          {app.status === 'confirmed' ? 'CONFIRMADO' : 'PENDENTE'}
                                         </div>
                                       </div>
                                     </div>
