@@ -140,6 +140,7 @@ export interface Appointment {
   notes?: string; // Notas técnicas do barbeiro
   clientId?: string; // Link to ClientProfile
   barberId?: string; // Link to BarberProfile
+  clientPhone?: string; // Telefone do cliente (denormalized for convenience)
 }
 
 export interface SavedStyle extends AiConsultationResponse {

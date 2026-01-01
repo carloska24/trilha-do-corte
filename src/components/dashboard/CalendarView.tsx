@@ -23,6 +23,8 @@ import {
   Edit,
   Bot,
   Sparkles,
+  Bell,
+  MoreVertical,
   X,
 } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
@@ -203,6 +205,19 @@ export const CalendarView: React.FC = () => {
 
   const handleSaveAppointment = async () => {
     if (!clientName.trim() || !quickAddSlot || !selectedService) return;
+
+    // Validate Past Time
+    const [h, m] = quickAddSlot.time.split(':').map(Number);
+    const appDate = new Date(quickAddSlot.date);
+    appDate.setHours(h, m, 0, 0);
+
+    // Reset seconds/ms of current time to avoid edge case issues
+    const now = new Date();
+    // Allow effectively "now" (within last minute) but nothing earlier
+    if (appDate < now) {
+      showToast('Não é possível agendar no passado!');
+      return;
+    }
 
     if (editId) {
       // UPDATE EXISTING
@@ -919,6 +934,53 @@ export const CalendarView: React.FC = () => {
                   a.time.startsWith(hourStr)
                 );
 
+                // SMART LOGIC: Check for overlaps from previous appointments
+                // We look for any appointment that starts BEFORE this hour and ends AFTER this hour's start
+                const allDailyApps = getAppointmentsForDate(selectedDate);
+                const overlappingApp = allDailyApps.find(a => {
+                  const startH = parseInt(a.time.split(':')[0]);
+                  const startM = parseInt(a.time.split(':')[1]);
+                  const service = getServiceDetails(a.serviceId);
+                  const duration = service.duration || 30;
+
+                  const startTotal = startH * 60 + startM;
+                  const endTotal = startTotal + duration;
+                  const currentHourStart = hour * 60;
+
+                  // Condição: Começa antes desta hora E termina depois do início desta hora
+                  return startTotal < currentHourStart && endTotal > currentHourStart;
+                });
+
+                let occupiedMinutesInThisHour = 0;
+                let nextAvailableStr = `${hourStr}:00`;
+
+                if (overlappingApp) {
+                  const startH = parseInt(overlappingApp.time.split(':')[0]);
+                  const startM = parseInt(overlappingApp.time.split(':')[1]);
+                  const service = getServiceDetails(overlappingApp.serviceId);
+                  const duration = service.duration || 30;
+                  const endTotal = startH * 60 + startM + duration;
+                  const currentHourStart = hour * 60;
+
+                  // Quantos minutos dessa hora estão tomados?
+                  const spillOver = endTotal - currentHourStart;
+
+                  if (spillOver > 0) {
+                    occupiedMinutesInThisHour = spillOver;
+                    // Round up to next 15 min slot for availability
+                    const remainder = spillOver % 15;
+                    const minutesToAdd = remainder === 0 ? 0 : 15 - remainder;
+                    const safeStart = spillOver + minutesToAdd;
+
+                    if (safeStart < 60) {
+                      nextAvailableStr = `${hourStr}:${String(safeStart).padStart(2, '0')}`;
+                    } else {
+                      // Se ocupar a hora toda ou mais, não mostra slot nesta hora
+                      occupiedMinutesInThisHour = 60;
+                    }
+                  }
+                }
+
                 // Check if this hour is in the past for today
                 const isPast =
                   selectedDate.toDateString() === new Date().toDateString() &&
@@ -950,7 +1012,10 @@ export const CalendarView: React.FC = () => {
 
                       const appId = draggedAppId;
                       if (appId) {
-                        const newTime = `${String(hour).padStart(2, '0')}:00`;
+                        const newTime =
+                          occupiedMinutesInThisHour > 0 && occupiedMinutesInThisHour < 60
+                            ? nextAvailableStr
+                            : `${String(hour).padStart(2, '0')}:00`;
                         handleMoveAppointment(appId, newTime);
                         setDraggedAppId(null);
                       }
@@ -958,196 +1023,266 @@ export const CalendarView: React.FC = () => {
                   >
                     {/* Time Column */}
                     <div className="w-16 md:w-20 py-4 pl-2 md:pl-4 text-xs md:text-sm font-mono font-bold text-gray-500 flex flex-col items-start border-r border-gray-800/50 bg-[#111]">
-                      <span>{hourStr}:00</span>
+                      <span className={occupiedMinutesInThisHour > 0 ? 'opacity-50' : ''}>
+                        {hourStr}:00
+                      </span>
+                      {occupiedMinutesInThisHour > 0 && occupiedMinutesInThisHour < 60 && (
+                        <span className="text-[9px] text-neon-yellow mt-1 font-mono">
+                          {nextAvailableStr.split(':')[1]}
+                        </span>
+                      )}
                     </div>
 
                     {/* Content Column */}
-                    <div className="flex-1 p-2 md:p-3 bg-transparent relative pointer-events-none">
+                    <div className="flex-1 px-2 md:px-3 relative pointer-events-none">
                       <div className="pointer-events-auto contents">
                         {apps.length > 0 ? (
                           apps.map(app => {
                             const service = getServiceDetails(app.serviceId);
-                            // Mock Payment Status logic (random for display if not real)
                             const isPaid = app.status === 'confirmed';
-
                             const startMinutes = parseInt(app.time.split(':')[1]);
                             const duration = service.duration || 30;
-                            // Fix: Ensure standard height mapping (110px per 60min) without clamping to prevent overlap
+                            // Strict height mapping
                             const height = (duration / 60) * 110;
+                            const top = (startMinutes / 60) * 110;
 
                             return (
                               <div
                                 key={app.id}
-                                className="absolute left-1 right-1 rounded-2xl shadow-sm select-none"
+                                className="absolute left-1 right-1 z-20"
                                 style={{
                                   top: `${top}px`,
                                   height: `${height}px`,
-                                  zIndex: draggedAppId === app.id ? 50 : 10,
+                                  zIndex: draggedAppId === app.id ? 50 : 20,
                                 }}
                               >
-                                {/* SWIPE CONTAINER */}
-                                <div className="relative w-full h-full group/card">
-                                  {/* BACK ACTIONS (Revealed on Swipe) */}
-                                  <div
-                                    className={`absolute inset-0 flex items-center justify-start gap-3 pl-4 bg-zinc-900/50 rounded-2xl border border-white/5 z-0 transition-opacity duration-300 ${
-                                      swipedAppId === app.id ? 'opacity-100' : 'opacity-0'
-                                    }`}
+                                {/* SWIPE ACTIONS */}
+                                <div
+                                  className={`absolute inset-0 flex items-center justify-start gap-3 pl-4 bg-zinc-900/95 rounded-r-xl border border-white/5 z-0 transition-opacity duration-300 ${
+                                    swipedAppId === app.id ? 'opacity-100' : 'opacity-0'
+                                  }`}
+                                >
+                                  <button
+                                    onClick={e => {
+                                      e.stopPropagation();
+                                      handleCancelAppointment(app.id, e);
+                                      setSwipedAppId(null);
+                                    }}
+                                    className="w-10 h-10 rounded-full bg-red-500/10 border border-red-500/50 flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-colors"
                                   >
-                                    <button
-                                      onClick={e => {
-                                        e.stopPropagation();
-                                        handleCancelAppointment(app.id, e);
-                                        setSwipedAppId(null);
-                                      }}
-                                      className="w-10 h-10 rounded-full bg-red-500/10 border border-red-500/50 flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-colors"
-                                    >
-                                      <Trash2 size={18} />
-                                    </button>
-                                    <button
-                                      onClick={e => {
-                                        e.stopPropagation();
-                                        handleEditAppointment(app, e);
-                                        setSwipedAppId(null);
-                                      }}
-                                      className="w-10 h-10 rounded-full bg-blue-500/10 border border-blue-500/50 flex items-center justify-center text-blue-500 hover:bg-blue-500 hover:text-white transition-colors"
-                                    >
-                                      <Edit size={18} />
-                                    </button>
-                                    {/* Close Swipe Zone */}
-                                    <div
-                                      className="flex-1 h-full"
-                                      onClick={() => setSwipedAppId(null)}
-                                    ></div>
-                                  </div>
+                                    <Trash2 size={18} />
+                                  </button>
+                                  <button
+                                    onClick={e => {
+                                      e.stopPropagation();
+                                      handleEditAppointment(app, e);
+                                      setSwipedAppId(null);
+                                    }}
+                                    className="w-10 h-10 rounded-full bg-blue-500/10 border border-blue-500/50 flex items-center justify-center text-blue-500 hover:bg-blue-500 hover:text-white transition-colors"
+                                  >
+                                    <Edit size={18} />
+                                  </button>
+                                  <div
+                                    className="flex-1 h-full"
+                                    onClick={() => setSwipedAppId(null)}
+                                  ></div>
+                                </div>
 
-                                  {/* MAIN CARD (Draggable / Swipeable) */}
-                                  <div
-                                    className={`w-full h-full bg-[#151515] border transition-transform duration-300 shadow-xl relative rounded-2xl overflow-hidden cursor-grab active:cursor-grabbing hover:border-gray-600 border-gray-800 z-10`}
-                                    style={{
-                                      transform:
-                                        swipedAppId === app.id
-                                          ? 'translateX(120px)'
-                                          : 'translateX(0)',
-                                    }}
-                                    // TOUCH HANDLERS (Swipe)
-                                    onTouchStart={e => {
-                                      setTouchStartX(e.touches[0].clientX);
-                                    }}
-                                    onTouchEnd={e => {
-                                      if (touchStartX === null) return;
-                                      const endX = e.changedTouches[0].clientX;
-                                      const diff = endX - touchStartX;
-                                      // Threshold for Swipe Right (> 50px)
-                                      if (diff > 50) {
-                                        setSwipedAppId(app.id);
-                                      } else if (diff < -50) {
-                                        setSwipedAppId(null); // Swipe Left to close
-                                      }
-                                      setTouchStartX(null);
-                                    }}
-                                    // DRAG HANDLERS (Desktop)
-                                    draggable={!swipedAppId} // Disable drag if swiped open
-                                    onDragStart={e => {
-                                      if (swipedAppId) {
-                                        e.preventDefault();
-                                        return;
-                                      }
-                                      handleDragStart(e, app);
-                                    }}
-                                    onDragEnd={handleDragEnd}
-                                    onClick={() => {
-                                      if (swipedAppId === app.id) setSwipedAppId(null);
-                                      else onSelectClient(app.clientName);
-                                    }}
-                                  >
-                                    {/* Left Status Bar with Glow */}
+                                {/* NEW CYBERPUNK CARD */}
+                                <div
+                                  className={`w-full h-full bg-[#09090b]/95 backdrop-blur-md border hover:border-neon-yellow/50 transition-all duration-300 shadow-2xl relative rounded-xl overflow-hidden cursor-grab active:cursor-grabbing group/card
+                                    ${
+                                      app.status === 'confirmed'
+                                        ? 'border-neon-yellow/40'
+                                        : 'border-white/10'
+                                    }
+                                    ${swipedAppId === app.id ? 'translate-x-[120px]' : ''}
+                                  `}
+                                  // TOUCH HANDLERS
+                                  onTouchStart={e => setTouchStartX(e.touches[0].clientX)}
+                                  onTouchEnd={e => {
+                                    if (touchStartX === null) return;
+                                    const diff = e.changedTouches[0].clientX - touchStartX;
+                                    if (diff > 50) setSwipedAppId(app.id);
+                                    else if (diff < -50) setSwipedAppId(null);
+                                    setTouchStartX(null);
+                                  }}
+                                  // DRAG HANDLERS
+                                  draggable={!swipedAppId}
+                                  onDragStart={e => {
+                                    if (swipedAppId) {
+                                      e.preventDefault();
+                                      return;
+                                    }
+                                    handleDragStart(e, app);
+                                  }}
+                                  onDragEnd={handleDragEnd}
+                                  onClick={() => {
+                                    if (swipedAppId === app.id) setSwipedAppId(null);
+                                    else onSelectClient(app.clientName);
+                                  }}
+                                >
+                                  <div className="relative pl-3 h-full group/card transition-all hover:z-50">
+                                    {/* Status Bar */}
                                     <div
-                                      className={`absolute left-0 top-0 bottom-0 w-1.5 ${
+                                      className={`absolute left-0 top-0 h-full w-1.5 rounded-l-full transition-colors ${
                                         app.status === 'confirmed'
-                                          ? 'bg-neon-yellow shadow-[0_0_10px_rgba(234,179,8,0.5)]'
-                                          : app.status === 'in_progress'
-                                          ? 'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]'
-                                          : 'bg-zinc-700'
+                                          ? 'bg-green-500 shadow-[0_0_8px_#22c55e]'
+                                          : 'bg-yellow-500'
                                       }`}
-                                    ></div>
+                                    />
 
-                                    <div className="flex flex-row justify-between items-center p-2 gap-2 h-full">
-                                      <div className="flex-1 min-w-0 pl-2">
-                                        {/* Client Name + Time */}
-                                        <div className="flex items-center gap-2 mb-0.5">
-                                          <h4 className="font-black text-white text-sm truncate leading-none uppercase tracking-wide">
-                                            {app.clientName}
-                                          </h4>
-                                          <span className="text-[10px] font-bold text-black bg-white/90 px-1 py-px rounded-[2px]">
-                                            {app.time}
-                                          </span>
-                                        </div>
+                                    {/* Card Content */}
+                                    <div
+                                      className="flex items-center justify-between gap-3 rounded-r-xl bg-zinc-900/95 backdrop-blur-sm border border-white/5 px-3 py-1 shadow-lg hover:shadow-2xl hover:bg-zinc-800/95 transition-all cursor-pointer h-full"
+                                      onClick={e => {
+                                        e.stopPropagation(); // Prevent drag/parent click issues
+                                        onSelectClient(app.clientName);
+                                      }}
+                                    >
+                                      {/* Main Info */}
+                                      <div className="flex flex-col gap-1 min-w-0 flex-1">
+                                        {/* Time */}
+                                        <span className="text-sm font-bold text-yellow-400 font-mono tracking-wider">
+                                          {app.time}
+                                        </span>
 
-                                        {/* Service Ticker & Price */}
-                                        <div className="flex items-center gap-2 text-[10px] text-gray-400 font-medium">
-                                          <span className="truncate max-w-[100px] text-neon-yellow">
-                                            {service.name}
-                                          </span>
-                                          <span className="text-green-400 border-l border-white/10 pl-2">
+                                        {/* Client */}
+                                        <span className="text-base font-black text-white uppercase truncate tracking-wide leading-tight">
+                                          {app.clientName}
+                                        </span>
+
+                                        {/* Service */}
+                                        <span className="text-xs text-zinc-400 truncate font-medium">
+                                          {service.name}
+                                        </span>
+
+                                        {/* Price & Duration */}
+                                        <div className="flex items-center gap-3 text-xs mt-1">
+                                          <span className="font-bold text-yellow-400 text-sm">
                                             {service.price}
                                           </span>
+                                          <span className="flex items-center gap-1 text-zinc-500 font-medium">
+                                            <Clock size={12} />
+                                            {service.duration || '30'} min
+                                          </span>
                                         </div>
-                                      </div>
 
-                                      {/* Right Side Info: Payment & Status */}
-                                      <div className="flex flex-col items-end gap-1 shrink-0">
-                                        {/* Only show Payment Badge if PAID */}
-                                        {isPaid && (
-                                          <div className="flex items-center gap-1 text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded text-green-400 bg-green-950/30 border border-green-500/30">
-                                            <Wallet size={8} />
-                                            PAGO
-                                          </div>
-                                        )}
-
-                                        {/* Status Text - Compact */}
+                                        {/* Status Label */}
                                         <div
-                                          className={`px-1.5 py-0.5 rounded-[2px] text-[8px] font-black uppercase tracking-widest border ${
+                                          className={`mt-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest ${
                                             app.status === 'confirmed'
-                                              ? 'bg-neon-yellow text-black border-neon-yellow'
-                                              : 'text-zinc-500 border-zinc-800 bg-zinc-900/50'
+                                              ? 'text-green-400'
+                                              : 'text-yellow-500/80'
                                           }`}
                                         >
-                                          {app.status === 'confirmed' ? 'CONFIRMADO' : 'PENDENTE'}
+                                          {app.status === 'confirmed' ? (
+                                            <CheckCircle2 size={12} />
+                                          ) : (
+                                            <Clock size={12} />
+                                          )}
+                                          {app.status === 'confirmed' ? 'Confirmado' : 'Pendente'}
                                         </div>
                                       </div>
-                                    </div>
 
-                                    {/* Swipe Hint (Visual cue) */}
-                                    <div className="absolute left-1 bottom-1/2 translate-y-1/2 p-1 opacity-10 pointer-events-none group-hover/card:opacity-30 transition-opacity">
-                                      <div className="w-1 h-8 rounded-full bg-gray-500"></div>
+                                      {/* Actions Column */}
+                                      <div className="flex flex-col items-center justify-center gap-2 pl-2 border-l border-white/5 min-w-[40px] h-full">
+                                        <button
+                                          onClick={e => {
+                                            e.stopPropagation();
+                                            // Try to find phone in multiple sources
+                                            let phone = app.clientPhone;
+                                            if (!phone) {
+                                              const found = clients.find(
+                                                c =>
+                                                  c.name.trim().toLowerCase() ===
+                                                  app.clientName.trim().toLowerCase()
+                                              );
+                                              if (found && found.phone && found.phone.length > 8) {
+                                                phone = found.phone;
+                                              }
+                                            }
+
+                                            // If still no phone, use empty string to open contact picker
+                                            const cleanPhone = phone
+                                              ? phone.replace(/\D/g, '')
+                                              : '';
+
+                                            const dateStr =
+                                              selectedDate.toLocaleDateString('pt-BR');
+                                            const mapLink = 'https://bit.ly/44RCRah';
+
+                                            const message =
+                                              `💈 *TRILHA DO CORTE* 💈\n\n` +
+                                              `👤 *Passageiro:* ${app.clientName}\n` +
+                                              `✅ *Status:* LEMBRETE\n\n` +
+                                              `✂️ *Serviço:* ${service.name}\n` +
+                                              `📅 *Data:* ${dateStr}\n` +
+                                              `⏰ *Horário:* ${app.time}\n` +
+                                              `🏢 *Unidade:* Jardim São Marcos\n` +
+                                              `📍 *Localização:* ${mapLink}\n\n` +
+                                              `⚠️ _Esperamos você no horário._\n` +
+                                              `✨ _Prepare-se para o upgrade._`;
+
+                                            const whatsappUrl = cleanPhone
+                                              ? `https://wa.me/55${cleanPhone.replace(
+                                                  /^55/,
+                                                  ''
+                                                )}?text=${encodeURIComponent(message)}`
+                                              : `https://wa.me/?text=${encodeURIComponent(
+                                                  message
+                                                )}`;
+
+                                            window.open(whatsappUrl, '_blank');
+                                          }}
+                                          className="w-10 h-10 rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-yellow-400 transition-colors border border-white/5 group/btn shadow-lg"
+                                          title="Enviar Lembrete no WhatsApp"
+                                        >
+                                          <Bell
+                                            size={18}
+                                            className="group-hover/btn:animate-swing"
+                                          />
+                                        </button>
+                                      </div>
                                     </div>
                                   </div>
                                 </div>
                               </div>
                             );
                           })
-                        ) : (
-                          // Empty Slot Interaction (Ghost Slot)
+                        ) : // EMPTY SLOT INTERACTION
+                        occupiedMinutesInThisHour < 60 ? (
                           <div
-                            onClick={() => {
-                              if (!isPast) handleSlotClick(hour);
+                            style={{
+                              marginTop: `${(occupiedMinutesInThisHour / 60) * 110}px`,
+                              height: `${((60 - occupiedMinutesInThisHour) / 60) * 110}px`,
                             }}
-                            className={`w-full h-full flex items-center justify-center rounded-xl border border-dashed border-gray-800/50 transition-all group/empty ${
+                            onClick={() => {
+                              if (!isPast) {
+                                // Use Smart Time
+                                setEditId(null);
+                                setQuickAddSlot({ date: selectedDate, time: nextAvailableStr });
+                                setIsQuickAddOpen(true);
+                              }
+                            }}
+                            className={`w-full rounded-xl border border-dashed border-gray-800/30 transition-all group/empty flex items-center justify-center ${
                               isPast
-                                ? 'cursor-not-allowed opacity-30 bg-white/5'
-                                : 'hover:border-gray-600 hover:bg-[#151515] hover:opacity-100 cursor-pointer opacity-50'
+                                ? 'cursor-not-allowed opacity-0'
+                                : 'hover:border-gray-700 hover:bg-[#151515] cursor-pointer opacity-60 hover:opacity-100'
                             }`}
                           >
                             {!isPast && (
-                              <div className="flex items-center gap-2 text-gray-700 group-hover/empty:text-gray-400 transition-colors">
-                                <Plus size={18} />
-                                <span className="text-[10px] md:text-xs font-black uppercase tracking-widest hidden group-hover/empty:inline-block">
-                                  Disponível
-                                </span>
+                              <div className="flex flex-col items-center gap-1 text-gray-800 group-hover/empty:text-gray-500 transition-colors">
+                                <Plus size={16} />
+                                {occupiedMinutesInThisHour > 0 && (
+                                  <span className="text-[9px] font-mono uppercase tracking-widest text-neon-yellow/70">
+                                    {nextAvailableStr}
+                                  </span>
+                                )}
                               </div>
                             )}
                           </div>
-                        )}
+                        ) : null}
                       </div>
                     </div>
                   </div>
