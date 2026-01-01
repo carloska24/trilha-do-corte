@@ -49,6 +49,9 @@
 
 html {
   scroll-behavior: smooth;
+  background-color: #000000; /* Fix for white line/overscroll */
+  margin: 0;
+  padding: 0;
 }
 
 :root {
@@ -78,6 +81,9 @@ body {
   background-color: #050505;
   user-select: none;
   -webkit-user-select: none;
+  background-attachment: fixed;
+  margin: 0;
+  padding: 0;
   -webkit-touch-callout: none;
 
   /* HIGH IMPACT TEXTURE: Carbon Grid */
