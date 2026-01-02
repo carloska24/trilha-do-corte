@@ -118,28 +118,36 @@ export const BookingModal: React.FC<BookingModalProps> = ({
     const dateParts = formData.date.split('-');
     const formattedDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
 
-    // Link direto do Google Maps (gera preview)
+    // Link direto do Google Maps
     const mapLink = 'https://www.google.com/maps?q=Rua+Monsenhor+Landell+de+Moura,+129+Campinas+SP';
 
-    // Mensagem com emojis 100% seguros (sem variation selector)
+    // Unicode Escapes para garantir que não haja corrupção de arquivo/encoding
+    const EMOJI = {
+      CHECK: '\u2705', // ✅
+      USER: '\uD83D\uDC64', // 👤
+      SCISSORS: '\u2702', // ✂
+      CALENDAR: '\uD83D\uDCC5', // 📅
+      CLOCK: '\uD83D\uDD50', // 🕚 (Aprox)
+      PIN: '\uD83D\uDCCD', // 📍
+      BARBER: '\uD83D\uDC88', // 💈
+    };
+
     const msg =
       `${mapLink}\n\n` +
-      `✅ AGENDAMENTO CONFIRMADO\n\n` +
-      `👤 Passageiro: ${formData.name}\n\n` +
-      `✂ Servico: ${selectedService?.name || ''}\n` +
-      `📅 Data: ${formattedDate}\n` +
-      `🕚 Horario: ${formData.time}\n` +
-      `📍 Unidade: Jardim Sao Marcos\n\n` +
-      `💈 Te esperamos para mais um corte de respeito.`;
+      `${EMOJI.CHECK} AGENDAMENTO CONFIRMADO\n\n` +
+      `${EMOJI.USER} Passageiro: ${formData.name}\n\n` +
+      `${EMOJI.SCISSORS} Servico: ${selectedService?.name || ''}\n` +
+      `${EMOJI.CALENDAR} Data: ${formattedDate}\n` +
+      `${EMOJI.CLOCK} Horario: ${formData.time}\n` +
+      `${EMOJI.PIN} Unidade: Jardim Sao Marcos\n\n` +
+      `${EMOJI.BARBER} Te esperamos para mais um corte de respeito.`;
 
-    // Sanitização defensiva (remove qualquer VS16 invisível)
-    const safeMsg = msg.normalize('NFKD').replace(/[\uFE0F]/g, '');
-    const encodedMsg = encodeURIComponent(safeMsg);
+    // Usar URLSearchParams para encoding nativo robusto
+    const params = new URLSearchParams();
+    params.append('text', msg);
 
-    window.open(
-      `https://wa.me/55${formData.phone.replace(/\D/g, '')}?text=${encodedMsg}`,
-      '_blank'
-    );
+    const whatsappUrl = `https://wa.me/55${formData.phone.replace(/\D/g, '')}?${params.toString()}`;
+    window.open(whatsappUrl, '_blank');
   };
 
   const handleSubmit = async () => {

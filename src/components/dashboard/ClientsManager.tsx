@@ -288,20 +288,22 @@ export const ClientsManager: React.FC = () => {
                           const inviteLink = `${baseUrl}/login?type=client&name=${encodeURIComponent(
                             client.name
                           )}&phone=${encodeURIComponent(client.phone)}`;
+                          const EMOJI = {
+                            BARBER: '\uD83D\uDC88',
+                            USER: '\uD83D\uDC64',
+                          };
                           const msg =
-                            `💈 TRILHA DO CORTE\n\n` +
-                            `👤 Passageiro: ${client.name}\n\n` +
+                            `${EMOJI.BARBER} TRILHA DO CORTE\n\n` +
+                            `${EMOJI.USER} Passageiro: ${client.name}\n\n` +
                             `Finalize seu cadastro no App para agendar seus horarios online:\n` +
                             `${inviteLink}`;
 
-                          // Sanitização defensiva
-                          const safeMsg = msg.normalize('NFKD').replace(/[\uFE0F]/g, '');
+                          const params = new URLSearchParams();
+                          params.append('text', msg);
 
                           // Open WhatsApp
                           const cleanPhone = client.phone.replace(/\D/g, '');
-                          const waUrl = `https://wa.me/55${cleanPhone}?text=${encodeURIComponent(
-                            safeMsg
-                          )}`;
+                          const waUrl = `https://wa.me/55${cleanPhone}?${params.toString()}`;
                           window.open(waUrl, '_blank');
                         }}
                         className="w-8 h-8 rounded-lg bg-green-500/10 border border-green-500/30 flex items-center justify-center text-green-500 hover:bg-green-500 hover:text-black transition-all"

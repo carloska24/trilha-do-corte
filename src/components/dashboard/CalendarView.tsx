@@ -1212,31 +1212,38 @@ export const CalendarView: React.FC = () => {
                                             const mapLink =
                                               'https://www.google.com/maps?q=Rua+Monsenhor+Landell+de+Moura,+129+Campinas+SP';
 
+                                            const EMOJI = {
+                                              CHECK: '\u2705',
+                                              USER: '\uD83D\uDC64',
+                                              SCISSORS: '\u2702',
+                                              CALENDAR: '\uD83D\uDCC5',
+                                              CLOCK: '\uD83D\uDD50',
+                                              PIN: '\uD83D\uDCCD',
+                                              ROCKET: '\uD83D\uDE80', // 🚀
+                                              PRAY: '\uD83D\uDE4F', // 🙏
+                                            };
+
                                             const msg =
                                               `${mapLink}\n\n` +
-                                              `📍 TRILHA DO CORTE\n\n` +
-                                              `👤 Passageiro: ${app.clientName}\n` +
-                                              `⏰ Status: Lembrete\n\n` +
-                                              `✂ Servico: ${service.name}\n` +
-                                              `📅 Data: ${dateStr}\n` +
-                                              `🕚 Horario: ${app.time}\n` +
-                                              `📍 Unidade: Jardim Sao Marcos\n\n` +
-                                              `🙏 Esperamos voce no horario.\n` +
-                                              `🚀 Prepare-se para o upgrade.`;
+                                              `${EMOJI.PIN} TRILHA DO CORTE\n\n` +
+                                              `${EMOJI.USER} Passageiro: ${app.clientName}\n` +
+                                              `${EMOJI.CLOCK} Status: Lembrete\n\n` +
+                                              `${EMOJI.SCISSORS} Servico: ${service.name}\n` +
+                                              `${EMOJI.CALENDAR} Data: ${dateStr}\n` +
+                                              `${EMOJI.CLOCK} Horario: ${app.time}\n` +
+                                              `${EMOJI.PIN} Unidade: Jardim Sao Marcos\n\n` +
+                                              `${EMOJI.PRAY} Esperamos voce no horario.\n` +
+                                              `${EMOJI.ROCKET} Prepare-se para o upgrade.`;
 
-                                            // Sanitização defensiva
-                                            const safeMsg = msg
-                                              .normalize('NFKD')
-                                              .replace(/[\uFE0F]/g, '');
+                                            const params = new URLSearchParams();
+                                            params.append('text', msg);
 
                                             const whatsappUrl = cleanPhone
                                               ? `https://wa.me/55${cleanPhone.replace(
                                                   /^55/,
                                                   ''
-                                                )}?text=${encodeURIComponent(safeMsg)}`
-                                              : `https://wa.me/?text=${encodeURIComponent(
-                                                  safeMsg
-                                                )}`;
+                                                )}?${params.toString()}`
+                                              : `https://wa.me/?${params.toString()}`;
 
                                             window.open(whatsappUrl, '_blank');
                                           }}
