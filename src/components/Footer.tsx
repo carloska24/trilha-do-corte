@@ -40,7 +40,7 @@ export const Footer: React.FC = () => {
           <ul className="space-y-4 text-gray-400">
             <li>
               <a
-                href="https://www.google.com/maps/search/?api=1&query=Rua+Monsenhor+Landell+de+Moura,+129+-+Jardim+São+Marcos,+Campinas+-+SP"
+                href="https://www.google.com/maps?q=Rua+Monsenhor+Landell+de+Moura,+129+Campinas+SP"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-start gap-3 hover:text-neon-orange transition-colors group"

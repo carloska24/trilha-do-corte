@@ -13,7 +13,7 @@ export const ClientFooter = () => {
 
   const handleOpenMaps = () => {
     window.open(
-      'https://www.google.com/maps/search/?api=1&query=Rua+Monsenhor+Landell+de+Moura,+129+-+Jardim+São+Marcos,+Campinas+-+SP',
+      'https://www.google.com/maps?q=Rua+Monsenhor+Landell+de+Moura,+129+Campinas+SP',
       '_blank'
     );
   };

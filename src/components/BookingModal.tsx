@@ -117,7 +117,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   const sendWhatsAppMessage = () => {
     const dateParts = formData.date.split('-');
     const formattedDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
-    const mapLink = 'https://bit.ly/44RCRah';
+    const mapLink = 'https://www.google.com/maps?q=Rua+Monsenhor+Landell+de+Moura,+129+Campinas+SP';
 
     // Using direct emojis to avoid encoding issues (The "losangulos")
     // Plug 🔌 | Rocket 🚀 | Folder 📂 | Check ✅

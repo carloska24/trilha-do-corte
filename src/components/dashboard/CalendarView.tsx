@@ -1210,7 +1210,8 @@ export const CalendarView: React.FC = () => {
 
                                             const dateStr =
                                               selectedDate.toLocaleDateString('pt-BR');
-                                            const mapLink = 'https://bit.ly/44RCRah';
+                                            const mapLink =
+                                              'https://www.google.com/maps?q=Rua+Monsenhor+Landell+de+Moura,+129+Campinas+SP';
 
                                             const message =
                                               `📍 *TRILHA DO CORTE*\n\n` +
