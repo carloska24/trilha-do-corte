@@ -1209,6 +1209,8 @@ export const CalendarView: React.FC = () => {
                                               : '';
 
                                             // Link direto do Google Maps
+                                            const dateStr =
+                                              selectedDate.toLocaleDateString('pt-BR');
                                             const mapLink =
                                               'https://www.google.com/maps?q=Rua+Monsenhor+Landell+de+Moura,+129+Campinas+SP';
 
