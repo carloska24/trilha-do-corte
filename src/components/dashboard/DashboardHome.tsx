@@ -175,142 +175,170 @@ export const DashboardHome: React.FC = () => {
         </p>
       </div>
 
-      {/* 2. CONDITIONAL CONTENT: OPEN vs CLOSED */}
-      {shopStatus.isOpen || inProgress ? (
-        <>
-          {/* RECTANGULAR STATUS AREA (BLUE ZONE) */}
-          <div className="w-full relative mb-4 flex-1 flex flex-col justify-center">
-            {/* Main Status Container */}
-            <div className="w-full aspect-square md:aspect-auto md:h-[500px] relative bg-[#050505] rounded-md overflow-hidden shadow-2xl border border-white/5 group">
-              {/* 1. STATUS SIGNAGE (TOP ABSOLUTE) - Hide when In Progress */}
-              {!inProgress && (
-                <>
-                  {/* STATUS NEON SIGNS - Only Open needed here essentially, but keeping for safety */}
-                  <div className="absolute top-8 left-2 z-30 pointer-events-none transform rotate-[-8deg] scale-[0.6] origin-top-left">
-                    <div className="relative rounded-2xl px-10 py-3 bg-black/90 flex flex-col items-center">
-                      <div className="absolute inset-0 border-[5px] rounded-2xl animate-pulse z-0 border-[#00ff00] shadow-[0_0_25px_rgba(0,255,0,0.6),inset_0_0_15px_rgba(0,255,0,0.4)]"></div>
-                      <div className="absolute inset-[3px] rounded-[14px] border-[2px] opacity-70 z-0 border-[#ccffcc]"></div>
-                      <h2
-                        className="relative z-10 text-5xl font-bold tracking-widest leading-none text-[#ccffcc]"
-                        style={{
-                          fontFamily: '"Tilt Neon", "Neon", sans-serif',
-                          textShadow:
-                            '0 0 5px #00ff00, 0 0 10px #00ff00, 0 0 20px #00ff00, 0 0 40px #00ff00',
-                        }}
-                      >
-                        ABERTO
-                      </h2>
-                    </div>
-                  </div>
-                </>
-              )}
+      {/* 2. UNIFIED VISUAL LAYOUT (OPEN & CLOSED) */}
+      <>
+        {/* RECTANGULAR STATUS AREA (BLUE ZONE) */}
+        <div
+          className={`w-full relative flex-1 flex flex-col justify-center ${
+            shopStatus.isOpen || inProgress ? 'mb-4' : 'mb-8'
+          }`}
+        >
+          {/* Main Status Container */}
+          <div className="w-full aspect-square md:aspect-auto md:h-[500px] relative bg-[#050505] rounded-md overflow-hidden shadow-2xl border border-white/5 group">
+            {/* 1. STATUS SIGNAGE (TOP ABSOLUTE) - Hide when In Progress */}
+            {/* 1. STATUS SIGNAGE (TOP ABSOLUTE) - Hide when In Progress */}
+            {!inProgress && (
+              <div className="absolute top-8 left-2 z-30 pointer-events-none transform rotate-[-8deg] scale-[0.6] origin-top-left">
+                <div className="relative rounded-2xl px-10 py-3 bg-black/90 flex flex-col items-center">
+                  {/* DYNAMIC GLOW & BORDER LAYER */}
+                  <div
+                    className={`absolute inset-0 border-[5px] rounded-2xl animate-pulse z-0 ${
+                      shopStatus.isOpen
+                        ? 'border-[#00ff00] shadow-[0_0_25px_rgba(0,255,0,0.6),inset_0_0_15px_rgba(0,255,0,0.4)]'
+                        : 'border-[#ff0000] shadow-[0_0_25px_rgba(255,0,0,0.6),inset_0_0_15px_rgba(255,0,0,0.4)]'
+                    }`}
+                  ></div>
 
-              {/* 2. MAIN CONTENT (FULL COVER) */}
-              {inProgress ? (
-                /* --- IN PROGRESS (FULL COVER + ROTATION) --- */
-                <div className="w-full h-full relative animate-[flipInY_0.8s_ease-out] [perspective:1000px]">
-                  {/* 1. BACKGROUND CONTAINER */}
-                  <div className="absolute inset-0 bg-[#050505] z-0">
-                    <img
-                      src="/background-teste.png"
-                      className="absolute inset-0 w-full h-full object-cover object-top opacity-100"
-                      alt="Background"
-                      onError={e => {
-                        const target = e.currentTarget;
-                        if (target.src.includes('background-teste.png')) {
-                          target.src = '/background-teste.jpg';
-                        } else {
-                          target.style.display = 'none';
-                        }
-                      }}
-                    />
-                  </div>
+                  {/* Inner White/Pastel Line */}
+                  <div
+                    className={`absolute inset-[3px] rounded-[14px] border-[2px] opacity-70 z-0 ${
+                      shopStatus.isOpen ? 'border-[#ccffcc]' : 'border-[#ff9999]'
+                    }`}
+                  ></div>
 
-                  {/* 1.5 MINI HANGING SIGN */}
-                  <div className="absolute top-12 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center w-full pointer-events-none">
-                    <div className="relative flex flex-col items-center transform hover:scale-105 transition-transform duration-500">
-                      <Star className="absolute top-0 -left-6 text-yellow-400 w-4 h-4 animate-pulse drop-shadow-[0_0_4px_#FACC15] fill-yellow-400" />
-                      <Star className="absolute top-0 -right-6 text-yellow-400 w-4 h-4 animate-pulse drop-shadow-[0_0_4px_#FACC15] fill-yellow-400" />
-                      <span
-                        className="font-script text-5xl text-[#FFD700] -rotate-2 drop-shadow-[0_0_15px_#FACC15] block"
-                        style={{ textShadow: '2px 2px 0px #000' }}
-                      >
-                        Bem Vindo
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* 2. CENTRALIZED SUPREME CLIENT CIRCLE */}
-                  <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-                    <div className="relative group pointer-events-auto">
-                      <div className="absolute inset-0 bg-cyan-500 rounded-full blur-[60px] opacity-20 animate-pulse group-hover:opacity-40 transition-opacity duration-500"></div>
-                      <div className="absolute -inset-8 border border-cyan-500/30 rounded-full animate-[spin_10s_linear_infinite] pointer-events-none"></div>
-                      <div className="absolute -inset-2 border-2 border-dashed border-cyan-400/40 rounded-full animate-[spin_20s_linear_infinite_reverse] pointer-events-none"></div>
-                      <div className="w-56 h-56 md:w-72 md:h-72 rounded-full p-2 bg-gradient-to-tr from-cyan-400 via-blue-500 to-purple-600 shadow-[0_0_40px_rgba(6,182,212,0.4)] relative overflow-hidden ring-4 ring-black/50">
-                        <div className="w-full h-full rounded-full border-[4px] border-white/20 overflow-hidden relative bg-black">
-                          <img
-                            src={
-                              inProgress.photoUrl && inProgress.photoUrl.trim() !== ''
-                                ? inProgress.photoUrl
-                                : 'https://images.unsplash.com/photo-1618077553780-75539862f629?q=80&w=400&auto=format&fit=crop'
-                            }
-                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                            alt="Cliente"
-                            onError={e => {
-                              e.currentTarget.src =
-                                'https://images.unsplash.com/photo-1618077553780-75539862f629?q=80&w=400&auto=format&fit=crop';
-                            }}
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Client Neon Sign (Bottom) */}
-                  <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 w-[80%] max-w-[280px]">
-                    <div className="relative border-2 border-green-400/80 rounded-xl px-4 pt-4 pb-2 bg-black/80 backdrop-blur-md shadow-[0_0_20px_rgba(74,222,128,0.3),inset_0_0_10px_rgba(74,222,128,0.1)] flex flex-col items-center transform hover:scale-105 transition-transform duration-300">
-                      <div className="absolute -top-5 left-0 right-0 text-center z-20">
-                        <span
-                          className="font-script text-4xl text-[#FFD700] -rotate-3 drop-shadow-[0_0_5px_#FACC15] block"
-                          style={{ textShadow: '2px 2px 0px #000' }}
-                        >
-                          Em Atendimento
-                        </span>
-                      </div>
-                      <Star className="absolute top-2 left-2 text-yellow-400 w-4 h-4 animate-pulse drop-shadow-[0_0_4px_#FACC15] fill-yellow-400" />
-                      <Star className="absolute top-2 right-2 text-yellow-400 w-4 h-4 animate-pulse drop-shadow-[0_0_4px_#FACC15] fill-yellow-400" />
-                      <div className="flex flex-col items-center relative z-10 w-full mt-1">
-                        <h2 className="text-3xl font-black text-white uppercase tracking-tighter text-center leading-none drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]">
-                          {inProgress.clientName ? inProgress.clientName.split(' ')[0] : 'Cliente'}
-                        </h2>
-                        <div className="w-1/2 h-[2px] bg-gradient-to-r from-transparent via-green-500 to-transparent mt-1 mb-1"></div>
-                        <span className="text-[10px] font-bold text-green-300 uppercase tracking-[0.2em]">
-                          Visual Confirmado
-                        </span>
-                      </div>
-                    </div>
-                  </div>
+                  {/* Text */}
+                  <h2
+                    className={`relative z-10 text-5xl font-bold tracking-widest leading-none ${
+                      shopStatus.isOpen ? 'text-[#ccffcc]' : 'text-[#ffcccc]'
+                    }`}
+                    style={{
+                      fontFamily: '"Tilt Neon", "Neon", sans-serif',
+                      textShadow: shopStatus.isOpen
+                        ? '0 0 5px #00ff00, 0 0 10px #00ff00, 0 0 20px #00ff00, 0 0 40px #00ff00'
+                        : '0 0 5px #ff0000, 0 0 10px #ff0000, 0 0 20px #ff0000, 0 0 40px #ff0000',
+                    }}
+                  >
+                    {shopStatus.isOpen ? 'ABERTO' : 'FECHADO'}
+                  </h2>
                 </div>
-              ) : (
-                /* --- SHOP STATUS (CHAIR) - OPEN ONLY --- */
-                <div className="w-full h-full relative flex items-end justify-center overflow-hidden">
-                  <div className="absolute inset-0 transition-opacity duration-1000 opacity-30 bg-blue-900/20"></div>
+              </div>
+            )}
+
+            {/* 2. MAIN CONTENT (FULL COVER) */}
+            {inProgress ? (
+              /* --- IN PROGRESS (FULL COVER + ROTATION) --- */
+              <div className="w-full h-full relative animate-[flipInY_0.8s_ease-out] [perspective:1000px]">
+                {/* 1. BACKGROUND CONTAINER */}
+                <div className="absolute inset-0 bg-[#050505] z-0">
                   <img
-                    src="/chair-open.png"
-                    className="w-full h-full object-contain scale-100 drop-shadow-[0_0_50px_rgba(0,100,255,0.2)] object-center transition-all duration-1000 transform"
-                    alt="Cadeira"
+                    src="/background-teste.png"
+                    className="absolute inset-0 w-full h-full object-cover object-top opacity-100"
+                    alt="Background"
                     onError={e => {
-                      e.currentTarget.src =
-                        'https://png.pngtree.com/png-vector/20230906/ourmid/pngtree-barber-shop-chair-3d-illustration-png-image_9963953.png';
+                      const target = e.currentTarget;
+                      if (target.src.includes('background-teste.png')) {
+                        target.src = '/background-teste.jpg';
+                      } else {
+                        target.style.display = 'none';
+                      }
                     }}
                   />
                 </div>
-              )}
-            </div>
-          </div>
 
-          {/* 3. NEXT CLIENT ACTION BUTTON */}
+                {/* 1.5 MINI HANGING SIGN */}
+                <div className="absolute top-12 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center w-full pointer-events-none">
+                  <div className="relative flex flex-col items-center transform hover:scale-105 transition-transform duration-500">
+                    <Star className="absolute top-0 -left-6 text-yellow-400 w-4 h-4 animate-pulse drop-shadow-[0_0_4px_#FACC15] fill-yellow-400" />
+                    <Star className="absolute top-0 -right-6 text-yellow-400 w-4 h-4 animate-pulse drop-shadow-[0_0_4px_#FACC15] fill-yellow-400" />
+                    <span
+                      className="font-script text-5xl text-[#FFD700] -rotate-2 drop-shadow-[0_0_15px_#FACC15] block"
+                      style={{ textShadow: '2px 2px 0px #000' }}
+                    >
+                      Bem Vindo
+                    </span>
+                  </div>
+                </div>
+
+                {/* 2. CENTRALIZED SUPREME CLIENT CIRCLE */}
+                <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                  <div className="relative group pointer-events-auto">
+                    <div className="absolute inset-0 bg-cyan-500 rounded-full blur-[60px] opacity-20 animate-pulse group-hover:opacity-40 transition-opacity duration-500"></div>
+                    <div className="absolute -inset-8 border border-cyan-500/30 rounded-full animate-[spin_10s_linear_infinite] pointer-events-none"></div>
+                    <div className="absolute -inset-2 border-2 border-dashed border-cyan-400/40 rounded-full animate-[spin_20s_linear_infinite_reverse] pointer-events-none"></div>
+                    <div className="w-56 h-56 md:w-72 md:h-72 rounded-full p-2 bg-gradient-to-tr from-cyan-400 via-blue-500 to-purple-600 shadow-[0_0_40px_rgba(6,182,212,0.4)] relative overflow-hidden ring-4 ring-black/50">
+                      <div className="w-full h-full rounded-full border-[4px] border-white/20 overflow-hidden relative bg-black">
+                        <img
+                          src={
+                            inProgress.photoUrl && inProgress.photoUrl.trim() !== ''
+                              ? inProgress.photoUrl
+                              : 'https://images.unsplash.com/photo-1618077553780-75539862f629?q=80&w=400&auto=format&fit=crop'
+                          }
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                          alt="Cliente"
+                          onError={e => {
+                            e.currentTarget.src =
+                              'https://images.unsplash.com/photo-1618077553780-75539862f629?q=80&w=400&auto=format&fit=crop';
+                          }}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Client Neon Sign (Bottom) */}
+                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 w-[80%] max-w-[280px]">
+                  <div className="relative border-2 border-green-400/80 rounded-xl px-4 pt-4 pb-2 bg-black/80 backdrop-blur-md shadow-[0_0_20px_rgba(74,222,128,0.3),inset_0_0_10px_rgba(74,222,128,0.1)] flex flex-col items-center transform hover:scale-105 transition-transform duration-300">
+                    <div className="absolute -top-5 left-0 right-0 text-center z-20">
+                      <span
+                        className="font-script text-4xl text-[#FFD700] -rotate-3 drop-shadow-[0_0_5px_#FACC15] block"
+                        style={{ textShadow: '2px 2px 0px #000' }}
+                      >
+                        Em Atendimento
+                      </span>
+                    </div>
+                    <Star className="absolute top-2 left-2 text-yellow-400 w-4 h-4 animate-pulse drop-shadow-[0_0_4px_#FACC15] fill-yellow-400" />
+                    <Star className="absolute top-2 right-2 text-yellow-400 w-4 h-4 animate-pulse drop-shadow-[0_0_4px_#FACC15] fill-yellow-400" />
+                    <div className="flex flex-col items-center relative z-10 w-full mt-1">
+                      <h2 className="text-3xl font-black text-white uppercase tracking-tighter text-center leading-none drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]">
+                        {inProgress.clientName ? inProgress.clientName.split(' ')[0] : 'Cliente'}
+                      </h2>
+                      <div className="w-1/2 h-[2px] bg-gradient-to-r from-transparent via-green-500 to-transparent mt-1 mb-1"></div>
+                      <span className="text-[10px] font-bold text-green-300 uppercase tracking-[0.2em]">
+                        Visual Confirmado
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* --- SHOP STATUS (CHAIR) - STATIC (OPEN/CLOSED) --- */
+              <div className="w-full h-full relative flex items-end justify-center overflow-hidden">
+                <div
+                  className={`absolute inset-0 transition-opacity duration-1000 ${
+                    shopStatus.isOpen ? 'opacity-30 bg-blue-900/20' : 'opacity-60 bg-red-900/10'
+                  }`}
+                ></div>
+                <img
+                  src={shopStatus.isOpen ? '/chair-open.png' : '/chair-closed.png'}
+                  className={`w-full h-full object-contain object-center transition-all duration-1000 transform ${
+                    shopStatus.isOpen
+                      ? 'scale-100 drop-shadow-[0_0_50px_rgba(0,100,255,0.2)]'
+                      : 'scale-110 drop-shadow-[0_0_50px_rgba(255,0,0,0.1)] grayscale-[50%] brightness-75'
+                  }`}
+                  alt="Barbearia"
+                  onError={e => {
+                    e.currentTarget.src =
+                      'https://png.pngtree.com/png-vector/20230906/ourmid/pngtree-barber-shop-chair-3d-illustration-png-image_9963953.png';
+                  }}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* 3. NEXT CLIENT ACTION BUTTON */}
+        {(shopStatus.isOpen || inProgress) && (
           <div className="w-full mb-4">
             {inProgress ? (
               <button
@@ -429,45 +457,11 @@ export const DashboardHome: React.FC = () => {
               </button>
             )}
           </div>
+        )}
 
-          {/* 4. QUEUE TICKER (ISOLATED) */}
-          <QueueTicker queue={queue} services={services} />
-        </>
-      ) : (
-        /* --- CLOSED STATE (FULLSCREEN HERO) --- */
-        <div className="w-[calc(100%+2rem)] -ml-4 -mr-4 -mb-28 flex-1 relative rounded-t-2xl overflow-hidden border-t border-white/5 shadow-2xl flex flex-col items-center justify-center min-h-[60vh]">
-          {/* Full Background Image */}
-          <div className="absolute inset-0 bg-black">
-            <img
-              src="/chair-closed.png"
-              className="w-full h-full object-cover grayscale-[30%] contrast-125 brightness-75 transition-all duration-1000"
-              alt="Barbearia Fechada"
-            />
-            {/* Dark Overlay Gradient - REDUCED OPACITY */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-60"></div>
-          </div>
-
-             {/* RED NEON SIGN (EXACT REPLICA OF OPEN SIGN - RED VERSION) */}
-             <div className="absolute top-8 left-2 z-30 pointer-events-none transform rotate-[-8deg] scale-[0.6] origin-top-left">
-                <div className="relative rounded-2xl px-10 py-3 bg-black/90 flex flex-col items-center">
-                   {/* PULSING GLOW & BORDER LAYER - RED */}
-                   <div className="absolute inset-0 border-[5px] rounded-2xl animate-pulse z-0 border-[#ff0000] shadow-[0_0_25px_rgba(255,0,0,0.6),inset_0_0_15px_rgba(255,0,0,0.4)]"></div>
-
-                   {/* Inner White/Pastel Line */}
-                   <div className="absolute inset-[3px] rounded-[14px] border-[2px] opacity-70 z-0 border-[#ff9999]"></div>
-
-                   {/* Text */}
-                   <h2 className="relative z-10 text-5xl font-bold tracking-widest leading-none text-[#ffcccc]"
-                    style={{
-                      fontFamily: '"Tilt Neon", "Neon", sans-serif',
-                      textShadow: '0 0 5px #ff0000, 0 0 10px #ff0000, 0 0 20px #ff0000, 0 0 40px #ff0000'
-                    }}>
-                    FECHADO
-                   </h2>
-                </div>
-             </div>
-        </div>
-      )}
+        {/* 4. QUEUE TICKER (ISOLATED) */}
+        <QueueTicker queue={queue} services={services} />
+      </>
     </div>
   );
 };

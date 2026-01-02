@@ -46,8 +46,12 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
     // Cloudinary returns URL in req.file.path
     res.json({ url: req.file.path });
   } catch (err) {
-    console.error('Upload error:', err);
-    res.status(500).json({ error: 'Falha no upload.' });
+    console.error('Upload Configuration Error:', err);
+    res.status(500).json({
+      error: 'Falha no upload.',
+      details: err.message || 'Erro desconhecido',
+      hint: err.http_code === 401 ? 'Verifique as credenciais do Cloudinary no .env' : undefined,
+    });
   }
 });
 
