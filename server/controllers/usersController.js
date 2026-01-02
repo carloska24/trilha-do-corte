@@ -65,6 +65,58 @@ export const updateClientProfile = async (req, res) => {
   }
 };
 
+export const updateBarberProfile = async (req, res) => {
+  const { id } = req.params;
+  const { name, phone, email, img, bio, specialty } = req.body;
+
+  try {
+    const updates = [];
+    const params = [];
+    let paramIdx = 1;
+
+    if (name !== undefined) {
+      updates.push(`name = $${paramIdx++}`);
+      params.push(name);
+    }
+    if (phone !== undefined) {
+      updates.push(`phone = $${paramIdx++}`);
+      params.push(phone);
+    }
+    if (email !== undefined) {
+      updates.push(`email = $${paramIdx++}`);
+      params.push(email);
+    }
+    if (img !== undefined) {
+      updates.push(`img = $${paramIdx++}`);
+      params.push(img);
+    }
+    if (bio !== undefined) {
+      // Barber specific
+      updates.push(`bio = $${paramIdx++}`);
+      params.push(bio);
+    }
+    if (specialty !== undefined) {
+      // Barber specific
+      updates.push(`specialty = $${paramIdx++}`);
+      params.push(specialty);
+    }
+
+    if (updates.length === 0) {
+      return res.status(400).json({ error: 'No valid fields to update.' });
+    }
+
+    params.push(id);
+    const sql = `UPDATE barbers SET ${updates.join(', ')} WHERE id = $${paramIdx}`;
+    await db.query(sql, params);
+
+    const { rows } = await db.query('SELECT * FROM barbers WHERE id = $1', [id]);
+    res.json({ success: true, data: rows[0] });
+  } catch (err) {
+    console.error('Update Barber Error:', err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
 export const createClientAdmin = async (req, res) => {
   const { name, phone, level, lastVisit, img, status, notes } = req.body;
   const id = uuidv4();

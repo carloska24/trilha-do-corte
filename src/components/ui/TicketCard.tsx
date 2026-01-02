@@ -6,25 +6,109 @@ interface TicketCardProps {
   data: BookingData;
   service?: ServiceItem;
   ticketId: string;
-  rating?: number;
+  rating?: number; // Kept for backward compatibility, serves as serviceCount proxy if needed
+  serviceCount?: number; // New prop for explicit tier logic
   className?: string;
 }
+
+type Tier = 'SILVER' | 'GOLD' | 'PLATINUM';
+
+const getTier = (count: number): Tier => {
+  if (count <= 5) return 'SILVER';
+  if (count <= 10) return 'GOLD';
+  return 'PLATINUM';
+};
+
+const TIER_STYLES = {
+  SILVER: {
+    gradient: 'bg-linear-to-br from-[#E2E4E9] via-[#F3F4F6] to-[#9CA3AF]', // Brighter silver body
+    border: 'border-white/40',
+    // CHANGED: Dark text for bright background
+    textMain: 'text-[#1F2937]', // Dark gray (almost black)
+    textSoft: 'text-[#4B5563]', // Medium gray
+    textMuted: 'text-[#6B7280]', // Light gray
+    accent: 'text-[#374151]',
+    icon: 'text-[#374151]',
+    shadow: 'shadow-[0_8px_20px_rgba(0,0,0,0.25)]',
+    // CHANGED: Anodized Dark Header
+    headerBg: 'bg-linear-to-b from-[#1F2328] to-[#2B2F36]',
+    headerBorder: 'border-[rgba(255,255,255,0.12)]',
+    headerText: 'text-[#E5E7EB] drop-shadow-sm',
+    headerTexture: 'opacity-[0.06]', // 6% Grid
+    headerTextureColor: '#FFFFFF',
+    textureOverlay: 'bg-white/10', // Crushed ice feel
+    cutoutBorder: 'border-gray-400/50',
+    infoBox: 'bg-black/5 border-black/10 backdrop-blur-sm', // Darken box for contrast
+    divider: 'bg-black/10',
+  },
+  GOLD: {
+    gradient: 'bg-linear-to-br from-[#E0B65C] via-[#FDE68A] to-[#8C6A1E]',
+    border: 'border-[#FFD777]/80',
+    // CHANGED: Dark Brown/Bronze for contrast on Gold
+    textMain: 'text-[#422006]', // Deep bronze
+    textSoft: 'text-[#713F12]',
+    textMuted: 'text-[#854D0E]',
+    accent: 'text-[#A16207]',
+    icon: 'text-[#854D0E]',
+    shadow: 'shadow-[0_10px_28px_rgba(0,0,0,0.45)]',
+    // Black Gold Header (Keep dark, text is already bright gold)
+    headerBg: 'bg-linear-to-b from-[#141414] to-[#1F1F1F]',
+    headerBorder: 'border-[rgba(255,215,119,0.35)]',
+    headerText: 'text-[#FDE68A] drop-shadow-[0_2px_0_rgba(0,0,0,1)]',
+    headerTexture: 'opacity-[0.04]', // 4% Grid
+    headerTextureColor: '#FDE68A',
+    textureOverlay: 'bg-[#FFD700]/10',
+    cutoutBorder: 'border-[#FFD777]/60',
+    infoBox: 'bg-[#2a1e0b]/90 border-[#b88a44]',
+    divider: 'bg-[#713F12]/40',
+  },
+  PLATINUM: {
+    gradient: 'bg-linear-to-br from-[#E5E7EB] via-[#F9FAFB] to-[#6B7280]',
+    border: 'border-white/45',
+    // CHANGED: Dark Slate for contrast on Platinum/White
+    textMain: 'text-[#0F172A]', // Dark Slate
+    textSoft: 'text-[#334155]',
+    textMuted: 'text-[#475569]',
+    accent: 'text-[#3B82F6]', // Blue accent
+    icon: 'text-[#334155]',
+    shadow: 'shadow-[0_12px_30px_rgba(0,0,0,0.55)]',
+    // Dark Titanium Header (Keep dark)
+    headerBg: 'bg-linear-to-b from-[#0F172A] to-[#111827]',
+    headerBorder: 'border-[rgba(147,197,253,0.35)]',
+    headerText:
+      'text-transparent bg-clip-text bg-linear-to-b from-white via-[#93C5FD] to-[#3B82F6] drop-shadow-[0_2px_4px_rgba(59,130,246,0.5)]',
+    headerTexture: 'opacity-[0.05]',
+    headerTextureColor: '#93C5FD',
+    textureOverlay: 'bg-[#93C5FD]/5',
+    cutoutBorder: 'border-[#93C5FD]/40',
+    infoBox: 'bg-[#0f172a]/90 border-[#1e293b]',
+    divider: 'bg-[#334155]/20',
+  },
+};
 
 export const TicketCard: React.FC<TicketCardProps> = ({
   data,
   service,
   ticketId,
-  rating = 4,
+  rating = 1,
+  serviceCount,
   className,
 }) => {
   const [isFlipped, setIsFlipped] = React.useState(false);
   const [isAnimating, setIsAnimating] = React.useState(false);
 
+  // Determine Tier: Use serviceCount if available, otherwise fallback to rating logic or default
+  // User logic: 1-5 Silver, 6-10 Gold, 11+ Platinum
+  // If serviceCount is not passed, we default to 1 (Silver)
+  const count = serviceCount !== undefined ? serviceCount : rating || 1;
+  const tier = getTier(count);
+  const styles = TIER_STYLES[tier];
+
   const handleFlip = () => {
-    if (isAnimating) return; // Prevent double-clicks
+    if (isAnimating) return;
     setIsAnimating(true);
     setIsFlipped(!isFlipped);
-    setTimeout(() => setIsAnimating(false), 750); // Buffer for transition to ensure smooth snap
+    setTimeout(() => setIsAnimating(false), 750);
   };
 
   const formatPrice = (value: number) =>
@@ -36,33 +120,31 @@ export const TicketCard: React.FC<TicketCardProps> = ({
     return `${day}/${month}/${year.slice(-2)}`;
   };
 
-  // --- DYNAMIC STYLES FOR CRISPNESS ---
-  // The goal: When not animating, we want pure 2D layers with NO 3D transforms to avoid blur.
-
   const wrapperStyle: React.CSSProperties = isAnimating
     ? {
         transformStyle: 'preserve-3d',
         perspective: '1000px',
         transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
-        transition: 'transform 0.7s', // Only animate when we say so
+        transition: 'transform 0.7s',
       }
     : {
-        // IDLE STATE: Pure 2D
         transform: 'none',
         transformStyle: 'flat',
         perspective: 'none',
-        transition: 'none', // CRITICAL: Stop the wrapper from animating back to 0
+        transition: 'none',
       };
 
   const frontFaceStyle: React.CSSProperties =
     !isAnimating && isFlipped
-      ? { opacity: 0, pointerEvents: 'none' } // Hidden when showing back (idle)
-      : { transform: 'translateZ(1px)' }; // Normal state
+      ? { opacity: 0, pointerEvents: 'none' }
+      : { transform: 'translateZ(1px)' };
 
   const backFaceStyle: React.CSSProperties =
     !isAnimating && isFlipped
-      ? { transform: 'none', zIndex: 50, opacity: 1 } // Shown on top when back (idle)
-      : { transform: 'rotateY(180deg)' }; // Normal 3D state
+      ? { transform: 'none', zIndex: 50, opacity: 1 }
+      : !isAnimating && !isFlipped
+      ? { transform: 'rotateY(180deg)', opacity: 0, pointerEvents: 'none' }
+      : { transform: 'rotateY(180deg)' };
 
   return (
     <div
@@ -71,42 +153,36 @@ export const TicketCard: React.FC<TicketCardProps> = ({
       }`}
       onClick={handleFlip}
     >
-      {/* Outer Glow - Slightly reduced */}
+      {/* Outer Glow - Tier Specific */}
       <div
-        className={`absolute inset-0 bg-[#F4D079]/20 blur-2xl rounded-[24px] transform scale-[0.9] pointer-events-none transition-opacity duration-500 z-0 ${
+        className={`absolute inset-0 blur-2xl rounded-[24px] transform scale-[0.9] pointer-events-none transition-opacity duration-500 z-0 ${
           isAnimating ? 'opacity-0' : 'opacity-40 group-hover:opacity-60'
+        } ${
+          tier === 'GOLD'
+            ? 'bg-[#F4D079]/30'
+            : tier === 'PLATINUM'
+            ? 'bg-[#93C5FD]/20'
+            : 'bg-white/5'
         }`}
       ></div>
 
       {/* FLIP INNER CONTAINER */}
-      <div
-        className="relative w-full z-10" // Removed 'duration-700 transition-transform' classes to control via inline style
-        style={wrapperStyle}
-      >
+      <div className="relative w-full z-10" style={wrapperStyle}>
         {/* ================= FRONT FACE ================= */}
         <div
-          className="relative backface-hidden z-10 block ring-1 ring-white/10 rounded-[24px]"
+          className={`relative backface-hidden z-10 block ring-1 rounded-[24px] ${styles.border}`}
           style={frontFaceStyle}
         >
           {/* Main Card Frame */}
           <div
-            className={`relative p-[2px] rounded-[24px] shadow-[0_15px_40px_-5px_rgba(0,0,0,0.6)] overflow-hidden ${
-              rating <= 1
-                ? 'bg-gradient-to-br from-[#ffffff] via-[#d4d4d8] to-[#9ca3af]' // Ultra Bright Silver
-                : 'bg-gradient-to-b from-[#b88a44] via-[#F4D079] to-[#74541e]' // Gold Gradient
-            }`}
+            className={`relative p-[2px] rounded-[24px] overflow-hidden ${styles.gradient} ${styles.shadow}`}
           >
             <div className="bg-[#141009] relative rounded-[22px] overflow-hidden flex flex-col h-auto backface-hidden antialiased transition-all duration-300">
               {/* Texture Layer */}
               <div className="absolute inset-0 z-0 pointer-events-none">
-                <div
-                  className={`absolute inset-0 opacity-100 ${
-                    rating <= 1
-                      ? 'bg-gradient-to-br from-[#888] via-[#aaa] to-[#555]' // Chrome Base
-                      : 'bg-gradient-to-br from-[#ae8b47] via-[#cfab59] to-[#8a6e34]' // Gold Base
-                  }`}
-                ></div>
-                {/* Micro-noise for texture without blur */}
+                <div className={`absolute inset-0 opacity-100 ${styles.gradient}`}></div>
+
+                {/* Micro-noise */}
                 <div
                   className="absolute inset-0 opacity-[0.15] mix-blend-overlay"
                   style={{
@@ -114,37 +190,31 @@ export const TicketCard: React.FC<TicketCardProps> = ({
                   }}
                 ></div>
                 <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-transparent to-black/40 mix-blend-overlay"></div>
+                {/* Specific Tier Overlay */}
+                <div
+                  className={`absolute inset-0 mix-blend-overlay ${styles.textureOverlay}`}
+                ></div>
               </div>
 
               {/* HEADER TEXTURE & TITLE */}
               <div
-                className={`relative z-10 h-14 w-full border-b shadow-md flex items-center justify-between px-5 ${
-                  rating <= 1 ? 'bg-[#1a1a1a] border-white/10' : 'bg-[#141009] border-[#F4D079]/30'
-                }`}
+                className={`relative z-10 h-14 w-full border-b shadow-md flex items-center justify-between px-5 ${styles.headerBg} ${styles.headerBorder}`}
               >
-                {/* Subtle Grid Pattern for Header */}
+                {/* Subtle Grid Pattern */}
                 <div
-                  className="absolute inset-0 opacity-20"
+                  className={`absolute inset-0 ${styles.headerTexture}`}
                   style={{
-                    backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)',
+                    backgroundImage: `radial-gradient(circle, ${styles.headerTextureColor} 1px, transparent 1px)`,
                     backgroundSize: '8px 8px',
                   }}
                 ></div>
 
-                <span
-                  className={`font-graffiti text-xl tracking-wider z-10 ${
-                    rating <= 1
-                      ? 'text-transparent bg-clip-text bg-gradient-to-b from-white via-gray-200 to-gray-400 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]'
-                      : 'text-[#F4D079] drop-shadow-[0_2px_0_rgba(0,0,0,1)]'
-                  }`}
-                >
+                <span className={`font-graffiti text-xl tracking-wider z-10 ${styles.headerText}`}>
                   TRILHA
-                  <span className={`${rating <= 1 ? 'text-white' : 'text-[#fff]'}`}>CARD</span>
+                  <span className={`${tier === 'GOLD' ? 'text-[#fff]' : 'text-white'}`}>CARD</span>
                 </span>
                 <span
-                  className={`font-mono font-bold text-xs tracking-widest z-10 ${
-                    rating <= 1 ? 'text-gray-400' : 'text-[#F4D079]/80'
-                  }`}
+                  className={`font-mono font-bold text-xs tracking-widest z-10 ${styles.textMuted}`}
                 >
                   {ticketId}
                 </span>
@@ -152,27 +222,20 @@ export const TicketCard: React.FC<TicketCardProps> = ({
 
               {/* BODY - FRONT */}
               <div className="relative z-10 p-5 flex flex-col">
-                {/* Stacked Fields Container - No extra gap */}
                 <div className="flex flex-col gap-3">
                   {/* Block 1: Passenger */}
                   <div className="flex flex-col items-start relative">
                     <span
-                      className={`text-[9px] font-black uppercase tracking-[0.2em] mb-0.5 ml-1 opacity-80 ${
-                        rating <= 1 ? 'text-gray-900' : 'text-[#2a1e0b]'
-                      }`}
+                      className={`text-[9px] font-black uppercase tracking-[0.2em] mb-0.5 ml-1 opacity-80 ${styles.textSoft}`}
                     >
                       Passageiro
                     </span>
                     <h3
-                      className={`text-3xl font-black uppercase tracking-wide leading-none ${
-                        rating <= 1
-                          ? 'text-white drop-shadow-md'
-                          : 'text-[#fff] text-shadow-gold drop-shadow-md'
-                      }`}
+                      className={`text-3xl font-black uppercase tracking-wide leading-none ${styles.textMain}`}
                     >
                       {data.name?.split(' ')[0] || 'CARLOS'}
-                      <span className="ml-2 opacity-80">
-                        {/* Initial */ data.name?.split(' ')?.[1]?.[0] || 'A'}.
+                      <span className={`ml-2 opacity-80 ${styles.textSoft}`}>
+                        {data.name?.split(' ')?.[1]?.[0] || 'A'}.
                       </span>
                     </h3>
                   </div>
@@ -180,70 +243,68 @@ export const TicketCard: React.FC<TicketCardProps> = ({
                   {/* Block 2: Service + Stars */}
                   <div className="flex flex-col items-start relative">
                     <span
-                      className={`text-[9px] font-black uppercase tracking-[0.2em] mb-0.5 ml-1 opacity-80 ${
-                        rating <= 1 ? 'text-gray-900' : 'text-[#2a1e0b]'
-                      }`}
+                      className={`text-[9px] font-black uppercase tracking-[0.2em] mb-0.5 ml-1 opacity-80 ${styles.textSoft}`}
                     >
                       Serviço
                     </span>
 
-                    {(() => {
-                      const name = service?.name || 'Corte';
-                      return (
-                        <h3
-                          className={`text-xl font-black uppercase tracking-wide leading-none ${
-                            rating <= 1
-                              ? 'text-white drop-shadow-md'
-                              : 'text-[#fff] text-shadow-gold drop-shadow-md'
-                          }`}
-                        >
-                          {name}
-                        </h3>
-                      );
-                    })()}
+                    <h3
+                      className={`text-xl font-black uppercase tracking-wide leading-none ${styles.textMain}`}
+                    >
+                      {service?.name || 'Corte'}
+                    </h3>
 
-                    {/* Stars - Immediately below service */}
-                    <div className="flex gap-1 mt-1.5 ml-0.5">
+                    {/* Stars / Tier Indicator */}
+                    <div className="flex gap-1 mt-1.5 ml-0.5 items-center">
+                      {/* Display stars if needed, or just Tier Name */}
                       {[1, 2, 3, 4, 5].map(s => (
-                        <div key={s} className="relative">
-                          <Star
-                            size={12}
-                            fill={s <= rating ? (rating <= 1 ? '#eab308' : '#FFFFFF') : 'none'}
-                            className={`${
-                              s <= rating
-                                ? rating <= 1
-                                  ? 'text-yellow-500'
-                                  : 'text-[#FFFFFF]'
-                                : 'text-black/20'
-                            }`}
-                            strokeWidth={s <= rating ? 0 : 2}
-                          />
-                        </div>
+                        <Star
+                          key={s}
+                          size={12}
+                          fill={
+                            tier === 'GOLD'
+                              ? '#854D0E' // Dark Bronze fill for Gold Card
+                              : tier === 'SILVER'
+                              ? '#374151' // Dark Gray fill for Silver Card
+                              : '#334155' // Dark Slate fill for Platinum Card
+                          }
+                          className={
+                            tier === 'GOLD'
+                              ? 'text-[#854D0E]'
+                              : tier === 'SILVER'
+                              ? 'text-[#374151]'
+                              : 'text-[#334155]'
+                          }
+                          strokeWidth={0}
+                        />
                       ))}
+                      <span
+                        className={`ml-2 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${styles.border} ${styles.textSoft}`}
+                      >
+                        {tier}
+                      </span>
                     </div>
                   </div>
                 </div>
 
-                {/* Divider - Moved up, tight to content */}
+                {/* Divider */}
                 <div
-                  className={`w-full h-[1px] my-2 shadow-[0_1px_0_rgba(255,255,255,0.2)] ${
-                    rating <= 1 ? 'bg-gray-400/50' : 'bg-[#5c4013]/60'
-                  }`}
+                  className={`w-full h-[1px] my-2 shadow-[0_1px_0_rgba(255,255,255,0.2)] ${styles.divider}`}
                 ></div>
 
-                {/* Footer Grid - With Icons */}
+                {/* Footer Grid */}
                 <div className="grid grid-cols-3 gap-2">
                   {/* Date */}
                   <div className="flex flex-col">
                     <span
-                      className={`text-[8px] font-black uppercase tracking-widest mb-0.5 flex items-center gap-1 opacity-90 ${
-                        rating <= 1 ? 'text-gray-900' : 'text-[#2a1e0b]'
-                      }`}
+                      className={`text-[8px] font-black uppercase tracking-widest mb-0.5 flex items-center gap-1 opacity-90 ${styles.textSoft}`}
                     >
-                      <Calendar size={10} strokeWidth={3} />
+                      <Calendar size={10} strokeWidth={3} className={styles.icon} />
                       Data
                     </span>
-                    <span className="font-mono text-sm font-bold text-[#fff] drop-shadow-sm truncate pl-0.5">
+                    <span
+                      className={`font-mono text-sm font-bold drop-shadow-sm truncate pl-0.5 ${styles.textMain}`}
+                    >
                       {formatDate(data.date)}
                     </span>
                   </div>
@@ -251,14 +312,14 @@ export const TicketCard: React.FC<TicketCardProps> = ({
                   {/* Time */}
                   <div className="flex flex-col items-center">
                     <span
-                      className={`text-[8px] font-black uppercase tracking-widest mb-0.5 flex items-center gap-1 opacity-90 ${
-                        rating <= 1 ? 'text-gray-900' : 'text-[#2a1e0b]'
-                      }`}
+                      className={`text-[8px] font-black uppercase tracking-widest mb-0.5 flex items-center gap-1 opacity-90 ${styles.textSoft}`}
                     >
-                      <Clock size={10} strokeWidth={3} />
+                      <Clock size={10} strokeWidth={3} className={styles.icon} />
                       Horário
                     </span>
-                    <span className="font-mono text-sm font-bold text-[#fff] drop-shadow-sm pl-0.5">
+                    <span
+                      className={`font-mono text-sm font-bold drop-shadow-sm pl-0.5 ${styles.textMain}`}
+                    >
                       {data.time || '10:00'}
                     </span>
                   </div>
@@ -266,15 +327,14 @@ export const TicketCard: React.FC<TicketCardProps> = ({
                   {/* Price */}
                   <div className="flex flex-col items-end">
                     <span
-                      className={`text-[8px] font-black uppercase tracking-widest mb-0.5 flex items-center gap-1 opacity-90 ${
-                        rating <= 1 ? 'text-gray-900' : 'text-[#2a1e0b]'
-                      }`}
+                      className={`text-[8px] font-black uppercase tracking-widest mb-0.5 flex items-center gap-1 opacity-90 ${styles.textSoft}`}
                     >
                       Valor
-                      {/* Using a generic bill icon or just text if icon not available, but user asked for icon */}
-                      <span className="font-bold text-[10px]">$</span>
+                      <Banknote size={10} strokeWidth={3} className={`ml-1 ${styles.accent}`} />
                     </span>
-                    <span className="font-mono text-base font-bold text-[#fff] drop-shadow-sm pl-0.5">
+                    <span
+                      className={`font-mono text-base font-bold drop-shadow-sm pl-0.5 ${styles.textMain}`}
+                    >
                       {formatPrice(service?.priceValue || 35)}
                     </span>
                   </div>
@@ -282,78 +342,73 @@ export const TicketCard: React.FC<TicketCardProps> = ({
               </div>
 
               {/* Cutouts */}
-              <div className="absolute -left-[10px] top-[calc(64px+80px)] w-5 h-5 bg-[#141009] rounded-full shadow-[inset_-1px_0_2px_rgba(0,0,0,0.5)] z-20 border-r border-[#b88a44]"></div>
-              <div className="absolute -right-[10px] top-[calc(64px+80px)] w-5 h-5 bg-[#141009] rounded-full shadow-[inset_1px_0_2px_rgba(0,0,0,0.5)] z-20 border-l border-[#b88a44]"></div>
+              <div
+                className={`absolute -left-[10px] top-[calc(64px+80px)] w-5 h-5 bg-[#141009] rounded-full shadow-[inset_-1px_0_2px_rgba(0,0,0,0.5)] z-20 border-r ${styles.cutoutBorder}`}
+              ></div>
+              <div
+                className={`absolute -right-[10px] top-[calc(64px+80px)] w-5 h-5 bg-[#141009] rounded-full shadow-[inset_1px_0_2px_rgba(0,0,0,0.5)] z-20 border-l ${styles.cutoutBorder}`}
+              ></div>
             </div>
           </div>
         </div>
 
         {/* ================= BACK FACE ================= */}
         <div
-          className="absolute inset-0 backface-hidden rotate-y-180 z-20 h-full w-full ring-1 ring-white/10 rounded-[24px]"
+          className={`absolute inset-0 backface-hidden rotate-y-180 z-20 h-full w-full ring-1 rounded-[24px] ${styles.border}`}
           style={backFaceStyle}
         >
           <div
-            className={`relative p-[3px] rounded-[24px] shadow-2xl overflow-hidden h-full ${
-              rating <= 1
-                ? 'bg-gradient-to-b from-[#4a4a4a] via-[#8a8a8a] to-[#2a2a2a]' // Iron
-                : 'bg-gradient-to-b from-[#8E6E34] via-[#F4D079] to-[#584015]' // Gold
-            }`}
+            className={`relative p-[3px] rounded-[24px] shadow-2xl overflow-hidden h-full ${styles.gradient}`}
           >
             <div className="bg-[#1a150c] relative rounded-[21px] overflow-hidden h-full flex flex-col backface-hidden antialiased">
               {/* Metallic Texture (Same as front) */}
               <div className="absolute inset-0 z-0 transform scale-x-[-1] pointer-events-none">
+                <div className={`absolute inset-0 opacity-100 ${styles.gradient}`}></div>
                 <div
-                  className={`absolute inset-0 opacity-100 ${
-                    rating <= 1
-                      ? 'bg-gradient-to-bl from-[#333] via-[#555] to-[#222]' // Iron Base
-                      : 'bg-gradient-to-bl from-[#ae8b47] via-[#cfab59] to-[#8a6e34]' // Gold Base
-                  }`}
+                  className="absolute inset-0 opacity-[0.15] mix-blend-overlay"
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+                  }}
                 ></div>
-                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/brushed-alum-dark.png')] opacity-40 mix-blend-multiply"></div>
-                <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-transparent to-black/30 mix-blend-overlay"></div>
+                <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-transparent to-black/40 mix-blend-overlay"></div>
+                {/* Specific Tier Overlay Back */}
+                <div
+                  className={`absolute inset-0 mix-blend-overlay ${styles.textureOverlay}`}
+                ></div>
               </div>
 
-              {/* TOP STRIP - BACK */}
+              {/* HEADER TEXTURE & TITLE - BACK */}
               <div
-                className={`relative z-10 h-14 w-full bg-[#0a0a0a] border-b flex items-center justify-center shrink-0 ${
-                  rating <= 1 ? 'border-gray-600/50' : 'border-[#F4D079]/50'
-                }`}
+                className={`relative z-10 h-14 w-full border-b shadow-md flex items-center justify-center shrink-0 ${styles.headerBg} ${styles.headerBorder}`}
               >
-                <span
-                  className={`font-graffiti text-base tracking-wider drop-shadow-sm ${
-                    rating <= 1 ? 'text-gray-300' : 'text-[#F4D079]'
-                  }`}
-                >
-                  REGRAS & <span className="text-[#fff]">POLÍTICA</span>
+                {/* Subtle Grid Pattern */}
+                {/* Subtle Grid Pattern */}
+                <div
+                  className={`absolute inset-0 ${styles.headerTexture}`}
+                  style={{
+                    backgroundImage: `radial-gradient(circle, ${styles.headerTextureColor} 1px, transparent 1px)`,
+                    backgroundSize: '8px 8px',
+                  }}
+                ></div>
+
+                <span className={`font-graffiti text-xl tracking-wider z-10 ${styles.headerText}`}>
+                  REGRAS & <span className="text-white">POLÍTICA</span>
                 </span>
               </div>
 
               {/* BODY - BACK */}
-              <div className="relative z-10 p-4 flex-1 flex flex-col justify-center items-center">
-                <div className="space-y-3 text-center w-full">
+              <div className="relative z-10 p-5 flex-1 flex flex-col justify-center items-center">
+                <div className="space-y-4 text-center w-full">
                   {/* Warning Icon/Text */}
-                  <div
-                    className={`bg-[#2a1e0b]/90 border rounded-xl p-4 shadow-lg w-full ${
-                      rating <= 1 ? 'border-gray-600' : 'border-[#b88a44]'
-                    }`}
-                  >
+                  <div className={`border rounded-xl p-4 shadow-lg w-full ${styles.infoBox}`}>
                     <p
-                      className={`text-[11px] font-black uppercase tracking-[0.2em] mb-2 border-b pb-1 ${
-                        rating <= 1
-                          ? 'text-gray-400 border-gray-600/50'
-                          : 'text-[#F4D079] border-[#F4D079]/20'
-                      }`}
+                      className={`text-[11px] font-black uppercase tracking-[0.2em] mb-2 border-b pb-1 ${styles.textSoft} border-white/20`}
                     >
                       Cancelamento
                     </p>
-                    <p className="text-xs leading-relaxed text-[#f0f0f0] font-bold">
+                    <p className={`text-xs leading-relaxed font-bold ${styles.textMain}`}>
                       O cancelamento deve ser feito com no mínimo <br />
-                      <span
-                        className={`text-base decoration-clone drop-shadow-md ${
-                          rating <= 1 ? 'text-gray-300' : 'text-[#F4D079]'
-                        }`}
-                      >
+                      <span className={`text-sm decoration-clone drop-shadow-sm ${styles.accent}`}>
                         30 minutos
                       </span>
                       <br /> de antecedência.
@@ -363,13 +418,15 @@ export const TicketCard: React.FC<TicketCardProps> = ({
                   {/* Penalty Notice */}
                   <div className="flex flex-col gap-2 w-full">
                     <div className="flex items-center justify-center gap-2 opacity-80">
-                      <div className="h-[2px] bg-[#5c4013] w-12"></div>
-                      <span className="text-[9px] font-black uppercase tracking-widest text-white/80">
+                      <div className={`h-[2px] w-12 ${styles.divider}`}></div>
+                      <span
+                        className={`text-[9px] font-black uppercase tracking-widest ${styles.textSoft}`}
+                      >
                         Penalidades
                       </span>
-                      <div className="h-[2px] bg-[#5c4013] w-12"></div>
+                      <div className={`h-[2px] w-12 ${styles.divider}`}></div>
                     </div>
-                    <p className="text-[10px] leading-tight text-white/90 font-bold px-4">
+                    <p className={`text-[10px] leading-tight font-bold px-4 ${styles.textMuted}`}>
                       O não cumprimento acarretará na perda de pontos de fidelidade e rebaixamento
                       de nível.
                     </p>
@@ -378,26 +435,24 @@ export const TicketCard: React.FC<TicketCardProps> = ({
 
                 {/* Footer Info */}
                 <div className="mt-auto pt-4 text-center">
-                  <span className="text-[9px] font-black text-[#3d2b0f] uppercase tracking-[0.3em] opacity-70">
+                  <span
+                    className={`text-[9px] font-black uppercase tracking-[0.3em] opacity-70 ${styles.textSoft}`}
+                  >
                     Trilha do Corte ®
                   </span>
                 </div>
               </div>
 
               {/* Cutouts - Back */}
-              <div className="absolute -right-[10px] top-[calc(56px+70px)] w-5 h-5 bg-[#141009] rounded-full shadow-[inset_2px_0_3px_rgba(0,0,0,0.4)] z-20 border-l border-[#8E6E34]/60"></div>
-              <div className="absolute -left-[10px] top-[calc(56px+70px)] w-5 h-5 bg-[#141009] rounded-full shadow-[inset_-2px_0_3px_rgba(0,0,0,0.4)] z-20 border-r border-[#8E6E34]/60"></div>
+              <div
+                className={`absolute -right-[10px] top-[calc(56px+70px)] w-5 h-5 rounded-full shadow-[inset_2px_0_3px_rgba(0,0,0,0.4)] z-20 border-l ${styles.cutoutBorder}`}
+              ></div>
+              <div
+                className={`absolute -left-[10px] top-[calc(56px+70px)] w-5 h-5 rounded-full shadow-[inset_-2px_0_3px_rgba(0,0,0,0.4)] z-20 border-r ${styles.cutoutBorder}`}
+              ></div>
             </div>
           </div>
         </div>
-
-        {/* Wrapper Close was missing? No, BackFace Close, Inner Close, Content Close. */}
-        {/* We need:
-          1. Close Content (Done inside BackFace logic usually)
-          2. Close Inner (Done)
-          3. Close BackFace (Done)
-          4. Close Wrapper (Need this one)
-      */}
       </div>
 
       <style>{`
@@ -407,10 +462,6 @@ export const TicketCard: React.FC<TicketCardProps> = ({
         }
         .text-shadow-gold {
           text-shadow: 0 0 10px rgba(244, 208, 121, 0.5), 0 0 20px rgba(244, 208, 121, 0.3);
-        }
-        /* Force hardware acceleartion on these specific text elements */
-        .transform-gpu {
-          transform: translateZ(0);
         }
       `}</style>
     </div>

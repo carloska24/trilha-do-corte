@@ -23,7 +23,7 @@ export default defineConfig(({ mode }) => {
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: [],
+        includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
         manifest: {
           name: 'Trilha do Corte - Barber Club',
           short_name: 'Trilha do Corte',
@@ -44,6 +44,52 @@ export default defineConfig(({ mode }) => {
               sizes: '512x512',
               type: 'image/png',
               purpose: 'any maskable',
+            },
+          ],
+        },
+        workbox: {
+          runtimeCaching: [
+            {
+              urlPattern: /^https:\/\/res\.cloudinary\.com\/.*/i,
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'cloudinary-images',
+                expiration: {
+                  maxEntries: 100,
+                  maxAgeSeconds: 60 * 60 * 24 * 30, // 30 Days
+                },
+                cacheableResponse: {
+                  statuses: [0, 200],
+                },
+              },
+            },
+            {
+              urlPattern: /^https:\/\/images\.unsplash\.com\/.*/i,
+              handler: 'StaleWhileRevalidate',
+              options: {
+                cacheName: 'unsplash-images',
+                expiration: {
+                  maxEntries: 50,
+                  maxAgeSeconds: 60 * 60 * 24 * 30, // 30 Days
+                },
+                cacheableResponse: {
+                  statuses: [0, 200],
+                },
+              },
+            },
+            {
+              urlPattern: /^https:\/\/ui-avatars\.com\/.*/i,
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'ui-avatars',
+                expiration: {
+                  maxEntries: 20,
+                  maxAgeSeconds: 60 * 60 * 24 * 30, // 30 Days
+                },
+                cacheableResponse: {
+                  statuses: [0, 200],
+                },
+              },
             },
           ],
         },

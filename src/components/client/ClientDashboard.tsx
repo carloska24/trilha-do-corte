@@ -64,6 +64,9 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
   const [isProfileSettingsOpen, setIsProfileSettingsOpen] = useState(false);
   const [selectedCombo, setSelectedCombo] = useState<Combo | null>(null);
 
+  // Calculate real completed services count for Tier logic
+  const completedServicesCount = appointments.filter(a => a.status === 'completed').length;
+
   const getServiceName = (id: string) => services.find(s => s.id === id)?.name || 'Serviço';
 
   const handleVitrineClick = (id?: string) => {
@@ -257,6 +260,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
                     }
                     ticketId={`COD-${app.id.substring(0, 6)}`}
                     rating={client.level || 1}
+                    serviceCount={completedServicesCount}
                     className="w-full max-w-none" // Overriding default max-w-[340px]
                   />
 

@@ -141,6 +141,27 @@ export const api = {
     }
   },
 
+  // --- IMAGES ---
+  uploadImage: async (file: File): Promise<string | null> => {
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const response = await fetch(`${API_URL}/upload`, {
+        method: 'POST',
+        body: formData, // No Content-Type header needed, fetch sets it for FormData
+      });
+      if (!response.ok) throw new Error('Upload failed');
+      const json = await response.json();
+      return json.url;
+    } catch (e) {
+      console.error('Upload Error:', e);
+      return null;
+    }
+  },
+
+  // --- BARBERS ---
+
   getBarbers: async (): Promise<Barber[]> => {
     try {
       const response = await fetch(`${API_URL}/barbers`);
@@ -149,6 +170,22 @@ export const api = {
     } catch (error) {
       console.error('Error fetching barbers:', error);
       return [];
+    }
+  },
+
+  updateBarber: async (id: string, data: Partial<Barber>): Promise<Barber | null> => {
+    try {
+      const response = await fetch(`${API_URL}/barbers/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) return null;
+      const json = await response.json();
+      return json.data;
+    } catch (error) {
+      console.error('Update Barber error:', error);
+      return null;
     }
   },
 

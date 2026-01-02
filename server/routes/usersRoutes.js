@@ -3,6 +3,7 @@ import {
   getClients,
   getBarbers,
   updateClientProfile,
+  updateBarberProfile,
   createClientAdmin,
 } from '../controllers/usersController.js';
 
@@ -15,5 +16,6 @@ router.post('/clients', createClientAdmin);
 
 // Barbers
 router.get('/barbers', getBarbers);
+router.put('/barbers/:id', updateBarberProfile);
 
 export default router;

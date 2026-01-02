@@ -17,6 +17,7 @@ import { api } from '../services/api';
 // Sub-components (Modals only, as views are now Routes)
 import { FinancialModal } from '../components/dashboard/FinancialModal';
 import { ClientProfileModal } from '../components/dashboard/ClientProfileModal';
+import { DraggableMic } from '../components/ui/DraggableMic';
 
 const DEFAULT_BARBER_IMAGE =
   'https://images.unsplash.com/photo-1618077553780-75539862f629?q=80&w=400&auto=format&fit=crop';
@@ -357,18 +358,20 @@ export const DashboardLayout: React.FC = () => {
   const barberProfile = currentUser as BarberProfile;
   const hasSpeechSupport = 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window;
 
-  const handleProfilePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleProfilePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 2 * 1024 * 1024) {
-        alert('A imagem deve ter no máximo 2MB!');
-        return;
+      // Remove 2MB check - rely on server/Cloudinary 50MB limits
+      try {
+        const url = await api.uploadImage(file);
+        if (url && barberProfile) {
+          await api.updateBarber(barberProfile.id, { img: url }); // Persist to DB
+          updateProfile({ photoUrl: url }); // Update Local Context
+        }
+      } catch (err) {
+        alert('Erro ao enviar imagem. Tente novamente.');
+        console.error(err);
       }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        updateProfile({ photoUrl: reader.result as string });
-      };
-      reader.readAsDataURL(file);
     }
   };
 
@@ -378,14 +381,18 @@ export const DashboardLayout: React.FC = () => {
     setBarberNotes('');
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPhotoPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      try {
+        const url = await api.uploadImage(file); // Upload first
+        if (url) {
+          setPhotoPreview(url); // Set URL as preview
+        }
+      } catch (err) {
+        console.error('Error uploading finish photo:', err);
+        alert('Erro ao enviar foto.');
+      }
     }
   };
 
@@ -401,20 +408,34 @@ export const DashboardLayout: React.FC = () => {
     }
   };
 
-  const confirmFinish = () => {
+  const confirmFinish = async () => {
     if (finishingAppId) {
-      const updated = appointments.map(app =>
-        app.id === finishingAppId
-          ? {
-              ...app,
-              status: 'completed' as AppointmentStatus,
-              photoUrl: photoPreview || undefined,
-              notes: barberNotes,
-            }
-          : app
-      );
-      updateAppointments(updated);
-      setFinishingAppId(null);
+      // Optimistic Update can be tricky if API fails, but let's try
+      // Call API to persist
+      try {
+        await api.updateAppointment(finishingAppId, {
+          status: 'completed',
+          photoUrl: photoPreview || undefined, // Send URL
+          notes: barberNotes,
+        });
+
+        // Local Update
+        const updated = appointments.map(app =>
+          app.id === finishingAppId
+            ? {
+                ...app,
+                status: 'completed' as AppointmentStatus,
+                photoUrl: photoPreview || undefined,
+                notes: barberNotes,
+              }
+            : app
+        );
+        updateAppointments(updated);
+        setFinishingAppId(null);
+      } catch (err) {
+        console.error('Failed to finish appointment', err);
+        alert('Erro ao finalizar. Verifique sua conexão.');
+      }
     }
   };
 
@@ -446,11 +467,11 @@ export const DashboardLayout: React.FC = () => {
             />
           </div>
           <div className="flex flex-col justify-center translate-y-[2px]">
-            <h1 className="text-2xl md:text-3xl text-white tracking-wide leading-none font-rye drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+            <h1 className="text-xl md:text-3xl text-white tracking-wide leading-none font-rye drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] whitespace-nowrap">
               Trilha do Corte
             </h1>
             <div className="flex items-center gap-2 pl-1">
-              <span className="text-[10px] md:text-xs font-bold text-[#FFD700] uppercase tracking-[0.35em] drop-shadow-sm opacity-90 font-sans">
+              <span className="text-[10px] md:text-xs font-bold text-[#FFD700] uppercase tracking-[0.35em] drop-shadow-sm opacity-90 font-sans whitespace-nowrap">
                 Barber Club
               </span>
             </div>
@@ -478,26 +499,25 @@ export const DashboardLayout: React.FC = () => {
         </div>
       </header>
 
-      {/* AI VOICE BUTTON - Fixed Bottom Right (above nav) */}
-      <button
-        onClick={isListening ? stopListening : startListening}
-        onTouchEnd={e => {
-          e.preventDefault(); // Prevent ghost click
-          isListening ? stopListening() : startListening();
-        }}
-        style={{ zIndex: 9999, touchAction: 'none' }} // touch-action: none prevents scrolling/zooming on the button
-        className={`fixed bottom-24 right-4 w-16 h-16 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(0,0,0,0.5)] transition-all duration-300 border-2 cursor-pointer active:scale-90 ${
-          isListening
-            ? 'bg-red-600 border-white text-white animate-pulse scale-110'
-            : 'bg-[#FFD700] border-white text-black hover:scale-110'
-        }`}
-        aria-label="Assistente de Voz IA"
-      >
-        {isListening ? <MicOff size={28} /> : <Mic size={28} />}
-        {isListening && (
-          <span className="absolute inset-0 rounded-full animate-ping bg-red-500/40"></span>
-        )}
-      </button>
+      {/* AI VOICE BUTTON - Fixed Bottom Right (above nav) - DRAGABLE & RESTRICTED */}
+      {(() => {
+        const allowedPaths = ['/dashboard', '/dashboard/calendar'];
+        // Strict check: only show on Dashboard (Home) and Calendar (Agenda)
+        // If the path exactly matches or is just a sub-path logic?
+        // User said: "Dashboard and Agenda".
+        // Dashboard path: /dashboard
+        // Agenda path: /dashboard/calendar
+        const showMic = allowedPaths.includes(location.pathname);
+
+        if (!showMic) return null;
+
+        return (
+          <DraggableMic
+            isListening={isListening}
+            onToggle={isListening ? stopListening : startListening}
+          />
+        );
+      })()}
 
       {/* AI Voice Feedback Toast */}
       {(isListening || aiResponse) && (
