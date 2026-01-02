@@ -3,12 +3,14 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { upload } from './uploadService.js';
+import 'dotenv/config'; // Load environment variables
 
 // Import Routes
 import authRoutes from './routes/authRoutes.js';
 import servicesRoutes from './routes/servicesRoutes.js';
 import appointmentsRoutes from './routes/appointmentsRoutes.js';
 import usersRoutes from './routes/usersRoutes.js';
+import aiRoutes from './routes/aiRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -48,6 +50,7 @@ app.use('/api', authRoutes); // Handles /api/login/* and /api/register/*
 app.use('/api/services', servicesRoutes); // Handles /api/services/*
 app.use('/api/appointments', appointmentsRoutes); // Handles /api/appointments/*
 app.use('/api', usersRoutes); // Handles /api/clients, /api/barbers
+app.use('/api/ai', aiRoutes); // Handles /api/ai/command
 
 // --- SERVER START ---
 app.listen(PORT, () => {

@@ -1,7 +1,7 @@
 // aiCommandProcessor.ts
-// Fix: Using Raw Fetch to ensure v1 endpoint and explicit model versioning (gemini-1.5-flash-001)
+// Secure Version: Delegates processing to Backend API
 
-const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+import { api } from '../services/api';
 
 // Types from User Request
 interface AiResponse {
@@ -84,15 +84,7 @@ export const processVoiceCommand = async (
     return { action: 'unknown', message: '...' }; // Silent ignore
   }
 
-  if (!API_KEY) {
-    console.warn('⚠️ VITE_GEMINI_API_KEY não encontrada. Usando Mock.');
-    return fallbackMockProcessor(text);
-  }
-
   isGlobalProcessing = true;
-
-  const model = 'gemini-2.5-flash';
-  const url = `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent`;
 
   try {
     // Format services list for prompt
@@ -102,43 +94,35 @@ export const processVoiceCommand = async (
         : '- Corte\n- Barba\n- Sobrancelha';
 
     const systemInstruction = getSystemPrompt(servicesListStr);
+    const fullPrompt = `System Context: ${systemInstruction}\n\nUser Input: ${text}`;
 
-    const payload = {
-      contents: [
-        {
-          role: 'user',
-          parts: [{ text: `System Context: ${systemInstruction}\n\nUser Input: ${text}` }],
-        },
-      ],
-      generationConfig: {
-        temperature: 0,
-        maxOutputTokens: 256,
-      },
-    };
-
-    const response = await fetch(url, {
+    // Call Backend Proxy
+    // Note: api service does not have a generic .post, so we use fetch directly.
+    const response = await fetch('/api/ai/command', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-goog-api-key': API_KEY || '',
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({ prompt: fullPrompt }),
     });
 
     if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`Gemini API Error ${response.status}: ${errText}`);
+      const errorData = await response.json().catch(() => ({}));
+      console.error('❌ Backend Error Details:', errorData);
+      throw new Error(
+        `Backend Error ${response.status}: ${errorData.details || errorData.error || 'Unknown'}`
+      );
     }
 
     const data = await response.json();
-    // Safely extract text from response structure
-    const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    const responseText = data.text;
 
     if (!responseText) {
-      throw new Error('Empty response from AI');
+      // Fallback if structure is different
+      throw new Error('Empty response from AI Backend');
     }
 
-    console.log('Gemini Raw Response:', responseText); // Debug
+    console.log('Gemini Backend Response:', responseText); // Debug
 
     // Clean Markdown Code Blocks if present (v1 doesn't enforce JSON mode)
     const cleanJson = responseText
@@ -208,18 +192,13 @@ export const processVoiceCommand = async (
         };
     }
   } catch (error: any) {
-    console.error('Gemini Error:', error);
+    console.error('Gemini Backend Error:', error);
     // Specific Handling for Quota Exceeded (429)
-    if (error.message?.includes('429') || error.status === 429) {
+    if (error.response?.status === 429) {
       return { action: 'unknown', message: '⚠️ Cota da IA excedida. Tente novamente em 2 min.' };
     }
     return { action: 'unknown', message: 'Erro ao processar comando com IA.' };
   } finally {
     isGlobalProcessing = false;
   }
-};
-
-// Fallback Mock (Offline Mode)
-const fallbackMockProcessor = (text: string): CommandResult => {
-  return { action: 'unknown', message: 'Modo Offline: Configure a API Key.' };
 };

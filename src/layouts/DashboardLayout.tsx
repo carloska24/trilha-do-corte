@@ -42,9 +42,56 @@ export const DashboardLayout: React.FC = () => {
   const currentView = getCurrentView();
 
   // AI VOICE STATE
-  const { isListening, transcript, startListening, stopListening } = useVoiceInterpreter();
+  const {
+    isListening,
+    transcript,
+    startListening,
+    stopListening,
+    error: voiceError,
+  } = useVoiceInterpreter();
   const [voiceProcessing, setVoiceProcessing] = useState(false);
   const [aiResponse, setAiResponse] = useState<string | null>(null);
+
+  // TEXT TO SPEECH HELPER
+  const speak = (text: string) => {
+    if ('speechSynthesis' in window) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'pt-BR';
+      utterance.rate = 1.2; // Slightly faster
+      // Try to find a good voice
+      const voices = window.speechSynthesis.getVoices();
+      const brVoice = voices.find(v => v.lang.includes('PT-BR') || v.lang.includes('pt-BR'));
+      if (brVoice) utterance.voice = brVoice;
+
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
+  // HANDLE MIC ERRORS (MOBILE HTTP ISSUE)
+  useEffect(() => {
+    if (voiceError) {
+      console.error('Voice Error:', voiceError);
+      if (
+        voiceError.includes('not-allowed') ||
+        voiceError.includes('security') ||
+        voiceError.includes('permission')
+      ) {
+        alert(
+          '⚠️ ERRO DE MICROFONE\n\n' +
+            'O Chrome bloqueou o microfone por segurança (HTTP).\n\n' +
+            'COMO RESOLVER:\n' +
+            '1. Abra chrome://flags\n' +
+            '2. Busque "Insecure origins treated as secure"\n' +
+            '3. Adicione o IP: ' +
+            window.location.origin +
+            '\n' +
+            '4. Reinicie o Chrome.'
+        );
+      } else {
+        alert('Erro no microfone: ' + voiceError);
+      }
+    }
+  }, [voiceError]);
 
   // Prevent multiple executions for the same transcript
   const [lastProcessedTranscript, setLastProcessedTranscript] = useState('');
@@ -67,6 +114,7 @@ export const DashboardLayout: React.FC = () => {
     setVoiceProcessing(true);
     setLastProcessedTranscript(text); // Mark as processed
     setAiResponse('Processando...');
+    // speak('Processando...'); // Optional: too verbose
 
     try {
       const { processVoiceCommand } = await import('../utils/aiCommandProcessor');
@@ -95,6 +143,7 @@ export const DashboardLayout: React.FC = () => {
         if (!foundClient && result.data.clientName) {
           console.log(`[AI] Creating new client: ${result.data.clientName}`);
           setAiResponse(`🆕 Criando cadastro para ${result.data.clientName}...`);
+          speak(`Criando cadastro para ${result.data.clientName}`);
           try {
             const newClient = await api.createClient({
               name: result.data.clientName,
@@ -121,7 +170,9 @@ export const DashboardLayout: React.FC = () => {
         // Strategy: If no client found, don't schedule, ask user to register.
 
         if (!foundClient) {
-          setAiResponse(`⚠️ Cliente "${result.data.clientName}" não encontrado.`);
+          const errorMsg = `Cliente "${result.data.clientName}" não encontrado.`;
+          setAiResponse(`⚠️ ${errorMsg}`);
+          speak(errorMsg);
           setTimeout(() => setAiResponse(null), 4000);
           return;
         }
@@ -166,7 +217,9 @@ export const DashboardLayout: React.FC = () => {
         const created = await api.createAppointment(newApptPayload);
 
         if (created) {
-          setAiResponse(`✅ Agendado: ${clientName} às ${time}`);
+          const successMsg = `Agendado: ${clientName} às ${time}`;
+          setAiResponse(`✅ ${successMsg}`);
+          speak(`Agendado para ${clientName} às ${time}`);
           // 3. Update Local State (Optimistic or from response)
           // We need to fetch fresh data or append. Appending is faster.
           updateAppointments([...appointments, created]);
