@@ -298,12 +298,11 @@ export const ClientsManager: React.FC = () => {
                             `Finalize seu cadastro no App para agendar seus horarios online:\n` +
                             `${inviteLink}`;
 
-                          const params = new URLSearchParams();
-                          params.append('text', msg);
+                          const encodedMsg = encodeURIComponent(msg);
 
                           // Open WhatsApp
                           const cleanPhone = client.phone.replace(/\D/g, '');
-                          const waUrl = `https://wa.me/55${cleanPhone}?${params.toString()}`;
+                          const waUrl = `https://api.whatsapp.com/send?phone=55${cleanPhone}&text=${encodedMsg}`;
                           window.open(waUrl, '_blank');
                         }}
                         className="w-8 h-8 rounded-lg bg-green-500/10 border border-green-500/30 flex items-center justify-center text-green-500 hover:bg-green-500 hover:text-black transition-all"

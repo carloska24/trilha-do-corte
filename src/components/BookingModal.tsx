@@ -142,11 +142,14 @@ export const BookingModal: React.FC<BookingModalProps> = ({
       `${EMOJI.PIN} Unidade: Jardim Sao Marcos\n\n` +
       `${EMOJI.BARBER} Te esperamos para mais um corte de respeito.`;
 
-    // Usar URLSearchParams para encoding nativo robusto
-    const params = new URLSearchParams();
-    params.append('text', msg);
+    // Usar api.whatsapp.com/send para garantir compatibilidade total de encoding
+    // Fontes indicam que wa.me tem bugs com emojis em alguns devices
+    const encodedMsg = encodeURIComponent(msg);
+    const whatsappUrl = `https://api.whatsapp.com/send?phone=55${formData.phone.replace(
+      /\D/g,
+      ''
+    )}&text=${encodedMsg}`;
 
-    const whatsappUrl = `https://wa.me/55${formData.phone.replace(/\D/g, '')}?${params.toString()}`;
     window.open(whatsappUrl, '_blank');
   };
 

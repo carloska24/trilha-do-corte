@@ -1237,15 +1237,13 @@ export const CalendarView: React.FC = () => {
                                               `${EMOJI.PRAY} Esperamos voce no horario.\n` +
                                               `${EMOJI.ROCKET} Prepare-se para o upgrade.`;
 
-                                            const params = new URLSearchParams();
-                                            params.append('text', msg);
-
+                                            const encodedMsg = encodeURIComponent(msg);
                                             const whatsappUrl = cleanPhone
-                                              ? `https://wa.me/55${cleanPhone.replace(
+                                              ? `https://api.whatsapp.com/send?phone=55${cleanPhone.replace(
                                                   /^55/,
                                                   ''
-                                                )}?${params.toString()}`
-                                              : `https://wa.me/?${params.toString()}`;
+                                                )}&text=${encodedMsg}`
+                                              : `https://api.whatsapp.com/send?text=${encodedMsg}`;
 
                                             window.open(whatsappUrl, '_blank');
                                           }}
