@@ -36,8 +36,9 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({
 
   const handleWhatsApp = () => {
     const phone = client.phone.replace(/\D/g, '');
-    const message = `Olá, ${client.name}! 💈\n\nTudo bem?`;
-    window.open(`https://wa.me/55${phone}?text=${encodeURIComponent(message)}`, '_blank');
+    const msg = `Ola, ${client.name}! 💈\n\nTudo bem?`;
+    const safeMsg = msg.normalize('NFKD').replace(/[\uFE0F]/g, '');
+    window.open(`https://wa.me/55${phone}?text=${encodeURIComponent(safeMsg)}`, '_blank');
   };
 
   const handleNewBookingClick = () => {

@@ -117,23 +117,24 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   const sendWhatsAppMessage = () => {
     const dateParts = formData.date.split('-');
     const formattedDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
+
+    // Link direto do Google Maps (gera preview)
     const mapLink = 'https://www.google.com/maps?q=Rua+Monsenhor+Landell+de+Moura,+129+Campinas+SP';
 
-    // Using direct emojis to avoid encoding issues (The "losangulos")
-    // Plug 🔌 | Rocket 🚀 | Folder 📂 | Check ✅
-
+    // Mensagem com emojis 100% seguros (sem variation selector)
     const msg =
-      `✅ *AGENDAMENTO CONFIRMADO*\n\n` +
-      `👤 *Passageiro:* ${formData.name}\n\n` +
-      `✂️ *Serviço:* ${selectedService?.name || ''}\n` +
-      `📅 *Data:* ${formattedDate}\n` +
-      `🕚 *Horário:* ${formData.time}\n` +
-      `🏬 *Unidade:* Jardim São Marcos\n\n` +
-      `📍 *Localização:*\n${mapLink}\n\n` +
+      `${mapLink}\n\n` +
+      `✅ AGENDAMENTO CONFIRMADO\n\n` +
+      `👤 Passageiro: ${formData.name}\n\n` +
+      `✂ Servico: ${selectedService?.name || ''}\n` +
+      `📅 Data: ${formattedDate}\n` +
+      `🕚 Horario: ${formData.time}\n` +
+      `📍 Unidade: Jardim Sao Marcos\n\n` +
       `💈 Te esperamos para mais um corte de respeito.`;
 
-    // Encode the entire message at once ensures correct UTF-8 handling
-    const encodedMsg = encodeURIComponent(msg);
+    // Sanitização defensiva (remove qualquer VS16 invisível)
+    const safeMsg = msg.normalize('NFKD').replace(/[\uFE0F]/g, '');
+    const encodedMsg = encodeURIComponent(safeMsg);
 
     window.open(
       `https://wa.me/55${formData.phone.replace(/\D/g, '')}?text=${encodedMsg}`,

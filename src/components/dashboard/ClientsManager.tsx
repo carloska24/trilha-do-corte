@@ -288,16 +288,19 @@ export const ClientsManager: React.FC = () => {
                           const inviteLink = `${baseUrl}/login?type=client&name=${encodeURIComponent(
                             client.name
                           )}&phone=${encodeURIComponent(client.phone)}`;
-                          const message =
-                            `💈 *TRILHA DO CORTE*\n\n` +
-                            `👤 *Passageiro:* ${client.name}\n\n` +
-                            `Finalize seu cadastro no App para agendar seus horários online:\n` +
+                          const msg =
+                            `💈 TRILHA DO CORTE\n\n` +
+                            `👤 Passageiro: ${client.name}\n\n` +
+                            `Finalize seu cadastro no App para agendar seus horarios online:\n` +
                             `${inviteLink}`;
+
+                          // Sanitização defensiva
+                          const safeMsg = msg.normalize('NFKD').replace(/[\uFE0F]/g, '');
 
                           // Open WhatsApp
                           const cleanPhone = client.phone.replace(/\D/g, '');
                           const waUrl = `https://wa.me/55${cleanPhone}?text=${encodeURIComponent(
-                            message
+                            safeMsg
                           )}`;
                           window.open(waUrl, '_blank');
                         }}

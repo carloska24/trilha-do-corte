@@ -1208,30 +1208,34 @@ export const CalendarView: React.FC = () => {
                                               ? phone.replace(/\D/g, '')
                                               : '';
 
-                                            const dateStr =
-                                              selectedDate.toLocaleDateString('pt-BR');
+                                            // Link direto do Google Maps
                                             const mapLink =
                                               'https://www.google.com/maps?q=Rua+Monsenhor+Landell+de+Moura,+129+Campinas+SP';
 
-                                            const message =
-                                              `📍 *TRILHA DO CORTE*\n\n` +
-                                              `👤 *Passageiro:* ${app.clientName}\n` +
-                                              `⏰ *Status:* Lembrete\n\n` +
-                                              `✂️ *Serviço:* ${service.name}\n` +
-                                              `📅 *Data:* ${dateStr}\n` +
-                                              `🕚 *Horário:* ${app.time}\n` +
-                                              `🏬 *Unidade:* Jardim São Marcos\n\n` +
-                                              `📍 *Localização:*\n${mapLink}\n\n` +
-                                              `🙏 Esperamos você no horário.\n` +
+                                            const msg =
+                                              `${mapLink}\n\n` +
+                                              `📍 TRILHA DO CORTE\n\n` +
+                                              `👤 Passageiro: ${app.clientName}\n` +
+                                              `⏰ Status: Lembrete\n\n` +
+                                              `✂ Servico: ${service.name}\n` +
+                                              `📅 Data: ${dateStr}\n` +
+                                              `🕚 Horario: ${app.time}\n` +
+                                              `📍 Unidade: Jardim Sao Marcos\n\n` +
+                                              `🙏 Esperamos voce no horario.\n` +
                                               `🚀 Prepare-se para o upgrade.`;
+
+                                            // Sanitização defensiva
+                                            const safeMsg = msg
+                                              .normalize('NFKD')
+                                              .replace(/[\uFE0F]/g, '');
 
                                             const whatsappUrl = cleanPhone
                                               ? `https://wa.me/55${cleanPhone.replace(
                                                   /^55/,
                                                   ''
-                                                )}?text=${encodeURIComponent(message)}`
+                                                )}?text=${encodeURIComponent(safeMsg)}`
                                               : `https://wa.me/?text=${encodeURIComponent(
-                                                  message
+                                                  safeMsg
                                                 )}`;
 
                                             window.open(whatsappUrl, '_blank');
