@@ -123,16 +123,14 @@ export const BookingModal: React.FC<BookingModalProps> = ({
     // Plug 🔌 | Rocket 🚀 | Folder 📂 | Check ✅
 
     const msg =
-      `💈 *TRILHA DO CORTE* 💈\n\n` +
-      `👤 *Passageiro:* ${formData.name}\n` +
-      `✅ *Status:* CONFIRMADO\n\n` +
+      `✅ *AGENDAMENTO CONFIRMADO*\n\n` +
+      `👤 *Passageiro:* ${formData.name}\n\n` +
       `✂️ *Serviço:* ${selectedService?.name || ''}\n` +
       `📅 *Data:* ${formattedDate}\n` +
-      `⏰ *Horário:* ${formData.time}\n` +
-      `🏢 *Unidade:* Jardim São Marcos\n` +
-      `📍 *Localização:* ${mapLink}\n\n` +
-      `⚠️ _Chegue com 10min de antecedência para o check-in._\n` +
-      `✨ _Prepare-se para o upgrade._`;
+      `🕚 *Horário:* ${formData.time}\n` +
+      `🏬 *Unidade:* Jardim São Marcos\n\n` +
+      `📍 *Localização:*\n${mapLink}\n\n` +
+      `💈 Te esperamos para mais um corte de respeito.`;
 
     // Encode the entire message at once ensures correct UTF-8 handling
     const encodedMsg = encodeURIComponent(msg);

@@ -288,7 +288,11 @@ export const ClientsManager: React.FC = () => {
                           const inviteLink = `${baseUrl}/login?type=client&name=${encodeURIComponent(
                             client.name
                           )}&phone=${encodeURIComponent(client.phone)}`;
-                          const message = `Olá ${client.name}! 💈\n\nFinalize seu cadastro no App da Trilha do Corte para agendar seus horários online:\n\n${inviteLink}`;
+                          const message =
+                            `💈 *TRILHA DO CORTE*\n\n` +
+                            `👤 *Passageiro:* ${client.name}\n\n` +
+                            `Finalize seu cadastro no App para agendar seus horários online:\n` +
+                            `${inviteLink}`;
 
                           // Open WhatsApp
                           const cleanPhone = client.phone.replace(/\D/g, '');

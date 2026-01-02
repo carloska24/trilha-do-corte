@@ -1213,16 +1213,16 @@ export const CalendarView: React.FC = () => {
                                             const mapLink = 'https://bit.ly/44RCRah';
 
                                             const message =
-                                              `💈 *TRILHA DO CORTE* 💈\n\n` +
+                                              `📍 *TRILHA DO CORTE*\n\n` +
                                               `👤 *Passageiro:* ${app.clientName}\n` +
-                                              `✅ *Status:* LEMBRETE\n\n` +
+                                              `⏰ *Status:* Lembrete\n\n` +
                                               `✂️ *Serviço:* ${service.name}\n` +
                                               `📅 *Data:* ${dateStr}\n` +
-                                              `⏰ *Horário:* ${app.time}\n` +
-                                              `🏢 *Unidade:* Jardim São Marcos\n` +
-                                              `📍 *Localização:* ${mapLink}\n\n` +
-                                              `⚠️ _Esperamos você no horário._\n` +
-                                              `✨ _Prepare-se para o upgrade._`;
+                                              `🕚 *Horário:* ${app.time}\n` +
+                                              `🏬 *Unidade:* Jardim São Marcos\n\n` +
+                                              `📍 *Localização:*\n${mapLink}\n\n` +
+                                              `🙏 Esperamos você no horário.\n` +
+                                              `🚀 Prepare-se para o upgrade.`;
 
                                             const whatsappUrl = cleanPhone
                                               ? `https://wa.me/55${cleanPhone.replace(
