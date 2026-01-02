@@ -1,6 +1,6 @@
 import React from 'react';
 import { BookingData, ServiceItem } from '../../types';
-import { Star } from 'lucide-react';
+import { Star, Calendar, Clock, Banknote } from 'lucide-react';
 
 interface TicketCardProps {
   data: BookingData;
@@ -92,17 +92,17 @@ export const TicketCard: React.FC<TicketCardProps> = ({
           <div
             className={`relative p-[2px] rounded-[24px] shadow-[0_15px_40px_-5px_rgba(0,0,0,0.6)] overflow-hidden ${
               rating <= 1
-                ? 'bg-gradient-to-b from-[#4a4a4a] via-[#8a8a8a] to-[#2a2a2a]' // Iron/Silver Gradient
+                ? 'bg-gradient-to-br from-[#ffffff] via-[#d4d4d8] to-[#9ca3af]' // Ultra Bright Silver
                 : 'bg-gradient-to-b from-[#b88a44] via-[#F4D079] to-[#74541e]' // Gold Gradient
             }`}
           >
-            <div className="bg-[#141009] relative rounded-[22px] overflow-hidden flex flex-col min-h-[160px] backface-hidden antialiased">
+            <div className="bg-[#141009] relative rounded-[22px] overflow-hidden flex flex-col h-auto backface-hidden antialiased transition-all duration-300">
               {/* Texture Layer */}
               <div className="absolute inset-0 z-0 pointer-events-none">
                 <div
                   className={`absolute inset-0 opacity-100 ${
                     rating <= 1
-                      ? 'bg-gradient-to-br from-[#333] via-[#555] to-[#222]' // Iron Base
+                      ? 'bg-gradient-to-br from-[#888] via-[#aaa] to-[#555]' // Chrome Base
                       : 'bg-gradient-to-br from-[#ae8b47] via-[#cfab59] to-[#8a6e34]' // Gold Base
                   }`}
                 ></div>
@@ -116,22 +116,34 @@ export const TicketCard: React.FC<TicketCardProps> = ({
                 <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-transparent to-black/40 mix-blend-overlay"></div>
               </div>
 
-              {/* TOP STRIP */}
+              {/* HEADER TEXTURE & TITLE */}
               <div
-                className={`relative z-10 h-16 w-full bg-[#0a0a0a] border-b shadow-md flex items-center justify-between px-6 ${
-                  rating <= 1 ? 'border-gray-600/50' : 'border-[#F4D079]/50'
+                className={`relative z-10 h-14 w-full border-b shadow-md flex items-center justify-between px-5 ${
+                  rating <= 1 ? 'bg-[#1a1a1a] border-white/10' : 'bg-[#141009] border-[#F4D079]/30'
                 }`}
               >
+                {/* Subtle Grid Pattern for Header */}
+                <div
+                  className="absolute inset-0 opacity-20"
+                  style={{
+                    backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)',
+                    backgroundSize: '8px 8px',
+                  }}
+                ></div>
+
                 <span
-                  className={`font-graffiti text-xl tracking-wider drop-shadow-[0_2px_0_rgba(0,0,0,1)] ${
-                    rating <= 1 ? 'text-gray-300' : 'text-[#F4D079]'
+                  className={`font-graffiti text-xl tracking-wider z-10 ${
+                    rating <= 1
+                      ? 'text-transparent bg-clip-text bg-gradient-to-b from-white via-gray-200 to-gray-400 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]'
+                      : 'text-[#F4D079] drop-shadow-[0_2px_0_rgba(0,0,0,1)]'
                   }`}
                 >
-                  TRILHA<span className="text-[#fff]">CARD</span>
+                  TRILHA
+                  <span className={`${rating <= 1 ? 'text-white' : 'text-[#fff]'}`}>CARD</span>
                 </span>
                 <span
-                  className={`font-mono font-bold text-sm tracking-widest drop-shadow-[0_1px_0_rgba(0,0,0,1)] ${
-                    rating <= 1 ? 'text-gray-400' : 'text-[#F4D079]'
+                  className={`font-mono font-bold text-xs tracking-widest z-10 ${
+                    rating <= 1 ? 'text-gray-400' : 'text-[#F4D079]/80'
                   }`}
                 >
                   {ticketId}
@@ -139,103 +151,130 @@ export const TicketCard: React.FC<TicketCardProps> = ({
               </div>
 
               {/* BODY - FRONT */}
-              <div className="relative z-10 p-6 flex-grow flex flex-col justify-between">
-                <div className="flex justify-between items-end mb-4">
-                  <div className="flex flex-col">
+              <div className="relative z-10 p-5 flex flex-col">
+                {/* Stacked Fields Container - No extra gap */}
+                <div className="flex flex-col gap-3">
+                  {/* Block 1: Passenger */}
+                  <div className="flex flex-col items-start relative">
                     <span
-                      className={`text-[10px] font-black uppercase tracking-[0.2em] mb-1 drop-shadow-sm ${
-                        rating <= 1 ? 'text-black/70' : 'text-[#2a1e0b]'
+                      className={`text-[9px] font-black uppercase tracking-[0.2em] mb-0.5 ml-1 opacity-80 ${
+                        rating <= 1 ? 'text-gray-900' : 'text-[#2a1e0b]'
                       }`}
                     >
                       Passageiro
                     </span>
-                    <h3 className="text-3xl font-black text-[#fff] uppercase tracking-wide drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] shadow-black text-shadow-gold leading-none pb-1">
-                      {data.name || 'Carlos'}
+                    <h3
+                      className={`text-3xl font-black uppercase tracking-wide leading-none ${
+                        rating <= 1
+                          ? 'text-white drop-shadow-md'
+                          : 'text-[#fff] text-shadow-gold drop-shadow-md'
+                      }`}
+                    >
+                      {data.name?.split(' ')[0] || 'CARLOS'}
+                      <span className="ml-2 opacity-80">
+                        {/* Initial */ data.name?.split(' ')?.[1]?.[0] || 'A'}.
+                      </span>
                     </h3>
-                    {/* Stars */}
-                    <div className="flex gap-1 mt-1.5">
-                      {[1, 2, 3, 4, 5].map(s => (
-                        <div key={s} className="relative">
-                          <Star
-                            size={14}
-                            fill={s <= rating ? '#Ffffff' : 'none'}
-                            className={`${s <= rating ? 'text-[#Ffffff]' : 'text-[#5c4013]/40'}`}
-                            strokeWidth={s <= rating ? 0 : 2}
-                          />
-                          {/* Glow Layer */}
-                          {s <= rating && (
-                            <div className="absolute inset-0 blur-[2px]">
-                              <Star
-                                size={14}
-                                fill="#F4D079"
-                                className="text-[#F4D079]"
-                                strokeWidth={0}
-                              />
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
                   </div>
 
-                  <div className="flex flex-col items-end">
-                    <span className="text-[10px] font-black text-[#2a1e0b] uppercase tracking-[0.2em] mb-1 drop-shadow-sm">
+                  {/* Block 2: Service + Stars */}
+                  <div className="flex flex-col items-start relative">
+                    <span
+                      className={`text-[9px] font-black uppercase tracking-[0.2em] mb-0.5 ml-1 opacity-80 ${
+                        rating <= 1 ? 'text-gray-900' : 'text-[#2a1e0b]'
+                      }`}
+                    >
                       Serviço
                     </span>
+
                     {(() => {
                       const name = service?.name || 'Corte';
-                      const isLong = name.length > 15 || name.includes(' + ');
-
-                      if (isLong) {
-                        const parts = name.split(name.includes(' + ') ? ' + ' : ' ');
-                        return (
-                          <div className="flex flex-col items-end leading-[0.9] gap-0.5">
-                            {parts.map((part, i) => (
-                              <h3
-                                key={i}
-                                className="text-sm font-black text-[#fff] uppercase tracking-wider drop-shadow-[0_2px_2px_rgba(0,0,0,0.9)] text-shadow-gold text-right"
-                              >
-                                {part}
-                              </h3>
-                            ))}
-                          </div>
-                        );
-                      }
-
                       return (
-                        <h3 className="text-lg font-black text-[#fff] uppercase tracking-wider drop-shadow-[0_2px_2px_rgba(0,0,0,0.9)] text-shadow-gold text-right">
+                        <h3
+                          className={`text-xl font-black uppercase tracking-wide leading-none ${
+                            rating <= 1
+                              ? 'text-white drop-shadow-md'
+                              : 'text-[#fff] text-shadow-gold drop-shadow-md'
+                          }`}
+                        >
                           {name}
                         </h3>
                       );
                     })()}
+
+                    {/* Stars - Immediately below service */}
+                    <div className="flex gap-1 mt-1.5 ml-0.5">
+                      {[1, 2, 3, 4, 5].map(s => (
+                        <div key={s} className="relative">
+                          <Star
+                            size={12}
+                            fill={s <= rating ? (rating <= 1 ? '#eab308' : '#FFFFFF') : 'none'}
+                            className={`${
+                              s <= rating
+                                ? rating <= 1
+                                  ? 'text-yellow-500'
+                                  : 'text-[#FFFFFF]'
+                                : 'text-black/20'
+                            }`}
+                            strokeWidth={s <= rating ? 0 : 2}
+                          />
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
-                <div className="w-full h-[1px] bg-[#5c4013]/60 my-2 shadow-[0_1px_0_rgba(255,255,255,0.1)]"></div>
+                {/* Divider - Moved up, tight to content */}
+                <div
+                  className={`w-full h-[1px] my-2 shadow-[0_1px_0_rgba(255,255,255,0.2)] ${
+                    rating <= 1 ? 'bg-gray-400/50' : 'bg-[#5c4013]/60'
+                  }`}
+                ></div>
 
-                <div className="grid grid-cols-3 gap-2 pt-2">
+                {/* Footer Grid - With Icons */}
+                <div className="grid grid-cols-3 gap-2">
+                  {/* Date */}
                   <div className="flex flex-col">
-                    <span className="text-[9px] font-black text-[#2a1e0b] uppercase tracking-widest mb-0.5">
+                    <span
+                      className={`text-[8px] font-black uppercase tracking-widest mb-0.5 flex items-center gap-1 opacity-90 ${
+                        rating <= 1 ? 'text-gray-900' : 'text-[#2a1e0b]'
+                      }`}
+                    >
+                      <Calendar size={10} strokeWidth={3} />
                       Data
                     </span>
-                    <span className="font-mono text-base font-bold text-[#fff] drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)] truncate">
+                    <span className="font-mono text-sm font-bold text-[#fff] drop-shadow-sm truncate pl-0.5">
                       {formatDate(data.date)}
                     </span>
                   </div>
+
+                  {/* Time */}
                   <div className="flex flex-col items-center">
-                    <span className="text-[9px] font-black text-[#2a1e0b] uppercase tracking-widest mb-0.5">
+                    <span
+                      className={`text-[8px] font-black uppercase tracking-widest mb-0.5 flex items-center gap-1 opacity-90 ${
+                        rating <= 1 ? 'text-gray-900' : 'text-[#2a1e0b]'
+                      }`}
+                    >
+                      <Clock size={10} strokeWidth={3} />
                       Horário
                     </span>
-                    <span className="font-mono text-base font-bold text-[#fff] drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
+                    <span className="font-mono text-sm font-bold text-[#fff] drop-shadow-sm pl-0.5">
                       {data.time || '10:00'}
                     </span>
                   </div>
+
+                  {/* Price */}
                   <div className="flex flex-col items-end">
-                    <span className="text-[9px] font-black text-[#2a1e0b] uppercase tracking-widest mb-0.5 flex items-center gap-1">
+                    <span
+                      className={`text-[8px] font-black uppercase tracking-widest mb-0.5 flex items-center gap-1 opacity-90 ${
+                        rating <= 1 ? 'text-gray-900' : 'text-[#2a1e0b]'
+                      }`}
+                    >
                       Valor
-                      <span className="text-[11px] opacity-70">💵</span>
+                      {/* Using a generic bill icon or just text if icon not available, but user asked for icon */}
+                      <span className="font-bold text-[10px]">$</span>
                     </span>
-                    <span className="font-mono text-lg font-bold text-[#fff] drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
+                    <span className="font-mono text-base font-bold text-[#fff] drop-shadow-sm pl-0.5">
                       {formatPrice(service?.priceValue || 35)}
                     </span>
                   </div>

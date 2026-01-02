@@ -469,7 +469,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
               </div>
 
               {/* Ticket Stub Visual - Main Focus */}
-              <div className="w-full flex-1 flex items-center justify-center my-1 animate-[flipDamp_0.8s_ease-out] min-h-0">
+              <div className="w-full flex-1 flex items-center justify-center my-1 animate-[flipDamp_0.8s_ease-out]">
                 {/* No Scale - Matches max-w of button */}
                 <TicketCard
                   data={formData}
