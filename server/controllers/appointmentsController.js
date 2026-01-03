@@ -109,6 +109,13 @@ export const createAppointment = async (req, res) => {
       data: { id, clientName, serviceId, date, time, status, price, photoUrl, notes },
     });
   } catch (e) {
+    if (e.code === '23505') {
+      console.warn('⚠️ Double booking attempt prevented by DB constraint.');
+      return res
+        .status(409)
+        .json({ error: 'Ops! Este horário acabou de ser reservado por outro cliente.' });
+    }
+
     console.error('❌ [POST] Error Creating Appointment:', e);
     return res.status(400).json({ error: 'Erro ao validar/salvar agendamento: ' + e.message });
   }

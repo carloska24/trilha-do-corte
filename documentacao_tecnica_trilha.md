@@ -95,7 +95,7 @@ Focado na retenção e facilidade de agendamento.
 
 1.  **Home & Agendamento:**
     - Visualização de serviços e combos ("Combos" têm destaque visual de selos).
-    - Seleção de Barbeiro e Horário disponível.
+    - Seleção de Data e Horário disponível.
     - Confirmação com resumo do serviço.
 2.  **Perfil & Loyalty (Trilha Card):**
     - Cartão de fidelidade digital (Gamification).
@@ -126,22 +126,26 @@ Ferramenta de gestão completa.
 
 ---
 
+---
+
 ## 5. Fluxos Críticos de Negócio
 
-### 1. Fluxo de Agendamento
+### 1. Fluxo de Agendamento (Guest & Auth)
 
-1.  **Cliente:** Seleciona Serviço > Escolhe Barbeiro > Escolhe Data/Hora.
-2.  **Frontend:** Valida disponibilidade localmente e envia `POST /appointments`.
-3.  **Backend:** Verifica colisão de horário no DB > Cria registro `pending`.
-4.  **Resultado:** Cliente vê confirmação; Agenda do Barbeiro atualiza em tempo real (polling/update).
+1.  **Cliente:** Seleciona Serviço > Escolhe Data/Hora (Landing Page ou App).
+2.  **Frontend:** Envia `POST /appointments` (Público).
+3.  **Backend (Segurança):**
+    - Verifica token (opcional, associa `clientId` se houver).
+    - Tenta `INSERT` no DB.
+    - **Proteção Anti-Conflito:** Índice Único (`date` + `time`) impede colisão. Se houver, retorna `409 Conflict`.
+4.  **Resultado:** Sucesso ou Erro amigável ("Horário acabou de ser reservado").
 
-### 2. Fluxo de Comando de Voz (IA)
+### 2. Fluxo de Comando de Voz (IA - Protegido)
 
-1.  **Barbeiro:** Clica no microfone e fala "Bloquear agenda amanhã a tarde".
-2.  **Frontend:** Captura áudio/texto > Envia para `/api/ai/command`.
-3.  **Backend:** Envia prompt estruturado para o **Gemini**.
-4.  **Gemini:** Interpreta intenção e retorna JSON de ação `{ action: "block_schedule", date: "tomorrow", period: "afternoon" }`.
-5.  **Frontend:** Executa a ação na interface.
+1.  **Barbeiro (Logado):** Clica no microfone e fala comando.
+2.  **Frontend:** Envia para `/api/ai/command` com Token JWT.
+3.  **Backend:** Valida Token > Envia prompt para o **Gemini**.
+4.  **Hardware/Ação:** Executa bloqueio ou consulta.
 
 ---
 

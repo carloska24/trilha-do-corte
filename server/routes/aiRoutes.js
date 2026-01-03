@@ -1,9 +1,11 @@
 import express from 'express';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
+import { authenticateToken } from '../middleware/auth.js';
+
 const router = express.Router();
 
-router.post('/command', async (req, res) => {
+router.post('/command', authenticateToken, async (req, res) => {
   try {
     const { prompt } = req.body;
 

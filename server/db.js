@@ -437,6 +437,17 @@ const APPOINTMENTS = [];
                 )
             `);
 
+      // 🛡️ Security: Prevent Double Booking (Race Conditions)
+      await client.query(`
+          CREATE UNIQUE INDEX IF NOT EXISTS idx_appointments_unique_slot 
+          ON appointments (date, time) 
+          WHERE status != 'cancelled'
+      `);
+
+      // 🔄 Schema Evolution: Ensure columns exist (if table was created before)
+      await client.query(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS clientId TEXT`);
+      await client.query(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS barberId TEXT`);
+
       // Seeding
       const servicesCheck = await client.query('SELECT count(*) as count FROM services');
       if (parseInt(servicesCheck.rows[0].count) === 0) {
