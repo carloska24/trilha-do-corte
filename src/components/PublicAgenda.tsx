@@ -324,6 +324,7 @@ export const PublicAgenda: React.FC = () => {
           </div>
         ) : (
           <>
+            {' '}
             <div className="grid grid-cols-4 gap-2 transition-all duration-500">
               {timeSlots
                 .slice(0, isExpanded ? undefined : 12) // Show only 12 initially
@@ -366,7 +367,6 @@ export const PublicAgenda: React.FC = () => {
                   );
                 })}
             </div>
-
             {/* Expand/Collapse Button */}
             {timeSlots.length > 12 && (
               <button
@@ -384,7 +384,6 @@ export const PublicAgenda: React.FC = () => {
                 )}
               </button>
             )}
-
             {/* Empty State if all filtered */}
             {timeSlots.length === 0 && (
               <div className="text-center py-8 text-gray-500">

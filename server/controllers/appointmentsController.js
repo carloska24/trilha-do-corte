@@ -1,11 +1,54 @@
 import { v4 as uuidv4 } from 'uuid';
 import db from '../db.js';
+import jwt from 'jsonwebtoken';
 
 export const getAppointments = async (req, res) => {
   try {
-    const { rows } = await db.query('SELECT * FROM appointments');
-    res.json({ data: rows });
+    // 1. Check Authority (Soft Auth)
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    let isBarber = false;
+
+    if (token) {
+      try {
+        jwt.verify(token, process.env.JWT_SECRET);
+        isBarber = true;
+      } catch (err) {
+        // Token invalid - Default to public view
+      }
+    }
+
+    // 2. Optimized Query
+    // Public: Only fetch recent/future appointments (Privacy + Perf)
+    // Barber: Fetch All (for now)
+    let queryText = 'SELECT * FROM appointments';
+
+    if (!isBarber) {
+      // Postgres-specific: Cast to date if string, or compare if date.
+      // Assuming standard ISO string 'YYYY-MM-DD' which is lexicographically comparable.
+      // Adding a safety margin for timezones
+      queryText += " WHERE date >= TO_CHAR(CURRENT_DATE - INTERVAL '1 day', 'YYYY-MM-DD')";
+    }
+
+    const { rows } = await db.query(queryText);
+
+    // 3. Data Sanitization (Privacy Shield)
+    const data = rows.map(row => {
+      if (isBarber) return row;
+
+      return {
+        // PUBLIC FIELDS ONLY
+        date: row.date,
+        time: row.time,
+        // Handle PG potential casing issues (serviceId vs serviceid)
+        serviceId: row.serviceId || row.serviceid,
+        status: row.status,
+      };
+    });
+
+    res.json({ data });
   } catch (err) {
+    console.error('GetAppointments Error:', err);
     res.status(400).json({ error: err.message });
   }
 };
