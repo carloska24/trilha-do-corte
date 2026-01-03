@@ -269,11 +269,11 @@ export const CalendarView: React.FC = () => {
   };
 
   const getAppointmentsForDate = (date: Date) => {
+    const targetDateKey = getLocalISODate(date);
     return appointments.filter(a => {
-      const d = new Date(a.date);
-      const dStr = d.toISOString().split('T')[0];
-      const targetStr = date.toISOString().split('T')[0];
-      return dStr === targetStr && a.status !== 'cancelled';
+      // Handle both pure YYYY-MM-DD and ISO strings
+      const appDateKey = a.date.includes('T') ? a.date.split('T')[0] : a.date;
+      return appDateKey === targetDateKey && a.status !== 'cancelled';
     });
   };
 
@@ -385,8 +385,17 @@ export const CalendarView: React.FC = () => {
   };
 
   // Helper to get service details
-  const getServiceDetails = (id: string) => {
-    const s = services.find(serv => serv.id === id) || ALL_SERVICES.find(serv => serv.id === id);
+  const getServiceDetails = (id: string | number) => {
+    if (!id)
+      return { name: 'Serviço', category: 'Geral', icon: 'scissors', price: 'R$-', duration: 30 };
+
+    // Normalize ID for comparison
+    const searchId = String(id).trim();
+
+    const s =
+      services.find(serv => String(serv.id).trim() === searchId) ||
+      ALL_SERVICES.find(serv => String(serv.id).trim() === searchId);
+
     return (
       s || { name: 'Serviço', category: 'Geral', icon: 'scissors', price: 'R$-', duration: 30 }
     );
@@ -538,57 +547,48 @@ export const CalendarView: React.FC = () => {
           <h1 className="text-3xl md:text-4xl font-graffiti text-white tracking-wide drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">
             AGENDA
           </h1>
-          <button
-            onClick={() => {
-              const now = new Date();
-              const nextHour = now.getHours() + 1;
-              const time = `${String(nextHour).padStart(2, '0')}:00`;
-              setQuickAddSlot({ date: selectedDate, time });
-              setIsQuickAddOpen(true);
-            }}
-            className="w-10 h-10 md:w-12 md:h-12 bg-neon-yellow rounded-full flex items-center justify-center text-black hover:scale-110 transition-transform shadow-[0_0_20px_rgba(234,179,8,0.4)]"
-          >
-            <Plus size={24} strokeWidth={3} />
-          </button>
+          <div className="flex-1"></div> {/* Spacer to replace Button */}
         </div>
 
         {/* TABS */}
-        <div className="flex items-center gap-6 md:gap-8 overflow-x-auto custom-scrollbar pb-1">
-          <button
-            onClick={() => setActiveTab('daily')}
-            className={`pb-3 border-b-2 text-sm md:text-base font-bold tracking-widest transition-all whitespace-nowrap ${
-              activeTab === 'daily'
-                ? 'border-neon-yellow text-neon-yellow'
-                : 'border-transparent text-gray-500 hover:text-white'
-            }`}
-          >
-            DIÁRIO
-          </button>
-          <button
-            onClick={() => setActiveTab('monthly')}
-            className={`pb-3 border-b-2 text-sm md:text-base font-bold tracking-widest transition-all whitespace-nowrap ${
-              activeTab === 'monthly'
-                ? 'border-neon-yellow text-neon-yellow'
-                : 'border-transparent text-gray-500 hover:text-white'
-            }`}
-          >
-            CALENDÁRIO
-          </button>
-          <button
-            onClick={() => setActiveTab('config')}
-            className={`pb-3 border-b-2 text-sm md:text-base font-bold tracking-widest transition-all whitespace-nowrap ${
-              activeTab === 'config'
-                ? 'border-neon-yellow text-neon-yellow'
-                : 'border-transparent text-gray-500 hover:text-white'
-            }`}
-          >
-            AJUSTES
-          </button>
+        <div className="flex items-center justify-between gap-2 md:gap-4 overflow-x-auto custom-scrollbar pb-1 w-full">
+          <div className="flex gap-4">
+            <button
+              onClick={() => setActiveTab('daily')}
+              className={`pb-3 border-b-2 text-xs md:text-sm font-bold tracking-widest transition-all whitespace-nowrap ${
+                activeTab === 'daily'
+                  ? 'border-neon-yellow text-neon-yellow'
+                  : 'border-transparent text-gray-500 hover:text-white'
+              }`}
+            >
+              DIÁRIO
+            </button>
+            <button
+              onClick={() => setActiveTab('monthly')}
+              className={`pb-3 border-b-2 text-xs md:text-sm font-bold tracking-widest transition-all whitespace-nowrap ${
+                activeTab === 'monthly'
+                  ? 'border-neon-yellow text-neon-yellow'
+                  : 'border-transparent text-gray-500 hover:text-white'
+              }`}
+            >
+              CALENDÁRIO
+            </button>
+            <button
+              onClick={() => setActiveTab('config')}
+              className={`pb-3 border-b-2 text-xs md:text-sm font-bold tracking-widest transition-all whitespace-nowrap ${
+                activeTab === 'config'
+                  ? 'border-neon-yellow text-neon-yellow'
+                  : 'border-transparent text-gray-500 hover:text-white'
+              }`}
+            >
+              AJUSTES
+            </button>
+          </div>
 
           {/* WhatsApp Export Button (Right Aligned or Inline) */}
           <button
             onClick={() => setIsExportOpen(true)}
-            className="ml-auto pb-3 text-green-500 hover:text-green-400 transition-colors flex items-center gap-2 font-bold tracking-widest text-xs md:text-sm uppercase whitespace-nowrap"
+            className="pb-3 text-green-500 hover:text-green-400 transition-colors flex items-center gap-2 font-bold tracking-widest text-xs md:text-sm uppercase whitespace-nowrap"
           >
             <Share2 size={18} />
             <span className="hidden md:inline">Exportar</span>
@@ -897,22 +897,27 @@ export const CalendarView: React.FC = () => {
               >
                 <ChevronLeft size={20} />
               </button>
-              <div className="text-center">
-                <h2 className="text-base md:text-lg font-black text-white uppercase tracking-wider flex items-center justify-center gap-2 md:gap-3">
+              <div className="text-center relative">
+                <span className="absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] block">
+                  Data Selecionada
+                </span>
+                <h2 className="text-base md:text-lg font-black text-white uppercase tracking-wider flex items-center justify-center gap-3">
                   <CalendarIcon size={16} className="text-neon-yellow" />
-                  {selectedDate
-                    .toLocaleDateString('pt-BR', {
-                      weekday: 'short',
-                      day: '2-digit',
-                      month: 'short',
-                    })
-                    .toUpperCase()}
-                </h2>
-                {selectedDate.toDateString() === new Date().toDateString() && (
-                  <span className="text-[9px] text-green-500 font-bold uppercase tracking-widest block -mt-1">
-                    Hoje
+                  <span>
+                    {selectedDate
+                      .toLocaleDateString('pt-BR', {
+                        weekday: 'short',
+                        day: '2-digit',
+                        month: 'short',
+                      })
+                      .toUpperCase()}
                   </span>
-                )}
+                  {selectedDate.toDateString() === new Date().toDateString() && (
+                    <span className="text-[10px] text-green-500 font-bold uppercase tracking-wider bg-green-500/10 px-2 py-0.5 rounded border border-green-500/20">
+                      HOJE
+                    </span>
+                  )}
+                </h2>
               </div>
               <button
                 onClick={e => {
@@ -926,380 +931,269 @@ export const CalendarView: React.FC = () => {
               </button>
             </div>
 
-            {/* Timeline */}
-            <div className="pb-24 pt-2 relative">
-              {getTimeSlots().map(hour => {
-                const hourStr = String(hour).padStart(2, '0');
-                const apps = getAppointmentsForDate(selectedDate).filter(a =>
-                  a.time.startsWith(hourStr)
+            {/* Dynamic Timeline Flow */}
+            <div className="pb-24 pt-2 relative flex flex-col">
+              {(() => {
+                // GENERATOR ALGORITHM
+                const items: any[] = [];
+                const dateKey = getLocalISODate(selectedDate);
+                const exception = shopSettings.exceptions?.[dateKey];
+
+                const startLimit = exception?.startHour ?? shopSettings.startHour;
+                const endLimit = exception?.endHour ?? shopSettings.endHour;
+
+                // REMOVED "CLOSED" BLOCKING UI - user wants grid always visible
+
+                let currentMinutes = startLimit * 60;
+                const endMinutes = endLimit * 60;
+
+                const dailyApps = getAppointmentsForDate(selectedDate).sort((a, b) =>
+                  a.time.localeCompare(b.time)
                 );
 
-                // SMART LOGIC: Check for overlaps from previous appointments
-                // We look for any appointment that starts BEFORE this hour and ends AFTER this hour's start
-                const allDailyApps = getAppointmentsForDate(selectedDate);
-                const overlappingApp = allDailyApps.find(a => {
-                  const startH = parseInt(a.time.split(':')[0]);
-                  const startM = parseInt(a.time.split(':')[1]);
-                  const service = getServiceDetails(a.serviceId);
-                  const duration = service.duration || 30;
+                while (currentMinutes < endMinutes) {
+                  const h = Math.floor(currentMinutes / 60);
+                  const m = currentMinutes % 60;
+                  const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 
-                  const startTotal = startH * 60 + startM;
-                  const endTotal = startTotal + duration;
-                  const currentHourStart = hour * 60;
+                  // 1. Find apps starting exactly here
+                  const startingApps = dailyApps.filter(a => a.time === timeStr);
 
-                  // Condição: Começa antes desta hora E termina depois do início desta hora
-                  return startTotal < currentHourStart && endTotal > currentHourStart;
-                });
+                  if (startingApps.length > 0) {
+                    // RENDER APPOINTMENTS (Stack if multiple, but usually 1)
+                    let maxDuration = 0;
+                    startingApps.forEach(app => {
+                      const service = getServiceDetails(app.serviceId);
+                      const duration = service.duration || 30;
+                      if (duration > maxDuration) maxDuration = duration;
 
-                let occupiedMinutesInThisHour = 0;
-                let nextAvailableStr = `${hourStr}:00`;
+                      items.push({ type: 'app', data: app, time: timeStr, service });
+                    });
 
-                if (overlappingApp) {
-                  const startH = parseInt(overlappingApp.time.split(':')[0]);
-                  const startM = parseInt(overlappingApp.time.split(':')[1]);
-                  const service = getServiceDetails(overlappingApp.serviceId);
-                  const duration = service.duration || 30;
-                  const endTotal = startH * 60 + startM + duration;
-                  const currentHourStart = hour * 60;
+                    // Advance Cursor by the longest appointment
+                    currentMinutes += maxDuration;
+                  } else {
+                    // RENDER EMPTY SLOT
+                    // We need to determine how long this empty slot lasts.
+                    // It should go until: Next App Start OR Next Hour Mark.
 
-                  // Quantos minutos dessa hora estão tomados?
-                  const spillOver = endTotal - currentHourStart;
+                    // a) Find next appointment start time (in minutes)
+                    const nextApp = dailyApps.find(a => {
+                      const [ah, am] = a.time.split(':').map(Number);
+                      return ah * 60 + am > currentMinutes;
+                    });
+                    const nextAppStart = nextApp
+                      ? parseInt(nextApp.time.split(':')[0]) * 60 +
+                        parseInt(nextApp.time.split(':')[1])
+                      : endMinutes;
 
-                  if (spillOver > 0) {
-                    occupiedMinutesInThisHour = spillOver;
-                    // Round up to next 15 min slot for availability
-                    const remainder = spillOver % 15;
-                    const minutesToAdd = remainder === 0 ? 0 : 15 - remainder;
-                    const safeStart = spillOver + minutesToAdd;
+                    // b) Next Hour Mark (e.g. if 9:30, next is 10:00)
+                    const nextHourMark = (Math.floor(currentMinutes / 60) + 1) * 60;
 
-                    if (safeStart < 60) {
-                      nextAvailableStr = `${hourStr}:${String(safeStart).padStart(2, '0')}`;
-                    } else {
-                      // Se ocupar a hora toda ou mais, não mostra slot nesta hora
-                      occupiedMinutesInThisHour = 60;
-                    }
+                    // Target is simpler of the two (don't overlap app, but snap to grid if free)
+                    let targetEnd = Math.min(nextAppStart, nextHourMark);
+
+                    // Safety: Ensure progress
+                    if (targetEnd <= currentMinutes) targetEnd = currentMinutes + 15;
+                    if (targetEnd > endMinutes) targetEnd = endMinutes;
+
+                    items.push({
+                      type: 'empty',
+                      time: timeStr,
+                      duration: targetEnd - currentMinutes,
+                    });
+                    currentMinutes = targetEnd;
                   }
                 }
 
-                // Check if this hour is in the past for today
-                const isPast =
-                  selectedDate.toDateString() === new Date().toDateString() &&
-                  hour < new Date().getHours();
-
-                return (
+                return items.map((item, idx) => (
                   <div
-                    key={hour}
-                    id={`hour-${hour}`}
-                    className={`flex min-h-[110px] border-b border-gray-800/30 group relative transition-colors duration-200 ${
-                      isPast ? 'opacity-60 bg-black/40' : ''
-                    }`}
-                    onDragOver={e => {
-                      e.preventDefault(); // Allow Drop
-                      e.currentTarget.classList.add('bg-white/5');
-                      e.currentTarget.classList.add('border-dashed');
-                      e.currentTarget.classList.add('border-neon-yellow/50');
-                    }}
-                    onDragLeave={e => {
-                      e.currentTarget.classList.remove('bg-white/5');
-                      e.currentTarget.classList.remove('border-dashed');
-                      e.currentTarget.classList.remove('border-neon-yellow/50');
-                    }}
-                    onDrop={e => {
-                      e.preventDefault();
-                      e.currentTarget.classList.remove('bg-white/5');
-                      e.currentTarget.classList.remove('border-dashed');
-                      e.currentTarget.classList.remove('border-neon-yellow/50');
-
-                      const appId = draggedAppId;
-                      if (appId) {
-                        const newTime =
-                          occupiedMinutesInThisHour > 0 && occupiedMinutesInThisHour < 60
-                            ? nextAvailableStr
-                            : `${String(hour).padStart(2, '0')}:00`;
-                        handleMoveAppointment(appId, newTime);
-                        setDraggedAppId(null);
-                      }
-                    }}
+                    key={`${item.time}-${idx}`}
+                    className={`flex min-h-[100px] border-b border-white/5 group relative transition-colors duration-200`}
                   >
                     {/* Time Column */}
-                    <div className="w-16 md:w-20 py-4 pl-2 md:pl-4 text-xs md:text-sm font-mono font-bold text-gray-500 flex flex-col items-start border-r border-gray-800/50 bg-[#111]">
-                      <span className={occupiedMinutesInThisHour > 0 ? 'opacity-50' : ''}>
-                        {hourStr}:00
-                      </span>
-                      {occupiedMinutesInThisHour > 0 && occupiedMinutesInThisHour < 60 && (
-                        <span className="text-[9px] text-neon-yellow mt-1 font-mono">
-                          {nextAvailableStr.split(':')[1]}
-                        </span>
-                      )}
+                    <div className="w-16 md:w-20 py-4 pl-2 md:pl-4 text-xs md:text-sm font-mono font-bold text-zinc-500 flex flex-col items-start border-r border-white/5">
+                      <span className={item.type === 'app' ? 'text-white' : ''}>{item.time}</span>
                     </div>
 
                     {/* Content Column */}
-                    <div className="flex-1 px-2 md:px-3 relative pointer-events-none">
-                      <div className="pointer-events-auto contents">
-                        {apps.length > 0 ? (
-                          apps.map(app => {
-                            const service = getServiceDetails(app.serviceId);
-                            const isPaid = app.status === 'confirmed';
-                            const startMinutes = parseInt(app.time.split(':')[1]);
-                            const duration = service.duration || 30;
-                            // Strict height mapping
-                            const height = (duration / 60) * 110;
-                            const top = (startMinutes / 60) * 110;
-
-                            return (
-                              <div
-                                key={app.id}
-                                className="absolute left-1 right-1 z-20"
-                                style={{
-                                  top: `${top}px`,
-                                  height: `${height}px`,
-                                  zIndex: draggedAppId === app.id ? 50 : 20,
-                                }}
-                              >
-                                {/* SWIPE ACTIONS */}
-                                <div
-                                  className={`absolute inset-0 flex items-center justify-start gap-3 pl-4 bg-zinc-900/95 rounded-r-xl border border-white/5 z-0 transition-opacity duration-300 ${
-                                    swipedAppId === app.id ? 'opacity-100' : 'opacity-0'
-                                  }`}
-                                >
-                                  <button
-                                    onClick={e => {
-                                      e.stopPropagation();
-                                      handleCancelAppointment(app.id, e);
-                                      setSwipedAppId(null);
-                                    }}
-                                    className="w-10 h-10 rounded-full bg-red-500/10 border border-red-500/50 flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-colors"
-                                  >
-                                    <Trash2 size={18} />
-                                  </button>
-                                  <button
-                                    onClick={e => {
-                                      e.stopPropagation();
-                                      handleEditAppointment(app, e);
-                                      setSwipedAppId(null);
-                                    }}
-                                    className="w-10 h-10 rounded-full bg-blue-500/10 border border-blue-500/50 flex items-center justify-center text-blue-500 hover:bg-blue-500 hover:text-white transition-colors"
-                                  >
-                                    <Edit size={18} />
-                                  </button>
-                                  <div
-                                    className="flex-1 h-full"
-                                    onClick={() => setSwipedAppId(null)}
-                                  ></div>
-                                </div>
-
-                                {/* NEW CYBERPUNK CARD */}
-                                <div
-                                  className={`w-full h-full bg-[#09090b]/95 backdrop-blur-md border hover:border-neon-yellow/50 transition-all duration-300 shadow-2xl relative rounded-xl overflow-hidden cursor-grab active:cursor-grabbing group/card
-                                    ${
-                                      app.status === 'confirmed'
-                                        ? 'border-neon-yellow/40'
-                                        : 'border-white/10'
-                                    }
-                                    ${swipedAppId === app.id ? 'translate-x-[120px]' : ''}
-                                  `}
-                                  // TOUCH HANDLERS
-                                  onTouchStart={e => setTouchStartX(e.touches[0].clientX)}
-                                  onTouchEnd={e => {
-                                    if (touchStartX === null) return;
-                                    const diff = e.changedTouches[0].clientX - touchStartX;
-                                    if (diff > 50) setSwipedAppId(app.id);
-                                    else if (diff < -50) setSwipedAppId(null);
-                                    setTouchStartX(null);
-                                  }}
-                                  // DRAG HANDLERS
-                                  draggable={!swipedAppId}
-                                  onDragStart={e => {
-                                    if (swipedAppId) {
-                                      e.preventDefault();
-                                      return;
-                                    }
-                                    handleDragStart(e, app);
-                                  }}
-                                  onDragEnd={handleDragEnd}
-                                  onClick={() => {
-                                    if (swipedAppId === app.id) setSwipedAppId(null);
-                                    else onSelectClient(app.clientName);
-                                  }}
-                                >
-                                  <div className="relative pl-3 h-full group/card transition-all hover:z-50">
-                                    {/* Status Bar */}
-                                    <div
-                                      className={`absolute left-0 top-0 h-full w-1.5 rounded-l-full transition-colors ${
-                                        app.status === 'confirmed'
-                                          ? 'bg-green-500 shadow-[0_0_8px_#22c55e]'
-                                          : 'bg-yellow-500'
-                                      }`}
-                                    />
-
-                                    {/* Card Content */}
-                                    <div
-                                      className="flex items-center justify-between gap-3 rounded-r-xl bg-zinc-900/95 backdrop-blur-sm border border-white/5 px-3 py-1 shadow-lg hover:shadow-2xl hover:bg-zinc-800/95 transition-all cursor-pointer h-full"
-                                      onClick={e => {
-                                        e.stopPropagation(); // Prevent drag/parent click issues
-                                        onSelectClient(app.clientName);
-                                      }}
-                                    >
-                                      {/* Main Info */}
-                                      <div className="flex flex-col gap-1 min-w-0 flex-1">
-                                        {/* Time */}
-                                        <span className="text-sm font-bold text-yellow-400 font-mono tracking-wider">
-                                          {app.time}
-                                        </span>
-
-                                        {/* Client */}
-                                        <span className="text-base font-black text-white uppercase truncate tracking-wide leading-tight">
-                                          {app.clientName}
-                                        </span>
-
-                                        {/* Service */}
-                                        <span className="text-xs text-zinc-400 truncate font-medium">
-                                          {service.name}
-                                        </span>
-
-                                        {/* Price & Duration */}
-                                        <div className="flex items-center gap-3 text-xs mt-1">
-                                          <span className="font-bold text-yellow-400 text-sm">
-                                            {service.price}
-                                          </span>
-                                          <span className="flex items-center gap-1 text-zinc-500 font-medium">
-                                            <Clock size={12} />
-                                            {service.duration || '30'} min
-                                          </span>
-                                        </div>
-
-                                        {/* Status Label */}
-                                        <div
-                                          className={`mt-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest ${
-                                            app.status === 'confirmed'
-                                              ? 'text-green-400'
-                                              : 'text-yellow-500/80'
-                                          }`}
-                                        >
-                                          {app.status === 'confirmed' ? (
-                                            <CheckCircle2 size={12} />
-                                          ) : (
-                                            <Clock size={12} />
-                                          )}
-                                          {app.status === 'confirmed' ? 'Confirmado' : 'Pendente'}
-                                        </div>
-                                      </div>
-
-                                      {/* Actions Column */}
-                                      <div className="flex flex-col items-center justify-center gap-2 pl-2 border-l border-white/5 min-w-[40px] h-full">
-                                        <button
-                                          onClick={e => {
-                                            e.stopPropagation();
-                                            // Try to find phone in multiple sources
-                                            let phone = app.clientPhone;
-                                            if (!phone) {
-                                              const found = clients.find(
-                                                c =>
-                                                  c.name.trim().toLowerCase() ===
-                                                  app.clientName.trim().toLowerCase()
-                                              );
-                                              if (found && found.phone && found.phone.length > 8) {
-                                                phone = found.phone;
-                                              }
-                                            }
-
-                                            // If still no phone, use empty string to open contact picker
-                                            const cleanPhone = phone
-                                              ? phone.replace(/\D/g, '')
-                                              : '';
-
-                                            // Link direto do Google Maps
-                                            const dateStr =
-                                              selectedDate.toLocaleDateString('pt-BR');
-                                            const mapLink =
-                                              'https://www.google.com/maps?q=Rua+Monsenhor+Landell+de+Moura,+129+Campinas+SP';
-
-                                            const EMOJI = {
-                                              CHECK: '\u2705',
-                                              USER: '\uD83D\uDC64',
-                                              SCISSORS: '\u2702',
-                                              CALENDAR: '\uD83D\uDCC5',
-                                              CLOCK: '\uD83D\uDD50',
-                                              PIN: '\uD83D\uDCCD',
-                                              ROCKET: '\uD83D\uDE80', // 🚀
-                                              PRAY: '\uD83D\uDE4F', // 🙏
-                                            };
-
-                                            const msg =
-                                              `${mapLink}\n\n` +
-                                              `${EMOJI.PIN} TRILHA DO CORTE\n\n` +
-                                              `${EMOJI.USER} Passageiro: ${app.clientName}\n` +
-                                              `${EMOJI.CLOCK} Status: Lembrete\n\n` +
-                                              `${EMOJI.SCISSORS} Servico: ${service.name}\n` +
-                                              `${EMOJI.CALENDAR} Data: ${dateStr}\n` +
-                                              `${EMOJI.CLOCK} Horario: ${app.time}\n` +
-                                              `${EMOJI.PIN} Unidade: Jardim Sao Marcos\n\n` +
-                                              `${EMOJI.PRAY} Esperamos voce no horario.\n` +
-                                              `${EMOJI.ROCKET} Prepare-se para o upgrade.`;
-
-                                            const encodedMsg = encodeURIComponent(msg);
-                                            const whatsappUrl = cleanPhone
-                                              ? `https://api.whatsapp.com/send?phone=55${cleanPhone.replace(
-                                                  /^55/,
-                                                  ''
-                                                )}&text=${encodedMsg}`
-                                              : `https://api.whatsapp.com/send?text=${encodedMsg}`;
-
-                                            window.open(whatsappUrl, '_blank');
-                                          }}
-                                          className="w-10 h-10 rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-yellow-400 transition-colors border border-white/5 group/btn shadow-lg"
-                                          title="Enviar Lembrete no WhatsApp"
-                                        >
-                                          <Bell
-                                            size={18}
-                                            className="group-hover/btn:animate-swing"
-                                          />
-                                        </button>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })
-                        ) : // EMPTY SLOT INTERACTION
-                        occupiedMinutesInThisHour < 60 ? (
+                    <div className="flex-1 px-2 md:px-3 py-2 relative">
+                      {item.type === 'app' ? (
+                        <div className="absolute inset-0 z-10 px-2 py-1">
+                          {/* SWIPE ACTIONS (Sibling) */}
                           <div
-                            style={{
-                              marginTop: `${(occupiedMinutesInThisHour / 60) * 110}px`,
-                              height: `${((60 - occupiedMinutesInThisHour) / 60) * 110}px`,
-                            }}
-                            onClick={() => {
-                              if (!isPast) {
-                                // Use Smart Time
-                                setEditId(null);
-                                setQuickAddSlot({ date: selectedDate, time: nextAvailableStr });
-                                setIsQuickAddOpen(true);
-                              }
-                            }}
-                            className={`w-full rounded-xl border border-dashed border-gray-800/30 transition-all group/empty flex items-center justify-center ${
-                              isPast
-                                ? 'cursor-not-allowed opacity-0'
-                                : 'hover:border-gray-700 hover:bg-[#151515] cursor-pointer opacity-60 hover:opacity-100'
+                            className={`absolute inset-0 flex items-center justify-start gap-4 pl-4 bg-[#111] rounded-xl border border-white/5 z-0 transition-opacity duration-300 ${
+                              swipedAppId === (item as any).data.id
+                                ? 'opacity-100 pointer-events-auto'
+                                : 'opacity-0 pointer-events-none'
                             }`}
                           >
-                            {!isPast && (
-                              <div className="flex flex-col items-center gap-1 text-gray-800 group-hover/empty:text-gray-500 transition-colors">
-                                <Plus size={16} />
-                                {occupiedMinutesInThisHour > 0 && (
-                                  <span className="text-[9px] font-mono uppercase tracking-widest text-neon-yellow/70">
-                                    {nextAvailableStr}
-                                  </span>
-                                )}
-                              </div>
-                            )}
+                            <button
+                              onClick={e => {
+                                e.stopPropagation();
+                                handleCancelAppointment((item as any).data.id, e);
+                                setSwipedAppId(null);
+                              }}
+                              className="w-10 h-10 rounded-full bg-red-500/10 border border-red-500/50 flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-all scale-90 hover:scale-100"
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                            <button
+                              onClick={e => {
+                                e.stopPropagation();
+                                handleEditAppointment((item as any).data, e);
+                                setSwipedAppId(null);
+                              }}
+                              className="w-10 h-10 rounded-full bg-blue-500/10 border border-blue-500/50 flex items-center justify-center text-blue-500 hover:bg-blue-500 hover:text-white transition-all scale-90 hover:scale-100"
+                            >
+                              <Edit size={18} />
+                            </button>
+                            {/* Click area to close swipe */}
+                            <div
+                              className="flex-1 h-full"
+                              onClick={() => setSwipedAppId(null)}
+                            ></div>
                           </div>
-                        ) : null}
-                      </div>
+
+                          {/* CARD - PREMIUM LAYOUT */}
+                          <div
+                            className={`w-full h-full bg-[#1A1A1A] rounded-xl overflow-hidden border border-white/10 shadow-lg relative z-10 cursor-grab active:cursor-grabbing group/card touch-pan-y flex flex-col
+                                    ${
+                                      swipedAppId === (item as any).data.id
+                                        ? 'translate-x-[120px] opacity-50'
+                                        : 'translate-x-0 opacity-100'
+                                    }
+                                    transition-all duration-300
+                                `}
+                            draggable={false}
+                            onTouchStart={e => setTouchStartX(e.touches[0].clientX)}
+                            onTouchEnd={e => {
+                              if (touchStartX === null) return;
+                              const diff = e.changedTouches[0].clientX - touchStartX;
+                              if (diff > 50) setSwipedAppId((item as any).data.id);
+                              else if (diff < -50) setSwipedAppId(null);
+                              setTouchStartX(null);
+                            }}
+                            onClick={() => {
+                              if (swipedAppId === (item as any).data.id) setSwipedAppId(null);
+                              else onSelectClient((item as any).data.clientName);
+                            }}
+                          >
+                            {/* HEADER: NAME + BELL */}
+                            <div className="flex justify-between items-center px-3 py-2 border-b border-white/5 bg-[#202020]">
+                              <h3 className="font-bold text-white text-sm md:text-base uppercase tracking-wider truncate">
+                                {(item as any).data.clientName}
+                              </h3>
+                              <button
+                                className="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/10 transition-colors"
+                                onClick={e => {
+                                  e.stopPropagation();
+                                  let phone = (item as any).data.clientPhone;
+                                  if (!phone) {
+                                    const found = clients.find(
+                                      c =>
+                                        c.name.toLowerCase() ===
+                                        (item as any).data.clientName.toLowerCase()
+                                    );
+                                    if (found && found.phone && found.phone.length > 8)
+                                      phone = found.phone;
+                                  }
+                                  const clean = phone?.replace(/\D/g, '') || '';
+
+                                  const msg = `💈 *Trilha do Corte*\n\nFala *${
+                                    (item as any).data.clientName
+                                  }*, tudo certo? 👊\nPassando pra lembrar do seu horário hoje:\n\n✂️ *${
+                                    (item as any).service.name
+                                  }*\n⏰ *${
+                                    (item as any).time
+                                  }*\n\n📍 *Local:* Trilha do Corte\nConfirmado? ✅`;
+
+                                  const link = clean
+                                    ? `https://api.whatsapp.com/send?phone=55${clean}&text=${encodeURIComponent(
+                                        msg
+                                      )}`
+                                    : `https://api.whatsapp.com/send?text=${encodeURIComponent(
+                                        msg
+                                      )}`;
+                                  window.open(link, '_blank');
+                                }}
+                              >
+                                <Bell size={12} />
+                              </button>
+                            </div>
+
+                            {/* BODY: SPLIT LEFT/RIGHT */}
+                            <div className="flex flex-1">
+                              {/* LEFT: TIME BOX */}
+                              <div className="w-[60px] flex flex-col items-center justify-center border-r border-white/5 bg-[#181818]">
+                                <span className="text-white font-black text-lg leading-none">
+                                  {(item as any).time.split(':')[0]}
+                                </span>
+                                <span className="text-zinc-500 font-bold text-[10px] uppercase">
+                                  {(item as any).time.split(':')[1]}
+                                </span>
+                              </div>
+
+                              {/* RIGHT: SERVICE INFO */}
+                              <div className="flex-1 flex flex-col">
+                                {/* Service Name */}
+                                <div className="flex-1 px-3 flex items-center border-b border-white/5">
+                                  <span className="text-zinc-300 text-xs font-bold uppercase tracking-wide line-clamp-1">
+                                    {(item as any).service.name}
+                                  </span>
+                                </div>
+
+                                {/* Footer (Duration + Price) */}
+                                <div className="px-3 py-1.5 flex justify-between items-center bg-[#1D1D1D]">
+                                  {/* Duration Pill */}
+                                  <div className="flex items-center justify-center border border-white/10 rounded-md px-2 py-0.5 bg-black/20">
+                                    <span className="text-[10px] font-bold text-zinc-400">
+                                      {(item as any).service.duration || '30'}m
+                                    </span>
+                                  </div>
+
+                                  {/* Price */}
+                                  <span className="text-neon-yellow font-black text-sm">
+                                    {(item as any).service.price}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Color Accent Line (Left Edge Overlay) */}
+                            <div
+                              className={`absolute left-0 top-0 bottom-0 w-1 ${
+                                (item as any).data.status === 'confirmed'
+                                  ? 'bg-green-500'
+                                  : 'bg-yellow-500'
+                              }`}
+                            ></div>
+                          </div>
+                        </div>
+                      ) : (
+                        // EMPTY SLOT
+                        <div
+                          className="w-full h-full flex items-center justify-center cursor-pointer group/empty"
+                          onClick={() => {
+                            if (item.type !== 'app') {
+                              setEditId(null);
+                              setQuickAddSlot({ date: selectedDate, time: item.time });
+                              setIsQuickAddOpen(true);
+                            }
+                          }}
+                        >
+                          <div className="w-full h-full border-2 border-dashed border-zinc-900 rounded-xl flex items-center justify-center transition-all group-hover/empty:border-zinc-800">
+                            <Plus
+                              className="text-zinc-800 group-hover/empty:text-zinc-600 transition-colors"
+                              size={24}
+                            />
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
-                );
-              })}
+                ));
+              })()}
             </div>
           </>
         )}

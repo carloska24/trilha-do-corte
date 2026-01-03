@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { getOptimizedImageUrl } from '../utils/imageUtils';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { ChairIcon } from '../components/icons/ChairIcon';
 import { ClientsIcon } from '../components/icons/ClientsIcon';
@@ -17,6 +18,7 @@ import { api } from '../services/api';
 // Sub-components (Modals only, as views are now Routes)
 import { FinancialModal } from '../components/dashboard/FinancialModal';
 import { ClientProfileModal } from '../components/dashboard/ClientProfileModal';
+import { BarberProfileModal } from '../components/dashboard/BarberProfileModal';
 import { DraggableMic } from '../components/ui/DraggableMic';
 
 const DEFAULT_BARBER_IMAGE =
@@ -124,7 +126,15 @@ export const DashboardLayout: React.FC = () => {
 
       if (result.action === 'schedule') {
         // New AI returns ISO date YYYY-MM-DD directly
-        const appointmentDate = result.data.date || new Date().toISOString().split('T')[0];
+        // Fix: Use Local Date for fallback instead of UTC to prevent "tomorrow" issues at night
+        const getLocalDateStr = () => {
+          const d = new Date();
+          const year = d.getFullYear();
+          const month = String(d.getMonth() + 1).padStart(2, '0');
+          const day = String(d.getDate()).padStart(2, '0');
+          return `${year}-${month}-${day}`;
+        };
+        const appointmentDate = result.data.date || getLocalDateStr();
         const time = result.data.time || '12:00';
         const clientName = result.data.clientName || 'Cliente Voz';
 
@@ -490,7 +500,7 @@ export const DashboardLayout: React.FC = () => {
             className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-street-gray shadow-md hover:border-[#FFD700] transition-colors"
           >
             <img
-              src={barberProfile?.photoUrl || DEFAULT_BARBER_IMAGE}
+              src={getOptimizedImageUrl(barberProfile?.photoUrl || DEFAULT_BARBER_IMAGE, 100, 100)}
               alt="Profile"
               className="w-full h-full object-cover"
             />
@@ -698,67 +708,9 @@ export const DashboardLayout: React.FC = () => {
         }}
       />
 
-      {/* MODAL PERFIL (Header) */}
-      {showProfileModal && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/95 backdrop-blur-sm animate-[fadeIn_0.2s_ease-out]">
-          <div className="bg-[#111] border border-gray-800 w-full max-w-sm p-8 rounded-sm shadow-2xl relative flex flex-col items-center">
-            <button
-              onClick={() => setShowProfileModal(false)}
-              className="absolute top-4 right-4 text-gray-500 hover:text-white cursor-pointer"
-            >
-              <X />
-            </button>
-            <div className="text-center mb-6 w-full">
-              <span className="text-[10px] font-black text-neon-yellow uppercase tracking-[0.2em] border-b border-gray-800 pb-2 mb-4 block">
-                Identificação do Maquinista
-              </span>
-              <div
-                className="w-32 h-32 rounded-full border-4 border-neon-orange p-1 bg-black shadow-[0_0_30px_rgba(249,115,22,0.4)] mx-auto mb-4 relative group cursor-pointer"
-                onClick={() => profilePhotoInputRef.current?.click()}
-              >
-                <img
-                  src={barberProfile?.photoUrl || DEFAULT_BARBER_IMAGE}
-                  alt="Perfil"
-                  className="w-full h-full object-cover rounded-full filter contrast-110"
-                />
-                <div className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                  <span className="text-xs font-bold uppercase text-white">Alterar</span>
-                </div>
-                <input
-                  type="file"
-                  ref={profilePhotoInputRef}
-                  className="hidden"
-                  accept="image/*"
-                  onChange={handleProfilePhotoChange}
-                />
-              </div>
-              <h2 className="text-3xl font-graffiti text-white mb-1">{barberProfile?.name}</h2>
-              <p className="text-gray-500 font-mono text-xs uppercase tracking-widest">
-                {barberProfile?.email}
-              </p>
-            </div>
-            <div className="w-full space-y-3">
-              <button
-                onClick={() => {
-                  setShowProfileModal(false);
-                  navigate('/dashboard/settings');
-                }}
-                className="w-full bg-[#1a1a1a] hover:bg-[#222] text-white py-4 flex items-center justify-center gap-3 text-xs font-black uppercase tracking-widest border border-gray-800 transition-colors cursor-pointer"
-              >
-                <Settings size={16} /> Configurações do Trem
-              </button>
-              <button
-                onClick={() => {
-                  logout();
-                  navigate('/');
-                }}
-                className="w-full bg-red-900/10 hover:bg-red-900/30 text-red-500 hover:text-red-400 py-4 flex items-center justify-center gap-3 text-xs font-black uppercase tracking-widest border border-red-900/20 transition-colors cursor-pointer"
-              >
-                <LogOut size={16} /> Encerrar Turno
-              </button>
-            </div>
-          </div>
-        </div>
+      {/* NEW BARBER PROFILE MODAL */}
+      {showProfileModal && barberProfile && (
+        <BarberProfileModal barber={barberProfile} onClose={() => setShowProfileModal(false)} />
       )}
 
       {/* MODAL FINALIZAR */}
@@ -784,7 +736,7 @@ export const DashboardLayout: React.FC = () => {
                 {photoPreview ? (
                   <>
                     <img
-                      src={photoPreview}
+                      src={getOptimizedImageUrl(photoPreview, 400, 300)}
                       className="absolute inset-0 w-full h-full object-cover"
                     />
                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">

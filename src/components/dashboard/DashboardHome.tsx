@@ -1,4 +1,5 @@
 import React from 'react';
+import { getOptimizedImageUrl } from '../../utils/imageUtils';
 import { ChairIcon } from '../icons/ChairIcon';
 import { Appointment, AppointmentStatus, ServiceItem } from '../../types';
 import { SERVICES as ALL_SERVICES } from '../../constants';
@@ -68,13 +69,16 @@ const QueueTicker = React.memo(
                       <div className="w-16 h-16 rounded-full p-[2px] bg-gradient-to-tr from-cyan-400 via-white to-purple-500 shadow-lg">
                         <div className="w-full h-full rounded-full overflow-hidden bg-black relative">
                           <img
-                            src={
+                            src={getOptimizedImageUrl(
                               client.photoUrl && client.photoUrl.trim() !== ''
                                 ? client.photoUrl
-                                : 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop'
-                            }
+                                : 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop',
+                              100,
+                              100
+                            )}
                             className="w-full h-full object-cover filter contrast-110"
                             alt={client.clientName}
+                            loading="lazy"
                             onError={e => {
                               e.currentTarget.src =
                                 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop';
@@ -268,11 +272,13 @@ export const DashboardHome: React.FC = () => {
                     <div className="w-56 h-56 md:w-72 md:h-72 rounded-full p-2 bg-gradient-to-tr from-cyan-400 via-blue-500 to-purple-600 shadow-[0_0_40px_rgba(6,182,212,0.4)] relative overflow-hidden ring-4 ring-black/50">
                       <div className="w-full h-full rounded-full border-[4px] border-white/20 overflow-hidden relative bg-black">
                         <img
-                          src={
+                          src={getOptimizedImageUrl(
                             inProgress.photoUrl && inProgress.photoUrl.trim() !== ''
                               ? inProgress.photoUrl
-                              : 'https://images.unsplash.com/photo-1618077553780-75539862f629?q=80&w=400&auto=format&fit=crop'
-                          }
+                              : 'https://images.unsplash.com/photo-1618077553780-75539862f629?q=80&w=400&auto=format&fit=crop',
+                            300,
+                            300
+                          )}
                           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                           alt="Cliente"
                           onError={e => {
@@ -349,11 +355,13 @@ export const DashboardHome: React.FC = () => {
                 <div className="w-[30%] h-full flex items-center justify-center relative z-10 pl-1">
                   <div className="w-[3.5rem] h-[3.5rem] rounded-full bg-gradient-to-br from-green-400 to-emerald-700 p-[2px] shadow-lg flex items-center justify-center">
                     <img
-                      src={
+                      src={getOptimizedImageUrl(
                         inProgress.photoUrl && inProgress.photoUrl.trim() !== ''
                           ? inProgress.photoUrl
-                          : 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop'
-                      }
+                          : 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop',
+                        100,
+                        100
+                      )}
                       className="w-full h-full object-cover rounded-full filter contrast-110"
                       alt="Client"
                       onError={e => {
@@ -390,11 +398,13 @@ export const DashboardHome: React.FC = () => {
                 <div className="w-[30%] h-full flex items-center justify-center relative z-10 pl-1">
                   <div className="w-[4.5rem] h-[4.5rem] rounded-full bg-gradient-to-br from-yellow-500 to-red-600 p-[2px] shadow-lg transform scale-105">
                     <img
-                      src={
+                      src={getOptimizedImageUrl(
                         nextClient?.photoUrl && nextClient.photoUrl.trim() !== ''
                           ? nextClient.photoUrl
-                          : 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop'
-                      }
+                          : 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop',
+                        100,
+                        100
+                      )}
                       className="w-full h-full object-cover rounded-full filter contrast-110"
                       alt="Client"
                       onError={e => {

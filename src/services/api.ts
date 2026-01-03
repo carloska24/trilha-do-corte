@@ -3,6 +3,14 @@ import { ServiceItem, Barber, Client, Appointment } from '../types';
 const BASE_URL = import.meta.env.VITE_API_URL || '';
 const API_URL = BASE_URL ? `${BASE_URL}/api` : '/api';
 
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('token');
+  return {
+    'Content-Type': 'application/json',
+    Authorization: token ? `Bearer ${token}` : '',
+  };
+};
+
 export const api = {
   loginClient: async (emailOrPhone: string, password: string): Promise<Client | null> => {
     try {
@@ -13,6 +21,7 @@ export const api = {
       });
       if (!response.ok) return null;
       const json = await response.json();
+      if (json.token) localStorage.setItem('token', json.token);
       return json.data;
     } catch (error) {
       console.error('Login error:', error);
@@ -29,6 +38,7 @@ export const api = {
       });
       if (!response.ok) return null;
       const json = await response.json();
+      if (json.token) localStorage.setItem('token', json.token);
       return json.data;
     } catch (error) {
       console.error('Login error:', error);
@@ -45,6 +55,7 @@ export const api = {
       });
       if (!response.ok) return null;
       const json = await response.json();
+      if (json.token) localStorage.setItem('token', json.token);
       return json.data;
     } catch (error) {
       console.error('Register error:', error);
@@ -61,6 +72,7 @@ export const api = {
       });
       if (!response.ok) return null;
       const json = await response.json();
+      if (json.token) localStorage.setItem('token', json.token);
       return json.data;
     } catch (error) {
       console.error('Register Barber error:', error);
@@ -72,7 +84,7 @@ export const api = {
     try {
       const response = await fetch(`${API_URL}/clients/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify(data),
       });
       if (!response.ok) return null;
@@ -99,9 +111,7 @@ export const api = {
     try {
       const response = await fetch(`${API_URL}/services`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify(service),
       });
       const json = await response.json();
@@ -116,9 +126,7 @@ export const api = {
     try {
       const response = await fetch(`${API_URL}/services/${id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify(service),
       });
       const json = await response.json();
@@ -133,6 +141,7 @@ export const api = {
     try {
       const response = await fetch(`${API_URL}/services/${id}`, {
         method: 'DELETE',
+        headers: getAuthHeaders(),
       });
       return response.ok;
     } catch (error) {
@@ -164,7 +173,9 @@ export const api = {
 
   getBarbers: async (): Promise<Barber[]> => {
     try {
-      const response = await fetch(`${API_URL}/barbers`);
+      const response = await fetch(`${API_URL}/barbers`, {
+        headers: getAuthHeaders(),
+      });
       const json = await response.json();
       return json.data;
     } catch (error) {
@@ -177,7 +188,7 @@ export const api = {
     try {
       const response = await fetch(`${API_URL}/barbers/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify(data),
       });
       if (!response.ok) return null;
@@ -191,9 +202,12 @@ export const api = {
 
   getClients: async (): Promise<Client[]> => {
     try {
-      const response = await fetch(`${API_URL}/clients`);
+      const response = await fetch(`${API_URL}/clients`, {
+        headers: getAuthHeaders(),
+      });
+      if (!response.ok) return [];
       const json = await response.json();
-      return json.data;
+      return json.data || [];
     } catch (error) {
       console.error('Error fetching clients:', error);
       return [];
@@ -204,9 +218,7 @@ export const api = {
     try {
       const response = await fetch(`${API_URL}/clients`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify(client),
       });
       const json = await response.json();
@@ -219,8 +231,13 @@ export const api = {
 
   getAppointments: async (): Promise<Appointment[]> => {
     try {
-      const response = await fetch(`${API_URL}/appointments`);
+      const response = await fetch(`${API_URL}/appointments`, {
+        headers: getAuthHeaders(),
+      });
+      if (!response.ok) return [];
       const json = await response.json();
+      if (!json.data) return [];
+
       // Handle Postgres lowercase return for clientId if needed
       return json.data.map((appt: any) => ({
         ...appt,
@@ -240,9 +257,7 @@ export const api = {
     try {
       const response = await fetch(`${API_URL}/appointments`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify(appointment),
       });
       const json = await response.json();
@@ -260,9 +275,7 @@ export const api = {
     try {
       const response = await fetch(`${API_URL}/appointments/${id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify(data),
       });
       if (!response.ok) return null;
@@ -278,6 +291,7 @@ export const api = {
     try {
       const response = await fetch(`${API_URL}/appointments`, {
         method: 'DELETE',
+        headers: getAuthHeaders(),
       });
       return response.ok;
     } catch (error) {

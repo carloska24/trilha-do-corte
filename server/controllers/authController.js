@@ -1,6 +1,17 @@
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
+import jwt from 'jsonwebtoken';
 import db from '../db.js';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret_123';
+
+const generateToken = user => {
+  return jwt.sign(
+    { id: user.id, email: user.email, type: user.specialty ? 'barber' : 'client' },
+    JWT_SECRET,
+    { expiresIn: '30d' }
+  );
+};
 
 export const loginClient = async (req, res) => {
   const { emailOrPhone, password } = req.body;
@@ -19,7 +30,8 @@ export const loginClient = async (req, res) => {
 
       if (match) {
         const { password, ...userWithoutPass } = row;
-        res.json({ success: true, data: userWithoutPass });
+        const token = generateToken(userWithoutPass);
+        res.json({ success: true, token, data: userWithoutPass });
       } else {
         res.status(401).json({ error: 'Senha incorreta.' });
       }
@@ -46,7 +58,8 @@ export const loginBarber = async (req, res) => {
       const match = await bcrypt.compare(password, row.password);
       if (match) {
         const { password, ...userWithoutPass } = row;
-        res.json({ success: true, data: userWithoutPass });
+        const token = generateToken(userWithoutPass);
+        res.json({ success: true, token, data: userWithoutPass });
       } else {
         res.status(401).json({ error: 'Credenciais inválidas' });
       }
@@ -70,9 +83,15 @@ export const registerClient = async (req, res) => {
     const params = [id, name, phone, email, hashedPassword, photoUrl];
 
     await db.query(sql, params);
+
+    // Return token directly after register for auto-login
+    const newUser = { id, name, phone, email, img: photoUrl, level: 1, status: 'new' };
+    const token = generateToken(newUser);
+
     res.json({
       success: true,
-      data: { id, name, phone, email, img: photoUrl, level: 1, status: 'new' },
+      token,
+      data: newUser,
     });
   } catch (error) {
     console.error('Register Error:', error);
@@ -91,9 +110,14 @@ export const registerBarber = async (req, res) => {
     const params = [id, name, 'Barbeiro', photoUrl, email, hashedPassword, phone];
 
     await db.query(sql, params);
+
+    const newBarber = { id, name, specialty: 'Barbeiro', image: photoUrl, email, phone };
+    const token = generateToken(newBarber);
+
     res.json({
       success: true,
-      data: { id, name, specialty: 'Barbeiro', image: photoUrl, email, phone },
+      token,
+      data: newBarber,
     });
   } catch (err) {
     console.error('❌ Register Barber Error:', err);

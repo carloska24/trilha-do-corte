@@ -10,12 +10,15 @@ import {
 const router = express.Router();
 
 // Clients
-router.get('/clients', getClients);
-router.put('/clients/:id', updateClientProfile);
-router.post('/clients', createClientAdmin);
+import { authenticateToken } from '../middleware/auth.js';
+
+// Clients
+router.get('/clients', authenticateToken, getClients);
+router.put('/clients/:id', authenticateToken, updateClientProfile);
+router.post('/clients', authenticateToken, createClientAdmin);
 
 // Barbers
-router.get('/barbers', getBarbers);
-router.put('/barbers/:id', updateBarberProfile);
+router.get('/barbers', authenticateToken, getBarbers);
+router.put('/barbers/:id', authenticateToken, updateBarberProfile);
 
 export default router;

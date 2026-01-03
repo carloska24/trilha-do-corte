@@ -8,9 +8,11 @@ import {
 
 const router = express.Router();
 
+import { authenticateToken } from '../middleware/auth.js';
+
 router.get('/', getServices);
-router.post('/', createService);
-router.put('/:id', updateService);
-router.delete('/:id', deleteService);
+router.post('/', authenticateToken, createService);
+router.put('/:id', authenticateToken, updateService);
+router.delete('/:id', authenticateToken, deleteService);
 
 export default router;

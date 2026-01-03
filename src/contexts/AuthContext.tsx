@@ -49,6 +49,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = () => {
     setUserType(null);
     setCurrentUser(null);
+    localStorage.removeItem('token');
   };
 
   const updateProfile = (data: Partial<ClientProfile | BarberProfile>) => {

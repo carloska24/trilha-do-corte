@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
+import { getOptimizedImageUrl } from '../../utils/imageUtils';
 import { Search, User, ChevronRight, Plus, X, Save, MessageCircle } from 'lucide-react';
 import { Client } from '../../types';
 import { generateId } from '../../utils';
 import { useData } from '../../contexts/DataContext';
 import { useOutletContext } from 'react-router-dom';
-
 import { api } from '../../services/api';
 
 interface DashboardOutletContext {
@@ -226,8 +226,9 @@ export const ClientsManager: React.FC = () => {
                       <div className="w-full h-full rounded-full overflow-hidden bg-zinc-900 border border-black relative">
                         {client.img ? (
                           <img
-                            src={client.img}
+                            src={getOptimizedImageUrl(client.img, 100, 100)}
                             alt={client.name}
+                            loading="lazy"
                             className="w-full h-full object-cover"
                           />
                         ) : (

@@ -1,3 +1,4 @@
+import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import db from '../db.js';
 
@@ -67,7 +68,7 @@ export const updateClientProfile = async (req, res) => {
 
 export const updateBarberProfile = async (req, res) => {
   const { id } = req.params;
-  const { name, phone, email, img, bio, specialty } = req.body;
+  const { name, phone, email, img, bio, specialty, password } = req.body;
 
   try {
     const updates = [];
@@ -87,18 +88,23 @@ export const updateBarberProfile = async (req, res) => {
       params.push(email);
     }
     if (img !== undefined) {
-      updates.push(`img = $${paramIdx++}`);
+      updates.push(`image = $${paramIdx++}`);
       params.push(img);
     }
-    if (bio !== undefined) {
-      // Barber specific
-      updates.push(`bio = $${paramIdx++}`);
-      params.push(bio);
-    }
+    // if (bio !== undefined) {
+    //   // Barber specific - Column likely missing in DB, disabling to prevent crash
+    //   updates.push(`bio = $${paramIdx++}`);
+    //   params.push(bio);
+    // }
     if (specialty !== undefined) {
       // Barber specific
       updates.push(`specialty = $${paramIdx++}`);
       params.push(specialty);
+    }
+    if (password !== undefined && password.trim() !== '') {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      updates.push(`password = $${paramIdx++}`);
+      params.push(hashedPassword);
     }
 
     if (updates.length === 0) {

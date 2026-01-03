@@ -8,6 +8,11 @@ import {
 
 const router = express.Router();
 
+import { authenticateToken } from '../middleware/auth.js';
+
+// Protect all appointment routes
+router.use(authenticateToken);
+
 router.get('/', getAppointments);
 router.post('/', createAppointment);
 router.put('/:id', updateAppointment);
