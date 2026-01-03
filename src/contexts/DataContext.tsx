@@ -38,10 +38,18 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const refreshData = useCallback(async () => {
     setIsLoading(true);
     try {
+      // Fetch public data always
+      const servicesRequest = api.getServices();
+      const appointmentsRequest = api.getAppointments();
+
+      // Fetch protected data only if token exists (simple check)
+      const token = localStorage.getItem('token');
+      const clientsRequest = token ? api.getClients() : Promise.resolve([]);
+
       const [fetchedServices, fetchedAppointments, fetchedClients] = await Promise.all([
-        api.getServices(),
-        api.getAppointments(),
-        api.getClients(),
+        servicesRequest,
+        appointmentsRequest,
+        clientsRequest,
       ]);
 
       const normalizedServices = fetchedServices.map((s: any) => {

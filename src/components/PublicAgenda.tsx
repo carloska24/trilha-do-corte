@@ -19,6 +19,7 @@ export const PublicAgenda: React.FC = () => {
 
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false); // New state for expansion
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // --- LOGICA DE CARROSSEL DE DIAS ---
@@ -65,9 +66,10 @@ export const PublicAgenda: React.FC = () => {
   };
 
   // --- LOGICA DE HORARIOS ---
+  // --- LOGICA DE HORARIOS INTELIGENTE (SMART SLOTS) ---
   const generateTimeSlots = () => {
-    // Check for exceptions for the selected date
-    if (selectedDate.getDay() === 0) return []; // Block Sundays
+    // 1. Validar dia fechado (Domingo ou Exceção)
+    if (selectedDate.getDay() === 0) return [];
 
     const dateKey =
       selectedDate.getFullYear() +
@@ -82,20 +84,73 @@ export const PublicAgenda: React.FC = () => {
 
     if (exception?.closed || startH >= endH) return [];
 
-    const slots = [];
-    const interval = shopSettings.slotInterval || 60;
-    const startMin = startH * 60;
-    const endMin = endH * 60;
+    // 2. Definir intervalo de "Grade" (Fina p/ Smart) = 15min
+    const GRID_INTERVAL = 15;
 
-    for (let time = startMin; time < endMin; time += interval) {
+    // 3. Mapear Agendamentos do Dia (Occupied Ranges)
+    const dateStr = selectedDate.toISOString().split('T')[0];
+    const dayAppointments = appointments.filter(app => {
+      // Ajuste para garantir comparação correta de data (timezone safe basic)
+      return app.date.startsWith(dateStr) && app.status !== 'cancelled';
+    });
+
+    const occupiedRanges = dayAppointments.map(app => {
+      const [h, m] = app.time.split(':').map(Number);
+      const startMin = h * 60 + m;
+
+      const service = services.find(s => s.id === app.serviceId);
+      const duration = service?.duration || 30; // Fallback
+
+      return { start: startMin, end: startMin + duration };
+    });
+
+    // 4. Gerar Slots Disponíveis
+    const slots = [];
+    const startOfDayMin = startH * 60;
+    const endOfDayMin = endH * 60;
+
+    // Duração "minima" para verificar se cabe UM serviço (usando o primeiro serviço ou 30min)
+    const minServiceDuration = services[0]?.duration || 30;
+
+    for (let time = startOfDayMin; time < endOfDayMin; time += GRID_INTERVAL) {
+      const currentSlotStart = time;
+      const currentSlotEnd = time + minServiceDuration;
+
+      // Verificar Colisão (Overlap)
+      const isOccupied = occupiedRanges.some(range => {
+        return currentSlotStart < range.end && currentSlotEnd > range.start;
+      });
+
+      // Verificar Passado
+      const now = new Date();
+      const isToday = dateStr === now.toISOString().split('T')[0];
+      const nowTotalMinutes = now.getHours() * 60 + now.getMinutes();
+      const isPassed = isToday && currentSlotStart < nowTotalMinutes;
+
+      // Format Label
       const h = Math.floor(time / 60);
       const m = time % 60;
-      slots.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
+      const timeLabel = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+
+      // Regra de Exibição:
+      // Se estiver ocupado, NÃO MOSTRAR (para "Smart" behavior), ou mostrar como ocupado?
+      // O usuário pediu "o próximo horário disponível deve ser...".
+      // Vamos incluir todos na lista, e o render decide a cor.
+
+      slots.push({
+        label: timeLabel,
+        minutes: time,
+        status: isOccupied ? 'occupied' : isPassed ? 'passed' : 'available',
+      });
     }
-    return slots;
+
+    // Filter out passed slots here to hide them completely
+    return slots.filter(s => s.status !== 'passed');
   };
 
-  const timeSlots = generateTimeSlots();
+  const timeSlotsObjects = generateTimeSlots();
+  // Filter only meaningful slots? For now return mapped labels for compatibility but use objects for status
+  const timeSlots = timeSlotsObjects.map(s => s.label);
 
   // Is current day closed?
   const dateKey =
@@ -107,28 +162,8 @@ export const PublicAgenda: React.FC = () => {
   const isClosed = shopSettings.exceptions?.[dateKey]?.closed;
 
   const getSlotStatus = (timeStr: string) => {
-    const dateStr = selectedDate.toISOString().split('T')[0];
-    const [h, m] = timeStr.split(':').map(Number);
-    const slotTotalMinutes = h * 60 + m;
-
-    // Check if passed
-    const now = new Date();
-    const isToday = dateStr === now.toISOString().split('T')[0];
-    const nowTotalMinutes = now.getHours() * 60 + now.getMinutes();
-
-    if (isToday && slotTotalMinutes < nowTotalMinutes) return 'passed';
-
-    // Check availability
-    // Simple check: Is there any appointment starting exactly at this time?
-    // Enhanced: Check if any appointment overlaps significantly?
-    // For now, let's keep it simple mapping "start time" matches.
-    // If user asks for overlap logic, we will add it.
-    const isOccupied = appointments.some(app => {
-      const appDate = new Date(app.date).toISOString().split('T')[0];
-      return appDate === dateStr && app.time === timeStr;
-    });
-
-    return isOccupied ? 'occupied' : 'available';
+    const slot = timeSlotsObjects.find(s => s.label === timeStr);
+    return slot?.status || 'available';
   };
 
   const handleSlotClick = (timeStr: string) => {
@@ -288,55 +323,76 @@ export const PublicAgenda: React.FC = () => {
             <span className="text-red-800 text-xs mt-1">Selecione outro dia</span>
           </div>
         ) : (
-          <div className="grid grid-cols-4 gap-2">
-            {timeSlots.map(timeStr => {
-              const status = getSlotStatus(timeStr);
+          <>
+            <div className="grid grid-cols-4 gap-2 transition-all duration-500">
+              {timeSlots
+                .slice(0, isExpanded ? undefined : 12) // Show only 12 initially
+                .map(timeStr => {
+                  const status = getSlotStatus(timeStr);
 
-              let baseClasses =
-                'flex flex-col items-center justify-center py-3 rounded-lg border transition-all duration-300';
+                  let baseClasses =
+                    'flex flex-col items-center justify-center py-3 rounded-lg border transition-all duration-300';
 
-              if (status === 'passed') {
-                return (
-                  <div
-                    key={timeStr}
-                    className={`${baseClasses} bg-[#0a0a0a] border-transparent opacity-30 cursor-not-allowed`}
-                  >
-                    <span className="text-sm font-bold text-gray-500 font-mono line-through">
-                      {timeStr}
-                    </span>
-                    <span className="text-[8px] font-bold uppercase text-gray-600">Encerrado</span>
-                  </div>
-                );
-              }
+                  if (status === 'passed') {
+                    // Should be hidden by filter, but safely handle if logic changes
+                    return null;
+                  }
 
-              if (status === 'occupied') {
-                return (
-                  <div
-                    key={timeStr}
-                    className={`${baseClasses} bg-red-900/5 border-red-900/20 opacity-50 cursor-not-allowed`}
-                  >
-                    <span className="text-sm font-bold text-red-800 font-mono">{timeStr}</span>
-                    <span className="text-[8px] font-bold uppercase text-red-900">Ocupado</span>
-                  </div>
-                );
-              }
+                  if (status === 'occupied') {
+                    return (
+                      <div
+                        key={timeStr}
+                        className={`${baseClasses} bg-red-900/5 border-red-900/20 opacity-50 cursor-not-allowed`}
+                      >
+                        <span className="text-sm font-bold text-red-800 font-mono">{timeStr}</span>
+                        <span className="text-[8px] font-bold uppercase text-red-900">Ocupado</span>
+                      </div>
+                    );
+                  }
 
-              return (
-                <button
-                  key={timeStr}
-                  onClick={() => handleSlotClick(timeStr)}
-                  className={`${baseClasses} bg-[#111] border-gray-800 text-white hover:bg-neon-yellow hover:text-black hover:border-neon-yellow hover:shadow-[0_0_15px_rgba(234,179,8,0.3)] active:scale-95 group`}
-                >
-                  <span className="text-sm font-bold font-mono group-hover:font-black">
-                    {timeStr}
-                  </span>
-                  <span className="text-[8px] font-bold uppercase text-green-500 group-hover:text-black mt-0.5">
-                    Livre
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+                  return (
+                    <button
+                      key={timeStr}
+                      onClick={() => handleSlotClick(timeStr)}
+                      className={`${baseClasses} bg-[#111] border-gray-800 text-white hover:bg-neon-yellow hover:text-black hover:border-neon-yellow hover:shadow-[0_0_15px_rgba(234,179,8,0.3)] active:scale-95 group`}
+                    >
+                      <span className="text-sm font-bold font-mono group-hover:font-black">
+                        {timeStr}
+                      </span>
+                      <span className="text-[8px] font-bold uppercase text-green-500 group-hover:text-black mt-0.5">
+                        Livre
+                      </span>
+                    </button>
+                  );
+                })}
+            </div>
+
+            {/* Expand/Collapse Button */}
+            {timeSlots.length > 12 && (
+              <button
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="w-full flex items-center justify-center gap-2 mt-4 py-2 text-xs font-bold uppercase tracking-widest text-zinc-500 hover:text-white transition-colors"
+              >
+                {isExpanded ? (
+                  <>
+                    <ChevronDown className="rotate-180" size={16} /> Menos Horários
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown size={16} /> Ver Mais Horários ({timeSlots.length - 12})
+                  </>
+                )}
+              </button>
+            )}
+
+            {/* Empty State if all filtered */}
+            {timeSlots.length === 0 && (
+              <div className="text-center py-8 text-gray-500">
+                <Clock className="w-8 h-8 mx-auto mb-2 opacity-20" />
+                <p className="text-xs uppercase tracking-widest">Sem horários disponíveis</p>
+              </div>
+            )}
+          </>
         )}
 
         {/* Navigation Arrow to Estilo Trilha */}

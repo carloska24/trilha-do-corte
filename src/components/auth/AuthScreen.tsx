@@ -189,20 +189,39 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
         <ArrowLeft size={16} /> <span className="hidden sm:inline">Voltar para Estação</span>
       </button>
 
-      <div className="relative z-10 w-full max-w-md my-10 animate-[fadeIn_0.5s_ease-out]">
+      <div
+        className={`relative z-10 w-full max-w-md ${
+          authMode === 'register' ? 'my-4' : 'my-10'
+        } animate-[fadeIn_0.5s_ease-out]`}
+      >
         {/* Header Identificador */}
-        <div className="text-center mb-8">
+        <div className={`text-center ${authMode === 'register' ? 'mb-4' : 'mb-8'}`}>
           <div
-            className={`inline-flex items-center justify-center p-4 rounded-full mb-4 border-2 bg-black/50 backdrop-blur-md ${borderColor} ${themeColor} shadow-[0_0_20px_rgba(0,0,0,0.5)]`}
+            className={`inline-flex items-center justify-center ${
+              authMode === 'register' ? 'p-3' : 'p-4'
+            } rounded-full ${
+              authMode === 'register' ? 'mb-2' : 'mb-4'
+            } border-2 bg-black/50 backdrop-blur-md ${borderColor} ${themeColor} shadow-[0_0_20px_rgba(0,0,0,0.5)]`}
           >
-            {isClient ? <User size={32} /> : <TrainFront size={32} />}
+            {isClient ? (
+              <User size={authMode === 'register' ? 24 : 32} />
+            ) : (
+              <TrainFront size={authMode === 'register' ? 24 : 32} />
+            )}
           </div>
-          <h2 className="text-3xl md:text-4xl font-graffiti text-white tracking-wide">
+          <h2
+            className={`${
+              authMode === 'register' ? 'text-2xl' : 'text-3xl md:text-4xl'
+            } font-graffiti text-white tracking-wide`}
+          >
             ACESSO <span className={themeColor}>{isClient ? 'PASSAGEIRO' : 'MAQUINISTA'}</span>
           </h2>
-          <p className="text-gray-500 text-xs font-mono uppercase tracking-widest mt-2">
-            Central de Controle de Estilo
-          </p>
+          {!authMode ||
+            (authMode === 'login' && (
+              <p className="text-gray-500 text-xs font-mono uppercase tracking-widest mt-2">
+                Central de Controle de Estilo
+              </p>
+            ))}
         </div>
 
         {/* Main Card */}
@@ -235,14 +254,14 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
             </button>
           </div>
 
-          <div className="p-8">
-            <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="p-6">
+            <form onSubmit={handleSubmit} className="space-y-3">
               {/* Photo Upload (Only Register) */}
               {authMode === 'register' && (
-                <div className="flex justify-center mb-6 animate-[fadeIn_0.3s_ease-out]">
+                <div className="flex justify-center mb-4 animate-[fadeIn_0.3s_ease-out]">
                   <div
                     onClick={() => fileInputRef.current?.click()}
-                    className={`w-24 h-24 rounded-full border-2 border-dashed flex items-center justify-center cursor-pointer group relative overflow-hidden transition-all bg-black/40
+                    className={`w-20 h-20 rounded-full border-2 border-dashed flex items-center justify-center cursor-pointer group relative overflow-hidden transition-all bg-black/40
                       ${photoPreview ? borderColor : 'border-gray-700 hover:border-gray-500'}`}
                   >
                     {photoPreview ? (
@@ -287,7 +306,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                     <input
                       type="text"
                       required
-                      className="w-full bg-black/40 border border-white/10 rounded-lg px-10 py-3 text-white focus:outline-none focus:border-white/30 transition-all placeholder-gray-700 font-medium"
+                      className="w-full bg-black/40 border border-white/10 rounded-lg px-10 py-2.5 text-white focus:outline-none focus:border-white/30 transition-all placeholder-gray-700 font-medium"
                       placeholder="Como quer ser chamado?"
                       value={formData.name}
                       onChange={e => setFormData({ ...formData, name: e.target.value })}
@@ -312,7 +331,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                       <input
                         type="tel"
                         required={isClient || authMode === 'register'}
-                        className="w-full bg-black/40 border border-white/10 rounded-lg px-10 py-3 text-white focus:outline-none focus:border-white/30 transition-all placeholder-gray-700 font-medium"
+                        className="w-full bg-black/40 border border-white/10 rounded-lg px-10 py-2.5 text-white focus:outline-none focus:border-white/30 transition-all placeholder-gray-700 font-medium"
                         placeholder="(00) 00000-0000"
                         value={formData.phone}
                         onChange={e => setFormData({ ...formData, phone: e.target.value })}
@@ -335,7 +354,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                       <input
                         type="email"
                         required={!isClient || authMode === 'register'}
-                        className="w-full bg-black/40 border border-white/10 rounded-lg px-10 py-3 text-white focus:outline-none focus:border-white/30 transition-all placeholder-gray-700 font-medium"
+                        className="w-full bg-black/40 border border-white/10 rounded-lg px-10 py-2.5 text-white focus:outline-none focus:border-white/30 transition-all placeholder-gray-700 font-medium"
                         placeholder="seu@email.com"
                         value={formData.email}
                         onChange={e => setFormData({ ...formData, email: e.target.value })}
@@ -358,7 +377,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                   <input
                     type="password"
                     required
-                    className="w-full bg-black/40 border border-white/10 rounded-lg px-10 py-3 text-white focus:outline-none focus:border-white/30 transition-all placeholder-gray-700 font-medium"
+                    className="w-full bg-black/40 border border-white/10 rounded-lg px-10 py-2.5 text-white focus:outline-none focus:border-white/30 transition-all placeholder-gray-700 font-medium"
                     placeholder="••••••••"
                     value={formData.password}
                     onChange={e => setFormData({ ...formData, password: e.target.value })}

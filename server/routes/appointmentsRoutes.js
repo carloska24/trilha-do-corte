@@ -10,10 +10,13 @@ const router = express.Router();
 
 import { authenticateToken } from '../middleware/auth.js';
 
-// Protect all appointment routes
+// Public route for availability
+router.get('/', getAppointments);
+
+// Protect all other appointment routes
 router.use(authenticateToken);
 
-router.get('/', getAppointments);
+// router.get('/', getAppointments); // Moved up to allow public access
 router.post('/', createAppointment);
 router.put('/:id', updateAppointment);
 router.delete('/', clearAppointments);
