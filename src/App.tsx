@@ -56,9 +56,9 @@ const GlobalBookingModal = () => {
             // This fixes the "disappearing on refresh" issue by ensuring what we have in UI is what IS in the DB
             await refreshData();
 
-            // As a fallback/optimistic update, we also update state directly if for some reason refresh fails
-            // but refreshData is the source of truth
-            // updateAppointments([...appointments, confirmedAppt]);
+            // As a fallback/optimistic update, we also update state directly
+            // This ensures instant feedback even if refreshData is slow or cached
+            updateAppointments([...appointments, confirmedAppt]);
           } else {
             throw new Error(
               'Falha ao criar agendamento (retorno nulo API). Verifique conflitos de horário.'

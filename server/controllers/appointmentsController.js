@@ -2,45 +2,67 @@ import { v4 as uuidv4 } from 'uuid';
 import db from '../db.js';
 import jwt from 'jsonwebtoken';
 
+const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret_123';
+
 export const getAppointments = async (req, res) => {
   try {
-    // 1. Check Authority (Soft Auth)
+    // 1. Auth Check & Role Decoupling
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
+    let user = null;
     let isBarber = false;
 
     if (token) {
       try {
-        jwt.verify(token, process.env.JWT_SECRET);
-        isBarber = true;
+        user = jwt.verify(token, JWT_SECRET);
+        isBarber = user.type === 'barber';
       } catch (err) {
-        // Token invalid - Default to public view
+        // Token invalid/expired - Treat as Guest
       }
     }
 
-    // 2. Optimized Query
-    // Public: Only fetch recent/future appointments (Privacy + Perf)
-    // Barber: Fetch All (for now)
+    // 2. Query
+    // Optimization: If Public/Guest, maybe limits? For now, fetch all relative to date for calculation.
     let queryText = 'SELECT * FROM appointments';
-
     if (!isBarber) {
-      // Postgres-specific: Cast to date if string, or compare if date.
-      // Assuming standard ISO string 'YYYY-MM-DD' which is lexicographically comparable.
-      // Adding a safety margin for timezones
-      queryText += " WHERE date >= TO_CHAR(CURRENT_DATE - INTERVAL '1 day', 'YYYY-MM-DD')";
+      // Optional: Filter past appointments for performance, but careful not to hide history for clients
+      // queryText += " WHERE date >= ...";
     }
 
     const { rows } = await db.query(queryText);
 
-    // 3. Data Sanitization (Privacy Shield)
+    // 3. Privacy Filter (The "View" Layer)
+    console.log(`🔍 [API] GetApps - UserID: ${user?.id}, IsBarber: ${isBarber}`);
+
     const data = rows.map(row => {
-      if (isBarber) return row;
+      // Logic:
+      // A. Barber sees everything.
+      // B. Client sees THEIR OWN full data.
+      // C. Public sees Sanitized (Busy Slots).
+
+      // Fix: Handle ID 0 (which is falsy) correctly
+      const isOwner =
+        user &&
+        row.clientId !== null &&
+        row.clientId !== undefined &&
+        String(row.clientId) === String(user.id);
+
+      // DEBUG: Log ownership check for debugging
+      if (user && !isBarber && !isOwner && row.status !== 'cancelled') {
+        // console.log(`   ⛔ Access Denied for App ${row.id.slice(0,5)}... Owner: ${row.clientId} vs Me: ${user.id}`);
+      }
+      if (isOwner) {
+        console.log(`   ✅ Access Granted for App ${row.id.slice(0, 5)}...`);
+      }
+
+      if (isBarber || isOwner) {
+        return row; // Full Data (includes clientName, phone, etc)
+      }
 
       return {
-        // PUBLIC FIELDS ONLY
+        // Sanitized
         date: row.date,
         time: row.time,
-        // Handle PG potential casing issues (serviceId vs serviceid)
         serviceId: row.serviceId || row.serviceid,
         status: row.status,
       };
@@ -54,7 +76,7 @@ export const getAppointments = async (req, res) => {
 };
 
 export const createAppointment = async (req, res) => {
-  const { clientName, serviceId, date, time, status, price, photoUrl, notes } = req.body;
+  const { clientName, serviceId, date, time, status, price, photoUrl, notes, clientId } = req.body;
 
   try {
     // 1. Check for Double Booking
@@ -100,13 +122,15 @@ export const createAppointment = async (req, res) => {
       price,
       photoUrl,
       notes,
-      req.body.clientId || null,
+      clientId !== undefined && clientId !== null ? clientId : null, // Fix: Allow 0 as ID
     ];
 
-    const result = await db.query(sql, params);
+    await db.query(sql, params);
+
+    // RETURN FULL OBJECT (Critical for UI consistency)
     res.json({
       message: 'success',
-      data: { id, clientName, serviceId, date, time, status, price, photoUrl, notes },
+      data: { id, clientName, serviceId, date, time, status, price, photoUrl, notes, clientId },
     });
   } catch (e) {
     if (e.code === '23505') {

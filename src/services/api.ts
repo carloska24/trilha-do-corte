@@ -231,7 +231,7 @@ export const api = {
 
   getAppointments: async (): Promise<Appointment[]> => {
     try {
-      const response = await fetch(`${API_URL}/appointments`, {
+      const response = await fetch(`${API_URL}/appointments?_t=${Date.now()}`, {
         headers: getAuthHeaders(),
       });
       if (!response.ok) return [];
