@@ -13,9 +13,19 @@ interface DashboardOutletContext {
   initiateFinish: (id: string) => void;
 }
 
+import { Client } from '../../types'; // Import Client type
+
 // --- ISOLATED COMPONENTS (PREVENT RE-RENDERS) ---
 const QueueTicker = React.memo(
-  ({ queue, services }: { queue: Appointment[]; services: ServiceItem[] }) => {
+  ({
+    queue,
+    services,
+    clients,
+  }: {
+    queue: Appointment[];
+    services: ServiceItem[];
+    clients: Client[];
+  }) => {
     return (
       <div className="w-full relative mt-6 group">
         {/* Title Label - Bem Vindo Style - Corrected */}
@@ -70,9 +80,11 @@ const QueueTicker = React.memo(
                         <div className="w-full h-full rounded-full overflow-hidden bg-black relative">
                           <img
                             src={getOptimizedImageUrl(
-                              client.photoUrl && client.photoUrl.trim() !== ''
-                                ? client.photoUrl
-                                : 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop',
+                              clients.find(c => c.id === client.clientId)?.img ||
+                                (client.photoUrl && client.photoUrl.trim() !== ''
+                                  ? client.photoUrl
+                                  : null) ||
+                                'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop',
                               100,
                               100
                             )}
@@ -87,23 +99,29 @@ const QueueTicker = React.memo(
                         </div>
                       </div>
 
-                      {/* Info */}
-                      <div className="ml-4 flex flex-col flex-1 min-w-0">
-                        <div className="flex justify-between items-center mb-0.5">
-                          <span className="text-[10px] font-bold text-cyan-400 font-mono tracking-widest bg-cyan-950/30 px-1.5 rounded border border-cyan-500/20">
-                            {client.time}
+                      {/* Info Container (Invisible Flex Wrapper) */}
+                      <div className="ml-4 flex items-center justify-between flex-1 min-w-0 gap-2">
+                        {/* Left Column: Client & Service */}
+                        <div className="flex flex-col justify-center gap-1">
+                          <span className="text-white font-black text-xl uppercase truncate leading-none tracking-tight group-hover/card:text-cyan-200 transition-colors">
+                            {client.clientName ? client.clientName.split(' ')[0] : 'Cliente'}
                           </span>
+
+                          <div className="flex items-center gap-1.5 opacity-60 group-hover/card:opacity-100 transition-opacity">
+                            <div className="w-1.5 h-1.5 rounded-full bg-cyan-400"></div>
+                            <span className="text-[10px] font-bold text-gray-300 font-mono uppercase tracking-widest truncate max-w-[120px]">
+                              {serviceName}
+                            </span>
+                          </div>
                         </div>
 
-                        <span className="text-white font-black text-lg uppercase truncate leading-none tracking-tight group-hover/card:text-transparent group-hover/card:bg-clip-text group-hover/card:bg-gradient-to-r group-hover/card:from-white group-hover/card:to-cyan-200 transition-all">
-                          {client.clientName ? client.clientName.split(' ')[0] : 'Cliente'}
-                        </span>
-
-                        <div className="flex items-center gap-2 mt-1.5">
-                          <div className="w-full h-[1px] bg-white/10 flex-1"></div>
-                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider truncate max-w-[100px] group-hover/card:text-gray-300">
-                            {serviceName}
-                          </span>
+                        {/* Right Column: Time Badge */}
+                        <div className="flex flex-col items-end justify-center">
+                          <div className="flex items-center justify-center bg-cyan-500/10 border border-cyan-400/20 rounded-lg px-2.5 py-1.5 shadow-[0_0_15px_rgba(6,182,212,0.1)] group-hover/card:shadow-[0_0_20px_rgba(6,182,212,0.3)] group-hover/card:border-cyan-400/50 transition-all">
+                            <span className="text-sm font-black text-cyan-400 font-mono tracking-wider leading-none">
+                              {client.time}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -119,7 +137,7 @@ const QueueTicker = React.memo(
 );
 
 export const DashboardHome: React.FC = () => {
-  const { appointments, services, updateAppointments } = useData();
+  const { appointments, services, clients, updateAppointments } = useData();
   const { currentTime, shopStatus } = useShopStatus(); // Using Centralized Logic
   const { initiateFinish } = useOutletContext<DashboardOutletContext>();
 
@@ -470,7 +488,7 @@ export const DashboardHome: React.FC = () => {
         )}
 
         {/* 4. QUEUE TICKER (ISOLATED) */}
-        <QueueTicker queue={queue} services={services} />
+        <QueueTicker queue={queue} services={services} clients={clients} />
       </>
     </div>
   );

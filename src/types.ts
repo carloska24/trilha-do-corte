@@ -169,6 +169,7 @@ export interface BarberProfile {
   name: string;
   email: string;
   photoUrl?: string; // Foto do perfil do barbeiro
+  phone?: string; // Telefone do barbeiro (Optional)
 }
 
 export type DashboardView =

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { getOptimizedImageUrl } from '../../utils/imageUtils';
-import { Search, User, ChevronRight, Plus, X, Save, MessageCircle } from 'lucide-react';
+import { Search, User, ChevronRight, Plus, X, Save, MessageCircle, Trash2 } from 'lucide-react';
+import { motion, useAnimation, PanInfo } from 'framer-motion';
 import { Client } from '../../types';
 import { generateId } from '../../utils';
 import { useData } from '../../contexts/DataContext';
@@ -10,6 +11,129 @@ import { api } from '../../services/api';
 interface DashboardOutletContext {
   setSelectedClient: (client: Client) => void;
 }
+
+const ClientCard: React.FC<{
+  client: Client;
+  onSelect: (c: Client) => void;
+  onDelete: (id: string) => void;
+}> = ({ client, onSelect, onDelete }) => {
+  const controls = useAnimation();
+
+  // Logic from original map
+  let ringColor = 'border-green-500';
+  let ringShadow = 'shadow-[0_0_10px_rgba(34,197,94,0.3)]';
+  let badgeColor = 'text-green-400 border-green-500/30 bg-green-950/30';
+
+  if ((client.level || 1) >= 5) {
+    ringColor = 'border-yellow-400';
+    ringShadow = 'shadow-[0_0_15px_rgba(250,204,21,0.4)]';
+    badgeColor = 'text-yellow-400 border-yellow-500/30 bg-yellow-950/30';
+  } else if ((client.level || 1) >= 3) {
+    ringColor = 'border-cyan-400';
+    ringShadow = 'shadow-[0_0_12px_rgba(34,211,238,0.4)]';
+    badgeColor = 'text-cyan-400 border-cyan-500/30 bg-cyan-950/30';
+  }
+
+  let statusColor = 'bg-green-500 shadow-[0_0_8px_#22c55e]';
+
+  if (client.lastVisit === 'Nunca' || !client.lastVisit) {
+    statusColor = 'bg-green-500 shadow-[0_0_8px_#22c55e]';
+  } else if (client.lastVisit === 'Hoje' || client.lastVisit === 'Ontem') {
+    statusColor = 'bg-green-500 shadow-[0_0_8px_#22c55e]';
+  } else {
+    try {
+      const parts = client.lastVisit.split('/');
+      if (parts.length === 3) {
+        const visitDate = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+        const diffDays = Math.ceil(
+          Math.abs(new Date().getTime() - visitDate.getTime()) / (1000 * 60 * 60 * 24)
+        );
+        if (diffDays > 60) statusColor = 'bg-red-500 shadow-[0_0_8px_#ef4444]';
+        else if (diffDays > 30) statusColor = 'bg-yellow-500 shadow-[0_0_8px_#eab308]';
+      }
+    } catch (e) {}
+  }
+
+  const handleDragEnd = async (_: any, info: PanInfo) => {
+    if (info.offset.x < -100) {
+      // Swiped left enough
+      onDelete(client.id);
+      controls.start({ x: 0 }); // Reset
+    } else {
+      controls.start({ x: 0 }); // Snap back
+    }
+  };
+
+  return (
+    <div className="relative mb-2 group touch-pan-y">
+      {/* Background Layer (Delete) */}
+      {/* Background Layer (Delete) */}
+      <div className="absolute inset-x-[2px] inset-y-[2px] bg-red-500/10 rounded-2xl flex items-center justify-end pr-6 z-0">
+        <Trash2 className="text-red-500" size={24} strokeWidth={2.5} />
+      </div>
+
+      {/* Foreground Layer (Card) */}
+      <motion.div
+        drag="x"
+        dragConstraints={{ left: -150, right: 0 }}
+        dragElastic={0.1}
+        onDragEnd={handleDragEnd}
+        animate={controls}
+        className="relative bg-[#0a0a0a] backdrop-blur-xl border border-white/5 p-3 rounded-2xl z-10 shadow-lg flex items-center gap-3 cursor-pointer active:cursor-grabbing"
+        onClick={() => onSelect(client)}
+        style={{ touchAction: 'pan-y' }} // Important for scrolling list
+      >
+        {/* AVATAR */}
+        <div className="relative flex-shrink-0">
+          <div className={`w-16 h-16 rounded-full p-[3px] border-2 ${ringColor} ${ringShadow}`}>
+            <div className="w-full h-full rounded-full overflow-hidden bg-zinc-900 border border-black relative">
+              {client.img ? (
+                <img
+                  src={getOptimizedImageUrl(client.img, 100, 100)}
+                  alt={client.name}
+                  loading="lazy"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-zinc-600">
+                  <User size={24} />
+                </div>
+              )}
+            </div>
+          </div>
+          <div
+            className={`absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-[#0a0a0a] ${statusColor} z-20`}
+          ></div>
+        </div>
+
+        {/* DATA */}
+        <div className="flex flex-col flex-1 min-w-0">
+          <h3 className="text-xl font-black text-white leading-none mb-1.5 uppercase tracking-wide truncate group-hover:text-neon-yellow transition-colors">
+            {client.name}
+          </h3>
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <div className={`flex items-center px-1.5 py-[2px] rounded border ${badgeColor}`}>
+              <span className="text-[10px] font-black font-mono tracking-widest leading-none">
+                LVL {client.level || 1}
+              </span>
+            </div>
+            <div className="w-[1px] h-3 bg-zinc-700"></div>
+            <span className="text-[8px] font-bold text-zinc-500 uppercase tracking-wider">
+              {!client.lastVisit || client.lastVisit === 'Nunca'
+                ? 'NOVO CLIENTE'
+                : `VISITOU: ${client.lastVisit}`}
+            </span>
+          </div>
+        </div>
+
+        {/* CHEVRON */}
+        <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-zinc-500">
+          <ChevronRight size={18} />
+        </div>
+      </motion.div>
+    </div>
+  );
+};
 
 export const ClientsManager: React.FC = () => {
   const { clients, updateClients } = useData();
@@ -112,8 +236,65 @@ export const ClientsManager: React.FC = () => {
     return { color: 'bg-red-500', label: 'Risco' };
   };
 
+  // --- DELETE MODAL STATE ---
+  const [clientToDelete, setClientToDelete] = useState<string | null>(null);
+
+  const handleDeleteClient = (id: string) => {
+    setClientToDelete(id);
+  };
+
+  const confirmDelete = async () => {
+    if (!clientToDelete) return;
+    const id = clientToDelete;
+
+    // Optimistic Update
+    const updatedClients = clients.filter(c => c.id !== id);
+    updateClients(updatedClients);
+    setClientToDelete(null);
+
+    // API Call
+    try {
+      const success = await api.deleteClient(id);
+      if (!success) console.error('Failed to delete on server');
+    } catch (e) {
+      console.error('Delete error', e);
+    }
+  };
+
   return (
     <div className="flex flex-col h-full w-full p-4 pb-32 animate-fade-in relative z-10">
+      {/* DELETE CONFIRMATION MODAL */}
+      {clientToDelete && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+          <div className="bg-zinc-950 border border-red-500/30 w-full max-w-sm rounded-2xl p-6 shadow-[0_0_50px_rgba(239,68,68,0.2)] relative text-center">
+            <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/20 shadow-[0_0_20px_rgba(239,68,68,0.2)]">
+              <Trash2 size={40} className="text-red-500" />
+            </div>
+            <h2 className="text-2xl font-graffiti text-white mb-2 uppercase">
+              Excluir Passageiro?
+            </h2>
+            <p className="text-zinc-400 text-sm mb-8 leading-relaxed">
+              Essa ação removerá permanentemente o cadastro.
+              <br />
+              <span className="text-red-400 font-bold">Isso não pode ser desfeito.</span>
+            </p>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={confirmDelete}
+                className="w-full py-3.5 bg-red-600 hover:bg-red-500 text-white font-black uppercase tracking-widest rounded-xl transition-all shadow-lg hover:shadow-red-500/20 active:scale-95"
+              >
+                Confirmar Exclusão
+              </button>
+              <button
+                onClick={() => setClientToDelete(null)}
+                className="w-full py-3.5 bg-transparent border border-zinc-800 text-zinc-500 font-bold uppercase tracking-widest rounded-xl hover:bg-zinc-900 transition-all active:scale-95 hover:text-white"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Header Section */}
       <div className="mb-8 mt-2 flex-shrink-0">
         <h1 className="text-4xl font-graffiti text-transparent bg-clip-text bg-gradient-to-r from-gray-900 via-gray-700 to-gray-500 dark:from-white dark:via-gray-200 dark:to-gray-500 leading-none drop-shadow-sm dark:drop-shadow-[0_0_10px_rgba(255,255,255,0.1)] mb-2 transition-all">
@@ -150,178 +331,14 @@ export const ClientsManager: React.FC = () => {
       {/* Client List (Holographic Cards) */}
       <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar min-h-0">
         <div className="flex flex-col gap-4 pb-20">
-          {filteredClients.map(client => {
-            // 1. LOGIC: LEVEL RINGS (Loyalty)
-            // Lvl 1-2: Green (Iniciante)
-            // Lvl 3-4: Cyan (Regular)
-            // Lvl 5+: Gold (VIP)
-            let ringColor = 'border-green-500';
-            let ringShadow = 'shadow-[0_0_10px_rgba(34,197,94,0.3)]';
-            let badgeColor = 'text-green-400 border-green-500/30 bg-green-950/30';
-
-            if (client.level >= 5) {
-              ringColor = 'border-yellow-400';
-              ringShadow = 'shadow-[0_0_15px_rgba(250,204,21,0.4)]';
-              badgeColor = 'text-yellow-400 border-yellow-500/30 bg-yellow-950/30';
-            } else if (client.level >= 3) {
-              ringColor = 'border-cyan-400';
-              ringShadow = 'shadow-[0_0_12px_rgba(34,211,238,0.4)]';
-              badgeColor = 'text-cyan-400 border-cyan-500/30 bg-cyan-950/30';
-            }
-
-            // 2. LOGIC: STATUS DOTS (Retention / Risk)
-            // New/Today/<30 days: Green (Safe)
-            // 30-60 days: Yellow (Warning)
-            // >60 days: Red (Churned/Risk)
-            let statusColor = 'bg-green-500 shadow-[0_0_8px_#22c55e]';
-            let statusLabel = 'ATIVO';
-
-            if (client.lastVisit === 'Nunca') {
-              statusColor = 'bg-green-500 shadow-[0_0_8px_#22c55e]'; // New is Good
-              statusLabel = 'NOVO';
-            } else if (client.lastVisit === 'Hoje' || client.lastVisit === 'Ontem') {
-              statusColor = 'bg-green-500 shadow-[0_0_8px_#22c55e]';
-              statusLabel = 'ATIVO';
-            } else {
-              // Parse DD/MM/YYYY
-              try {
-                const parts = client.lastVisit.split('/');
-                if (parts.length === 3) {
-                  const visitDate = new Date(
-                    parseInt(parts[2]),
-                    parseInt(parts[1]) - 1,
-                    parseInt(parts[0])
-                  );
-                  const now = new Date();
-                  const diffTime = Math.abs(now.getTime() - visitDate.getTime());
-                  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-                  if (diffDays > 60) {
-                    statusColor = 'bg-red-500 shadow-[0_0_8px_#ef4444]';
-                    statusLabel = 'RISCO';
-                  } else if (diffDays > 30) {
-                    statusColor = 'bg-yellow-500 shadow-[0_0_8px_#eab308]';
-                    statusLabel = 'ATENÇÃO';
-                  }
-                }
-              } catch (e) {
-                // Fallback
-              }
-            }
-
-            return (
-              <div
-                key={client.id}
-                className="group relative bg-[#0a0a0a]/90 backdrop-blur-md border border-white/5 p-4 rounded-2xl hover:border-white/10 transition-all duration-300 flex-shrink-0 shadow-lg"
-              >
-                <div
-                  className="relative flex items-center gap-4 z-10 w-full cursor-pointer"
-                  onClick={() => onSelectClient(client)}
-                >
-                  {/* AVATAR + RING + DOT */}
-                  <div className="relative flex-shrink-0">
-                    <div
-                      className={`w-16 h-16 rounded-full p-[3px] border-2 ${ringColor} ${ringShadow} transition-all`}
-                    >
-                      <div className="w-full h-full rounded-full overflow-hidden bg-zinc-900 border border-black relative">
-                        {client.img ? (
-                          <img
-                            src={getOptimizedImageUrl(client.img, 100, 100)}
-                            alt={client.name}
-                            loading="lazy"
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-zinc-600">
-                            <User size={24} />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Status Dot (Bottom Right) */}
-                    <div
-                      className={`absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-[#0a0a0a] ${statusColor} z-20`}
-                    ></div>
-                  </div>
-
-                  {/* TEXT INFO */}
-                  <div className="flex flex-col flex-1 min-w-0">
-                    <h3 className="text-xl font-black text-white leading-none mb-1.5 uppercase tracking-wide truncate group-hover:text-neon-yellow transition-colors">
-                      {client.name}
-                    </h3>
-
-                    <div className="flex items-center gap-2.5 flex-wrap">
-                      {/* LEVEL BADGE */}
-                      <div
-                        className={`flex items-center px-1.5 py-[2px] rounded border ${badgeColor}`}
-                      >
-                        <span className="text-[10px] font-black font-mono tracking-widest leading-none">
-                          LVL {client.level || 1}
-                        </span>
-                      </div>
-
-                      {/* SEPARATOR */}
-                      <div className="w-[1px] h-3 bg-zinc-700"></div>
-
-                      {/* VISIT TEXT */}
-                      <div className="flex flex-col leading-none">
-                        <span className="text-[8px] font-bold text-zinc-500 uppercase tracking-wider">
-                          {!client.lastVisit ||
-                          client.lastVisit === 'Nunca' ||
-                          String(client.lastVisit).toLowerCase() === 'undefined'
-                            ? 'NOVO CLIENTE'
-                            : `VISITOU: ${client.lastVisit}`}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* ACTIONS GROUP */}
-                  <div className="flex items-center gap-2">
-                    {/* Invite Button (Only if phone exists and is likely mobile) */}
-                    {client.phone && client.phone.length > 8 && (
-                      <button
-                        onClick={e => {
-                          e.stopPropagation();
-                          // Generate Invite Link
-                          const baseUrl = window.location.origin;
-                          const inviteLink = `${baseUrl}/login?type=client&name=${encodeURIComponent(
-                            client.name
-                          )}&phone=${encodeURIComponent(client.phone)}`;
-                          const EMOJI = {
-                            BARBER: '\uD83D\uDC88',
-                            USER: '\uD83D\uDC64',
-                          };
-                          const msg =
-                            `${EMOJI.BARBER} TRILHA DO CORTE\n\n` +
-                            `${EMOJI.USER} Passageiro: ${client.name}\n\n` +
-                            `Finalize seu cadastro no App para agendar seus horarios online:\n` +
-                            `${inviteLink}`;
-
-                          const encodedMsg = encodeURIComponent(msg);
-
-                          // Open WhatsApp
-                          const cleanPhone = client.phone.replace(/\D/g, '');
-                          const waUrl = `https://api.whatsapp.com/send?phone=55${cleanPhone}&text=${encodedMsg}`;
-                          window.open(waUrl, '_blank');
-                        }}
-                        className="w-8 h-8 rounded-lg bg-green-500/10 border border-green-500/30 flex items-center justify-center text-green-500 hover:bg-green-500 hover:text-black transition-all"
-                        title="Enviar Convite"
-                      >
-                        <MessageCircle size={16} />
-                      </button>
-                    )}
-
-                    {/* ARROW ICON */}
-                    <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-zinc-500 group-hover:bg-neon-yellow group-hover:text-black transition-all">
-                      <ChevronRight size={18} strokeWidth={3} />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+          {filteredClients.map(client => (
+            <ClientCard
+              key={client.id}
+              client={client}
+              onSelect={onSelectClient}
+              onDelete={handleDeleteClient}
+            />
+          ))}
 
           {/* Empty State */}
           {filteredClients.length === 0 && (

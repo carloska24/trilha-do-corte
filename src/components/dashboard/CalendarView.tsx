@@ -26,9 +26,11 @@ import {
   X,
 } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { useOutletContext } from 'react-router-dom';
 import { useVoiceCommand } from '../../hooks/useVoiceCommand';
 import { ConfirmModal } from '../ui/ConfirmModal';
+import { WhatsAppIcon } from '../icons/WhatsAppIcon';
 
 interface DashboardOutletContext {
   setSelectedClient: (client: Client) => void;
@@ -37,6 +39,7 @@ interface DashboardOutletContext {
 export const CalendarView: React.FC = () => {
   const { appointments, services, updateAppointments, clients, shopSettings, updateShopSettings } =
     useData();
+  const { currentUser } = useAuth();
   const { setSelectedClient } = useOutletContext<DashboardOutletContext>();
 
   const onNewAppointment = async (data: BookingData) => {
@@ -317,25 +320,45 @@ export const CalendarView: React.FC = () => {
       month: '2-digit',
     });
 
-    // 📅 = %F0%9F%93%85 | 💈 = %F0%9F%92%88 | ✂️ = %E2%9C%82%EF%B8%8F | ✅ = %E2%9C%85 | ⏳ = %E2%8F%B3
+    // UNICODE ESCAPE SEQUENCE METHOD (Standard 2025/2026 Fix)
+    const ICON_CALENDAR = '\uD83D\uDDD3\uFE0F';
+    const ICON_SCISSORS = '\u2702\uFE0F';
+    const ICON_POLE = '\uD83D\uDC88';
+    const LINE_SEPARATOR = '───────────────────────────';
 
-    let msg = `%F0%9F%93%85%20*AGENDA%20-%20${encodeURIComponent(dateStr)}*%0A%0A`;
+    let msg = `${ICON_CALENDAR} *AGENDA - ${dateStr}*\n`;
+    msg += `${LINE_SEPARATOR}\n\n`;
 
     dailyApps.forEach(app => {
       const service = getServiceDetails(app.serviceId);
-      // Pre-encoded icons to prevent diamong-question-marks issue
-      const icon = service.category === 'Barba' ? '%F0%9F%92%88' : '%E2%9C%82%EF%B8%8F';
-      const statusIcon = app.status === 'confirmed' ? '%E2%9C%85' : '%E2%8F%B3';
 
-      const clientName = encodeURIComponent((app.clientName || 'Cliente').split(' ')[0]);
-      const serviceName = encodeURIComponent(service.name);
+      const serviceIcon = service.category === 'Barba' ? ICON_POLE : ICON_SCISSORS;
 
-      msg += `${app.time}%20-%20${clientName}%20${icon}%20${serviceName}%20${statusIcon}%0A`;
+      let clientName = (app.clientName || 'Cliente').trim().split(' ')[0].toLowerCase();
+      if (clientName.length > 0) {
+        clientName = clientName.charAt(0).toUpperCase() + clientName.slice(1);
+      }
+
+      const serviceName = service.name;
+
+      msg += `*${app.time}* • ${clientName}\n`;
+      msg += `      ${serviceIcon} ${serviceName}\n\n`;
     });
 
-    msg += `%0A_%20Trilha%20do%20Corte%20_`;
+    msg += `${LINE_SEPARATOR}\n`;
+    msg += `_${ICON_POLE} Trilha do Corte_`;
 
-    window.open(`https://wa.me/?text=${msg}`, '_blank');
+    const barberPhone = (currentUser as any)?.phone?.replace(/\D/g, '');
+
+    // API.WHATSAPP.COM is more reliable for specialized encoding
+    const baseUrl = `https://api.whatsapp.com/send`;
+
+    const phoneParam = barberPhone ? `&phone=55${barberPhone}` : '';
+    const textParam = `text=${encodeURIComponent(msg)}`;
+
+    const finalUrl = `${baseUrl}?${textParam}${phoneParam}`;
+
+    window.open(finalUrl, '_blank');
   };
 
   const handleCancelAppointment = async (id: string, e: React.MouseEvent) => {
@@ -544,7 +567,32 @@ export const CalendarView: React.FC = () => {
           <h1 className="text-3xl md:text-4xl font-graffiti text-white tracking-wide drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">
             AGENDA
           </h1>
-          <div className="flex-1"></div> {/* Spacer to replace Button */}
+          {/* WhatsApp Share Button */}
+          <button
+            onClick={() => setIsExportOpen(true)}
+            className="group relative px-2 pr-4 py-1.5 bg-[#0a0a0a] border border-green-500/30 rounded-xl flex items-center gap-3 hover:border-green-500 hover:shadow-[0_0_15px_rgba(34,197,94,0.2)] transition-all overflow-hidden active:scale-95"
+          >
+            <div className="absolute inset-0 bg-green-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+
+            {/* Icon Badge */}
+            <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center border border-green-500/30 relative z-10 group-hover:bg-green-500 group-hover:text-black transition-colors">
+              <WhatsAppIcon
+                width={18}
+                height={18}
+                className="fill-green-500 group-hover:fill-black transition-colors"
+              />
+            </div>
+
+            {/* Text Stack */}
+            <div className="flex flex-col items-start relative z-10">
+              <span className="text-[9px] font-bold text-green-500 uppercase tracking-widest leading-none mb-0.5 group-hover:text-green-400">
+                WhatsApp
+              </span>
+              <span className="text-xs font-black text-white uppercase tracking-wider leading-none">
+                Compartilhar
+              </span>
+            </div>
+          </button>
         </div>
 
         {/* TABS */}
@@ -583,13 +631,6 @@ export const CalendarView: React.FC = () => {
           </div>
 
           {/* WhatsApp Export Button (Right Aligned or Inline) */}
-          <button
-            onClick={() => setIsExportOpen(true)}
-            className="pb-3 text-green-500 hover:text-green-400 transition-colors flex items-center gap-2 font-bold tracking-widest text-xs md:text-sm uppercase whitespace-nowrap"
-          >
-            <Share2 size={18} />
-            <span className="hidden md:inline">Exportar</span>
-          </button>
         </div>
       </div>
 
@@ -995,10 +1036,51 @@ export const CalendarView: React.FC = () => {
                   }
                 }
 
+                const handleDragStart = (e: React.DragEvent, app: any) => {
+                  e.dataTransfer.setData('text/plain', app.id);
+                  e.dataTransfer.effectAllowed = 'move';
+                  // Create a custom drag image if needed, or rely on default
+                };
+
+                const handleDragOver = (e: React.DragEvent) => {
+                  e.preventDefault(); // Essential to allow dropping
+                  e.dataTransfer.dropEffect = 'move';
+                };
+
+                const handleDrop = async (e: React.DragEvent, targetTime: string) => {
+                  e.preventDefault();
+                  const appId = e.dataTransfer.getData('text/plain');
+                  if (!appId) return;
+
+                  const app = appointments.find(a => a.id === appId);
+                  if (!app || app.time === targetTime) return;
+
+                  // Optimistic Update
+                  const updatedAppointments = appointments.map(a =>
+                    a.id === appId ? { ...a, time: targetTime, date: dateKey } : a
+                  );
+                  updateAppointments(updatedAppointments);
+
+                  // API Call
+                  const success = await api.updateAppointment(appId, {
+                    time: targetTime,
+                    date: dateKey,
+                  });
+                  if (!success) {
+                    // Revert if failed
+                    alert('Erro ao mover agendamento');
+                    updateAppointments(appointments); // Revert to old state
+                  }
+                };
+
                 return items.map((item, idx) => (
                   <div
                     key={`${item.time}-${idx}`}
-                    className={`flex min-h-[100px] border-b border-white/5 group relative transition-colors duration-200`}
+                    onDragOver={handleDragOver}
+                    onDrop={e => handleDrop(e, item.time)}
+                    className={`flex min-h-[100px] border-b border-white/5 group relative transition-colors duration-200 ${
+                      item.type === 'empty' ? 'hover:bg-white/5' : ''
+                    }`}
                   >
                     {/* Time Column */}
                     <div className="w-16 md:w-20 py-4 pl-2 md:pl-4 text-xs md:text-sm font-mono font-bold text-zinc-500 flex flex-col items-start border-r border-white/5">
@@ -1052,9 +1134,10 @@ export const CalendarView: React.FC = () => {
                                         ? 'translate-x-[120px] opacity-50'
                                         : 'translate-x-0 opacity-100'
                                     }
-                                    transition-all duration-300
+                                    transition-all duration-300 hover:border-white/20 hover:shadow-xl
                                 `}
-                            draggable={false}
+                            draggable={true}
+                            onDragStart={e => handleDragStart(e, (item as any).data)}
                             onTouchStart={e => setTouchStartX(e.touches[0].clientX)}
                             onTouchEnd={e => {
                               if (touchStartX === null) return;

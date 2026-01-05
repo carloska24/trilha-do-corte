@@ -229,6 +229,19 @@ export const api = {
     }
   },
 
+  deleteClient: async (id: string): Promise<boolean> => {
+    try {
+      const response = await fetch(`${API_URL}/clients/${id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+      });
+      return response.ok;
+    } catch (error) {
+      console.error('Error deleting client:', error);
+      return false;
+    }
+  },
+
   getAppointments: async (): Promise<Appointment[]> => {
     try {
       const response = await fetch(`${API_URL}/appointments?_t=${Date.now()}`, {
