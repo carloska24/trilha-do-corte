@@ -21,8 +21,6 @@ import {
   Share2,
   Trash2,
   Edit,
-  Bot,
-  Sparkles,
   Bell,
   MoreVertical,
   X,
@@ -170,7 +168,6 @@ export const CalendarView: React.FC = () => {
     };
   }, []);
 
-  const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
   const [draggedAppId, setDraggedAppId] = useState<string | null>(null);
 
   const handleDragStart = (e: React.DragEvent, app: Appointment) => {
@@ -600,214 +597,232 @@ export const CalendarView: React.FC = () => {
       <div className="flex-1 overflow-y-auto custom-scrollbar relative">
         {activeTab === 'config' ? (
           // --- SETTINGS VIEW (REFINED) ---
-          <div className="p-6 max-w-lg mx-auto animate-fade-in-up">
+          <div className="p-4 md:p-6 max-w-lg mx-auto animate-fade-in-up pb-24">
+            {/* Header Section */}
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-2xl font-black text-white uppercase tracking-wider flex items-center gap-3">
+                  <Clock size={24} className="text-neon-yellow" />
+                  Ajustes
+                </h2>
+                <p className="text-xs text-gray-500 font-bold uppercase tracking-widest mt-1 pl-9">
+                  Personalize sua agenda
+                </p>
+              </div>
+
+              {/* Voice Command Button - Floating or Inline */}
+              <button
+                onClick={() => {
+                  if (isListening) {
+                    stopListening();
+                  } else {
+                    startListening(action => {
+                      if (!action) return;
+
+                      if (action.type === 'SET_HOURS') {
+                        // Check if specific date
+                        if (action.payload.date) {
+                          const dateKey = action.payload.date;
+                          const currentException = shopSettings.exceptions?.[dateKey] || {};
+
+                          const newException = { ...currentException };
+                          if (action.payload.start !== undefined)
+                            newException.startHour = action.payload.start;
+                          if (action.payload.end !== undefined)
+                            newException.endHour = action.payload.end;
+
+                          const newExceptions = {
+                            ...shopSettings.exceptions,
+                            [dateKey]: newException,
+                          };
+                          updateShopSettings({ ...shopSettings, exceptions: newExceptions });
+
+                          const fmtDate = new Date(dateKey + 'T12:00:00').toLocaleDateString(
+                            'pt-BR',
+                            { day: '2-digit', month: '2-digit' }
+                          );
+                          showToast(`📅 Dia ${fmtDate} atualizado!`);
+                        } else {
+                          // Global Setting
+                          const updates: any = {};
+                          if (action.payload.start !== undefined)
+                            updates.startHour = action.payload.start;
+                          if (action.payload.end !== undefined)
+                            updates.endHour = action.payload.end;
+                          updateShopSettings({ ...shopSettings, ...updates });
+                          showToast(`Horário padrão atualizado!`);
+                        }
+                      } else if (action.type === 'SET_CLOSED') {
+                        // "Dia X Fechado" (Now handling multiple dates)
+                        if (action.payload.dates && action.payload.dates.length > 0) {
+                          const newExceptions = { ...shopSettings.exceptions };
+                          const formattedDates: string[] = [];
+
+                          action.payload.dates.forEach(dateKey => {
+                            const currentException = shopSettings.exceptions?.[dateKey] || {};
+                            newExceptions[dateKey] = { ...currentException, closed: true };
+
+                            const [y, m, d] = dateKey.split('-');
+                            formattedDates.push(`${d}/${m}`);
+                          });
+
+                          updateShopSettings({
+                            ...shopSettings,
+                            exceptions: newExceptions,
+                          });
+
+                          const datesString = formattedDates.join(', ');
+                          showToast(`🚫 Dias ${datesString} definidos como FECHADO!`);
+                        }
+                      } else if (action.type === 'RESET_EXCEPTIONS') {
+                        updateShopSettings({
+                          ...shopSettings,
+                          startHour: 9,
+                          endHour: 19,
+                          exceptions: {},
+                        });
+                        showToast(`♻️ Todos os dias resetados para o padrão (9-19h)!`);
+                      } else if (action.type === 'SET_INTERVAL') {
+                        updateShopSettings({
+                          ...shopSettings,
+                          slotInterval: action.payload.minutes,
+                        });
+                        showToast(`Intervalo de ${action.payload.minutes}min definido!`);
+                      } else {
+                        // Use a visual cue for failure (if toast allows HTML/ReactNode, otherwise just a different text prefix)
+                        showToast(`❌ Não entendi: "${action.transcript}"`);
+                      }
+                    });
+                  }
+                }}
+                className={`
+                    w-14 h-14 rounded-full flex items-center justify-center transition-all relative overflow-hidden group shadow-lg
+                    ${
+                      isListening
+                        ? 'bg-red-500 text-white shadow-[0_0_20px_rgba(239,68,68,0.6)] animate-pulse'
+                        : 'bg-[#1A1A1A] text-neon-yellow border-2 border-neon-yellow/30 hover:bg-neon-yellow hover:text-black hover:scale-105'
+                    }
+                  `}
+              >
+                {isListening ? (
+                  <>
+                    <div className="absolute inset-0 bg-red-500 animate-ping opacity-20"></div>
+                    <MicOff size={24} />
+                  </>
+                ) : (
+                  <Mic size={24} />
+                )}
+              </button>
+            </div>
+
             {/* Main Card */}
             <div className="bg-[#1A1A1A] rounded-2xl border border-white/5 overflow-hidden shadow-2xl relative">
               {/* Subtle Gradient Glow */}
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-neon-yellow to-transparent opacity-50"></div>
 
-              <div className="p-6 border-b border-white/5 bg-[#1E1E1E] flex items-center justify-between">
-                <div>
-                  <h3 className="text-white font-black uppercase tracking-widest flex items-center gap-3 text-lg">
-                    <Clock size={20} className="text-neon-yellow" />
-                    Configuração
+              {/* SECTION 1: HOURS */}
+              <div className="p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-1 h-4 bg-neon-yellow rounded-full"></div>
+                  <h3 className="text-white font-bold uppercase tracking-widest text-sm">
+                    Horário de Funcionamento
                   </h3>
-                  <p className="text-xs text-gray-500 font-medium mt-1 uppercase tracking-wider pl-8">
-                    Defina o horário de funcionamento
-                  </p>
                 </div>
 
-                {/* Voice Command Button */}
-                <button
-                  onClick={() => {
-                    if (isListening) {
-                      stopListening();
-                    } else {
-                      startListening(action => {
-                        if (!action) return;
-
-                        if (action.type === 'SET_HOURS') {
-                          // Check if specific date
-                          if (action.payload.date) {
-                            const dateKey = action.payload.date;
-                            const currentException = shopSettings.exceptions?.[dateKey] || {};
-
-                            const newException = { ...currentException };
-                            if (action.payload.start !== undefined)
-                              newException.startHour = action.payload.start;
-                            if (action.payload.end !== undefined)
-                              newException.endHour = action.payload.end;
-
-                            const newExceptions = {
-                              ...shopSettings.exceptions,
-                              [dateKey]: newException,
-                            };
-                            updateShopSettings({ ...shopSettings, exceptions: newExceptions });
-
-                            const fmtDate = new Date(dateKey + 'T12:00:00').toLocaleDateString(
-                              'pt-BR',
-                              { day: '2-digit', month: '2-digit' }
-                            );
-                            showToast(`📅 Dia ${fmtDate} atualizado!`);
-                          } else {
-                            // Global Setting
-                            const updates: any = {};
-                            if (action.payload.start !== undefined)
-                              updates.startHour = action.payload.start;
-                            if (action.payload.end !== undefined)
-                              updates.endHour = action.payload.end;
-                            updateShopSettings({ ...shopSettings, ...updates });
-                            showToast(`Horário padrão atualizado!`);
-                          }
-                        } else if (action.type === 'SET_CLOSED') {
-                          // "Dia X Fechado" (Now handling multiple dates)
-                          if (action.payload.dates && action.payload.dates.length > 0) {
-                            const newExceptions = { ...shopSettings.exceptions };
-                            const formattedDates: string[] = [];
-
-                            action.payload.dates.forEach(dateKey => {
-                              const currentException = shopSettings.exceptions?.[dateKey] || {};
-                              newExceptions[dateKey] = { ...currentException, closed: true };
-
-                              const [y, m, d] = dateKey.split('-');
-                              formattedDates.push(`${d}/${m}`);
-                            });
-
-                            updateShopSettings({
-                              ...shopSettings,
-                              exceptions: newExceptions,
-                            });
-
-                            const datesString = formattedDates.join(', ');
-                            showToast(`🚫 Dias ${datesString} definidos como FECHADO!`);
-                          }
-                        } else if (action.type === 'RESET_EXCEPTIONS') {
-                          updateShopSettings({
-                            ...shopSettings,
-                            startHour: 9,
-                            endHour: 19,
-                            exceptions: {},
-                          });
-                          showToast(`♻️ Todos os dias resetados para o padrão (9-19h)!`);
-                        } else if (action.type === 'SET_INTERVAL') {
-                          updateShopSettings({
-                            ...shopSettings,
-                            slotInterval: action.payload.minutes,
-                          });
-                          showToast(`Intervalo de ${action.payload.minutes}min definido!`);
-                        } else {
-                          // Use a visual cue for failure (if toast allows HTML/ReactNode, otherwise just a different text prefix)
-                          showToast(`❌ Não entendi: "${action.transcript}"`);
-                        }
-                      });
-                    }
-                  }}
-                  className={`
-                    w-12 h-12 rounded-full flex items-center justify-center transition-all relative overflow-hidden group
-                    ${
-                      isListening
-                        ? 'bg-red-500 text-white shadow-[0_0_20px_rgba(239,68,68,0.6)] animate-pulse'
-                        : 'bg-[#111] text-neon-yellow border border-neon-yellow/30 hover:bg-neon-yellow hover:text-black shadow-[0_0_10px_rgba(234,179,8,0.2)]'
-                    }
-                  `}
-                >
-                  {isListening ? (
-                    <>
-                      <div className="absolute inset-0 bg-red-500 animate-ping opacity-20"></div>
-                      <MicOff size={20} />
-                    </>
-                  ) : (
-                    <Mic size={20} />
-                  )}
-                </button>
-              </div>
-
-              <div className="p-2">
-                {/* Start Hour */}
-                <div className="flex items-center justify-between p-4 rounded-xl hover:bg-white/5 transition-colors group mb-2">
-                  <div>
-                    <span className="text-gray-400 font-bold uppercase text-[10px] tracking-widest block mb-1">
-                      Abertura
-                    </span>
-                    <span className="text-white font-black text-2xl group-hover:text-neon-yellow transition-colors">
-                      {String(shopSettings.startHour).padStart(2, '0')}:00
-                    </span>
+                <div className="grid gap-2">
+                  {/* Start Hour */}
+                  <div className="flex items-center justify-between p-4 rounded-xl bg-[#111] border border-white/5 hover:border-white/10 transition-colors group">
+                    <div>
+                      <span className="text-gray-500 font-bold uppercase text-[10px] tracking-widest block mb-1">
+                        Abertura
+                      </span>
+                      <span className="text-white font-black text-2xl group-hover:text-neon-yellow transition-colors">
+                        {String(shopSettings.startHour).padStart(2, '0')}:00
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={e => {
+                          e.stopPropagation();
+                          const newStart = Math.max(0, shopSettings.startHour - 1);
+                          updateShopSettings({ ...shopSettings, startHour: newStart });
+                          showToast('Abertura salva!');
+                        }}
+                        className="w-10 h-10 rounded-lg bg-[#1E1E1E] hover:bg-neon-yellow hover:text-black border border-white/5 flex items-center justify-center transition-all active:scale-95 text-gray-400"
+                      >
+                        <Minus size={18} strokeWidth={3} />
+                      </button>
+                      <button
+                        onClick={e => {
+                          e.stopPropagation();
+                          const newStart = Math.min(
+                            shopSettings.endHour - 1,
+                            shopSettings.startHour + 1
+                          );
+                          updateShopSettings({ ...shopSettings, startHour: newStart });
+                          showToast('Abertura salva!');
+                        }}
+                        className="w-10 h-10 rounded-lg bg-[#1E1E1E] hover:bg-neon-yellow hover:text-black border border-white/5 flex items-center justify-center transition-all active:scale-95 text-gray-400"
+                      >
+                        <Plus size={18} strokeWidth={3} />
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 bg-black/40 p-1.5 rounded-lg border border-white/5">
-                    <button
-                      onClick={e => {
-                        e.stopPropagation();
-                        const newStart = Math.max(0, shopSettings.startHour - 1);
-                        updateShopSettings({ ...shopSettings, startHour: newStart });
-                        showToast('Abertura salva!');
-                      }}
-                      className="w-10 h-10 rounded-md bg-[#111] hover:bg-neon-yellow hover:text-black border border-white/10 flex items-center justify-center transition-all active:scale-95 text-gray-400 hover:text-black"
-                    >
-                      <Minus size={18} strokeWidth={3} />
-                    </button>
-                    <button
-                      onClick={e => {
-                        e.stopPropagation();
-                        const newStart = Math.min(
-                          shopSettings.endHour - 1,
-                          shopSettings.startHour + 1
-                        );
-                        updateShopSettings({ ...shopSettings, startHour: newStart });
-                        showToast('Abertura salva!');
-                      }}
-                      className="w-10 h-10 rounded-md bg-[#111] hover:bg-neon-yellow hover:text-black border border-white/10 flex items-center justify-center transition-all active:scale-95 text-gray-400 hover:text-black"
-                    >
-                      <Plus size={18} strokeWidth={3} />
-                    </button>
-                  </div>
-                </div>
 
-                {/* End Hour */}
-                <div className="flex items-center justify-between p-4 rounded-xl hover:bg-white/5 transition-colors group">
-                  <div>
-                    <span className="text-gray-400 font-bold uppercase text-[10px] tracking-widest block mb-1">
-                      Fechamento
-                    </span>
-                    <span className="text-white font-black text-2xl group-hover:text-neon-yellow transition-colors">
-                      {String(shopSettings.endHour).padStart(2, '0')}:00
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 bg-black/40 p-1.5 rounded-lg border border-white/5">
-                    <button
-                      onClick={e => {
-                        e.stopPropagation();
-                        const newEnd = Math.max(
-                          shopSettings.startHour + 1,
-                          shopSettings.endHour - 1
-                        );
-                        updateShopSettings({ ...shopSettings, endHour: newEnd });
-                        showToast('Fechamento salvo!');
-                      }}
-                      className="w-10 h-10 rounded-md bg-[#111] hover:bg-neon-yellow hover:text-black border border-white/10 flex items-center justify-center transition-all active:scale-95 text-gray-400 hover:text-black"
-                    >
-                      <Minus size={18} strokeWidth={3} />
-                    </button>
-                    <button
-                      onClick={e => {
-                        e.stopPropagation();
-                        const newEnd = Math.min(23, shopSettings.endHour + 1);
-                        updateShopSettings({ ...shopSettings, endHour: newEnd });
-                        showToast('Fechamento salvo!');
-                      }}
-                      className="w-10 h-10 rounded-md bg-[#111] hover:bg-neon-yellow hover:text-black border border-white/10 flex items-center justify-center transition-all active:scale-95 text-gray-400 hover:text-black"
-                    >
-                      <Plus size={18} strokeWidth={3} />
-                    </button>
+                  {/* End Hour */}
+                  <div className="flex items-center justify-between p-4 rounded-xl bg-[#111] border border-white/5 hover:border-white/10 transition-colors group">
+                    <div>
+                      <span className="text-gray-500 font-bold uppercase text-[10px] tracking-widest block mb-1">
+                        Fechamento
+                      </span>
+                      <span className="text-white font-black text-2xl group-hover:text-neon-yellow transition-colors">
+                        {String(shopSettings.endHour).padStart(2, '0')}:00
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={e => {
+                          e.stopPropagation();
+                          const newEnd = Math.max(
+                            shopSettings.startHour + 1,
+                            shopSettings.endHour - 1
+                          );
+                          updateShopSettings({ ...shopSettings, endHour: newEnd });
+                          showToast('Fechamento salvo!');
+                        }}
+                        className="w-10 h-10 rounded-lg bg-[#1E1E1E] hover:bg-neon-yellow hover:text-black border border-white/5 flex items-center justify-center transition-all active:scale-95 text-gray-400"
+                      >
+                        <Minus size={18} strokeWidth={3} />
+                      </button>
+                      <button
+                        onClick={e => {
+                          e.stopPropagation();
+                          const newEnd = Math.min(23, shopSettings.endHour + 1);
+                          updateShopSettings({ ...shopSettings, endHour: newEnd });
+                          showToast('Fechamento salvo!');
+                        }}
+                        className="w-10 h-10 rounded-lg bg-[#1E1E1E] hover:bg-neon-yellow hover:text-black border border-white/5 flex items-center justify-center transition-all active:scale-95 text-gray-400"
+                      >
+                        <Plus size={18} strokeWidth={3} />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Interval Section */}
-              <div className="p-6 bg-[#151515] border-t border-white/5">
-                <span className="text-gray-500 font-bold uppercase text-[10px] tracking-widest block mb-4 flex items-center gap-2">
-                  <Clock size={12} /> Intervalo entre cortes
-                </span>
-                <div className="grid grid-cols-4 gap-3">
+              {/* Divider */}
+              <div className="h-px bg-white/5 mx-6"></div>
+
+              {/* SECTION 2: INTERVAL */}
+              <div className="p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-1 h-4 bg-purple-500 rounded-full"></div>
+                  <h3 className="text-white font-bold uppercase tracking-widest text-sm">
+                    Duração dos Cortes
+                  </h3>
+                </div>
+
+                <div className="grid grid-cols-4 gap-2">
                   {[60, 30, 20, 15].map(min => (
                     <button
                       key={min}
@@ -817,17 +832,17 @@ export const CalendarView: React.FC = () => {
                         showToast(`${min}min salvo!`);
                       }}
                       className={`
-                                        flex flex-col items-center justify-center py-3 rounded-xl border transition-all active:scale-95 group/btn
+                                        flex flex-col items-center justify-center py-4 rounded-xl border transition-all active:scale-95 group/btn relative overflow-hidden
                                         ${
                                           (shopSettings.slotInterval || 60) === min
-                                            ? 'bg-neon-yellow border-neon-yellow text-black shadow-[0_0_15px_rgba(234,179,8,0.3)]'
-                                            : 'bg-[#111] border-gray-800 text-gray-500 hover:border-gray-600 hover:bg-[#1A1A1A] hover:text-white'
+                                            ? 'bg-neon-yellow border-neon-yellow text-black'
+                                            : 'bg-[#111] border-white/5 text-gray-500 hover:border-white/20 hover:text-white'
                                         }
                                     `}
                     >
-                      <span className="text-lg font-black">{min}</span>
+                      <span className="text-lg font-black relative z-10">{min}</span>
                       <span
-                        className={`text-[8px] font-bold uppercase ${
+                        className={`text-[8px] font-bold uppercase relative z-10 ${
                           (shopSettings.slotInterval || 60) === min
                             ? 'text-black/70'
                             : 'text-gray-600 group-hover/btn:text-gray-400'
@@ -838,47 +853,6 @@ export const CalendarView: React.FC = () => {
                     </button>
                   ))}
                 </div>
-              </div>
-
-              {/* AI COMMAND ZONE */}
-              <div className="p-6 bg-[#151515] border-t border-white/5">
-                <button
-                  onClick={async () => {
-                    if (
-                      window.confirm(
-                        '🤖 IA SYSTEM: \n\nAtenção, operador. O protocolo de reset irá WIPE em toda a base de dados temporal (agenda). \n\nConfirmar execução?'
-                      )
-                    ) {
-                      const success = await import('../../services/api').then(m =>
-                        m.api.clearAppointments()
-                      );
-                      if (success) {
-                        alert('✅ Execução concluída. Sistema reiniciando...');
-                        window.location.reload();
-                      } else {
-                        alert('❌ Erro no protocolo de comunicação.');
-                      }
-                    }
-                  }}
-                  className="w-full bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white py-4 flex items-center justify-center gap-3 rounded-xl shadow-[0_0_25px_rgba(139,92,246,0.5)] transition-all transform hover:scale-[1.02] group mt-4 border border-white/10 relative overflow-hidden"
-                >
-                  {/* Animated Glare */}
-                  <div className="absolute top-0 left-[-100%] w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:animate-[shimmer_1.5s_infinite]"></div>
-
-                  <Bot
-                    size={24}
-                    className="text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]"
-                  />
-                  <div className="flex flex-col items-start leading-none">
-                    <span className="text-[10px] font-bold text-purple-200 uppercase tracking-[0.2em] mb-0.5">
-                      Protocolo de Limpeza
-                    </span>
-                    <span className="text-sm font-black uppercase tracking-widest drop-shadow-md">
-                      AI SYSTEM RESET
-                    </span>
-                  </div>
-                  <Sparkles size={16} className="text-purple-300 animate-pulse ml-1" />
-                </button>
               </div>
             </div>
           </div>
@@ -942,7 +916,22 @@ export const CalendarView: React.FC = () => {
                 const startLimit = exception?.startHour ?? shopSettings.startHour;
                 const endLimit = exception?.endHour ?? shopSettings.endHour;
 
-                // REMOVED "CLOSED" BLOCKING UI - user wants grid always visible
+                // SUNDAY BLOCKER (Refined Standardized UI)
+                if (selectedDate.getDay() === 0) {
+                  return (
+                    <div className="flex flex-col items-center justify-center py-24 text-gray-500 opacity-50">
+                      <Clock className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                      <h3 className="text-sm font-bold uppercase tracking-widest mb-1">
+                        Domingo - Fechado
+                      </h3>
+                      <p className="text-[10px] uppercase tracking-widest opacity-60">
+                        Sem horários disponíveis
+                      </p>
+                    </div>
+                  );
+                }
+
+                // REMOVED "CLOSED" BLOCKING UI - user wants grid always visible (EXCEPT SUNDAYS)
 
                 let currentMinutes = startLimit * 60;
                 const endMinutes = endLimit * 60;

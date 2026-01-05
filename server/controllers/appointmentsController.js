@@ -40,23 +40,18 @@ export const getAppointments = async (req, res) => {
       // B. Client sees THEIR OWN full data.
       // C. Public sees Sanitized (Busy Slots).
 
-      // Fix: Handle ID 0 (which is falsy) correctly
+      // Fix: Handle PG casing (clientId vs clientid) and ID 0 (falsy)
+      const dbClientId = row.clientId !== undefined ? row.clientId : row.clientid;
+
+      // Strict check that handles 0 and string/number mismatch
       const isOwner =
         user &&
-        row.clientId !== null &&
-        row.clientId !== undefined &&
-        String(row.clientId) === String(user.id);
-
-      // DEBUG: Log ownership check for debugging
-      if (user && !isBarber && !isOwner && row.status !== 'cancelled') {
-        // console.log(`   ⛔ Access Denied for App ${row.id.slice(0,5)}... Owner: ${row.clientId} vs Me: ${user.id}`);
-      }
-      if (isOwner) {
-        console.log(`   ✅ Access Granted for App ${row.id.slice(0, 5)}...`);
-      }
+        dbClientId !== null &&
+        dbClientId !== undefined &&
+        String(dbClientId) === String(user.id);
 
       if (isBarber || isOwner) {
-        return row; // Full Data (includes clientName, phone, etc)
+        return row; // Full Data
       }
 
       return {

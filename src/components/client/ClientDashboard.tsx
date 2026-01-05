@@ -244,7 +244,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
               {upcoming.map(app => (
                 <div
                   key={app.id}
-                  className="w-full sm:w-[350px] snap-center relative flex justify-center py-4 shrink-0 transition-transform"
+                  className="w-[85vw] sm:w-[320px] snap-center relative flex justify-center py-4 shrink-0 transition-transform"
                 >
                   <TicketCard
                     data={{

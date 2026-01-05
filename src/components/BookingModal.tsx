@@ -16,6 +16,7 @@ import { SERVICES as ALL_SERVICES } from '../constants';
 import { TicketCard } from './ui/TicketCard';
 import { ServiceCard } from './ui/ServiceCard';
 import { useData } from '../contexts/DataContext';
+import { useAuth } from '../contexts/AuthContext';
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -42,6 +43,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   appointments = [],
 }) => {
   const { shopSettings } = useData();
+  const { currentUser } = useAuth();
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<BookingData>({
@@ -145,6 +147,8 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   };
 
   // 3. Smart Time Slots Generation
+
+  // ... inside generateTimeSlots ...
   const generateTimeSlots = () => {
     // Validar dia fechado: Domingo retorna array vazio
     if (selectedDate.getDay() === 0) return [];
@@ -183,7 +187,13 @@ export const BookingModal: React.FC<BookingModalProps> = ({
         ALL_SERVICES.find(s => s.id === app.serviceId);
       const duration = service?.duration || 30;
 
-      return { start: startMin, end: startMin + duration };
+      // CHECK IF THIS IS MINE
+      // We check by Client ID (if logged in) or Phone (if drafted)
+      const isMine =
+        (currentUser?.id && String(app.clientId) === String(currentUser.id)) ||
+        (formData.phone && app.clientPhone === formData.phone); // Fallback
+
+      return { start: startMin, end: startMin + duration, isMine };
     });
 
     // Generate Slots
@@ -202,15 +212,33 @@ export const BookingModal: React.FC<BookingModalProps> = ({
       const currentSlotEnd = time + serviceDuration;
 
       // Check Overlap
-      const isOccupied = occupiedRanges.some(range => {
+      let slotStatus = 'available';
+      const conflict = occupiedRanges.find(range => {
         return currentSlotStart < range.end && currentSlotEnd > range.start;
       });
 
+      if (conflict) {
+        if (conflict.isMine) {
+          slotStatus = 'user_appointment';
+        } else {
+          slotStatus = 'occupied';
+        }
+      }
+
       // Check Past
       const now = new Date();
-      const isToday = dateKey === now.toISOString().split('T')[0];
+      const localNowDateKey =
+        now.getFullYear() +
+        '-' +
+        String(now.getMonth() + 1).padStart(2, '0') +
+        '-' +
+        String(now.getDate()).padStart(2, '0');
+
+      const isToday = dateKey === localNowDateKey;
       const nowTotalMinutes = now.getHours() * 60 + now.getMinutes();
       const isPassed = isToday && currentSlotStart < nowTotalMinutes;
+
+      if (isPassed) slotStatus = 'passed';
 
       const h = Math.floor(time / 60);
       const m = time % 60;
@@ -219,7 +247,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
       slots.push({
         label: timeLabel,
         minutes: time,
-        status: isOccupied ? 'occupied' : isPassed ? 'passed' : 'available',
+        status: slotStatus,
       });
     }
 
@@ -548,6 +576,22 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                                 >
                                   <span className="text-sm font-bold text-gray-500 font-mono line-through">
                                     {slot.label}
+                                  </span>
+                                </div>
+                              );
+                            }
+
+                            if (slot.status === 'user_appointment') {
+                              return (
+                                <div
+                                  key={slot.label}
+                                  className={`${baseClasses} bg-neon-yellow/10 border-neon-yellow/50 cursor-not-allowed`}
+                                >
+                                  <span className="text-sm font-black text-neon-yellow font-mono">
+                                    {slot.label}
+                                  </span>
+                                  <span className="text-[7px] font-bold uppercase text-neon-yellow leading-none mt-0.5">
+                                    Seu Horário
                                   </span>
                                 </div>
                               );
