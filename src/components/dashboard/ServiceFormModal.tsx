@@ -71,23 +71,29 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const formData = new FormData();
-      formData.append('image', file);
+      // Import api dynamically or assume it's available.
+      // Better to use dynamic import if we want to avoid top-level circular deps,
+      // or just standard import if compatible.
+      // Looking at the file, imports are top-level.
+      // I'll use the dynamic import pattern seen in ServiceConfig or add a standard import if possible.
+      // The file ServiceFormModal doesn't import 'api' yet.
 
       try {
-        const res = await fetch('http://localhost:3000/api/upload', {
-          method: 'POST',
-          body: formData,
-        });
-        const data = await res.json();
+        // Use dynamic import to avoid circular dependency risks if any, purely for safety
+        // as ServiceConfig imports both api and ServiceFormModal.
+        const { api } = await import('../../services/api');
 
-        if (data.url) {
-          setFormData(prev => ({ ...prev, image: data.url }));
+        const url = await api.uploadImage(file);
+
+        if (url) {
+          setFormData(prev => ({ ...prev, image: url }));
         } else {
-          console.error('Upload failed:', data.error);
+          console.error('Upload failed');
+          alert('Erro ao fazer upload da imagem. Tente novamente.');
         }
       } catch (error) {
         console.error('Error uploading image:', error);
+        alert('Erro ao conectar com o servidor.');
       }
     }
   };
