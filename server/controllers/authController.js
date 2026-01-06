@@ -32,7 +32,21 @@ export const loginClient = async (req, res) => {
 
     if (row) {
       console.log('✅ User found:', row.name);
-      const match = await bcrypt.compare(password, row.password);
+
+      // 🛡️ Segurança: Verificar integridade da senha (hash)
+      if (!row.password) {
+        console.error(`❌ [Auth Error] Senha ausente no DB para usuário: ${emailOrPhone}`);
+        return res.status(401).json({ error: 'Erro de cadastro. Contate o suporte.' });
+      }
+
+      let match = false;
+      try {
+        match = await bcrypt.compare(password, row.password);
+      } catch (bcryptErr) {
+        console.error('❌ [Bcrypt Error] Falha na verificação de senha:', bcryptErr);
+        // Não retornar 500 aqui para não assustar o cliente, apenas negar acesso
+        return res.status(401).json({ error: 'Erro de verificação de credenciais.' });
+      }
 
       if (match) {
         const { password, ...userWithoutPass } = row;
@@ -62,7 +76,20 @@ export const loginBarber = async (req, res) => {
 
     if (row) {
       console.log('✅ Barber found:', row.name);
-      const match = await bcrypt.compare(password, row.password);
+
+      if (!row.password) {
+        console.error(`❌ [Auth Error] Senha ausente no DB para barbeiro: ${email}`);
+        return res.status(401).json({ error: 'Erro de cadastro. Contate o admin.' });
+      }
+
+      let match = false;
+      try {
+        match = await bcrypt.compare(password, row.password);
+      } catch (err) {
+        console.error('❌ [Bcrypt Error] Falha na verificação:', err);
+        return res.status(401).json({ error: 'Erro de verificação.' });
+      }
+
       if (match) {
         const { password, ...userWithoutPass } = row;
         const token = generateToken(userWithoutPass);

@@ -98,10 +98,19 @@ export const processVoiceCommand = async (
 
     // Call Backend Proxy
     // Note: api service does not have a generic .post, so we use fetch directly.
+    const token = localStorage.getItem('token');
+
+    // Authorization Check
+    if (!token) {
+      console.warn('⚠️ [AI] Comando ignorado: Usuário não autenticado.');
+      return { action: 'unknown', message: 'Você precisa estar logado para usar a IA.' };
+    }
+
     const response = await fetch('/api/ai/command', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({ prompt: fullPrompt }),
     });
@@ -141,12 +150,25 @@ export const processVoiceCommand = async (
     // Map AI Intent to Frontend Action
     switch (parsed.intent) {
       case 'CREATE_APPOINTMENT':
+        // 🛡️ Guard: Ensure required entities are present to prevent "ghost" appointments
+        if (!parsed.entities?.client_name || !parsed.entities?.time) {
+          return {
+            action: 'unknown', // Falls back to showing message in UI
+            message: 'Entendi que quer agendar, mas preciso do NOME e HORÁRIO.',
+            data: {},
+            raw: parsed,
+          };
+        }
+
         return {
           action: 'schedule',
           data: {
             clientName: parsed.entities?.client_name,
             serviceName: parsed.entities?.service_name,
-            date: parsed.entities?.date, // Already ISO
+            // 🛡️ Fix: AI sometimes returns "2026 01 06" (spaces) -> Normalize to YYYY-MM-DD
+            date: parsed.entities?.date
+              ? parsed.entities.date.replace(/ /g, '-')
+              : new Date().toISOString().split('T')[0],
             time: parsed.entities?.time,
           },
           message: `Entendido. Agendando ${parsed.entities?.service_name || 'serviço'} para ${

@@ -95,7 +95,7 @@ export const createAppointment = async (req, res) => {
     // Note: Schema validation already checks valid date/time format, so we can simplify checks below or keep them as double-safety.
     // 1. Check for Double Booking
     const { rows: existingRows } = await db.query(
-      "SELECT * FROM appointments WHERE date = $1 AND time = $2 AND status != 'cancelled'",
+      "SELECT * FROM appointments WHERE date = $1 AND time = $2 AND (status != 'cancelled' OR status IS NULL)",
       [date, time]
     );
 
@@ -132,7 +132,8 @@ export const createAppointment = async (req, res) => {
       serviceId,
       date,
       time,
-      status,
+
+      status || 'pending', // 🛡️ Default to pending to prevent NULLs
       price,
       photoUrl,
       notes,

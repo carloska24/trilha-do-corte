@@ -161,6 +161,8 @@ export const DashboardLayout: React.FC = () => {
               phone: '00000000000', // Placeholder
               email: `cliente.${Date.now()}@temp.com`,
               photoUrl: `https://ui-avatars.com/api/?name=${result.data.clientName}&background=random`,
+              status: 'new',
+              notes: 'Cadastrado via IA de Voz',
             });
             if (newClient) {
               foundClient = newClient;
@@ -341,7 +343,16 @@ export const DashboardLayout: React.FC = () => {
       ) {
         setAiResponse('⚠️ Horário já ocupado!');
       } else {
-        setAiResponse('Erro ao processar comando.');
+        // Tentar extrair mensagem de erro da resposta se disponível
+        let message = 'Erro ao processar comando.';
+        if (error instanceof Error) {
+          message = error.message;
+        } else if (typeof error === 'object' && (error as any).error) {
+          message = (error as any).error; // Backend error
+        }
+
+        console.error('❌ AI Command Error:', error);
+        setAiResponse(`❌ ${message}`);
       }
       setTimeout(() => setAiResponse(null), 3000);
     } finally {

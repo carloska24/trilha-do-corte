@@ -60,7 +60,7 @@ app.use('/api', authRoutes); // Handles /api/login/* and /api/register/*
 app.use('/api/services', servicesRoutes); // Handles /api/services/*
 app.use('/api/appointments', appointmentsRoutes); // Handles /api/appointments/*
 app.use('/api', usersRoutes); // Handles /api/clients, /api/barbers
-app.get('/api/ai/command', aiRoutes); // Handles /api/ai/command
+app.use('/api/ai', aiRoutes); // Handles /api/ai/command
 
 // Global Error Handler
 app.use((err, req, res, next) => {

@@ -203,10 +203,20 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({
                 </span>
               </div>
 
-              {/* ID Badge (Prominent) */}
-              <span className="text-[10px] font-mono font-bold text-zinc-500 tracking-widest border border-white/5 px-2 py-0.5 rounded bg-black/20">
-                ID {String(client.id || '0000').slice(-4)}
-              </span>
+              {/* ID Badge / Status Badge */}
+              {client.status === 'new' ? (
+                <span className="text-[10px] font-bold text-black tracking-widest bg-neon-yellow px-2 py-0.5 rounded shadow-[0_0_10px_rgba(234,179,8,0.4)] animate-pulse">
+                  NOVO
+                </span>
+              ) : client.isGuest ? (
+                <span className="text-[10px] font-bold text-white tracking-widest bg-purple-600 px-2 py-0.5 rounded bg-opacity-80">
+                  VISITANTE
+                </span>
+              ) : (
+                <span className="text-[10px] font-mono font-bold text-zinc-600 tracking-widest px-2 py-0.5 rounded">
+                  #{String(client.id || '0000').slice(-4)}
+                </span>
+              )}
             </div>
           </div>
 
@@ -300,7 +310,7 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({
                       <div className="flex-1 p-5 flex flex-col justify-center relative">
                         {/* Top: Service */}
                         <div className="flex-1 flex items-center">
-                          <span className="text-xl font-black text-white uppercase tracking-wide leading-tight truncate">
+                          <span className="text-sm font-black text-white uppercase tracking-wide leading-tight line-clamp-2">
                             {getServiceName(app.serviceId)}
                           </span>
                         </div>

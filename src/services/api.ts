@@ -273,11 +273,17 @@ export const api = {
         headers: getAuthHeaders(),
         body: JSON.stringify(appointment),
       });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Erro ${response.status}: Falha ao criar agendamento`);
+      }
+
       const json = await response.json();
       return json.data;
     } catch (error) {
       console.error('Error creating appointment:', error);
-      return null;
+      throw error; // UI catches this
     }
   },
 
