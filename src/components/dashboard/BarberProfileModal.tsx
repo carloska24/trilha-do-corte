@@ -29,7 +29,26 @@ export const BarberProfileModal: React.FC<BarberProfileModalProps> = ({ barber, 
     phone: barber.phone || '', // Check if phone exists in BarberProfile type
     password: '',
     confirmPassword: '',
+    password: '',
+    confirmPassword: '',
   });
+
+  const [showAvatarSelector, setShowAvatarSelector] = useState(false);
+  const [avatarList, setAvatarList] = useState<string[]>([]);
+
+  // Fetch dynamic avatars from server
+  React.useEffect(() => {
+    if (showAvatarSelector) {
+      fetch('http://localhost:3000/api/avatars')
+        .then(res => res.json())
+        .then(data => {
+          if (data.avatars && data.avatars.length > 0) {
+            setAvatarList(data.avatars);
+          }
+        })
+        .catch(err => console.error('Failed to load local avatars:', err));
+    }
+  }, [showAvatarSelector]);
 
   const profilePhotoInputRef = useRef<HTMLInputElement>(null);
 
@@ -143,6 +162,16 @@ export const BarberProfileModal: React.FC<BarberProfileModalProps> = ({ barber, 
                 onChange={handlePhotoChange}
                 disabled={loading}
               />
+            </div>
+
+            <div className="flex flex-col gap-2 items-center mt-4">
+              <button
+                onClick={() => setShowAvatarSelector(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-[#1a1a1a] hover:bg-[#222] border border-white/10 hover:border-[#FFD700]/50 rounded-lg text-xs font-bold text-gray-300 hover:text-[#FFD700] transition-all group"
+              >
+                <User size={14} className="group-hover:text-[#FFD700]" />
+                ESCOLHER AVATAR
+              </button>
             </div>
 
             {!isEditing && (
@@ -309,6 +338,59 @@ export const BarberProfileModal: React.FC<BarberProfileModalProps> = ({ barber, 
           </p>
         </div>
       </div>
+
+      {/* Avatar Selector Modal */}
+      {showAvatarSelector && (
+        <div className="absolute inset-0 z-[100] bg-black/95 backdrop-blur-xl flex items-center justify-center p-6 animate-fade-in">
+          <div className="w-full max-w-sm bg-[#111] border border-white/10 rounded-2xl p-6 shadow-2xl flex flex-col max-h-[80vh]">
+            <div className="flex justify-between items-center mb-4 shrink-0">
+              <h3 className="text-[#FFD700] font-graffiti text-xl uppercase tracking-wider">
+                Escolher Avatar
+              </h3>
+              <button
+                onClick={() => setShowAvatarSelector(false)}
+                className="text-gray-400 hover:text-white p-2"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3 overflow-y-auto custom-scrollbar p-1 flex-1 min-h-0">
+              {avatarList.map((url, index) => (
+                <button
+                  key={index}
+                  onClick={async () => {
+                    // Update barber photo
+                    try {
+                      setLoading(true);
+                      await api.updateBarber(barber.id, { img: url });
+                      updateProfile({ photoUrl: url });
+                      setSuccess('Avatar atualizado!');
+                      setTimeout(() => setSuccess(''), 3000);
+                      setShowAvatarSelector(false);
+                    } catch (err) {
+                      console.error(err);
+                      setError('Erro ao atualizar avatar.');
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}
+                  className="relative aspect-square rounded-xl overflow-hidden border border-white/10 hover:border-[#FFD700] hover:shadow-[0_0_15px_rgba(255,215,0,0.5)] transition-all group bg-black"
+                >
+                  <img
+                    src={url}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    onError={e => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                    }}
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

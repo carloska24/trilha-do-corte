@@ -197,16 +197,17 @@ export const ClientsManager: React.FC = () => {
 
     // STRICT FILTER: Exclude Guest/Temporary clients only
     // Real clients (like CARLOS A) might have 'UNDEFINED' lastVisit but valid phones
-    const isGuest =
-      (client as any).isGuest ||
-      String(client.id).startsWith('temp') ||
-      !client.phone ||
-      client.phone.toLowerCase().trim() === 'sem cadastro' ||
-      client.phone.trim() === '' ||
-      client.phone.toLowerCase().trim() === 'undefined' ||
-      client.phone.replace(/\D/g, '').length < 8 || // Filter out short/placeholder phones
-      /^0+$/.test(client.phone.replace(/\D/g, '')) || // Filter out '000000', '00000000000'
-      (client.notes && client.notes.includes('Agendamento rápido'));
+    // STRICT FILTER RELAXED: User wants to see temporary clients to send invites
+    // We only filter out truly broken/empty records now.
+
+    // const isGuest = ... (OLD LOGIC REMOVED)
+
+    const isInvalid =
+      !client.name || client.name.trim() === '' || client.name.toLowerCase().includes('undefined');
+
+    // Show everyone else, even if phone is missing (so we can see them and add phone/invite)
+
+    return matchesSearch && !isInvalid;
 
     // Debug log to help diagnose persistent ghost clients if needed
     // console.log('Client:', client.name, 'Phone:', client.phone, 'Guest:', isGuest);

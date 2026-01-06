@@ -1,6 +1,18 @@
 import React, { useState, useRef } from 'react';
-import { X, Camera, Save, User, Phone, Scissors, Calendar, FileText, Check } from 'lucide-react';
+import {
+  X,
+  Camera,
+  Save,
+  User,
+  Phone,
+  Scissors,
+  Calendar,
+  FileText,
+  Check,
+  Grid,
+} from 'lucide-react';
 import { ClientProfile } from '../../types';
+import { AVATAR_PACK } from '../../constants';
 
 interface ClientProfileSettingsProps {
   isOpen: boolean;
@@ -44,6 +56,22 @@ export const ClientProfileSettings: React.FC<ClientProfileSettingsProps> = ({
   );
   const [favoriteStyle, setFavoriteStyle] = useState(client.preferences?.favoriteStyle || '');
   const [notes, setNotes] = useState(client.preferences?.notes || '');
+  const [showAvatarSelector, setShowAvatarSelector] = useState(false);
+  const [avatarList, setAvatarList] = useState<string[]>(AVATAR_PACK);
+
+  // Fetch dynamic avatars from server
+  React.useEffect(() => {
+    if (showAvatarSelector) {
+      fetch('http://localhost:3000/api/avatars')
+        .then(res => res.json())
+        .then(data => {
+          if (data.avatars && data.avatars.length > 0) {
+            setAvatarList(data.avatars);
+          }
+        })
+        .catch(err => console.error('Failed to load local avatars:', err));
+    }
+  }, [showAvatarSelector]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -187,13 +215,12 @@ export const ClientProfileSettings: React.FC<ClientProfileSettingsProps> = ({
           {/* TAB: PERSONAL */}
           {activeTab === 'personal' && (
             <div className="space-y-8 animate-fade-in-up">
-              {/* Photo Upload */}
               <div className="flex flex-col items-center gap-4">
                 <div
                   className="relative group cursor-pointer"
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  <div className="w-36 h-36 rounded-full bg-gradient-to-tr from-gray-800 to-black p-[2px] group-hover:from-neon-yellow group-hover:to-orange-500 transition-all duration-500 shadow-2xl">
+                  <div className="w-36 h-36 rounded-full bg-linear-to-tr from-gray-800 to-black p-[2px] group-hover:from-neon-yellow group-hover:to-orange-500 transition-all duration-500 shadow-2xl">
                     <div className="w-full h-full rounded-full overflow-hidden bg-[#151515] relative">
                       {photoUrl ? (
                         <img
@@ -222,9 +249,19 @@ export const ClientProfileSettings: React.FC<ClientProfileSettingsProps> = ({
                     onChange={handlePhotoUpload}
                   />
                 </div>
-                <p className="text-gray-500 text-[10px] font-mono tracking-widest uppercase">
-                  Toque para atualizar foto
-                </p>
+
+                <div className="flex flex-col gap-2 items-center">
+                  <p className="text-gray-500 text-[10px] font-mono tracking-widest uppercase">
+                    Toque para atualizar foto
+                  </p>
+                  <button
+                    onClick={() => setShowAvatarSelector(true)}
+                    className="flex items-center gap-2 px-4 py-2 bg-[#1a1a1a] hover:bg-[#222] border border-white/10 hover:border-neon-cyan/50 rounded-lg text-xs font-bold text-gray-300 hover:text-neon-cyan transition-all group"
+                  >
+                    <Grid size={14} className="group-hover:text-neon-cyan" />
+                    ESCOLHER AVATAR GAME
+                  </button>
+                </div>
               </div>
 
               {/* Inputs */}
@@ -390,6 +427,53 @@ export const ClientProfileSettings: React.FC<ClientProfileSettingsProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Avatar Selector Modal */}
+      {showAvatarSelector && (
+        <div className="absolute inset-0 z-[100] bg-black/95 backdrop-blur-xl flex items-center justify-center p-6 animate-fade-in">
+          <div className="w-full max-w-sm bg-[#111] border border-white/10 rounded-2xl p-6 shadow-2xl flex flex-col max-h-[80vh]">
+            <div className="flex justify-between items-center mb-4 shrink-0">
+              <h3 className="text-neon-yellow font-graffiti text-xl uppercase tracking-wider mobile-glitch">
+                Escolher Avatar <span className="text-white">Game</span>
+              </h3>
+              <button
+                onClick={() => setShowAvatarSelector(false)}
+                className="text-gray-400 hover:text-white p-2"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3 overflow-y-auto custom-scrollbar p-1 flex-1 min-h-0">
+              {avatarList.map((url, index) => (
+                <button
+                  key={index}
+                  onClick={() => {
+                    setPhotoUrl(url); // Use the relative URL directly
+                    setShowAvatarSelector(false);
+                  }}
+                  className="relative aspect-square rounded-xl overflow-hidden border border-white/10 hover:border-neon-cyan hover:shadow-[0_0_15px_rgba(6,182,212,0.5)] transition-all group bg-black"
+                >
+                  <img
+                    src={url}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    onError={e => {
+                      // Fallback if local image fails
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-neon-cyan/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </button>
+              ))}
+            </div>
+
+            <p className="text-center text-gray-500 text-[10px] mt-4 uppercase tracking-widest shrink-0">
+              Toque para selecionar
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

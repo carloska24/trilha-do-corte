@@ -1152,13 +1152,18 @@ export const CalendarView: React.FC = () => {
 
                             {/* CARD - PREMIUM LAYOUT */}
                             <div
-                              className={`w-full h-full bg-[#1A1A1A] rounded-xl overflow-hidden border border-white/10 shadow-lg relative z-10 cursor-grab active:cursor-grabbing group/card touch-pan-y flex flex-col
+                              className={`w-full h-full rounded-xl overflow-hidden border shadow-lg relative z-10 cursor-grab active:cursor-grabbing group/card touch-pan-y flex flex-col
                                     ${
                                       swipedAppId === (item as any).data.id
                                         ? 'translate-x-[120px] opacity-50'
                                         : 'translate-x-0 opacity-100'
                                     }
-                                    transition-all duration-300 hover:border-white/20 hover:shadow-xl
+                                    ${
+                                      (item as any).data.status === 'completed'
+                                        ? 'bg-[#121212] border-green-900/30' // Removed grayscale, kept dark/green tint
+                                        : 'bg-[#1A1A1A] border-white/10 hover:border-white/20 hover:shadow-xl'
+                                    }
+                                    transition-all duration-300
                                 `}
                               draggable={true}
                               onDragStart={e => handleDragStart(e, (item as any).data)}
@@ -1176,53 +1181,67 @@ export const CalendarView: React.FC = () => {
                               }}
                             >
                               {/* HEADER: NAME + BELL */}
-                              <div className="flex justify-between items-center px-3 py-2 border-b border-white/5 bg-[#202020]">
-                                <h3 className="font-bold text-white text-sm md:text-base uppercase tracking-wider truncate">
+                              <div
+                                className={`flex justify-between items-center px-3 py-2 border-b ${
+                                  (item as any).data.status === 'completed'
+                                    ? 'bg-[#0f1510] border-green-900/10'
+                                    : 'bg-[#202020] border-white/5'
+                                }`}
+                              >
+                                <h3 className="font-bold text-white text-sm md:text-base uppercase tracking-wider truncate flex items-center gap-2">
                                   {(item as any).data.clientName}
                                 </h3>
-                                <button
-                                  className="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/10 transition-colors"
-                                  onClick={e => {
-                                    e.stopPropagation();
-                                    let phone = (item as any).data.clientPhone;
-                                    if (!phone) {
-                                      const found = clients.find(
-                                        c =>
-                                          c.name.toLowerCase() ===
-                                          (item as any).data.clientName.toLowerCase()
-                                      );
-                                      if (found && found.phone && found.phone.length > 8)
-                                        phone = found.phone;
-                                    }
-                                    const clean = phone?.replace(/\D/g, '') || '';
+                                {(item as any).data.status !== 'completed' && (
+                                  <button
+                                    className="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/10 transition-colors"
+                                    onClick={e => {
+                                      e.stopPropagation();
+                                      let phone = (item as any).data.clientPhone;
+                                      if (!phone) {
+                                        const found = clients.find(
+                                          c =>
+                                            c.name.toLowerCase() ===
+                                            (item as any).data.clientName.toLowerCase()
+                                        );
+                                        if (found && found.phone && found.phone.length > 8)
+                                          phone = found.phone;
+                                      }
+                                      const clean = phone?.replace(/\D/g, '') || '';
 
-                                    const msg = `💈 *Trilha do Corte*\n\nFala *${
-                                      (item as any).data.clientName
-                                    }*, tudo certo? 👊\nPassando pra lembrar do seu horário hoje:\n\n✂️ *${
-                                      (item as any).service.name
-                                    }*\n⏰ *${
-                                      (item as any).time
-                                    }*\n\n📍 *Local:* Trilha do Corte\nConfirmado? ✅`;
+                                      const msg = `💈 *Trilha do Corte*\n\nFala *${
+                                        (item as any).data.clientName
+                                      }*, tudo certo? 👊\nPassando pra lembrar do seu horário hoje:\n\n✂️ *${
+                                        (item as any).service.name
+                                      }*\n⏰ *${
+                                        (item as any).time
+                                      }*\n\n📍 *Local:* Trilha do Corte\nConfirmado? ✅`;
 
-                                    const link = clean
-                                      ? `https://api.whatsapp.com/send?phone=55${clean}&text=${encodeURIComponent(
-                                          msg
-                                        )}`
-                                      : `https://api.whatsapp.com/send?text=${encodeURIComponent(
-                                          msg
-                                        )}`;
-                                    window.open(link, '_blank');
-                                  }}
-                                >
-                                  <Bell size={12} />
-                                </button>
+                                      const link = clean
+                                        ? `https://api.whatsapp.com/send?phone=55${clean}&text=${encodeURIComponent(
+                                            msg
+                                          )}`
+                                        : `https://api.whatsapp.com/send?text=${encodeURIComponent(
+                                            msg
+                                          )}`;
+                                      window.open(link, '_blank');
+                                    }}
+                                  >
+                                    <Bell size={12} />
+                                  </button>
+                                )}
                               </div>
 
                               {/* BODY: SPLIT LEFT/RIGHT */}
                               <div className="flex flex-1">
                                 {/* LEFT: TIME BOX */}
                                 <div className="w-[60px] flex flex-col items-center justify-center border-r border-white/5 bg-[#181818]">
-                                  <span className="text-white font-black text-lg leading-none">
+                                  <span
+                                    className={`font-black text-lg leading-none ${
+                                      (item as any).data.status === 'completed'
+                                        ? 'text-green-500' // Green time if paid
+                                        : 'text-white'
+                                    }`}
+                                  >
                                     {(item as any).time.split(':')[0]}
                                   </span>
                                   <span className="text-zinc-500 font-bold text-[10px] uppercase">
@@ -1233,25 +1252,45 @@ export const CalendarView: React.FC = () => {
                                 {/* RIGHT: SERVICE INFO */}
                                 <div className="flex-1 flex flex-col">
                                   {/* Service Name */}
-                                  <div className="flex-1 px-3 flex items-center border-b border-white/5">
-                                    <span className="text-zinc-300 text-xs font-bold uppercase tracking-wide line-clamp-1">
+                                  <div className="flex-1 px-3 flex items-center border-b border-white/5 bg-[#1a1a1a]">
+                                    <span
+                                      className={`text-xs font-black uppercase tracking-wide line-clamp-1 ${
+                                        (item as any).data.status === 'completed'
+                                          ? 'text-zinc-400' // No strikethrough per request
+                                          : 'text-zinc-300'
+                                      }`}
+                                    >
                                       {(item as any).service.name}
                                     </span>
                                   </div>
 
-                                  {/* Footer (Duration + Price) */}
-                                  <div className="px-3 py-1.5 flex justify-between items-center bg-[#1D1D1D]">
-                                    {/* Duration Pill */}
-                                    <div className="flex items-center justify-center border border-white/10 rounded-md px-2 py-0.5 bg-black/20">
-                                      <span className="text-[10px] font-bold text-zinc-400">
+                                  {/* Footer (Duration + Price + BADGE) */}
+                                  <div
+                                    className={`relative px-3 py-1.5 flex justify-between items-center ${
+                                      (item as any).data.status === 'completed'
+                                        ? 'bg-[#101010]'
+                                        : 'bg-[#1D1D1D]'
+                                    }`}
+                                  >
+                                    {/* Duration Pill - Refined (Less rounded, bigger) */}
+                                    <div className="flex items-center justify-center border border-white/10 rounded px-2 py-0.5 bg-white/5">
+                                      <span className="text-xs font-bold text-zinc-300">
                                         {(item as any).service.duration || '30'}m
                                       </span>
                                     </div>
 
-                                    {/* Price */}
-                                    <span className="text-neon-yellow font-black text-sm">
-                                      {(item as any).service.price}
-                                    </span>
+                                    {/* Price OR Paid Badge */}
+                                    <div className="flex items-center gap-2">
+                                      {(item as any).data.status === 'completed' ? (
+                                        <span className="text-[10px] bg-green-500 text-black border border-green-400 px-2 py-0.5 rounded-sm uppercase tracking-widest font-black shadow-[0_0_10px_rgba(34,197,94,0.3)] transform scale-105">
+                                          PAGO
+                                        </span>
+                                      ) : (
+                                        <span className="text-neon-yellow font-black text-sm">
+                                          {(item as any).service.price}
+                                        </span>
+                                      )}
+                                    </div>
                                   </div>
                                 </div>
                               </div>
@@ -1259,7 +1298,9 @@ export const CalendarView: React.FC = () => {
                               {/* Color Accent Line (Left Edge Overlay) */}
                               <div
                                 className={`absolute left-0 top-0 bottom-0 w-1 ${
-                                  (item as any).data.status === 'confirmed'
+                                  (item as any).data.status === 'completed'
+                                    ? 'bg-green-500' // Solid green
+                                    : (item as any).data.status === 'confirmed'
                                     ? 'bg-green-500'
                                     : 'bg-yellow-500'
                                 }`}

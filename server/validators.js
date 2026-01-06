@@ -36,4 +36,5 @@ export const appointmentSchema = z.object({
   status: z.string().optional(),
   notes: z.string().optional(),
   photoUrl: z.string().optional(),
+  phone: z.string().optional(),
 });

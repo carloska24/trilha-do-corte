@@ -316,3 +316,23 @@ export const MOCK_COMBOS: Combo[] = [
     featured: true,
   },
 ];
+// --- AVATAR PACK (Gamer / Cyberpunk / 3D Style) ---
+export const AVATAR_PACK = [
+  // Neon Masks & Helmets
+  'https://images.unsplash.com/photo-1563089145-599997674d42?q=80&w=200&auto=format&fit=crop', // Neon Mask
+  'https://images.unsplash.com/photo-1614728853913-1e32005e319a?q=80&w=200&auto=format&fit=crop', // Cyber Helmet
+  'https://images.unsplash.com/photo-1614726365723-49cfae9278b7?q=80&w=200&auto=format&fit=crop', // Red Hood
+  'https://images.unsplash.com/photo-1552053831-71594a27632d?q=80&w=200&auto=format&fit=crop', // Dog Neon
+
+  // 3D Renders & Art
+  'https://images.unsplash.com/photo-1620641788427-7a1c42208d9f?q=80&w=200&auto=format&fit=crop', // Pink 3D Girl
+  'https://images.unsplash.com/photo-1618331835717-801e976710b2?q=80&w=200&auto=format&fit=crop', // Abstract Neon
+  'https://images.unsplash.com/photo-1635322966219-b75ed3a90533?q=80&w=200&auto=format&fit=crop', // Anime Girl
+  'https://images.unsplash.com/photo-1614729931668-37963b6b3e8c?q=80&w=200&auto=format&fit=crop', // Red Cyborg
+
+  // Futuristic People
+  'https://images.unsplash.com/photo-1496345875659-11f7dd282d1d?q=80&w=200&auto=format&fit=crop', // Man in Shadows
+  'https://images.unsplash.com/photo-1578357078588-d3425aebd82d?q=80&w=200&auto=format&fit=crop', // Gas Mask
+  'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=200&auto=format&fit=crop', // Classic Avatar (Safe fallback)
+  'https://images.unsplash.com/photo-1639628735078-ed2f038a193e?q=80&w=200&auto=format&fit=crop', // 3D Character
+];

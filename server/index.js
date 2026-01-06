@@ -11,6 +11,7 @@ import servicesRoutes from './routes/servicesRoutes.js';
 import appointmentsRoutes from './routes/appointmentsRoutes.js';
 import usersRoutes from './routes/usersRoutes.js';
 import aiRoutes from './routes/aiRoutes.js';
+import avatarRoutes from './routes/avatarRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -61,6 +62,7 @@ app.use('/api/services', servicesRoutes); // Handles /api/services/*
 app.use('/api/appointments', appointmentsRoutes); // Handles /api/appointments/*
 app.use('/api', usersRoutes); // Handles /api/clients, /api/barbers
 app.use('/api/ai', aiRoutes); // Handles /api/ai/command
+app.use('/api/avatars', avatarRoutes); // Handles /api/avatars list
 
 // Global Error Handler
 app.use((err, req, res, next) => {

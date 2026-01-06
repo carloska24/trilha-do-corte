@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { getOptimizedImageUrl } from '../../utils/imageUtils';
 import { ChairIcon } from '../icons/ChairIcon';
 import { Appointment, AppointmentStatus, ServiceItem } from '../../types';
-import { SERVICES as ALL_SERVICES } from '../../constants';
+import { SERVICES as ALL_SERVICES, AVATAR_PACK } from '../../constants';
 import { Armchair, ChevronLeft, ChevronRight, User, Star } from 'lucide-react';
 import { sendBroadcastNotification } from '../../utils/notificationUtils';
 import { useData } from '../../contexts/DataContext';
@@ -269,6 +269,35 @@ export const DashboardHome: React.FC = () => {
     [currentTime.toDateString()]
   );
 
+  // Helper to get client image
+  const getClientImage = (app: Appointment | null | undefined, size = 100) => {
+    if (!app) {
+      // Placeholder for empty state (Deterministic based on 'Guest')
+      const seed = 'Guest'.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      return getOptimizedImageUrl(AVATAR_PACK[seed % AVATAR_PACK.length], size, size);
+    }
+
+    // 1. Try to find client in the list (Most reliable/up-to-date)
+    const clientProfile = clients.find(c => c.id === app.clientId);
+    if (clientProfile && clientProfile.img && clientProfile.img.trim() !== '') {
+      return getOptimizedImageUrl(clientProfile.img, size, size);
+    }
+
+    // 2. Fallback to appointment photoUrl (if any, e.g. guest or snapshot)
+    // BLOCK: Explicitly ignore the old generic placeholder if it was saved to DB
+    const OLD_PLACEHOLDER = 'photo-1500648767791';
+    if (app.photoUrl && app.photoUrl.trim() !== '' && !app.photoUrl.includes(OLD_PLACEHOLDER)) {
+      return getOptimizedImageUrl(app.photoUrl, size, size);
+    }
+
+    // 3. Fallback placeholder (Deterministic Random Avatar)
+    const seed = (app.clientName || 'Visitor')
+      .split('')
+      .reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const avatarIndex = seed % AVATAR_PACK.length;
+    return getOptimizedImageUrl(AVATAR_PACK[avatarIndex], size, size);
+  };
+
   return (
     <div className="flex flex-col items-center w-full max-w-md mx-auto h-full animate-[fadeIn_0.5s_ease-out] transition-colors duration-300">
       {/* 1. CLOCK & DATE */}
@@ -378,13 +407,7 @@ export const DashboardHome: React.FC = () => {
                     <div className="w-56 h-56 md:w-72 md:h-72 rounded-full p-2 bg-gradient-to-tr from-cyan-400 via-blue-500 to-purple-600 shadow-[0_0_40px_rgba(6,182,212,0.4)] relative overflow-hidden ring-4 ring-black/50">
                       <div className="w-full h-full rounded-full border-[4px] border-white/20 overflow-hidden relative bg-black">
                         <img
-                          src={getOptimizedImageUrl(
-                            inProgress.photoUrl && inProgress.photoUrl.trim() !== ''
-                              ? inProgress.photoUrl
-                              : 'https://images.unsplash.com/photo-1618077553780-75539862f629?q=80&w=400&auto=format&fit=crop',
-                            300,
-                            300
-                          )}
+                          src={getClientImage(inProgress, 300)}
                           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                           alt="Cliente"
                           onError={e => {
@@ -461,13 +484,7 @@ export const DashboardHome: React.FC = () => {
                 <div className="w-[30%] h-full flex items-center justify-center relative z-10 pl-1">
                   <div className="w-[3.5rem] h-[3.5rem] rounded-full bg-gradient-to-br from-green-400 to-emerald-700 p-[2px] shadow-lg flex items-center justify-center">
                     <img
-                      src={getOptimizedImageUrl(
-                        inProgress.photoUrl && inProgress.photoUrl.trim() !== ''
-                          ? inProgress.photoUrl
-                          : 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop',
-                        100,
-                        100
-                      )}
+                      src={getClientImage(inProgress, 100)}
                       className="w-full h-full object-cover rounded-full filter contrast-110"
                       alt="Client"
                       onError={e => {
@@ -504,13 +521,7 @@ export const DashboardHome: React.FC = () => {
                 <div className="w-[30%] h-full flex items-center justify-center relative z-10 pl-1">
                   <div className="w-[4.5rem] h-[4.5rem] rounded-full bg-gradient-to-br from-yellow-500 to-red-600 p-[2px] shadow-lg transform scale-105">
                     <img
-                      src={getOptimizedImageUrl(
-                        nextClient?.photoUrl && nextClient.photoUrl.trim() !== ''
-                          ? nextClient.photoUrl
-                          : 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop',
-                        100,
-                        100
-                      )}
+                      src={getClientImage(nextClient, 100)}
                       className="w-full h-full object-cover rounded-full filter contrast-110"
                       alt="Client"
                       onError={e => {

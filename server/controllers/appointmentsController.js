@@ -2,6 +2,9 @@ import { v4 as uuidv4 } from 'uuid';
 import db from '../db.js';
 import jwt from 'jsonwebtoken';
 import { appointmentSchema } from '../validators.js';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret_123';
 
@@ -117,9 +120,9 @@ export const createAppointment = async (req, res) => {
       return res.status(400).json({ error: 'A barbearia não abre aos domingos!' });
     }
 
-    // Rule: Hours 08:00 - 19:00
-    if (hour < 8 || hour >= 19) {
-      return res.status(400).json({ error: 'Estamos fechados. Horário: 08h às 19h.' });
+    // Rule: Hours 08:00 - 20:00 (Last slot 19:xx)
+    if (hour < 8 || hour > 19) {
+      return res.status(400).json({ error: 'Estamos fechados. Horário: 08h às 20h.' });
     }
 
     // Insert
@@ -137,8 +140,70 @@ export const createAppointment = async (req, res) => {
       price,
       photoUrl,
       notes,
-      clientId !== undefined && clientId !== null ? clientId : null, // Fix: Allow 0 as ID
+      clientId !== undefined && clientId !== null ? clientId : null,
     ];
+
+    // --- AUTO-REGISTER GUEST CLIENT LOGIC ---
+    // If no clientId provided (Guest/AI), create a ghost Client record so they appear in Manager
+    if (!params[9]) {
+      // params[9] is clientId
+      try {
+        const guestId = uuidv4();
+        const guestPhone = validatedData.phone || ''; // Phone might be empty (AI Voice)
+        const guestName = clientName;
+
+        // Basic deduplication by phone if available
+        let existingClientId = null;
+        if (guestPhone.length > 8) {
+          const { rows: found } = await db.query(
+            'SELECT id FROM clients WHERE phone = $1 LIMIT 1',
+            [guestPhone]
+          );
+          if (found.length > 0) existingClientId = found[0].id;
+        }
+
+        if (existingClientId) {
+          params[9] = existingClientId;
+        } else {
+          // --- RANDOM AVATAR SELECTION ---
+          let randomAvatar = null;
+          try {
+            // Resolve path relative to THIS file (appointmentsController.js is in server/controllers)
+            // Path to public/avatars: ../../public/avatars
+            const __filename = fileURLToPath(import.meta.url);
+            const __dirname = path.dirname(__filename);
+            const avatarsDir = path.join(__dirname, '../../public/avatars');
+
+            if (fs.existsSync(avatarsDir)) {
+              const files = fs.readdirSync(avatarsDir);
+              const images = files.filter(f => /\.(jpg|jpeg|png|gif|webp)$/i.test(f));
+
+              if (images.length > 0) {
+                const randomImage = images[Math.floor(Math.random() * images.length)];
+                randomAvatar = `/avatars/${randomImage}`;
+              }
+            }
+          } catch (avatarErr) {
+            console.warn('⚠️ Failed to select random avatar:', avatarErr);
+          }
+
+          // Create new Guest Client with Random Avatar
+          await db.query(
+            "INSERT INTO clients (id, name, phone, level, lastvisit, status, notes, img) VALUES ($1, $2, $3, 1, 'Nunca', 'guest', 'Cliente Visitante (Auto)', $4)",
+            [guestId, guestName, guestPhone, randomAvatar]
+          );
+          params[9] = guestId;
+        }
+
+        // Also update the param for the appointment query
+        // We need to rebuild params array or update the variable used?
+        // Since params is array passed to db.query, updating index 9 works.
+      } catch (guestErr) {
+        console.warn('⚠️ Failed to auto-create guest client:', guestErr);
+        // Continue without clientId (orphan appointment) - fail safe
+      }
+    }
+    // ----------------------------------------
 
     await db.query(sql, params);
 
