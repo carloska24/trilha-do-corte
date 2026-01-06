@@ -1,7 +1,13 @@
-import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 import db from '../db.js';
+import {
+  loginSchema,
+  loginBarberSchema,
+  registerClientSchema,
+  registerBarberSchema,
+} from '../validators.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret_123';
 
@@ -14,10 +20,10 @@ const generateToken = user => {
 };
 
 export const loginClient = async (req, res) => {
-  const { emailOrPhone, password } = req.body;
-  console.log('📝 [Login Attempt] Client:', emailOrPhone);
-
   try {
+    const { emailOrPhone, password } = loginSchema.parse(req.body);
+    console.log('📝 [Login Attempt] Client:', emailOrPhone);
+
     const { rows } = await db.query('SELECT * FROM clients WHERE email = $1 OR phone = $2', [
       emailOrPhone,
       emailOrPhone,
@@ -40,16 +46,17 @@ export const loginClient = async (req, res) => {
       res.status(401).json({ error: 'Usuário não encontrado.' });
     }
   } catch (err) {
+    if (err.name === 'ZodError') return res.status(400).json({ error: err.errors[0].message });
     console.error('❌ Database error:', err);
     res.status(500).json({ error: err.message });
   }
 };
 
 export const loginBarber = async (req, res) => {
-  const { email, password } = req.body;
-  console.log('💈 [Login Attempt] Barber:', email);
-
   try {
+    const { email, password } = loginBarberSchema.parse(req.body);
+    console.log('💈 [Login Attempt] Barber:', email);
+
     const { rows } = await db.query('SELECT * FROM barbers WHERE email = $1', [email]);
     const row = rows[0];
 
@@ -67,16 +74,17 @@ export const loginBarber = async (req, res) => {
       res.status(401).json({ error: 'Credenciais inválidas' });
     }
   } catch (err) {
+    if (err.name === 'ZodError') return res.status(400).json({ error: err.errors[0].message });
     console.error('❌ Database Error:', err);
     res.status(500).json({ error: err.message });
   }
 };
 
 export const registerClient = async (req, res) => {
-  const { name, phone, email, password, photoUrl } = req.body;
-  const id = uuidv4();
-
   try {
+    const { name, phone, email, password, photoUrl } = registerClientSchema.parse(req.body);
+    const id = uuidv4();
+
     const hashedPassword = await bcrypt.hash(password, 10);
     const sql =
       "INSERT INTO clients (id, name, phone, email, password, img, level, status, notes) VALUES ($1, $2, $3, $4, $5, $6, 1, 'new', '')";
@@ -100,10 +108,10 @@ export const registerClient = async (req, res) => {
 };
 
 export const registerBarber = async (req, res) => {
-  const { name, phone, email, password, photoUrl } = req.body;
-  const id = uuidv4();
-
   try {
+    const { name, phone, email, password, photoUrl } = registerBarberSchema.parse(req.body);
+    const id = uuidv4();
+
     const hashedPassword = await bcrypt.hash(password, 10);
     const sql =
       'INSERT INTO barbers (id, name, specialty, image, email, password, phone) VALUES ($1, $2, $3, $4, $5, $6, $7)';

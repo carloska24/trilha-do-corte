@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { getOptimizedImageUrl } from '../../utils/imageUtils';
 import { ChairIcon } from '../icons/ChairIcon';
 import { Appointment, AppointmentStatus, ServiceItem } from '../../types';
 import { SERVICES as ALL_SERVICES } from '../../constants';
-import { Armchair, ChevronRight, User, Star } from 'lucide-react';
+import { Armchair, ChevronLeft, ChevronRight, User, Star } from 'lucide-react';
 import { sendBroadcastNotification } from '../../utils/notificationUtils';
 import { useData } from '../../contexts/DataContext';
 import { useShopStatus } from '../../hooks/useShopStatus';
@@ -26,9 +26,63 @@ const QueueTicker = React.memo(
     services: ServiceItem[];
     clients: Client[];
   }) => {
+    const scrollRef = useRef<HTMLDivElement>(null);
+    const [isPaused, setIsPaused] = useState(false);
+
+    // Auto-Scroll Logic (Faster Speed)
+    useEffect(() => {
+      const scrollContainer = scrollRef.current;
+      if (!scrollContainer || queue.length === 0) return;
+
+      let animationFrameId: number;
+      const speed = 1.6; // Pixels per frame (Adjusted: "um pouco mais rápido")
+
+      const animate = () => {
+        if (!isPaused && scrollContainer) {
+          scrollContainer.scrollLeft += speed;
+
+          // Silent Loop Reset
+          // Assumes content is duplicated 3 times [...items, ...items, ...items]
+          const scrollWidth = scrollContainer.scrollWidth;
+          const clientWidth = scrollContainer.clientWidth;
+
+          if (scrollWidth > clientWidth) {
+            // We have 3 sets.
+            // Total width ~ 3 * SingleSetWidth.
+            // We start at 0 (Set A visible).
+            // We want to reset when Set A is fully scrolled out and Set B is fully visible.
+            // Set A width = scrollWidth / 3.
+            // So when scrollLeft >= scrollWidth / 3, we subtract scrollWidth / 3.
+            // This jumps from Start of B back to Start of A.
+
+            const singleSetWidth = scrollWidth / 3;
+
+            if (scrollContainer.scrollLeft >= singleSetWidth) {
+              scrollContainer.scrollLeft -= singleSetWidth;
+            }
+          }
+        }
+        animationFrameId = requestAnimationFrame(animate);
+      };
+
+      animationFrameId = requestAnimationFrame(animate);
+      return () => cancelAnimationFrame(animationFrameId);
+    }, [isPaused, queue.length]);
+
+    // Manual Navigation Controls
+    const scroll = (direction: 'left' | 'right') => {
+      if (scrollRef.current) {
+        const amount = 310; // Approx item width + gap
+        scrollRef.current.scrollBy({
+          left: direction === 'left' ? -amount : amount,
+          behavior: 'smooth',
+        });
+      }
+    };
+
     return (
       <div className="w-full relative mt-6 group">
-        {/* Title Label - Bem Vindo Style - Corrected */}
+        {/* Title Label */}
         <div className="absolute -top-7 left-4 z-20 flex items-end pointer-events-none">
           <span
             className="font-script text-4xl text-[#FFD700] -rotate-6 drop-shadow-[0_0_4px_#FACC15] z-20 relative"
@@ -38,12 +92,29 @@ const QueueTicker = React.memo(
           </span>
         </div>
 
-        <div className="w-full h-40 bg-[#050505] border border-gray-800 rounded-2xl overflow-hidden relative flex items-center shadow-2xl transform-gpu ring-1 ring-white/5 pt-4">
+        <div className="w-full h-40 bg-[#050505] border border-gray-800 rounded-2xl overflow-hidden relative flex items-center shadow-2xl transform-gpu ring-1 ring-white/5 pt-4 group/carousel">
           {/* Neon Glow Decoration */}
           <div className="absolute inset-0 pointer-events-none">
             <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-50"></div>
             <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-purple-500/20 to-transparent opacity-30"></div>
           </div>
+
+          {/* Navigation Buttons (Visible on Hover/Focus) */}
+          <button
+            onClick={() => scroll('left')}
+            className="absolute left-0 top-0 bottom-0 z-30 w-12 bg-gradient-to-r from-black/80 to-transparent flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-opacity duration-300 hover:from-black/90 cursor-pointer text-white/70 hover:text-cyan-400"
+            aria-label="Previous"
+          >
+            <ChevronLeft size={32} />
+          </button>
+
+          <button
+            onClick={() => scroll('right')}
+            className="absolute right-0 top-0 bottom-0 z-30 w-12 bg-gradient-to-l from-black/80 to-transparent flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-opacity duration-300 hover:from-black/90 cursor-pointer text-white/70 hover:text-cyan-400"
+            aria-label="Next"
+          >
+            <ChevronRight size={32} />
+          </button>
 
           {queue.length === 0 ? (
             <div className="w-full flex flex-col items-center justify-center text-gray-500 z-10 opacity-60">
@@ -53,20 +124,34 @@ const QueueTicker = React.memo(
               </span>
             </div>
           ) : (
-            // Marquee Container
-            <div className="flex animate-ticker items-center pl-4 py-2 hover:pause-animation will-change-transform">
-              {[...queue, ...queue].map((client, i) => {
-                // Find Service Name
+            // Scroll Container
+            <div
+              ref={scrollRef}
+              className="flex items-center pl-5 py-2 overflow-x-auto no-scrollbar w-full h-full relative z-10"
+              onMouseEnter={() => setIsPaused(true)}
+              onMouseLeave={() => setIsPaused(false)}
+              onTouchStart={() => setIsPaused(true)}
+              onTouchEnd={() => {
+                // Delay resume on mobile to allow momentum scroll to finish
+                setTimeout(() => setIsPaused(false), 3000);
+              }}
+              style={{
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none',
+                scrollBehavior: 'auto', // Force auto to prevent fighting JS loop
+              }}
+            >
+              {/* Render items 3 times to ensure smooth infinite loop buffer */}
+              {[...queue, ...queue, ...queue].map((client, i) => {
                 const service =
                   services.find(s => s.id === client.serviceId) ||
                   ALL_SERVICES.find(s => s.id === client.serviceId);
                 const serviceName = service ? service.name : 'Corte & Estilo';
-                // const servicePrice = service ? service.price : 'R$ -';
 
                 return (
                   <div
                     key={`${client.id}-${i}`}
-                    className="flex-shrink-0 w-72 h-24 bg-black/40 backdrop-blur-md rounded-xl border border-white/10 mr-5 flex flex-col relative overflow-hidden group/card hover:border-cyan-400 transition-all duration-300 shadow-lg hover:shadow-[0_0_20px_rgba(6,182,212,0.15)]"
+                    className="flex-shrink-0 w-72 h-28 bg-black/40 backdrop-blur-md rounded-xl border border-white/10 mr-5 flex flex-col relative overflow-hidden group/card hover:border-cyan-400 transition-all duration-300 shadow-lg hover:shadow-[0_0_20px_rgba(6,182,212,0.15)] select-none"
                   >
                     {/* Vibrant Gradient Background on Hover */}
                     <div className="absolute inset-0 bg-gradient-to-r from-cyan-900/10 via-blue-900/10 to-purple-900/10 opacity-0 group-hover/card:opacity-100 transition-opacity duration-300"></div>
@@ -74,9 +159,9 @@ const QueueTicker = React.memo(
                     {/* Decorative Side Bar */}
                     <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-cyan-400 via-blue-500 to-purple-600"></div>
 
-                    <div className="flex items-center h-full pl-4 pr-3 py-2 z-10">
+                    <div className="flex items-center h-full pl-4 pr-3 py-2 z-10 relative">
                       {/* Avatar */}
-                      <div className="w-16 h-16 rounded-full p-[2px] bg-gradient-to-tr from-cyan-400 via-white to-purple-500 shadow-lg">
+                      <div className="w-16 h-16 rounded-full p-[2px] bg-gradient-to-tr from-cyan-400 via-white to-purple-500 shadow-lg shrink-0 self-center">
                         <div className="w-full h-full rounded-full overflow-hidden bg-black relative">
                           <img
                             src={getOptimizedImageUrl(
@@ -92,32 +177,35 @@ const QueueTicker = React.memo(
                             alt={client.clientName}
                             loading="lazy"
                             onError={e => {
-                              e.currentTarget.src =
+                              const target = e.currentTarget;
+                              target.onerror = null;
+                              target.src =
                                 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop';
                             }}
                           />
                         </div>
                       </div>
 
-                      {/* Info Container (Invisible Flex Wrapper) */}
-                      <div className="ml-4 flex items-center justify-between flex-1 min-w-0 gap-2">
-                        {/* Left Column: Client & Service */}
-                        <div className="flex flex-col justify-center gap-1">
-                          <span className="text-white font-black text-xl uppercase truncate leading-none tracking-tight group-hover/card:text-cyan-200 transition-colors">
+                      {/* Info Container */}
+                      <div className="ml-3 flex flex-col justify-between flex-1 min-w-0 h-full py-1">
+                        {/* Top: Client Name (Only First Name, Higher Up) */}
+                        <div className="flex items-start w-full mt-0.5">
+                          <span className="text-white font-black text-2xl uppercase truncate leading-none tracking-tight group-hover/card:text-cyan-200 transition-colors">
                             {client.clientName ? client.clientName.split(' ')[0] : 'Cliente'}
                           </span>
-
-                          <div className="flex items-center gap-1.5 opacity-60 group-hover/card:opacity-100 transition-opacity">
-                            <div className="w-1.5 h-1.5 rounded-full bg-cyan-400"></div>
-                            <span className="text-[10px] font-bold text-gray-300 font-mono uppercase tracking-widest truncate max-w-[120px]">
-                              {serviceName}
-                            </span>
-                          </div>
                         </div>
 
-                        {/* Right Column: Time Badge */}
-                        <div className="flex flex-col items-end justify-center">
-                          <div className="flex items-center justify-center bg-cyan-500/10 border border-cyan-400/20 rounded-lg px-2.5 py-1.5 shadow-[0_0_15px_rgba(6,182,212,0.1)] group-hover/card:shadow-[0_0_20px_rgba(6,182,212,0.3)] group-hover/card:border-cyan-400/50 transition-all">
+                        {/* Middle: Service Name (Larger font, centered vertically relative to spacing) */}
+                        <div className="flex items-center w-full mt-1 mb-1">
+                          <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 mr-2 flex-shrink-0 animate-pulse"></div>
+                          <span className="text-base font-bold text-gray-300 font-mono uppercase tracking-wide truncate">
+                            {serviceName}
+                          </span>
+                        </div>
+
+                        {/* Bottom: Divider & Time */}
+                        <div className="relative w-full pt-1 border-t border-white/10 mt-auto flex justify-end">
+                          <div className="flex items-center justify-center bg-cyan-500/10 border border-cyan-400/20 rounded-md px-3 py-1 shadow-[0_0_10px_rgba(6,182,212,0.1)] group-hover/card:border-cyan-400/50 transition-all">
                             <span className="text-sm font-black text-cyan-400 font-mono tracking-wider leading-none">
                               {client.time}
                             </span>

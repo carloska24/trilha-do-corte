@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { ChevronRight, Star, Sparkles, Scissors, Clock, Ticket } from 'lucide-react';
 import { ServiceItem, Combo } from '../../types';
 import { MOCK_COMBOS } from '../../constants';
+import { getOptimizedImageUrl } from '../../utils/imageUtils';
 
 interface VitrineDestaquesProps {
   services: ServiceItem[];
@@ -118,26 +119,22 @@ export const VitrineDestaques: React.FC<VitrineDestaquesProps> = ({ services, on
               {/* Background Image */}
               <div className="absolute inset-0">
                 <img
-                  src={
+                  src={getOptimizedImageUrl(
                     item.image ||
-                    `/services/${(item.title || item.name)
-                      .toLowerCase()
-                      .replace(/\s+/g, '-')
-                      .normalize('NFD')
-                      .replace(/[\u0300-\u036f]/g, '')
-                      .replace('&', 'e')}.jpg`
-                  }
+                      `/services/${(item.title || item.name)
+                        .toLowerCase()
+                        .replace(/\s+/g, '-')
+                        .normalize('NFD')
+                        .replace(/[\u0300-\u036f]/g, '')
+                        .replace('&', 'e')}.jpg`,
+                    400,
+                    300
+                  )}
                   onError={e => {
                     const target = e.currentTarget;
-                    // If failed path image, try local fallback logic or mock
-                    if (target.src.includes('.jpg') && !target.src.includes('data:')) {
-                      // Try png? Or just fallback.
-                      // Avoiding infinite loop if png also fails
-                      // target.src = target.src.replace('.jpg', '.png');
+                    // Prevent infinite loop by checking if we already fell back
+                    if (target.src !== MOCK_IMAGES.default) {
                       target.src = MOCK_IMAGES.default;
-                    } else {
-                      target.src = MOCK_IMAGES.default;
-                      target.onerror = null;
                     }
                   }}
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"

@@ -60,7 +60,16 @@ app.use('/api', authRoutes); // Handles /api/login/* and /api/register/*
 app.use('/api/services', servicesRoutes); // Handles /api/services/*
 app.use('/api/appointments', appointmentsRoutes); // Handles /api/appointments/*
 app.use('/api', usersRoutes); // Handles /api/clients, /api/barbers
-app.use('/api/ai', aiRoutes); // Handles /api/ai/command
+app.get('/api/ai/command', aiRoutes); // Handles /api/ai/command
+
+// Global Error Handler
+app.use((err, req, res, next) => {
+  console.error('🔥 [Critical Error] Unhandled Exception:', err);
+  res.status(500).json({
+    error: 'Erro interno do servidor.',
+    details: process.env.NODE_ENV === 'development' ? err.message : undefined,
+  });
+});
 
 // --- SERVER START ---
 app.listen(PORT, () => {

@@ -140,3 +140,17 @@ export const createClientAdmin = async (req, res) => {
     res.status(400).json({ error: err.message });
   }
 };
+
+export const deleteClient = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const { rowCount } = await db.query('DELETE FROM clients WHERE id = $1', [id]);
+    if (rowCount === 0) {
+      return res.status(404).json({ error: 'Client not found' });
+    }
+    res.json({ message: 'Client deleted successfully' });
+  } catch (err) {
+    console.error('Delete Client Error:', err);
+    res.status(500).json({ error: err.message });
+  }
+};

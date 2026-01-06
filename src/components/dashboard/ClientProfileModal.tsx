@@ -265,54 +265,61 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({
             </div>
           </div>
 
-          {/* NEXT APPOINTMENT (PREMIUM TICKET STYLE) */}
+          {/* NEXT APPOINTMENT (PREMIUM TICKET STYLE - CAROUSEL) */}
           <div>
             <div className="flex items-center gap-2 mb-3 opacity-60">
               <Clock size={12} className="text-white" />
               <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-[0.2em]">
-                Próxima Viagem
+                {futureApps.length > 1 ? 'Próximas Viagens' : 'Próxima Viagem'}
               </span>
             </div>
 
-            {nextApp && nextAppParts ? (
-              <div className="w-full bg-[#121214] border border-white/5 rounded-2xl overflow-hidden flex group hover:border-white/10 transition-colors">
-                {/* Left: Date Box */}
-                <div className="w-20 bg-[#18181b] flex flex-col items-center justify-center border-r border-white/5 p-2 gap-0.5">
-                  <span className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest">
-                    {nextAppParts.weekday}
-                  </span>
-                  <span className="text-3xl font-black text-white tracking-tighter leading-none my-1">
-                    {nextAppParts.day}
-                  </span>
-                  <span className="text-[9px] text-zinc-400 font-bold uppercase tracking-widest">
-                    {nextAppParts.month}
-                  </span>
-                </div>
+            {futureApps.length > 0 ? (
+              <div className="flex overflow-x-auto gap-4 pb-2 snap-x snap-mandatory no-scrollbar">
+                {futureApps.map((app, idx) => {
+                  const parts = getDateParts(app.date);
+                  return (
+                    <div
+                      key={app.id || idx}
+                      className="min-w-full snap-center bg-[#121214] border border-white/5 rounded-2xl overflow-hidden flex group hover:border-white/10 transition-colors shadow-lg"
+                    >
+                      {/* Left: Date Box */}
+                      <div className="w-24 bg-[#18181b] flex flex-col items-center justify-center border-r border-white/5 p-2 gap-0.5">
+                        <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">
+                          {parts.weekday}
+                        </span>
+                        <span className="text-4xl font-black text-white tracking-tighter leading-none my-1">
+                          {parts.day}
+                        </span>
+                        <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">
+                          {parts.month}
+                        </span>
+                      </div>
 
-                {/* Right: Details */}
-                <div className="flex-1 p-4 flex flex-col justify-center relative">
-                  {/* Top: Service */}
-                  <span className="text-base font-black text-white uppercase tracking-wide leading-tight mb-3">
-                    {getServiceName(nextApp.serviceId)}
-                  </span>
+                      {/* Right: Details */}
+                      <div className="flex-1 p-5 flex flex-col justify-center relative">
+                        {/* Top: Service */}
+                        <div className="flex-1 flex items-center">
+                          <span className="text-xl font-black text-white uppercase tracking-wide leading-tight truncate">
+                            {getServiceName(app.serviceId)}
+                          </span>
+                        </div>
 
-                  {/* Bottom: Meta */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-zinc-500 bg-white/5 px-2 py-1 rounded-md">
-                      <Clock size={12} className="text-zinc-400" />
-                      <span className="text-xs font-bold font-mono text-zinc-300">
-                        {nextApp.time}
-                      </span>
+                        {/* Bottom: Meta */}
+                        <div className="flex items-center justify-between mt-2">
+                          <div className="flex items-center gap-2 text-zinc-500 bg-white/5 px-3 py-1.5 rounded-lg">
+                            <Clock size={14} className="text-zinc-400" />
+                            <span className="text-sm font-bold font-mono text-zinc-300">
+                              {app.time}
+                            </span>
+                          </div>
+
+                          <span className="text-lg font-black text-white">R$ {app.price}</span>
+                        </div>
+                      </div>
                     </div>
-
-                    <div className="flex items-center gap-1">
-                      <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-wider mr-1">
-                        Valor
-                      </span>
-                      <span className="text-sm font-black text-white">R$ {nextApp.price}</span>
-                    </div>
-                  </div>
-                </div>
+                  );
+                })}
               </div>
             ) : (
               <div className="border border-dashed border-zinc-800 rounded-2xl p-6 text-center">

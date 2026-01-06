@@ -1073,62 +1073,86 @@ export const CalendarView: React.FC = () => {
                   }
                 };
 
-                return items.map((item, idx) => (
-                  <div
-                    key={`${item.time}-${idx}`}
-                    onDragOver={handleDragOver}
-                    onDrop={e => handleDrop(e, item.time)}
-                    className={`flex min-h-[100px] border-b border-white/5 group relative transition-colors duration-200 ${
-                      item.type === 'empty' ? 'hover:bg-white/5' : ''
-                    }`}
-                  >
-                    {/* Time Column */}
-                    <div className="w-16 md:w-20 py-4 pl-2 md:pl-4 text-xs md:text-sm font-mono font-bold text-zinc-500 flex flex-col items-start border-r border-white/5">
-                      <span className={item.type === 'app' ? 'text-white' : ''}>{item.time}</span>
-                    </div>
+                return items.map((item, idx) => {
+                  // CHECK IF SLOT IS IN THE PAST
+                  const isPast = (() => {
+                    const now = new Date();
+                    // Reset seconds for cleaner comparison
+                    const current = new Date(
+                      now.getFullYear(),
+                      now.getMonth(),
+                      now.getDate(),
+                      now.getHours(),
+                      now.getMinutes()
+                    );
 
-                    {/* Content Column */}
-                    <div className="flex-1 px-2 md:px-3 py-2 relative">
-                      {item.type === 'app' ? (
-                        <div className="absolute inset-0 z-10 px-2 py-1">
-                          {/* SWIPE ACTIONS (Sibling) */}
-                          <div
-                            className={`absolute inset-0 flex items-center justify-start gap-4 pl-4 bg-[#111] rounded-xl border border-white/5 z-0 transition-opacity duration-300 ${
-                              swipedAppId === (item as any).data.id
-                                ? 'opacity-100 pointer-events-auto'
-                                : 'opacity-0 pointer-events-none'
-                            }`}
-                          >
-                            <button
-                              onClick={e => {
-                                e.stopPropagation();
-                                handleCancelAppointment((item as any).data.id, e);
-                                setSwipedAppId(null);
-                              }}
-                              className="w-10 h-10 rounded-full bg-red-500/10 border border-red-500/50 flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-all scale-90 hover:scale-100"
-                            >
-                              <Trash2 size={18} />
-                            </button>
-                            <button
-                              onClick={e => {
-                                e.stopPropagation();
-                                handleEditAppointment((item as any).data, e);
-                                setSwipedAppId(null);
-                              }}
-                              className="w-10 h-10 rounded-full bg-blue-500/10 border border-blue-500/50 flex items-center justify-center text-blue-500 hover:bg-blue-500 hover:text-white transition-all scale-90 hover:scale-100"
-                            >
-                              <Edit size={18} />
-                            </button>
-                            {/* Click area to close swipe */}
+                    const slotDate = new Date(selectedDate);
+                    const [h, m] = item.time.split(':').map(Number);
+                    slotDate.setHours(h, m, 0, 0);
+
+                    return slotDate < current;
+                  })();
+
+                  return (
+                    <div
+                      key={`${item.time}-${idx}`}
+                      onDragOver={handleDragOver}
+                      onDrop={e => handleDrop(e, item.time)}
+                      className={`flex min-h-[100px] border-b border-white/5 group relative transition-colors duration-200 ${
+                        item.type === 'empty' && !isPast ? 'hover:bg-white/5' : ''
+                      }`}
+                    >
+                      {/* Time Column */}
+                      <div
+                        className={`w-16 md:w-20 py-4 pl-2 md:pl-4 text-xs md:text-sm font-mono font-bold flex flex-col items-start border-r border-white/5 ${
+                          isPast ? 'text-zinc-700' : 'text-zinc-500'
+                        }`}
+                      >
+                        <span className={item.type === 'app' ? 'text-white' : ''}>{item.time}</span>
+                      </div>
+
+                      {/* Content Column */}
+                      <div className="flex-1 px-2 md:px-3 py-2 relative">
+                        {item.type === 'app' ? (
+                          <div className="absolute inset-0 z-10 px-2 py-1">
+                            {/* SWIPE ACTIONS (Sibling) */}
                             <div
-                              className="flex-1 h-full"
-                              onClick={() => setSwipedAppId(null)}
-                            ></div>
-                          </div>
+                              className={`absolute inset-0 flex items-center justify-start gap-4 pl-4 bg-[#111] rounded-xl border border-white/5 z-0 transition-opacity duration-300 ${
+                                swipedAppId === (item as any).data.id
+                                  ? 'opacity-100 pointer-events-auto'
+                                  : 'opacity-0 pointer-events-none'
+                              }`}
+                            >
+                              <button
+                                onClick={e => {
+                                  e.stopPropagation();
+                                  handleCancelAppointment((item as any).data.id, e);
+                                  setSwipedAppId(null);
+                                }}
+                                className="w-10 h-10 rounded-full bg-red-500/10 border border-red-500/50 flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-all scale-90 hover:scale-100"
+                              >
+                                <Trash2 size={18} />
+                              </button>
+                              <button
+                                onClick={e => {
+                                  e.stopPropagation();
+                                  handleEditAppointment((item as any).data, e);
+                                  setSwipedAppId(null);
+                                }}
+                                className="w-10 h-10 rounded-full bg-blue-500/10 border border-blue-500/50 flex items-center justify-center text-blue-500 hover:bg-blue-500 hover:text-white transition-all scale-90 hover:scale-100"
+                              >
+                                <Edit size={18} />
+                              </button>
+                              {/* Click area to close swipe */}
+                              <div
+                                className="flex-1 h-full"
+                                onClick={() => setSwipedAppId(null)}
+                              ></div>
+                            </div>
 
-                          {/* CARD - PREMIUM LAYOUT */}
-                          <div
-                            className={`w-full h-full bg-[#1A1A1A] rounded-xl overflow-hidden border border-white/10 shadow-lg relative z-10 cursor-grab active:cursor-grabbing group/card touch-pan-y flex flex-col
+                            {/* CARD - PREMIUM LAYOUT */}
+                            <div
+                              className={`w-full h-full bg-[#1A1A1A] rounded-xl overflow-hidden border border-white/10 shadow-lg relative z-10 cursor-grab active:cursor-grabbing group/card touch-pan-y flex flex-col
                                     ${
                                       swipedAppId === (item as any).data.id
                                         ? 'translate-x-[120px] opacity-50'
@@ -1136,135 +1160,153 @@ export const CalendarView: React.FC = () => {
                                     }
                                     transition-all duration-300 hover:border-white/20 hover:shadow-xl
                                 `}
-                            draggable={true}
-                            onDragStart={e => handleDragStart(e, (item as any).data)}
-                            onTouchStart={e => setTouchStartX(e.touches[0].clientX)}
-                            onTouchEnd={e => {
-                              if (touchStartX === null) return;
-                              const diff = e.changedTouches[0].clientX - touchStartX;
-                              if (diff > 50) setSwipedAppId((item as any).data.id);
-                              else if (diff < -50) setSwipedAppId(null);
-                              setTouchStartX(null);
-                            }}
-                            onClick={() => {
-                              if (swipedAppId === (item as any).data.id) setSwipedAppId(null);
-                              else onSelectClient((item as any).data.clientName);
-                            }}
-                          >
-                            {/* HEADER: NAME + BELL */}
-                            <div className="flex justify-between items-center px-3 py-2 border-b border-white/5 bg-[#202020]">
-                              <h3 className="font-bold text-white text-sm md:text-base uppercase tracking-wider truncate">
-                                {(item as any).data.clientName}
-                              </h3>
-                              <button
-                                className="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/10 transition-colors"
-                                onClick={e => {
-                                  e.stopPropagation();
-                                  let phone = (item as any).data.clientPhone;
-                                  if (!phone) {
-                                    const found = clients.find(
-                                      c =>
-                                        c.name.toLowerCase() ===
-                                        (item as any).data.clientName.toLowerCase()
-                                    );
-                                    if (found && found.phone && found.phone.length > 8)
-                                      phone = found.phone;
-                                  }
-                                  const clean = phone?.replace(/\D/g, '') || '';
+                              draggable={true}
+                              onDragStart={e => handleDragStart(e, (item as any).data)}
+                              onTouchStart={e => setTouchStartX(e.touches[0].clientX)}
+                              onTouchEnd={e => {
+                                if (touchStartX === null) return;
+                                const diff = e.changedTouches[0].clientX - touchStartX;
+                                if (diff > 50) setSwipedAppId((item as any).data.id);
+                                else if (diff < -50) setSwipedAppId(null);
+                                setTouchStartX(null);
+                              }}
+                              onClick={() => {
+                                if (swipedAppId === (item as any).data.id) setSwipedAppId(null);
+                                else onSelectClient((item as any).data.clientName);
+                              }}
+                            >
+                              {/* HEADER: NAME + BELL */}
+                              <div className="flex justify-between items-center px-3 py-2 border-b border-white/5 bg-[#202020]">
+                                <h3 className="font-bold text-white text-sm md:text-base uppercase tracking-wider truncate">
+                                  {(item as any).data.clientName}
+                                </h3>
+                                <button
+                                  className="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/10 transition-colors"
+                                  onClick={e => {
+                                    e.stopPropagation();
+                                    let phone = (item as any).data.clientPhone;
+                                    if (!phone) {
+                                      const found = clients.find(
+                                        c =>
+                                          c.name.toLowerCase() ===
+                                          (item as any).data.clientName.toLowerCase()
+                                      );
+                                      if (found && found.phone && found.phone.length > 8)
+                                        phone = found.phone;
+                                    }
+                                    const clean = phone?.replace(/\D/g, '') || '';
 
-                                  const msg = `💈 *Trilha do Corte*\n\nFala *${
-                                    (item as any).data.clientName
-                                  }*, tudo certo? 👊\nPassando pra lembrar do seu horário hoje:\n\n✂️ *${
-                                    (item as any).service.name
-                                  }*\n⏰ *${
-                                    (item as any).time
-                                  }*\n\n📍 *Local:* Trilha do Corte\nConfirmado? ✅`;
+                                    const msg = `💈 *Trilha do Corte*\n\nFala *${
+                                      (item as any).data.clientName
+                                    }*, tudo certo? 👊\nPassando pra lembrar do seu horário hoje:\n\n✂️ *${
+                                      (item as any).service.name
+                                    }*\n⏰ *${
+                                      (item as any).time
+                                    }*\n\n📍 *Local:* Trilha do Corte\nConfirmado? ✅`;
 
-                                  const link = clean
-                                    ? `https://api.whatsapp.com/send?phone=55${clean}&text=${encodeURIComponent(
-                                        msg
-                                      )}`
-                                    : `https://api.whatsapp.com/send?text=${encodeURIComponent(
-                                        msg
-                                      )}`;
-                                  window.open(link, '_blank');
-                                }}
-                              >
-                                <Bell size={12} />
-                              </button>
-                            </div>
-
-                            {/* BODY: SPLIT LEFT/RIGHT */}
-                            <div className="flex flex-1">
-                              {/* LEFT: TIME BOX */}
-                              <div className="w-[60px] flex flex-col items-center justify-center border-r border-white/5 bg-[#181818]">
-                                <span className="text-white font-black text-lg leading-none">
-                                  {(item as any).time.split(':')[0]}
-                                </span>
-                                <span className="text-zinc-500 font-bold text-[10px] uppercase">
-                                  {(item as any).time.split(':')[1]}
-                                </span>
+                                    const link = clean
+                                      ? `https://api.whatsapp.com/send?phone=55${clean}&text=${encodeURIComponent(
+                                          msg
+                                        )}`
+                                      : `https://api.whatsapp.com/send?text=${encodeURIComponent(
+                                          msg
+                                        )}`;
+                                    window.open(link, '_blank');
+                                  }}
+                                >
+                                  <Bell size={12} />
+                                </button>
                               </div>
 
-                              {/* RIGHT: SERVICE INFO */}
-                              <div className="flex-1 flex flex-col">
-                                {/* Service Name */}
-                                <div className="flex-1 px-3 flex items-center border-b border-white/5">
-                                  <span className="text-zinc-300 text-xs font-bold uppercase tracking-wide line-clamp-1">
-                                    {(item as any).service.name}
+                              {/* BODY: SPLIT LEFT/RIGHT */}
+                              <div className="flex flex-1">
+                                {/* LEFT: TIME BOX */}
+                                <div className="w-[60px] flex flex-col items-center justify-center border-r border-white/5 bg-[#181818]">
+                                  <span className="text-white font-black text-lg leading-none">
+                                    {(item as any).time.split(':')[0]}
+                                  </span>
+                                  <span className="text-zinc-500 font-bold text-[10px] uppercase">
+                                    {(item as any).time.split(':')[1]}
                                   </span>
                                 </div>
 
-                                {/* Footer (Duration + Price) */}
-                                <div className="px-3 py-1.5 flex justify-between items-center bg-[#1D1D1D]">
-                                  {/* Duration Pill */}
-                                  <div className="flex items-center justify-center border border-white/10 rounded-md px-2 py-0.5 bg-black/20">
-                                    <span className="text-[10px] font-bold text-zinc-400">
-                                      {(item as any).service.duration || '30'}m
+                                {/* RIGHT: SERVICE INFO */}
+                                <div className="flex-1 flex flex-col">
+                                  {/* Service Name */}
+                                  <div className="flex-1 px-3 flex items-center border-b border-white/5">
+                                    <span className="text-zinc-300 text-xs font-bold uppercase tracking-wide line-clamp-1">
+                                      {(item as any).service.name}
                                     </span>
                                   </div>
 
-                                  {/* Price */}
-                                  <span className="text-neon-yellow font-black text-sm">
-                                    {(item as any).service.price}
-                                  </span>
+                                  {/* Footer (Duration + Price) */}
+                                  <div className="px-3 py-1.5 flex justify-between items-center bg-[#1D1D1D]">
+                                    {/* Duration Pill */}
+                                    <div className="flex items-center justify-center border border-white/10 rounded-md px-2 py-0.5 bg-black/20">
+                                      <span className="text-[10px] font-bold text-zinc-400">
+                                        {(item as any).service.duration || '30'}m
+                                      </span>
+                                    </div>
+
+                                    {/* Price */}
+                                    <span className="text-neon-yellow font-black text-sm">
+                                      {(item as any).service.price}
+                                    </span>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
 
-                            {/* Color Accent Line (Left Edge Overlay) */}
+                              {/* Color Accent Line (Left Edge Overlay) */}
+                              <div
+                                className={`absolute left-0 top-0 bottom-0 w-1 ${
+                                  (item as any).data.status === 'confirmed'
+                                    ? 'bg-green-500'
+                                    : 'bg-yellow-500'
+                                }`}
+                              ></div>
+                            </div>
+                          </div>
+                        ) : (
+                          // EMPTY SLOT
+                          <div
+                            className={`w-full h-full flex items-center justify-center group/empty ${
+                              isPast
+                                ? 'cursor-not-allowed opacity-30 select-none'
+                                : 'cursor-pointer'
+                            }`}
+                            onClick={() => {
+                              if (isPast) return; // BLOCK CLICK
+                              if (item.type !== 'app') {
+                                setEditId(null);
+                                setQuickAddSlot({ date: selectedDate, time: item.time });
+                                setIsQuickAddOpen(true);
+                              }
+                            }}
+                          >
                             <div
-                              className={`absolute left-0 top-0 bottom-0 w-1 ${
-                                (item as any).data.status === 'confirmed'
-                                  ? 'bg-green-500'
-                                  : 'bg-yellow-500'
+                              className={`w-full h-full border-2 border-dashed rounded-xl flex items-center justify-center transition-all ${
+                                isPast
+                                  ? 'border-zinc-900'
+                                  : 'border-zinc-900 group-hover/empty:border-zinc-800'
                               }`}
-                            ></div>
+                            >
+                              {isPast ? (
+                                <span className="text-[10px] font-bold text-zinc-800 uppercase tracking-widest">
+                                  Encerrado
+                                </span>
+                              ) : (
+                                <Plus
+                                  className="text-zinc-800 group-hover/empty:text-zinc-600 transition-colors"
+                                  size={24}
+                                />
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      ) : (
-                        // EMPTY SLOT
-                        <div
-                          className="w-full h-full flex items-center justify-center cursor-pointer group/empty"
-                          onClick={() => {
-                            if (item.type !== 'app') {
-                              setEditId(null);
-                              setQuickAddSlot({ date: selectedDate, time: item.time });
-                              setIsQuickAddOpen(true);
-                            }
-                          }}
-                        >
-                          <div className="w-full h-full border-2 border-dashed border-zinc-900 rounded-xl flex items-center justify-center transition-all group-hover/empty:border-zinc-800">
-                            <Plus
-                              className="text-zinc-800 group-hover/empty:text-zinc-600 transition-colors"
-                              size={24}
-                            />
-                          </div>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ));
+                  );
+                });
               })()}
             </div>
           </>

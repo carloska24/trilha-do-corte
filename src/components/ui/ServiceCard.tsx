@@ -2,6 +2,7 @@ import React from 'react';
 
 import { ServiceItem } from '../../types';
 import { PromoBadge } from './PromoBadge';
+import { getOptimizedImageUrl } from '../../utils/imageUtils';
 
 interface ServiceCardProps {
   service: ServiceItem;
@@ -102,14 +103,16 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
       {/* 1. IMAGE AREA (Top) */}
       <div className="relative h-48 overflow-hidden bg-black/50">
         <img
-          src={
+          src={getOptimizedImageUrl(
             service.image ||
-            `/services/${service.name
-              .toLowerCase()
-              .replace(/\s+/g, '-')
-              .normalize('NFD')
-              .replace(/[\u0300-\u036f]/g, '')}.jpg`
-          }
+              `/services/${service.name
+                .toLowerCase()
+                .replace(/\s+/g, '-')
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')}.jpg`,
+            400,
+            300
+          )}
           onError={e => {
             const target = e.currentTarget;
             if (!target.src.includes('data:image') && target.src.includes('.jpg')) {

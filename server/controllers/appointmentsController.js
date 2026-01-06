@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import db from '../db.js';
 import jwt from 'jsonwebtoken';
+import { appointmentSchema } from '../validators.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret_123';
 
@@ -21,26 +22,40 @@ export const getAppointments = async (req, res) => {
       }
     }
 
-    // 2. Query
-    // Optimization: If Public/Guest, maybe limits? For now, fetch all relative to date for calculation.
+    // 2. Query Optimization (Tunnel Vision)
     let queryText = 'SELECT * FROM appointments';
-    if (!isBarber) {
-      // Optional: Filter past appointments for performance, but careful not to hide history for clients
-      // queryText += " WHERE date >= ...";
+    let params = [];
+
+    // DEFAULT (GUEST): Only fetch future + recent busy slots to keep payload small
+    // Optimization: Guests only need to know what is taken to avoid double booking.
+    if (!user) {
+      // Fetch only future appointments (and maybe today's)
+      queryText += ' WHERE date >= CURRENT_DATE::text';
+      // Note: 'date' column is text in this schema, so we cast or use string comparison if stored as ISO YYYY-MM-DD
+    }
+    // CLIENT: Fetch ONLY their history + future
+    else if (!isBarber) {
+      queryText += ' WHERE clientid = $1';
+      params.push(user.id);
+    }
+    // BARBER: Fetch Everything (Maybe limit history to last 6 months for speed?)
+    else if (isBarber) {
+      // For now, load all for barber to ensure full dashboard visibility,
+      // but ideally should be paginated or limited by date range in future.
+      // queryText += " WHERE date >= ..."
     }
 
-    const { rows } = await db.query(queryText);
+    console.log(
+      `🔍 [API] GetApps - Strategy: ${
+        !user ? 'GUEST (Filtered)' : isBarber ? 'BARBER (Full)' : 'CLIENT (Personal)'
+      }`
+    );
 
-    // 3. Privacy Filter (The "View" Layer)
-    console.log(`🔍 [API] GetApps - UserID: ${user?.id}, IsBarber: ${isBarber}`);
+    const { rows } = await db.query(queryText, params);
 
+    // 3. Privacy Filter (The "View" Layer) remains as secondary safety net
     const data = rows.map(row => {
-      // Logic:
-      // A. Barber sees everything.
-      // B. Client sees THEIR OWN full data.
-      // C. Public sees Sanitized (Busy Slots).
-
-      // Fix: Handle PG casing (clientId vs clientid) and ID 0 (falsy)
+      // Fix: Handle PG casing (clientId vs clientid)
       const dbClientId = row.clientId !== undefined ? row.clientId : row.clientid;
 
       // Strict check that handles 0 and string/number mismatch
@@ -55,7 +70,7 @@ export const getAppointments = async (req, res) => {
       }
 
       return {
-        // Sanitized
+        // Sanitized for Guests
         date: row.date,
         time: row.time,
         serviceId: row.serviceId || row.serviceid,
@@ -71,9 +86,13 @@ export const getAppointments = async (req, res) => {
 };
 
 export const createAppointment = async (req, res) => {
-  const { clientName, serviceId, date, time, status, price, photoUrl, notes, clientId } = req.body;
-
   try {
+    const validatedData = appointmentSchema.parse(req.body);
+    const { clientName, serviceId, date, time, status, price, photoUrl, notes, clientId } =
+      validatedData;
+
+    // Legacy mapping or use validatedData directly. The schema ensures types.
+    // Note: Schema validation already checks valid date/time format, so we can simplify checks below or keep them as double-safety.
     // 1. Check for Double Booking
     const { rows: existingRows } = await db.query(
       "SELECT * FROM appointments WHERE date = $1 AND time = $2 AND status != 'cancelled'",
