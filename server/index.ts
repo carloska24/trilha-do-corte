@@ -36,6 +36,14 @@ app.use(
   })
 );
 
+// Serve Avatars Statically (Needed for /api/avatars logic)
+app.use(
+  '/avatars',
+  express.static(path.join(__dirname, '../public/avatars'), {
+    maxAge: '7d',
+  })
+);
+
 // --- ROUTES ---
 
 // Upload Endpoint

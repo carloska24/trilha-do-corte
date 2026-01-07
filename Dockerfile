@@ -13,6 +13,9 @@ COPY package*.json ./
 # Copy Prisma schema (Needed for postinstall "prisma generate")
 COPY prisma/ ./prisma/
 
+# Copy public assets (Avatars, icons, etc.)
+COPY public/ ./public/
+
 # Install ALL dependencies (including dev for TypeScript support)
 RUN npm install --legacy-peer-deps
 
