@@ -7,9 +7,11 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install ONLY production dependencies (ignoring devDependencies like Vite/Tailwind)
-# We use --omit=dev to keep the image small
-RUN npm install --omit=dev --legacy-peer-deps
+# Install ALL dependencies (including dev for TypeScript support)
+RUN npm install
+
+# Copy configuration files
+COPY tsconfig.json ./
 
 # Copy the server code
 COPY server/ ./server/
