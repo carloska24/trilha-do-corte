@@ -4,6 +4,9 @@ FROM node:20-slim
 # Set working directory
 WORKDIR /app
 
+# Install system dependencies (Prisma needs OpenSSL)
+RUN apt-get update -y && apt-get install -y openssl ca-certificates
+
 # Copy package files
 COPY package*.json ./
 
