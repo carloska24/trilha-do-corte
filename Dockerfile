@@ -22,4 +22,4 @@ COPY server/ ./server/
 
 # Expose the port Cloud Run expects
 # Start the server
-CMD ["node", "server/index.js"]
+CMD ["npm", "start"]
