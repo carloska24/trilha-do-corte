@@ -11,7 +11,7 @@ COPY package*.json ./
 COPY prisma/ ./prisma/
 
 # Install ALL dependencies (including dev for TypeScript support)
-RUN npm install
+RUN npm install --legacy-peer-deps
 
 # Copy configuration files
 COPY tsconfig.json ./
