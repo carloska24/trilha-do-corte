@@ -62,7 +62,7 @@ export const ClientProfileSettings: React.FC<ClientProfileSettingsProps> = ({
   // Fetch dynamic avatars from server
   React.useEffect(() => {
     if (showAvatarSelector) {
-      fetch('http://localhost:3000/api/avatars')
+      fetch('/api/avatars')
         .then(res => res.json())
         .then(data => {
           if (data.avatars && data.avatars.length > 0) {
