@@ -130,14 +130,28 @@ export const LoyaltyCard: React.FC<LoyaltyCardProps> = ({ client, onClick }) => 
         </div>
 
         {/* FOOTER */}
-        <div className="relative z-10 px-5 py-2 border-t border-yellow-600/20 flex justify-between items-center text-[10px] bg-black/20">
-          <span className="text-yellow-700/60 font-bold uppercase tracking-[0.2em] flex items-center gap-1.5">
-            <RefreshCw size={10} className="animate-spin-slow" /> Atualizado
-          </span>
-          <span className="text-yellow-500 font-bold drop-shadow-sm">
-            Faltam <span className="text-yellow-300 text-xs">{remaining}</span>
-          </span>
-        </div>
+        {remaining === 0 ? (
+          // VICTORY FOOTER
+          <div className="relative z-10 px-5 py-3 border-t border-yellow-500/50 flex justify-center items-center bg-gradient-to-r from-yellow-900/40 via-yellow-600/20 to-yellow-900/40 animate-pulse">
+            <span className="text-yellow-400 font-black uppercase tracking-widest text-xs flex items-center gap-2 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+              <Star className="fill-yellow-400 text-yellow-400 w-4 h-4" />
+              1 Corte na Faixa Grátis
+              <Star className="fill-yellow-400 text-yellow-400 w-4 h-4" />
+            </span>
+            {/* Celebration Glow */}
+            <div className="absolute inset-0 bg-yellow-500/10 blur-md"></div>
+          </div>
+        ) : (
+          // STANDARD FOOTER
+          <div className="relative z-10 px-5 py-2 border-t border-yellow-600/20 flex justify-between items-center text-[10px] bg-black/20">
+            <span className="text-yellow-700/60 font-black uppercase tracking-[0.2em] flex items-center gap-1.5">
+              <RefreshCw size={10} className="animate-spin-slow" /> Atualizado
+            </span>
+            <span className="text-yellow-500 font-bold drop-shadow-sm">
+              Faltam <span className="text-yellow-300 text-xs">{remaining}</span> (Ganha 1 Corte)
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );

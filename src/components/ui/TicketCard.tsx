@@ -38,7 +38,7 @@ const TIER_STYLES = {
     headerTextureColor: '#FFFFFF',
     textureOverlay: 'bg-white/10', // Crushed ice feel
     cutoutBorder: 'border-gray-400/50',
-    infoBox: 'bg-black/5 border-black/10 backdrop-blur-sm', // Darken box for contrast
+    infoBox: 'bg-black/5 border-black/10', // Darken box for contrast
     divider: 'bg-black/10',
   },
   GOLD: {
@@ -108,7 +108,7 @@ export const TicketCard: React.FC<TicketCardProps> = ({
     if (isAnimating) return;
     setIsAnimating(true);
     setIsFlipped(!isFlipped);
-    setTimeout(() => setIsAnimating(false), 750);
+    setTimeout(() => setIsAnimating(false), 750); // Keep debounce to prevent spam
   };
 
   const formatPrice = (value: number) =>
@@ -119,32 +119,44 @@ export const TicketCard: React.FC<TicketCardProps> = ({
     const [year, month, day] = dateStr.split('-');
     return `${day}/${month}/${year.slice(-2)}`;
   };
+  // Helper to shorten names to avoid layout overflow
+  const resolveServiceName = (name: string) => {
+    let clean = name.replace(/ \+ /g, '+'); // "Corte + Barba" -> "Corte+Barba"
+    // If still too long, aggressively shorten words
+    if (clean.length > 18) {
+      clean = clean
+        .split('+')
+        .map(part => (part.length > 5 ? part.slice(0, 4) : part))
+        .join('+');
+    }
+    return clean;
+  };
+  // PERSISTENT 3D WRAPPER
+  const wrapperStyle: React.CSSProperties = {
+    transformStyle: 'preserve-3d',
+    perspective: '1000px',
+    transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
+    transition: 'transform 0.7s cubic-bezier(0.4, 0.0, 0.2, 1)', // Smooth easing
+  };
 
-  const wrapperStyle: React.CSSProperties = isAnimating
-    ? {
-        transformStyle: 'preserve-3d',
-        perspective: '1000px',
-        transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
-        transition: 'transform 0.7s',
-      }
-    : {
-        transform: 'none',
-        transformStyle: 'flat',
-        perspective: 'none',
-        transition: 'none',
-      };
+  // SIMPLIFIED FACES (Rely on backface-visibility: hidden)
+  const frontFaceStyle: React.CSSProperties = {
+    transform: 'rotateY(0deg)',
+    WebkitBackfaceVisibility: 'hidden',
+    backfaceVisibility: 'hidden',
+    zIndex: 2,
+    position: 'relative', // Relative to push height
+    inset: 0,
+  };
 
-  const frontFaceStyle: React.CSSProperties =
-    !isAnimating && isFlipped
-      ? { opacity: 0, pointerEvents: 'none' }
-      : { transform: 'translateZ(1px)' };
-
-  const backFaceStyle: React.CSSProperties =
-    !isAnimating && isFlipped
-      ? { transform: 'none', zIndex: 50, opacity: 1 }
-      : !isAnimating && !isFlipped
-      ? { transform: 'rotateY(180deg)', opacity: 0, pointerEvents: 'none' }
-      : { transform: 'rotateY(180deg)' };
+  const backFaceStyle: React.CSSProperties = {
+    transform: 'rotateY(180deg)',
+    WebkitBackfaceVisibility: 'hidden',
+    backfaceVisibility: 'hidden',
+    zIndex: 1,
+    position: 'absolute',
+    inset: 0,
+  };
 
   return (
     <div
@@ -170,7 +182,7 @@ export const TicketCard: React.FC<TicketCardProps> = ({
       <div className="relative w-full z-10" style={wrapperStyle}>
         {/* ================= FRONT FACE ================= */}
         <div
-          className={`relative backface-hidden z-10 block ring-1 rounded-[24px] ${styles.border}`}
+          className={`block ring-1 rounded-[24px] ${styles.border} w-full`}
           style={frontFaceStyle}
         >
           {/* Main Card Frame */}
@@ -248,11 +260,23 @@ export const TicketCard: React.FC<TicketCardProps> = ({
                       Serviço
                     </span>
 
-                    <h3
-                      className={`text-xl font-black uppercase tracking-wide leading-none ${styles.textMain}`}
-                    >
-                      {service?.name || 'Corte'}
-                    </h3>
+                    {(() => {
+                      const finalName = resolveServiceName(service?.name || 'Corte');
+                      const fontSize =
+                        finalName.length > 16
+                          ? 'text-sm'
+                          : finalName.length > 10
+                          ? 'text-base'
+                          : 'text-xl';
+                      return (
+                        <h3
+                          className={`${fontSize} font-black uppercase tracking-wide leading-none truncate whitespace-nowrap ${styles.textMain}`}
+                          title={service?.name}
+                        >
+                          {finalName}
+                        </h3>
+                      );
+                    })()}
 
                     {/* Stars / Tier Indicator */}
                     <div className="flex gap-1 mt-1.5 ml-0.5 items-center">
@@ -354,7 +378,7 @@ export const TicketCard: React.FC<TicketCardProps> = ({
 
         {/* ================= BACK FACE ================= */}
         <div
-          className={`absolute inset-0 backface-hidden rotate-y-180 z-20 h-full w-full ring-1 rounded-[24px] ${styles.border}`}
+          className={`block ring-1 rounded-[24px] ${styles.border} w-full h-full`}
           style={backFaceStyle}
         >
           <div
