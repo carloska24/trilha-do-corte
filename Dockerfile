@@ -13,6 +13,10 @@ RUN npm install
 # Copy configuration files
 COPY tsconfig.json ./
 
+# Copy Prisma schema and generate client
+COPY prisma/ ./prisma/
+RUN npx prisma generate
+
 # Copy the server code
 COPY server/ ./server/
 
