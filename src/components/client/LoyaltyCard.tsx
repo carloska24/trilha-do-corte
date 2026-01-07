@@ -8,8 +8,8 @@ interface LoyaltyCardProps {
 }
 
 export const LoyaltyCard: React.FC<LoyaltyCardProps> = ({ client, onClick }) => {
-  // SIMULATION: Hardcoded to 7 points (70%) as requested
-  const points = 7;
+  // SIMULATION: Hardcoded to 0 points (0%) as requested
+  const points = 0;
   const TOTAL = 10;
   const percent = Math.min((points / TOTAL) * 100, 100);
   const remaining = Math.max(TOTAL - points, 0);
