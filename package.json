@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "server": "tsx watch server/index.ts",
     "dev:full": "concurrently \"npm run server\" \"npm run dev\"",
-    "reset:schedule": "tsx server/reset_schedule.ts"
+    "reset:schedule": "tsx server/reset_schedule.ts",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

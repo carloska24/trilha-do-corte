@@ -7,14 +7,16 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
+# Copy Prisma schema (Needed for postinstall "prisma generate")
+COPY prisma/ ./prisma/
+
 # Install ALL dependencies (including dev for TypeScript support)
 RUN npm install
 
 # Copy configuration files
 COPY tsconfig.json ./
 
-# Copy Prisma schema and generate client
-COPY prisma/ ./prisma/
+# Explicitly generate client again to be safe (though postinstall does it)
 RUN npx prisma generate
 
 # Copy the server code
