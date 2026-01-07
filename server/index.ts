@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -22,7 +22,7 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 
 // Debug Middleware to log all requests
-app.use((req, res, next) => {
+app.use((req: Request, res: Response, next: NextFunction) => {
   console.log(`📡 [${req.method}] ${req.url} | Origin: ${req.headers.origin || 'Unknown'}`);
   next();
 });
@@ -39,7 +39,7 @@ app.use(
 // --- ROUTES ---
 
 // Upload Endpoint
-app.post('/api/upload', upload.single('image'), (req, res) => {
+app.post('/api/upload', upload.single('image'), (req: Request, res: Response) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
@@ -65,7 +65,7 @@ app.use('/api/ai', aiRoutes); // Handles /api/ai/command
 app.use('/api/avatars', avatarRoutes); // Handles /api/avatars list
 
 // Global Error Handler
-app.use((err, req, res, next) => {
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   console.error('🔥 [Critical Error] Unhandled Exception:', err);
   res.status(500).json({
     error: 'Erro interno do servidor.',

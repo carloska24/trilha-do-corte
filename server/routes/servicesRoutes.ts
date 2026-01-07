@@ -5,10 +5,9 @@ import {
   updateService,
   deleteService,
 } from '../controllers/servicesController.js';
+import { authenticateToken } from '../middleware/auth.js';
 
 const router = express.Router();
-
-import { authenticateToken } from '../middleware/auth.js';
 
 router.get('/', getServices);
 router.post('/', authenticateToken, createService);

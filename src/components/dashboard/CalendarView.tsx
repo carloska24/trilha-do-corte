@@ -304,7 +304,7 @@ export const CalendarView: React.FC = () => {
     return `${year}-${month}-${day}`;
   };
 
-  // WhatsApp Export Logic
+  // WhatsApp Premium Export Logic
   const handleExportWhatsApp = () => {
     const dailyApps = getAppointmentsForDate(selectedDate).sort((a, b) =>
       a.time.localeCompare(b.time)
@@ -320,44 +320,85 @@ export const CalendarView: React.FC = () => {
       month: '2-digit',
     });
 
-    // UNICODE ESCAPE SEQUENCE METHOD (Standard 2025/2026 Fix)
-    const ICON_CALENDAR = '\uD83D\uDDD3\uFE0F';
-    const ICON_SCISSORS = '\u2702\uFE0F';
-    const ICON_POLE = '\uD83D\uDC88';
-    const LINE_SEPARATOR = '───────────────────────────';
-
-    let msg = `${ICON_CALENDAR} *AGENDA - ${dateStr}*\n`;
-    msg += `${LINE_SEPARATOR}\n\n`;
+    // 1. Calculate Totals
+    let totalRevenue = 0;
+    let totalMinutes = 0;
 
     dailyApps.forEach(app => {
       const service = getServiceDetails(app.serviceId);
 
-      const serviceIcon = service.category === 'Barba' ? ICON_POLE : ICON_SCISSORS;
+      // Safe Regex Parsing for Price (Handles "R$ 35,00", "35", "R$ 35.00", etc)
+      // Removes everything that is not a digit or a comma (for cents)
+      const rawPrice = String(service.price || '0');
+      const cleanPrice = rawPrice.replace(/[^\d,]/g, '').replace(',', '.');
+      const priceNum = parseFloat(cleanPrice);
 
-      let clientName = (app.clientName || 'Cliente').trim().split(' ')[0].toLowerCase();
-      if (clientName.length > 0) {
-        clientName = clientName.charAt(0).toUpperCase() + clientName.slice(1);
-      }
+      if (!isNaN(priceNum)) totalRevenue += priceNum;
 
-      const serviceName = service.name;
-
-      msg += `*${app.time}* • ${clientName}\n`;
-      msg += `      ${serviceIcon} ${serviceName}\n\n`;
+      // Ensure duration is treated as number
+      totalMinutes += Number(service.duration) || 30;
     });
 
-    msg += `${LINE_SEPARATOR}\n`;
-    msg += `_${ICON_POLE} Trilha do Corte_`;
+    // Format Duration (e.g., 150m -> 2h30)
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    const durationStr = hours > 0 ? `${hours}h${minutes > 0 ? minutes : ''}` : `${minutes} min`;
 
+    // 2. Build Message
+    const ICON_CALENDAR = '🗓️';
+    const ICON_CLOCK = '⏰';
+    const ICON_USER = '👤';
+    const ICON_SCISSORS = '✂️';
+    const ICON_DURATION = '⏳';
+    const ICON_MONEY = '💸';
+    const ICON_CHART = '📈';
+    const ICON_SHOP = '💈';
+
+    // Separator (using simple unicode box drawing or just dashes)
+    const SEPARATOR = '──────────────';
+
+    let msg = `${ICON_CALENDAR} *AGENDA — ${dateStr}*\n`;
+    msg += `${ICON_SHOP} Trilha do Corte\n\n`;
+
+    dailyApps.forEach(app => {
+      const service = getServiceDetails(app.serviceId);
+
+      // Determine service icon based on category/name if possible, else default
+      let sIcon = ICON_SCISSORS;
+      if (service.name.toLowerCase().includes('barba')) sIcon = '💈';
+      if (
+        service.name.toLowerCase().includes('alisamento') ||
+        service.name.toLowerCase().includes('selagem')
+      )
+        sIcon = '🧴';
+
+      let clientName = (app.clientName || 'Cliente').trim();
+      // Capitalize first letter of each word
+      clientName = clientName.replace(/\b\w/g, l => l.toUpperCase());
+
+      msg += `${SEPARATOR}\n`;
+      msg += `${ICON_CLOCK} *${app.time}*\n`;
+      msg += `${ICON_USER} ${clientName}\n`;
+      msg += `${sIcon} ${service.name}\n`;
+      msg += `${ICON_DURATION} ${service.duration} min\n`;
+      msg += `${ICON_MONEY} ${service.price}\n`;
+    });
+
+    msg += `\n${SEPARATOR}\n\n`;
+    msg += `${ICON_CHART} *Resumo do dia*\n`;
+    msg += `${ICON_DURATION} Tempo total: ${durationStr}\n`;
+    msg += `${ICON_MONEY} Faturamento: ${totalRevenue.toLocaleString('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    })}\n`;
+
+    // 3. Send
     const barberPhone = (currentUser as any)?.phone?.replace(/\D/g, '');
-
-    // API.WHATSAPP.COM is more reliable for specialized encoding
     const baseUrl = `https://api.whatsapp.com/send`;
-
     const phoneParam = barberPhone ? `&phone=55${barberPhone}` : '';
     const textParam = `text=${encodeURIComponent(msg)}`;
 
     const finalUrl = `${baseUrl}?${textParam}${phoneParam}`;
-
     window.open(finalUrl, '_blank');
   };
 
@@ -1000,8 +1041,28 @@ export const CalendarView: React.FC = () => {
                       items.push({ type: 'app', data: app, time: timeStr, service });
                     });
 
-                    // Advance Cursor by the longest appointment
-                    currentMinutes += maxDuration;
+                    // Advance Cursor:
+                    // Determine where to jump next.
+                    // Ideally: Jump to (current + maxDuration).
+                    // BUT: If there is an app starting *in between*, we must stop there to render it.
+
+                    const nextStep = currentMinutes + maxDuration;
+
+                    // Look for closest upcoming app start time strictly between current and nextStep
+                    const upcomingApp = dailyApps.find(a => {
+                      const [ah, am] = a.time.split(':').map(Number);
+                      const appStart = ah * 60 + am;
+                      return appStart > currentMinutes && appStart < nextStep;
+                    });
+
+                    if (upcomingApp) {
+                      // CLIP: Jump only to the start of the conflicting app
+                      const [uh, um] = upcomingApp.time.split(':').map(Number);
+                      currentMinutes = uh * 60 + um;
+                    } else {
+                      // NO CONFLICT: Jump full duration
+                      currentMinutes = nextStep;
+                    }
                   } else {
                     // RENDER EMPTY SLOT
                     // We need to determine how long this empty slot lasts.
@@ -1160,8 +1221,8 @@ export const CalendarView: React.FC = () => {
                                     }
                                     ${
                                       (item as any).data.status === 'completed'
-                                        ? 'bg-[#121212] border-green-900/30' // Removed grayscale, kept dark/green tint
-                                        : 'bg-[#1A1A1A] border-white/10 hover:border-white/20 hover:shadow-xl'
+                                        ? 'bg-gradient-to-br from-[#064e3b] via-[#022c22] to-black border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.2)]' // Rich Emerald Gradient for Paid
+                                        : 'bg-gradient-to-br from-[#1E1E1E] to-[#121212] border-white/10 hover:border-yellow-500/30 hover:shadow-[0_4px_20px_rgba(0,0,0,0.5)]'
                                     }
                                     transition-all duration-300
                                 `}
@@ -1184,16 +1245,25 @@ export const CalendarView: React.FC = () => {
                               <div
                                 className={`flex justify-between items-center px-3 py-2 border-b ${
                                   (item as any).data.status === 'completed'
-                                    ? 'bg-[#0f1510] border-green-900/10'
-                                    : 'bg-[#202020] border-white/5'
+                                    ? 'bg-black/20 border-emerald-500/20'
+                                    : 'bg-white/5 border-white/5'
                                 }`}
                               >
-                                <h3 className="font-bold text-white text-sm md:text-base uppercase tracking-wider truncate flex items-center gap-2">
+                                <h3
+                                  className={`font-black text-sm md:text-base uppercase tracking-wider truncate flex items-center gap-2 ${
+                                    (item as any).data.status === 'completed'
+                                      ? 'text-emerald-100 drop-shadow-sm'
+                                      : 'text-zinc-100 drop-shadow-md'
+                                  }`}
+                                >
                                   {(item as any).data.clientName}
+                                  {(item as any).data.status === 'completed' && (
+                                    <CheckCircle2 size={14} className="text-emerald-400" />
+                                  )}
                                 </h3>
                                 {(item as any).data.status !== 'completed' && (
                                   <button
-                                    className="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/10 transition-colors"
+                                    className="w-6 h-6 flex items-center justify-center text-zinc-500 hover:text-neon-yellow transition-all focus:outline-none active:scale-95"
                                     onClick={e => {
                                       e.stopPropagation();
                                       let phone = (item as any).data.clientPhone;
@@ -1208,13 +1278,27 @@ export const CalendarView: React.FC = () => {
                                       }
                                       const clean = phone?.replace(/\D/g, '') || '';
 
-                                      const msg = `💈 *Trilha do Corte*\n\nFala *${
+                                      const serviceName = (item as any).service.name;
+                                      let sIcon = '✂️';
+                                      const lowerName = serviceName.toLowerCase();
+                                      if (
+                                        lowerName.includes('barba') ||
+                                        lowerName.includes('pezinho')
+                                      )
+                                        sIcon = '💈';
+                                      if (
+                                        lowerName.includes('alisamento') ||
+                                        lowerName.includes('selagem') ||
+                                        lowerName.includes('hidrata')
+                                      )
+                                        sIcon = '🧴';
+                                      if (lowerName.includes('sobrancelha')) sIcon = '📐';
+
+                                      const msg = `🗓️ *Lembrete de Agendamento*\n💈 *Trilha do Corte*\n\nFala *${
                                         (item as any).data.clientName
-                                      }*, tudo certo? 👊\nPassando pra lembrar do seu horário hoje:\n\n✂️ *${
-                                        (item as any).service.name
-                                      }*\n⏰ *${
+                                      }*, tudo certo? 👊\n\n${sIcon} *${serviceName}*\n⏰ *${
                                         (item as any).time
-                                      }*\n\n📍 *Local:* Trilha do Corte\nConfirmado? ✅`;
+                                      }*\n\n📍 *Local:* Trilha do Corte\n✅ Confirmado?`;
 
                                       const link = clean
                                         ? `https://api.whatsapp.com/send?phone=55${clean}&text=${encodeURIComponent(
@@ -1226,7 +1310,7 @@ export const CalendarView: React.FC = () => {
                                       window.open(link, '_blank');
                                     }}
                                   >
-                                    <Bell size={12} />
+                                    <Bell size={18} strokeWidth={2.5} />
                                   </button>
                                 )}
                               </div>
@@ -1234,17 +1318,29 @@ export const CalendarView: React.FC = () => {
                               {/* BODY: SPLIT LEFT/RIGHT */}
                               <div className="flex flex-1">
                                 {/* LEFT: TIME BOX */}
-                                <div className="w-[60px] flex flex-col items-center justify-center border-r border-white/5 bg-[#181818]">
+                                <div
+                                  className={`w-[60px] flex flex-col items-center justify-center border-r  ${
+                                    (item as any).data.status === 'completed'
+                                      ? 'bg-black/20 border-emerald-500/20'
+                                      : 'bg-black/40 border-white/5'
+                                  }`}
+                                >
                                   <span
                                     className={`font-black text-lg leading-none ${
                                       (item as any).data.status === 'completed'
-                                        ? 'text-green-500' // Green time if paid
+                                        ? 'text-emerald-400' // Green time if paid
                                         : 'text-white'
                                     }`}
                                   >
                                     {(item as any).time.split(':')[0]}
                                   </span>
-                                  <span className="text-zinc-500 font-bold text-[10px] uppercase">
+                                  <span
+                                    className={`font-bold text-[10px] uppercase ${
+                                      (item as any).data.status === 'completed'
+                                        ? 'text-emerald-600'
+                                        : 'text-zinc-500'
+                                    }`}
+                                  >
                                     {(item as any).time.split(':')[1]}
                                   </span>
                                 </div>
@@ -1252,12 +1348,18 @@ export const CalendarView: React.FC = () => {
                                 {/* RIGHT: SERVICE INFO */}
                                 <div className="flex-1 flex flex-col">
                                   {/* Service Name */}
-                                  <div className="flex-1 px-3 flex items-center border-b border-white/5 bg-[#1a1a1a]">
+                                  <div
+                                    className={`flex-1 px-3 flex items-center border-b ${
+                                      (item as any).data.status === 'completed'
+                                        ? 'bg-transparent border-emerald-500/10'
+                                        : 'bg-transparent border-white/5'
+                                    }`}
+                                  >
                                     <span
                                       className={`text-xs font-black uppercase tracking-wide line-clamp-1 ${
                                         (item as any).data.status === 'completed'
-                                          ? 'text-zinc-400' // No strikethrough per request
-                                          : 'text-zinc-300'
+                                          ? 'text-emerald-200/80'
+                                          : 'text-zinc-300 group-hover/card:text-white transition-colors'
                                       }`}
                                     >
                                       {(item as any).service.name}
@@ -1268,13 +1370,25 @@ export const CalendarView: React.FC = () => {
                                   <div
                                     className={`relative px-3 py-1.5 flex justify-between items-center ${
                                       (item as any).data.status === 'completed'
-                                        ? 'bg-[#101010]'
-                                        : 'bg-[#1D1D1D]'
+                                        ? 'bg-black/40'
+                                        : 'bg-black/20'
                                     }`}
                                   >
                                     {/* Duration Pill - Refined (Less rounded, bigger) */}
-                                    <div className="flex items-center justify-center border border-white/10 rounded px-2 py-0.5 bg-white/5">
-                                      <span className="text-xs font-bold text-zinc-300">
+                                    <div
+                                      className={`flex items-center justify-center border rounded px-2 py-0.5 ${
+                                        (item as any).data.status === 'completed'
+                                          ? 'bg-emerald-900/30 border-emerald-500/30'
+                                          : 'bg-white/5 border-white/10'
+                                      }`}
+                                    >
+                                      <span
+                                        className={`text-xs font-bold ${
+                                          (item as any).data.status === 'completed'
+                                            ? 'text-emerald-400'
+                                            : 'text-zinc-300'
+                                        }`}
+                                      >
                                         {(item as any).service.duration || '30'}m
                                       </span>
                                     </div>
@@ -1282,11 +1396,14 @@ export const CalendarView: React.FC = () => {
                                     {/* Price OR Paid Badge */}
                                     <div className="flex items-center gap-2">
                                       {(item as any).data.status === 'completed' ? (
-                                        <span className="text-[10px] bg-green-500 text-black border border-green-400 px-2 py-0.5 rounded-sm uppercase tracking-widest font-black shadow-[0_0_10px_rgba(34,197,94,0.3)] transform scale-105">
-                                          PAGO
-                                        </span>
+                                        <div className="flex items-center gap-1 bg-emerald-500 text-black px-2 py-0.5 rounded shadow-[0_0_10px_rgba(16,185,129,0.5)]">
+                                          <Wallet size={10} strokeWidth={3} />
+                                          <span className="text-[10px] uppercase tracking-widest font-black">
+                                            PAGO
+                                          </span>
+                                        </div>
                                       ) : (
-                                        <span className="text-neon-yellow font-black text-sm">
+                                        <span className="text-yellow-400 font-black text-sm drop-shadow-[0_0_8px_rgba(250,204,21,0.3)]">
                                           {(item as any).service.price}
                                         </span>
                                       )}
@@ -1299,10 +1416,10 @@ export const CalendarView: React.FC = () => {
                               <div
                                 className={`absolute left-0 top-0 bottom-0 w-1 ${
                                   (item as any).data.status === 'completed'
-                                    ? 'bg-green-500' // Solid green
+                                    ? 'bg-emerald-400 shadow-[0_0_10px_#34d399]' // Glowing left border
                                     : (item as any).data.status === 'confirmed'
-                                    ? 'bg-green-500'
-                                    : 'bg-yellow-500'
+                                    ? 'bg-green-500 shadow-[0_0_8px_#22c55e]'
+                                    : 'bg-yellow-500 shadow-[0_0_8px_#EAB308]'
                                 }`}
                               ></div>
                             </div>
@@ -1354,34 +1471,47 @@ export const CalendarView: React.FC = () => {
         )}
       </div>
 
-      {/* QUICK ADD MODAL */}
+      {/* QUICK ADD MODAL - HARVARD UX REDESIGN */}
       {isQuickAddOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in">
-          <div className="bg-[#111] w-full max-w-sm rounded-2xl border border-gray-800 shadow-2xl p-6 relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-1 bg-neon-yellow shadow-[0_0_20px_#EAB308]"></div>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl animate-fade-in">
+          <div className="bg-[#0f0f0f] w-full max-w-sm rounded-3xl border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.8)] p-8 relative overflow-hidden group">
+            {/* Ambient Background Glows */}
+            <div className="absolute -top-20 -right-20 w-60 h-60 bg-neon-yellow/5 rounded-full blur-3xl pointer-events-none"></div>
+            <div className="absolute -bottom-20 -left-20 w-60 h-60 bg-purple-500/5 rounded-full blur-3xl pointer-events-none"></div>
 
-            <div className="flex justify-between items-center mb-8 mt-2">
-              <h3 className="text-2xl font-black text-white uppercase italic tracking-wider">
-                {editId ? 'Editar' : 'Novo'}
-                <br />
-                Agendamento
-              </h3>
+            {/* Top Accent Line */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/3 h-[2px] bg-gradient-to-r from-transparent via-neon-yellow to-transparent shadow-[0_0_10px_#EAB308]"></div>
+
+            <div className="flex justify-between items-start mb-8 relative z-10">
+              <div>
+                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] mb-1 block">
+                  {editId ? 'Editar Detalhes' : 'Nova Solicitação'}
+                </span>
+                <h3 className="text-3xl font-black text-white uppercase italic tracking-wider leading-none">
+                  Agendar
+                  <span className="block text-transparent bg-clip-text bg-gradient-to-r from-neon-yellow to-yellow-600">
+                    Horário
+                  </span>
+                </h3>
+              </div>
               <button
                 onClick={() => setIsQuickAddOpen(false)}
-                className="bg-gray-800 p-2 rounded-lg text-gray-400 hover:text-white transition-colors"
+                className="w-10 h-10 rounded-full bg-white/5 border border-white/5 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all active:scale-95"
               >
-                <ChevronLeft size={20} className="rotate-180" />
+                <X size={18} />
               </button>
             </div>
 
-            <div className="space-y-5">
-              <div className="bg-[#151515] p-4 rounded-xl border border-gray-800 flex justify-between items-center gap-4">
-                <div className="flex-1">
-                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-2">
+            <div className="space-y-6 relative z-10">
+              {/* DATE & TIME CAPSULE */}
+              <div className="bg-black/40 p-1 rounded-2xl border border-white/5 flex gap-1">
+                {/* DATE */}
+                <div className="flex-1 bg-[#1a1a1a] rounded-xl border border-white/5 p-3 flex flex-col justify-between group/date hover:border-white/10 transition-colors relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover/date:opacity-100 transition-opacity"></div>
+                  <label className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest z-10">
                     Data
                   </label>
-                  {/* CUSTOM DATE SELECTOR */}
-                  <div className="flex items-center justify-between bg-[#0a0a0a] border border-gray-800 rounded-xl p-2">
+                  <div className="flex items-center justify-between mt-1 z-10">
                     <button
                       onClick={() => {
                         if (quickAddSlot) {
@@ -1390,17 +1520,15 @@ export const CalendarView: React.FC = () => {
                           setQuickAddSlot({ ...quickAddSlot, date: d });
                         }
                       }}
-                      className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+                      className="p-1 hover:bg-white/10 rounded text-zinc-500 hover:text-white transition-colors"
                     >
-                      <ChevronLeft size={16} />
+                      <ChevronLeft size={14} />
                     </button>
-
                     <span className="text-white font-bold text-sm uppercase">
                       {quickAddSlot?.date
                         .toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
                         .replace('.', '')}
                     </span>
-
                     <button
                       onClick={() => {
                         if (quickAddSlot) {
@@ -1409,119 +1537,122 @@ export const CalendarView: React.FC = () => {
                           setQuickAddSlot({ ...quickAddSlot, date: d });
                         }
                       }}
-                      className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+                      className="p-1 hover:bg-white/10 rounded text-zinc-500 hover:text-white transition-colors"
                     >
-                      <ChevronRight size={16} />
+                      <ChevronRight size={14} />
                     </button>
                   </div>
                 </div>
 
-                <div className="text-right w-32">
-                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">
+                {/* TIME */}
+                <div className="flex-[0.8] bg-[#1a1a1a] rounded-xl border border-white/5 p-3 flex flex-col justify-between group/time hover:border-neon-yellow/30 transition-colors relative relative overflow-hidden">
+                  <div className="absolute inset-0 bg-neon-yellow/5 opacity-0 group-hover/time:opacity-100 transition-opacity"></div>
+                  <label className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest z-10">
                     Horário
                   </label>
-                  {/* CUSTOM TIME SELECTOR */}
-                  <div className="relative">
-                    {/* Trigger Button */}
-                    <button
-                      onClick={() => setIsTimeListOpen(!isTimeListOpen)}
-                      className="w-full bg-transparent text-neon-yellow font-mono font-bold text-2xl text-right focus:outline-none flex items-center justify-end gap-2"
-                    >
-                      {quickAddSlot?.time || '--:--'}
-                      <ChevronLeft
-                        size={16}
-                        className={`transition-transform duration-300 ${
-                          isTimeListOpen ? 'rotate-90' : '-rotate-90'
-                        }`}
-                      />
-                    </button>
 
-                    {/* Dropdown Grid */}
-                    {isTimeListOpen && (
-                      <div className="absolute top-full right-0 mt-2 bg-[#0a0a0a] border border-gray-700 rounded-xl overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.9)] z-50 w-48 max-h-48 overflow-y-auto custom-scrollbar p-1">
-                        <div className="grid grid-cols-2 gap-1">
-                          {Array.from(
-                            {
-                              length:
-                                (shopSettings.endHour - shopSettings.startHour) *
-                                (60 / (shopSettings.slotInterval || 60)),
-                            },
-                            (_, i) => {
-                              const totalMinutes =
-                                shopSettings.startHour * 60 + i * (shopSettings.slotInterval || 60);
-                              const h = Math.floor(totalMinutes / 60);
-                              const m = totalMinutes % 60;
-                              const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(
-                                2,
-                                '0'
-                              )}`;
-                              return (
-                                <button
-                                  key={timeStr}
-                                  onClick={() => {
-                                    if (quickAddSlot)
-                                      setQuickAddSlot({ ...quickAddSlot, time: timeStr });
-                                    setIsTimeListOpen(false);
-                                  }}
-                                  className={`px-2 py-2 text-sm font-mono font-bold rounded-lg transition-colors ${
-                                    quickAddSlot?.time === timeStr
-                                      ? 'bg-neon-yellow text-black'
-                                      : 'text-gray-400 hover:text-white hover:bg-white/10'
-                                  }`}
-                                >
-                                  {timeStr}
-                                </button>
-                              );
-                            }
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-2 pl-1">
-                  Cliente
-                </label>
-                <input
-                  autoFocus
-                  value={clientName}
-                  onChange={e => setClientName(e.target.value)}
-                  placeholder="Nome do cliente"
-                  className="w-full bg-[#151515] border border-gray-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-neon-yellow transition-colors font-bold"
-                />
-              </div>
-
-              <div>
-                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-2 pl-1">
-                  Serviço
-                </label>
-                <div className="relative">
-                  {/* Trigger Button */}
                   <button
-                    onClick={() => setIsServiceListOpen(!isServiceListOpen)}
-                    className="w-full bg-[#151515] border border-gray-800 rounded-xl px-4 py-3 text-white text-left font-bold flex items-center justify-between focus:outline-none focus:border-neon-yellow transition-all hover:bg-[#1a1a1a]"
+                    onClick={() => setIsTimeListOpen(!isTimeListOpen)}
+                    className="flex items-center justify-between mt-1 z-10 w-full"
                   >
-                    <span className="truncate mr-2">
-                      {services.find(s => s.id === selectedService)?.name
-                        ? `${services.find(s => s.id === selectedService)?.name} - ${
-                            services.find(s => s.id === selectedService)?.price
-                          }`
-                        : 'Selecione um serviço'}
+                    <span className="text-neon-yellow font-mono font-bold text-xl tracking-tight">
+                      {quickAddSlot?.time || '--:--'}
                     </span>
                     <ChevronLeft
-                      className={`text-neon-yellow transition-transform duration-300 ${
-                        isServiceListOpen ? 'rotate-90' : '-rotate-90'
+                      size={14}
+                      className={`text-zinc-600 transition-transform ${
+                        isTimeListOpen ? 'rotate-90' : '-rotate-90'
                       }`}
-                      size={16}
                     />
                   </button>
 
-                  {/* Dropdown List */}
+                  {/* TIME DROPDOWN */}
+                  {isTimeListOpen && (
+                    <div className="absolute top-full right-0 mt-2 bg-[#151515] border border-white/10 rounded-xl overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,1)] z-50 w-40 max-h-48 overflow-y-auto custom-scrollbar p-1">
+                      <div className="grid grid-cols-2 gap-1">
+                        {Array.from(
+                          {
+                            length:
+                              (shopSettings.endHour - shopSettings.startHour) *
+                              (60 / (shopSettings.slotInterval || 60)),
+                          },
+                          (_, i) => {
+                            const totalMinutes =
+                              shopSettings.startHour * 60 + i * (shopSettings.slotInterval || 60);
+                            const h = Math.floor(totalMinutes / 60);
+                            const m = totalMinutes % 60;
+                            const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(
+                              2,
+                              '0'
+                            )}`;
+                            return (
+                              <button
+                                key={timeStr}
+                                onClick={() => {
+                                  if (quickAddSlot)
+                                    setQuickAddSlot({ ...quickAddSlot, time: timeStr });
+                                  setIsTimeListOpen(false);
+                                }}
+                                className={`px-2 py-2 text-xs font-mono font-bold rounded-lg transition-colors ${
+                                  quickAddSlot?.time === timeStr
+                                    ? 'bg-neon-yellow text-black'
+                                    : 'text-zinc-400 hover:text-white hover:bg-white/10'
+                                }`}
+                              >
+                                {timeStr}
+                              </button>
+                            );
+                          }
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* INPUTS */}
+              <div className="space-y-4">
+                {/* CLIENT NAME */}
+                <div className="group relative">
+                  <div className="absolute left-4 top-3.5 pointer-events-none text-zinc-500 group-focus-within:text-neon-yellow transition-colors">
+                    <span className="text-xs uppercase font-bold tracking-widest">Cliente</span>
+                  </div>
+                  <input
+                    autoFocus
+                    value={clientName}
+                    onChange={e => setClientName(e.target.value)}
+                    placeholder="Nome do cliente..."
+                    className="w-full bg-[#151515] border border-white/5 rounded-xl px-4 pt-8 pb-3 text-white font-bold placeholder:text-zinc-700 focus:outline-none focus:border-neon-yellow/50 focus:bg-[#1a1a1a] transition-all"
+                  />
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-zinc-800 group-focus-within:bg-neon-yellow transition-colors shadow-[0_0_10px_rgba(234,179,8,0)] group-focus-within:shadow-[0_0_10px_rgba(234,179,8,0.5)]"></div>
+                </div>
+
+                {/* SERVICE SELECTOR */}
+                <div className="group relative">
+                  <button
+                    onClick={() => setIsServiceListOpen(!isServiceListOpen)}
+                    className="w-full bg-[#151515] border border-white/5 rounded-xl px-4 pt-8 pb-3 text-left font-bold focus:outline-none focus:border-neon-yellow/50 focus:bg-[#1a1a1a] transition-all flex justify-between items-center group-focus:border-neon-yellow/50"
+                  >
+                    <div className="absolute left-4 top-3.5 pointer-events-none text-zinc-500 group-hover:text-neon-yellow transition-colors">
+                      <span className="text-xs uppercase font-bold tracking-widest">Serviço</span>
+                    </div>
+
+                    <span
+                      className={`text-white ${
+                        !services.find(s => s.id === selectedService) ? 'text-zinc-600' : ''
+                      }`}
+                    >
+                      {services.find(s => s.id === selectedService)?.name || 'Selecione...'}
+                    </span>
+
+                    <span className="text-neon-yellow text-sm bg-neon-yellow/10 px-2 py-0.5 rounded border border-neon-yellow/20">
+                      {services.find(s => s.id === selectedService)?.price || 'R$ --'}
+                    </span>
+                  </button>
+
+                  {/* SERVICE DROPDOWN */}
                   {isServiceListOpen && (
-                    <div className="absolute top-full left-0 right-0 mt-2 bg-[#0a0a0a] border border-gray-700 rounded-xl overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.9)] z-50 max-h-48 overflow-y-auto custom-scrollbar">
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-[#151515] border border-white/10 rounded-xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.9)] z-50 max-h-56 overflow-y-auto custom-scrollbar">
                       {services.map(s => (
                         <button
                           key={s.id}
@@ -1529,20 +1660,20 @@ export const CalendarView: React.FC = () => {
                             setSelectedService(s.id);
                             setIsServiceListOpen(false);
                           }}
-                          className={`w-full text-left px-4 py-3 text-sm font-bold border-b border-white/5 transition-colors flex justify-between items-center group
-                            ${
-                              selectedService === s.id
-                                ? 'bg-neon-yellow/10 text-neon-yellow'
-                                : 'text-zinc-400 hover:text-white hover:bg-white/5'
-                            }
-                          `}
+                          className={`w-full text-left px-4 py-3 text-sm font-bold border-b border-white/5 transition-colors flex justify-between items-center group/opt
+                                ${
+                                  selectedService === s.id
+                                    ? 'bg-neon-yellow/10 text-neon-yellow'
+                                    : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                                }
+                            `}
                         >
                           <span>{s.name}</span>
                           <span
                             className={`text-xs opacity-50 ${
                               selectedService === s.id
                                 ? 'text-neon-yellow'
-                                : 'group-hover:text-white'
+                                : 'group-hover/opt:text-white'
                             }`}
                           >
                             {s.price}
@@ -1556,11 +1687,21 @@ export const CalendarView: React.FC = () => {
 
               <button
                 onClick={handleSaveAppointment}
-                className="w-full py-4 bg-neon-yellow text-black font-black uppercase tracking-widest rounded-xl hover:bg-yellow-400 hover:shadow-[0_0_20px_rgba(234,179,8,0.4)] transition-all mt-4 flex justify-center items-center gap-2"
+                className="w-full py-5 bg-gradient-to-r from-neon-yellow to-yellow-500 text-black font-black uppercase tracking-[0.2em] rounded-xl hover:shadow-[0_0_30px_rgba(234,179,8,0.4)] transition-all mt-6 flex justify-center items-center gap-3 active:scale-[0.98] group/btn relative overflow-hidden"
               >
-                {editId ? 'Salvar Alterações' : 'Confirmar'}{' '}
-                <ChevronRight size={16} strokeWidth={3} />
+                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300"></div>
+                <span>{editId ? 'Salvar Alterações' : 'Confirmar'}</span>
+                <ChevronRight
+                  size={18}
+                  strokeWidth={3}
+                  className="group-hover/btn:translate-x-1 transition-transform"
+                />
               </button>
+            </div>
+
+            {/* Footer decoration */}
+            <div className="absolute bottom-4 left-0 w-full flex justify-center opacity-20 pointer-events-none">
+              <div className="w-12 h-1 rounded-full bg-white/20"></div>
             </div>
           </div>
         </div>

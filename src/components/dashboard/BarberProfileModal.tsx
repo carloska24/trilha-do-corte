@@ -26,9 +26,7 @@ export const BarberProfileModal: React.FC<BarberProfileModalProps> = ({ barber, 
   const [formData, setFormData] = useState({
     name: barber.name,
     email: barber.email,
-    phone: barber.phone || '', // Check if phone exists in BarberProfile type
-    password: '',
-    confirmPassword: '',
+    phone: barber.phone || '',
     password: '',
     confirmPassword: '',
   });

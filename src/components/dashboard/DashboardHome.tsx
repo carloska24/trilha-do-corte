@@ -243,10 +243,18 @@ export const DashboardHome: React.FC = () => {
     updateAppointments(updated);
   };
 
+  // Calculate Today's Date String (YYYY-MM-DD) for filtering
+  const todayString = React.useMemo(() => {
+    const year = currentTime.getFullYear();
+    const month = String(currentTime.getMonth() + 1).padStart(2, '0');
+    const day = String(currentTime.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }, [currentTime.toDateString()]); // Only recalc when date changes
+
   // Memoized Derived Data to prevent recalc on every clock tick
   const { queue, inProgress, nextClient } = React.useMemo(() => {
     const q = appointments
-      .filter(a => a.status === 'pending' || a.status === 'confirmed')
+      .filter(a => (a.status === 'pending' || a.status === 'confirmed') && a.date === todayString)
       .sort((a, b) => a.time.localeCompare(b.time));
 
     return {
@@ -254,7 +262,7 @@ export const DashboardHome: React.FC = () => {
       inProgress: appointments.find(a => a.status === 'in_progress'),
       nextClient: q.length > 0 ? q[0] : null,
     };
-  }, [appointments]);
+  }, [appointments, todayString]);
 
   // Format Date: "QUARTA-FEIRA, 3 DE DEZEMBRO"
   const dateString = React.useMemo(

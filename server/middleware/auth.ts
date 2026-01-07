@@ -1,6 +1,11 @@
+import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
-export const authenticateToken = (req, res, next) => {
+export interface AuthenticatedRequest extends Request {
+  user?: any;
+}
+
+export const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req.headers['authorization'];
   // FORMAT: "Bearer <token>"
   const token = authHeader && authHeader.split(' ')[1];
@@ -12,14 +17,14 @@ export const authenticateToken = (req, res, next) => {
   // Fallback secret para desenvolvimento, idealmente deve vir do .env
   const secret = process.env.JWT_SECRET || 'dev_secret_123';
 
-  jwt.verify(token, secret, (err, user) => {
+  jwt.verify(token, secret, (err: any, user: any) => {
     if (err) {
       console.error('❌ Token Inválido:', err.message);
       return res.status(403).json({ error: 'Token inválido ou expirado.' });
     }
 
     // Anexa o usuário decodificado à requisição
-    req.user = user;
+    (req as AuthenticatedRequest).user = user;
     next();
   });
 };

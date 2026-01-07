@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -11,7 +11,7 @@ const __dirname = path.dirname(__filename);
 // server/routes -> server -> trilha -> public/avatars
 const AVATARS_DIR = path.join(__dirname, '../../public/avatars');
 
-router.get('/', (req, res) => {
+router.get('/', (req: Request, res: Response) => {
   try {
     // Se a pasta não existir, cria-a
     if (!fs.existsSync(AVATARS_DIR)) {

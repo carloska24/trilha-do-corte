@@ -1,11 +1,11 @@
-import express from 'express';
+import express, { Response } from 'express';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-import { authenticateToken } from '../middleware/auth.js';
+import { authenticateToken, AuthenticatedRequest } from '../middleware/auth.js';
 
 const router = express.Router();
 
-router.post('/command', authenticateToken, async (req, res) => {
+router.post('/command', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { prompt } = req.body;
 
@@ -25,7 +25,7 @@ router.post('/command', authenticateToken, async (req, res) => {
     const text = response.text();
 
     res.json({ text });
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ Gemini Server Error:', error);
     res.status(500).json({
       error: 'Failed to process AI command',

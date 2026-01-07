@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model services {
+  id          String  @id
+  name        String?
+  price       String?
+  priceValue  Float?  @map("pricevalue")
+  description String?
+  icon        String?
+  image       String?
+  category    String?
+  activePromo String? @map("activepromo")
+  duration    Int?
+  badges      String?
+}
+
+model barbers {
+  id        String  @id
+  name      String?
+  specialty String?
+  image     String?
+  email     String?
+  password  String?
+}
+
+model clients {
+  id        String  @id
+  name      String?
+  phone     String?
+  level     Int?
+  lastVisit String? @map("lastvisit")
+  img       String?
+  status    String?
+  notes     String?
+  password  String?
+  email     String?
+}
+
+model appointments {
+  id         String  @id
+  clientName String? @map("clientname")
+  serviceId  String? @map("serviceid")
+  date       String?
+  time       String?
+  status     String?
+  price      Float?
+  photoUrl   String? @map("photourl")
+  notes      String?
+  clientId   String? @map("clientid")
+  barberId   String? @map("barberid")
+
+  @@unique([date, time], map: "idx_appointments_unique_slot")
+}
