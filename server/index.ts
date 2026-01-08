@@ -27,7 +27,8 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
-app.use(express.json({ limit: '50mb' }));
+// Security: Limit JSON body size to prevent DoS (was 50mb)
+app.use(express.json({ limit: '1mb' }));
 app.use(
   '/uploads',
   express.static(path.join(__dirname, 'uploads'), {

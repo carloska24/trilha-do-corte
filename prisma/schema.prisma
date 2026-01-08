@@ -8,53 +8,61 @@ datasource db {
 }
 
 model services {
-  id          String  @id
+  id          String         @id
   name        String?
   price       String?
-  priceValue  Float?  @map("pricevalue")
+  priceValue  Float?         @map("pricevalue")
   description String?
   icon        String?
   image       String?
   category    String?
-  activePromo String? @map("activepromo")
+  activePromo String?        @map("activepromo")
   duration    Int?
   badges      String?
+  appointments appointments[]
 }
 
 model barbers {
-  id        String  @id
-  name      String?
-  specialty String?
-  image     String?
-  email     String?
-  password  String?
+  id           String         @id
+  name         String?
+  specialty    String?
+  image        String?
+  email        String?
+  password     String?
+  appointments appointments[]
 }
 
 model clients {
-  id        String  @id
-  name      String?
-  phone     String?
-  level     Int?
-  lastVisit String? @map("lastvisit")
-  img       String?
-  status    String?
-  notes     String?
-  password  String?
-  email     String?
+  id           String         @id
+  name         String?
+  phone        String?
+  level        Int?
+  lastVisit    String?        @map("lastvisit")
+  img          String?
+  status       String?
+  notes        String?
+  password     String?
+  email        String?
+  appointments appointments[]
 }
 
 model appointments {
-  id         String  @id
-  clientName String? @map("clientname")
-  serviceId  String? @map("serviceid")
+  id         String    @id
+  clientName String?   @map("clientname")
+  serviceId  String?   @map("serviceid")
   date       String?
   time       String?
   status     String?
   price      Float?
-  photoUrl   String? @map("photourl")
+  photoUrl   String?   @map("photourl")
   notes      String?
-  clientId   String? @map("clientid")
-  barberId   String? @map("barberid")
+  clientId   String?   @map("clientid")
+  barberId   String?   @map("barberid")
+
+  // Relations
+  client     clients?  @relation(fields: [clientId], references: [id])
+  barber     barbers?  @relation(fields: [barberId], references: [id])
+  service    services? @relation(fields: [serviceId], references: [id])
 
   @@unique([date, time], map: "idx_appointments_unique_slot")
 }

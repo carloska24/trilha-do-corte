@@ -36,43 +36,75 @@
   /* Animations */
   --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   --animate-slide-track: slideTrack 2s linear infinite;
+  --animate-float-slow: float-slow 4s ease-in-out infinite;
+  --animate-pulse-neon: pulse-neon 3s ease-in-out infinite;
+  --animate-scan-vertical: scan-vertical 2s linear infinite;
+  --animate-fade-in-up: fadeInUp 0.8s ease-out forwards;
+  --animate-ticker: ticker 40s linear infinite;
+  --animate-coin-bounce: coin-bounce 500ms ease-in-out;
+  --animate-coin-enter: coin-enter 500ms ease-out forwards;
 
   @keyframes slideTrack {
-    0% {
-      transform: translateY(0);
-    }
-    100% {
-      transform: translateY(20px);
-    }
+    0% { transform: translateY(0); }
+    100% { transform: translateY(20px); }
+  }
+  @keyframes float-slow {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-3px); }
+  }
+  @keyframes pulse-neon {
+    0%, 100% { opacity: 1; filter: drop-shadow(0 0 5px rgba(34, 211, 238, 0.5)); transform: scale(1); }
+    50% { opacity: 0.8; filter: drop-shadow(0 0 15px rgba(34, 211, 238, 0.8)); transform: scale(1.02); }
+  }
+  @keyframes scan-vertical {
+    0% { top: -10%; opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { top: 110%; opacity: 0; }
+  }
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes ticker {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+  @keyframes coin-bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-3px); }
+  }
+  @keyframes coin-enter {
+    0% { transform: translateY(-10px); opacity: 0; }
+    50% { opacity: 1; }
+    100% { transform: translateY(0); opacity: 1; }
   }
 }
 
 html {
   scroll-behavior: smooth;
-  background-color: #000000; /* Fix for white line/overscroll */
+  background-color: #000000;
   margin: 0;
   padding: 0;
 }
 
 :root {
-  /* ... kept as is for variables ... */
-  --bg-primary: #fafafa; /* Zinc 50 */
-  --bg-secondary: #f4f4f5; /* Zinc 100 */
+  --bg-primary: #fafafa;
+  --bg-secondary: #f4f4f5;
   --bg-card: #ffffff;
-  --text-primary: #09090b; /* Zinc 950 */
-  --text-secondary: #52525b; /* Zinc 600 */
-  --border-color: #e4e4e7; /* Zinc 200 */
+  --text-primary: #09090b;
+  --text-secondary: #52525b;
+  --border-color: #e4e4e7;
   --stripe-color: rgba(0, 0, 0, 0.04);
 }
 
 :root[class='dark'] {
-  /* Dark Mode Colors (Original) */
   --bg-primary: #121212;
   --bg-secondary: #09090b;
   --bg-card: #1e1e1e;
   --text-primary: #ffffff;
-  --text-secondary: #a1a1aa; /* Zinc 400 */
-  --border-color: rgba(255, 255, 255, 0.05); /* White/5 */
+  --text-secondary: #a1a1aa;
+  --border-color: rgba(255, 255, 255, 0.05);
   --stripe-color: rgba(255, 255, 255, 0.03);
 }
 
@@ -85,22 +117,13 @@ body {
   margin: 0;
   padding: 0;
   -webkit-touch-callout: none;
-
-  /* HIGH IMPACT TEXTURE: Carbon Grid */
   background-image:
-    /* 1. Vignette (Dark edges, clear center) */ radial-gradient(
-      circle at center,
-      transparent 0%,
-      #000000 100%
-    ),
-    /* 2. Carbon Fiber / Checker Pattern */
+    radial-gradient(circle at center, transparent 0%, #000000 100%),
       linear-gradient(45deg, #111 25%, transparent 25%, transparent 75%, #111 75%, #111),
     linear-gradient(45deg, #111 25%, transparent 25%, transparent 75%, #111 75%, #111);
-
   background-position: 0 0, 0 0, 10px 10px;
   background-size: 100% 100%, 20px 20px, 20px 20px;
   background-attachment: fixed;
-
   color: var(--text-primary);
   font-family: 'Inter', sans-serif;
   overflow-x: hidden;
@@ -123,25 +146,6 @@ body {
   background: var(--color-neon-yellow);
 }
 
-@keyframes bgScroll {
-  /* Animation removed for static robust texture, or can be added back if requested */
-  0% {
-    background-position: 0 0, 0 0, 10px 10px;
-  }
-  100% {
-    background-position: 0 0, 20px 20px, 30px 30px;
-  }
-}
-
-@keyframes barberScroll {
-  0% {
-    background-position: 0 0;
-  }
-  100% {
-    background-position: 56px 0;
-  }
-}
-
 /* Tipografia Urbana */
 .font-graffiti {
   font-family: 'Permanent Marker', cursive;
@@ -150,42 +154,10 @@ body {
 
 /* Efeito de Vidro para Cards */
 .glass-panel {
-  background: rgba(24, 24, 27, 0.7); /* Zinc 900 com transparência */
+  background: rgba(24, 24, 27, 0.7);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-/* Scrollbar Personalizada */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: #09090b;
-}
-::-webkit-scrollbar-thumb {
-  background: #27272a;
-  border-radius: 99px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #eab308; /* Amarelo Sólido */
-}
-
-/* Animações Sutis */
-.fade-in {
-  animation: fadeIn 0.5s ease-out forwards;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 /* Badge Promocional Ribbon */
@@ -193,86 +165,11 @@ body {
   clip-path: polygon(0 0, 100% 0, 92% 50%, 100% 100%, 0 100%);
 }
 
-/* --- CUSTOM CHAIR ANIMATIONS --- */
-
-/* Header Chair: Subtle Float */
-@keyframes float-slow {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-3px);
-  }
-}
-.animate-float-slow {
-  animation: float-slow 4s ease-in-out infinite;
-}
-
-/* Waiting Chair: Neon Pulse (Breathing) */
-@keyframes pulse-neon {
-  0%,
-  100% {
-    opacity: 1;
-    filter: drop-shadow(0 0 5px rgba(34, 211, 238, 0.5));
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.8;
-    filter: drop-shadow(0 0 15px rgba(34, 211, 238, 0.8));
-    transform: scale(1.02);
-  }
-}
-.animate-pulse-neon {
-  animation: pulse-neon 3s ease-in-out infinite;
-}
-
-/* Waiting Chair: Scan Line Effect */
-@keyframes scan-vertical {
-  0% {
-    top: -10%;
-    opacity: 0;
-  }
-  10% {
-    opacity: 1;
-  }
-  90% {
-    opacity: 1;
-  }
-  100% {
-    top: 110%;
-    opacity: 0;
-  }
-}
-.animate-scan-vertical {
-  animation: scan-vertical 2s linear infinite;
-  background: linear-gradient(to bottom, transparent, rgba(34, 211, 238, 0.5), transparent);
-}
-
-/* --- 3D FLIP ANIMATION UTILITIES --- */
-.perspective-1000 {
-  perspective: 1000px;
-}
-
-.transform-style-3d {
-  transform-style: preserve-3d;
-}
-
-.backface-hidden {
-  backface-visibility: hidden;
-}
-
-.rotate-y-180 {
-  transform: rotateY(180deg);
-}
-
 /* --- TEXT BUTTON STYLE --- */
-/* --- TEXT BUTTON STYLE (Refined for Mobile) --- */
 .text-button-style {
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
   letter-spacing: -0.02em;
   color: #ffffff;
-  /* Removed gradient/clip for maximum sharpness */
 }
 
 /* --- ARCADE TEXTURE --- */
@@ -287,7 +184,7 @@ body {
 
 /* --- PREMIUM BADGES & TEXT GLOW --- */
 .text-glow-subtle {
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8); /* Removed blur glow, focused on readability */
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
   font-weight: 700;
   opacity: 0.9;
 }
@@ -311,75 +208,6 @@ body {
   box-shadow: 0 0 8px currentColor;
 }
 
-/* --- NEW ANIMATIONS FOR STATUS CIRCLE --- */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-fade-in-up {
-  animation: fadeInUp 0.8s ease-out forwards;
-}
-
-.delay-100 {
-  animation-delay: 0.1s;
-}
-.delay-200 {
-  animation-delay: 0.2s;
-}
-.delay-300 {
-  animation-delay: 0.3s;
-}
-
-@keyframes pulseSlow {
-  0%,
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.8;
-    transform: scale(0.95);
-  }
-}
-
-.animate-pulse-slow {
-  animation: pulseSlow 3s ease-in-out infinite;
-}
-
-/* --- FONTS --- */
-.font-sf-pro {
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, Helvetica,
-    Arial, sans-serif;
-}
-
-/* --- MARQUEE / TICKER ANIMATION --- */
-@keyframes ticker {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-50%);
-  }
-}
-
-.animate-ticker {
-  animation: ticker 40s linear infinite;
-  width: max-content;
-  will-change: transform;
-  transform: translate3d(0, 0, 0); /* Force GPU */
-}
-
-.animate-ticker:hover {
-  animation-play-state: paused;
-}
-
 .mask-gradient-x {
   mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
   -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
@@ -387,12 +215,8 @@ body {
 
 /* --- NEW MAGNIFICENT BARBER POLE --- */
 @keyframes pole-slide {
-  from {
-    background-position: 0 0;
-  }
-  to {
-    background-position: 28px 28px;
-  }
+  from { background-position: 0 0; }
+  to { background-position: 28px 28px; }
 }
 
 .bg-barber-pole-card {
@@ -423,24 +247,11 @@ body {
 
 /* Flip In Y Animation for Client Reveal */
 @keyframes flipInY {
-  0% {
-    transform: perspective(400px) rotateY(90deg);
-    opacity: 0;
-  }
-  40% {
-    transform: perspective(400px) rotateY(-20deg);
-  }
-  60% {
-    transform: perspective(400px) rotateY(10deg);
-    opacity: 1;
-  }
-  80% {
-    transform: perspective(400px) rotateY(-5deg);
-  }
-  100% {
-    transform: perspective(400px) rotateY(0deg);
-    opacity: 1;
-  }
+  0% { transform: perspective(400px) rotateY(90deg); opacity: 0; }
+  40% { transform: perspective(400px) rotateY(-20deg); }
+  60% { transform: perspective(400px) rotateY(10deg); opacity: 1; }
+  80% { transform: perspective(400px) rotateY(-5deg); }
+  100% { transform: perspective(400px) rotateY(0deg); opacity: 1; }
 }
 
 /* Slant Clip Path for Price Tag */
@@ -448,33 +259,6 @@ body {
   clip-path: polygon(20% 0, 100% 0, 100% 100%, 0% 100%);
 }
 
-/* --- CUSTOM WALLET ANIMATIONS --- */
-@layer utilities {
-  @keyframes coin-bounce {
-    0%,
-    100% {
-      transform: translateY(0);
-    }
-    50% {
-      transform: translateY(-3px);
-    }
-  }
-  @keyframes coin-enter {
-    0% {
-      transform: translateY(-10px);
-      opacity: 0;
-    }
-    50% {
-      opacity: 1;
-    }
-    100% {
-      transform: translateY(0);
-      opacity: 1;
-    }
-  }
-}
-
-/* Custom class for the wallet glow */
 .wallet-glow {
   filter: drop-shadow(0 0 5px rgba(234, 179, 8, 0.5));
 }
