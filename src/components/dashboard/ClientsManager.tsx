@@ -7,6 +7,8 @@ import { generateId } from '../../utils';
 import { useData } from '../../contexts/DataContext';
 import { useOutletContext } from 'react-router-dom';
 import { api } from '../../services/api';
+import { InviteClientModal } from './InviteClientModal';
+import { WhatsAppLogo } from '../icons/WhatsAppLogo';
 
 interface DashboardOutletContext {
   setSelectedClient: (client: Client) => void;
@@ -16,7 +18,8 @@ const ClientCard: React.FC<{
   client: Client;
   onSelect: (c: Client) => void;
   onDelete: (id: string) => void;
-}> = ({ client, onSelect, onDelete }) => {
+  onInvite: (c: Client) => void;
+}> = ({ client, onSelect, onDelete, onInvite }) => {
   const controls = useAnimation();
 
   // Logic from original map
@@ -33,7 +36,6 @@ const ClientCard: React.FC<{
     ringShadow = 'shadow-[0_0_12px_rgba(34,211,238,0.4)]';
     badgeColor = 'text-cyan-400 border-cyan-500/30 bg-cyan-950/30';
   }
-
   let statusColor = 'bg-green-500 shadow-[0_0_8px_#22c55e]';
 
   if (client.lastVisit === 'Nunca' || !client.lastVisit) {
@@ -53,20 +55,21 @@ const ClientCard: React.FC<{
       }
     } catch (e) {}
   }
-
   const handleDragEnd = async (_: any, info: PanInfo) => {
     if (info.offset.x < -100) {
-      // Swiped left enough
       onDelete(client.id);
-      controls.start({ x: 0 }); // Reset
+      controls.start({ x: 0 });
     } else {
-      controls.start({ x: 0 }); // Snap back
+      controls.start({ x: 0 });
     }
   };
 
+  // Check if needs formalization (Only if phone is missing/placeholder)
+  const isTemp =
+    !client.phone || client.phone === '00000000000' || client.phone.replace(/\D/g, '').length < 8;
+
   return (
     <div className="relative mb-2 group touch-pan-y">
-      {/* Background Layer (Delete) */}
       {/* Background Layer (Delete) */}
       <div className="absolute inset-x-[2px] inset-y-[2px] bg-red-500/10 rounded-2xl flex items-center justify-end pr-6 z-0">
         <Trash2 className="text-red-500" size={24} strokeWidth={2.5} />
@@ -81,7 +84,7 @@ const ClientCard: React.FC<{
         animate={controls}
         className="relative bg-[#0a0a0a] backdrop-blur-xl border border-white/5 p-3 rounded-2xl z-10 shadow-lg flex items-center gap-3 cursor-pointer active:cursor-grabbing"
         onClick={() => onSelect(client)}
-        style={{ touchAction: 'pan-y' }} // Important for scrolling list
+        style={{ touchAction: 'pan-y' }}
       >
         {/* AVATAR */}
         <div className="relative flex-shrink-0">
@@ -102,15 +105,25 @@ const ClientCard: React.FC<{
             </div>
           </div>
           <div
-            className={`absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-[#0a0a0a] ${statusColor} z-20`}
+            className={`absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-[#0a0a0a] ${
+              isTemp ? 'bg-neon-yellow animate-pulse' : statusColor
+            } z-20`}
           ></div>
         </div>
 
         {/* DATA */}
         <div className="flex flex-col flex-1 min-w-0">
-          <h3 className="text-xl font-black text-white leading-none mb-1.5 uppercase tracking-wide truncate group-hover:text-neon-yellow transition-colors">
-            {client.name}
-          </h3>
+          <div className="flex items-center gap-2 mb-1.5">
+            <h3 className="text-xl font-black text-white leading-none uppercase tracking-wide truncate group-hover:text-neon-yellow transition-colors">
+              {client.name}
+            </h3>
+            {isTemp && (
+              <span className="px-1.5 py-0.5 rounded bg-neon-yellow/20 text-neon-yellow text-[8px] font-bold uppercase tracking-wider border border-neon-yellow/30">
+                PROVISÓRIO
+              </span>
+            )}
+          </div>
+
           <div className="flex items-center gap-2.5 flex-wrap">
             <div className={`flex items-center px-1.5 py-[2px] rounded border ${badgeColor}`}>
               <span className="text-[10px] font-black font-mono tracking-widest leading-none">
@@ -126,9 +139,19 @@ const ClientCard: React.FC<{
           </div>
         </div>
 
-        {/* CHEVRON */}
-        <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-zinc-500">
-          <ChevronRight size={18} />
+        {/* ACTIONS (Formalize) */}
+        <div className="flex items-center gap-2">
+          {isTemp && (
+            <button
+              onClick={e => {
+                e.stopPropagation();
+                onInvite(client);
+              }}
+              className="w-10 h-10 flex items-center justify-center transition-all active:scale-95 group/btn"
+            >
+              <WhatsAppLogo size={24} className="group-hover/btn:scale-110 transition-transform" />
+            </button>
+          )}
         </div>
       </motion.div>
     </div>
@@ -163,7 +186,7 @@ export const ClientsManager: React.FC = () => {
       level: 1,
       lastVisit: 'Nunca',
       img: null,
-      status: 'new' as const,
+      status: 'active' as const, // Manual creation = Active/Official
       notes: newClientData.notes,
     };
 
@@ -240,8 +263,15 @@ export const ClientsManager: React.FC = () => {
   // --- DELETE MODAL STATE ---
   const [clientToDelete, setClientToDelete] = useState<string | null>(null);
 
+  // Invite Modal State
+  const [clientToInvite, setClientToInvite] = useState<Client | null>(null);
+
   const handleDeleteClient = (id: string) => {
     setClientToDelete(id);
+  };
+
+  const handleInviteClient = (client: Client) => {
+    setClientToInvite(client);
   };
 
   const confirmDelete = async () => {
@@ -264,6 +294,15 @@ export const ClientsManager: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full w-full p-4 pb-32 animate-fade-in relative z-10">
+      {/* INVITE MODAL */}
+      {clientToInvite && (
+        <InviteClientModal
+          isOpen={true}
+          onClose={() => setClientToInvite(null)}
+          client={clientToInvite}
+        />
+      )}
+
       {/* DELETE CONFIRMATION MODAL */}
       {clientToDelete && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
@@ -338,6 +377,7 @@ export const ClientsManager: React.FC = () => {
               client={client}
               onSelect={onSelectClient}
               onDelete={handleDeleteClient}
+              onInvite={handleInviteClient}
             />
           ))}
 

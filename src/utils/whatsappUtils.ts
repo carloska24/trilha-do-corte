@@ -112,3 +112,11 @@ export const generateWhatsAppExportUrl = ({
 
   return `${baseUrl}?${textParam}${phoneParam}`;
 };
+
+export const generateWhatsAppLink = (phone: string, message: string): string => {
+  const cleanPhone = phone.replace(/\D/g, '');
+  const baseUrl = `https://api.whatsapp.com/send`;
+  const phoneParam = cleanPhone ? `&phone=55${cleanPhone}` : '';
+  const textParam = `text=${encodeURIComponent(message)}`;
+  return `${baseUrl}?${textParam}${phoneParam}`;
+};
