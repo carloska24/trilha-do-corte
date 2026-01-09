@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { getOptimizedImageUrl } from '../../utils/imageUtils';
 import { ChairIcon } from '../icons/ChairIcon';
 import { Appointment, AppointmentStatus, ServiceItem } from '../../types';
-import { SERVICES as ALL_SERVICES, AVATAR_PACK } from '../../constants';
+import { SERVICES as ALL_SERVICES, LOCAL_AVATARS } from '../../constants';
 import { Armchair, ChevronLeft, ChevronRight, User, Star } from 'lucide-react';
 import { sendBroadcastNotification } from '../../utils/notificationUtils';
 import { useData } from '../../contexts/DataContext';
@@ -282,7 +282,7 @@ export const DashboardHome: React.FC = () => {
     if (!app) {
       // Placeholder for empty state (Deterministic based on 'Guest')
       const seed = 'Guest'.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-      return getOptimizedImageUrl(AVATAR_PACK[seed % AVATAR_PACK.length], size, size);
+      return getOptimizedImageUrl(LOCAL_AVATARS[seed % LOCAL_AVATARS.length], size, size);
     }
 
     // 1. Try to find client in the list (Most reliable/up-to-date)
@@ -302,8 +302,8 @@ export const DashboardHome: React.FC = () => {
     const seed = (app.clientName || 'Visitor')
       .split('')
       .reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    const avatarIndex = seed % AVATAR_PACK.length;
-    return getOptimizedImageUrl(AVATAR_PACK[avatarIndex], size, size);
+    const avatarIndex = seed % LOCAL_AVATARS.length;
+    return getOptimizedImageUrl(LOCAL_AVATARS[avatarIndex], size, size);
   };
 
   return (

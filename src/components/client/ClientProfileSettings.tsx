@@ -12,7 +12,7 @@ import {
   Grid,
 } from 'lucide-react';
 import { ClientProfile } from '../../types';
-import { AVATAR_PACK } from '../../constants';
+import { LOCAL_AVATARS } from '../../constants';
 
 interface ClientProfileSettingsProps {
   isOpen: boolean;
@@ -57,7 +57,7 @@ export const ClientProfileSettings: React.FC<ClientProfileSettingsProps> = ({
   const [favoriteStyle, setFavoriteStyle] = useState(client.preferences?.favoriteStyle || '');
   const [notes, setNotes] = useState(client.preferences?.notes || '');
   const [showAvatarSelector, setShowAvatarSelector] = useState(false);
-  const [avatarList, setAvatarList] = useState<string[]>(AVATAR_PACK);
+  const [avatarList, setAvatarList] = useState<string[]>(LOCAL_AVATARS);
 
   // Fetch dynamic avatars from server
   React.useEffect(() => {

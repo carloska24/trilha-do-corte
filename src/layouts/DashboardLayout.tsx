@@ -14,6 +14,7 @@ import { AppointmentStatus, BarberProfile, Client, Service } from '../types';
 import { LogOut, Check, X, Camera, Mic, MicOff, Settings, Briefcase } from 'lucide-react';
 import { useVoiceInterpreter } from '../hooks/useVoiceInterpreter';
 import { api } from '../services/api';
+import { LOCAL_AVATARS } from '../constants';
 
 // Sub-components (Modals only, as views are now Routes)
 import { FinancialModal } from '../components/dashboard/FinancialModal';
@@ -160,7 +161,8 @@ export const DashboardLayout: React.FC = () => {
               name: result.data.clientName,
               phone: '00000000000', // Placeholder
               email: `cliente.${Date.now()}@temp.com`,
-              photoUrl: `https://ui-avatars.com/api/?name=${result.data.clientName}&background=random`,
+              // Fix: Use Local System Avatars (Random)
+              img: LOCAL_AVATARS[Math.floor(Math.random() * LOCAL_AVATARS.length)],
               status: 'new',
               notes: 'Cadastrado via IA de Voz',
             });

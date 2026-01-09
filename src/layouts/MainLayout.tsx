@@ -4,6 +4,8 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useUI } from '../contexts/UIContext';
 import { DashboardView } from '../types';
 
+import { AiChatWidget } from '../components/client/AiChatWidget';
+
 export const MainLayout: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -51,6 +53,10 @@ export const MainLayout: React.FC = () => {
       <main>
         <Outlet />
       </main>
+      {/* Only show AI Chat on Landing Page (public) */}
+      {!location.pathname.startsWith('/dashboard') &&
+        !location.pathname.startsWith('/client') &&
+        !location.pathname.startsWith('/login') && <AiChatWidget />}
     </>
   );
 };

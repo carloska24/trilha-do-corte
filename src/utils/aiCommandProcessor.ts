@@ -134,17 +134,25 @@ export const processVoiceCommand = async (
     console.log('Gemini Backend Response:', responseText); // Debug
 
     // Clean Markdown Code Blocks if present (v1 doesn't enforce JSON mode)
+    // Clean Markdown Code Blocks if present
     const cleanJson = responseText
       .replace(/```json/g, '')
       .replace(/```/g, '')
       .trim();
+
+    // Check if it looks like JSON
+    if (!cleanJson.startsWith('{')) {
+      console.warn('⚠️ Response is not JSON, treating as text message:', cleanJson);
+      return { action: 'unknown', message: cleanJson };
+    }
 
     let parsed: AiResponse;
     try {
       parsed = JSON.parse(cleanJson);
     } catch (e) {
       console.error('Failed to parse AI JSON', e);
-      return { action: 'unknown', message: 'Erro ao interpretar resposta da IA.' };
+      // Fallback: Return raw text as message
+      return { action: 'unknown', message: cleanJson };
     }
 
     // Map AI Intent to Frontend Action
