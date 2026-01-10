@@ -110,12 +110,56 @@ export const loginBarber = async (req: Request, res: Response) => {
 export const registerClient = async (req: Request, res: Response) => {
   try {
     const { name, phone, email, password, photoUrl } = registerClientSchema.parse(req.body);
-    const id = uuidv4();
-
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Using strict types from Prisma Schema
-    await prisma.clients.create({
+    // 1. Check if user already exists (by phone or email)
+    const existingClient = await prisma.clients.findFirst({
+      where: {
+        OR: [{ phone }, { email }],
+      },
+    });
+
+    if (existingClient) {
+      // 2. If exists, check if it's a full account or provisional
+      // If it has a password, it's considered a full account -> Error
+      if (existingClient.password && existingClient.password.length > 0) {
+        return res.status(409).json({ error: 'Usuário já cadastrado. Faça login.' });
+      }
+
+      // 3. If no password (Provisional/invite), UPDATE the record
+      console.log(`🔄 Upgrading provisional client: ${existingClient.name} (${existingClient.id})`);
+
+      const updatedClient = await prisma.clients.update({
+        where: { id: existingClient.id },
+        data: {
+          name, // Update name in case they corrected it
+          email, // Update email
+          password: hashedPassword,
+          img: photoUrl || existingClient.img,
+          status: 'active', // Activate account
+          notes: existingClient.notes ? existingClient.notes : 'Cadastro finalizado via Magic Link',
+        },
+      });
+
+      const token = generateToken(updatedClient);
+      return res.json({
+        success: true,
+        token,
+        data: {
+          id: updatedClient.id,
+          name: updatedClient.name,
+          phone: updatedClient.phone,
+          email: updatedClient.email,
+          img: updatedClient.img,
+          level: updatedClient.level,
+          status: updatedClient.status,
+        },
+      });
+    }
+
+    // 4. If user does NOT exist, CREATE new (Standard flow)
+    const id = uuidv4();
+    const newClient = await prisma.clients.create({
       data: {
         id,
         name,
@@ -124,30 +168,23 @@ export const registerClient = async (req: Request, res: Response) => {
         password: hashedPassword,
         img: photoUrl,
         level: 1,
-        status: 'new',
+        status: 'active', // Explicitly active
         notes: '',
-        // lastVisit is usually set when an appointment is made, but schema allows null?
-        // checking schema: lastVisit String?
-        // default logic in old controller: INSERT ... VALUES (..., 'Never', ...)? No, it was omitted in old code insert?
-        // Old code: INSERT INTO clients ... VALUES ... status='new', notes=''. No lastVisit?
-        // Wait, old code line 117: INSERT INTO clients (..., lastVisit?, ...)?
-        // Old code line 117: (id, name, phone, email, password, img, level, status, notes).
-        // It did NOT insert lastVisit.
-        // But manually defined schema has lastVisit. I'll leave it null or empty string if needed?
-        // "lastVisit" is not in INSERT list of old code. So it is null in DB.
       },
     });
 
-    const newUser = { id, name, phone, email, img: photoUrl, level: 1, status: 'new' };
-    const token = generateToken(newUser);
-
+    const token = generateToken(newClient);
     res.json({
       success: true,
       token,
-      data: newUser,
+      data: { ...newClient, img: photoUrl },
     });
   } catch (error: any) {
     console.error('Register Error:', error);
+    // Handle Unique Constraint explicitly if race condition occurs
+    if (error.code === 'P2002') {
+      return res.status(409).json({ error: 'Usuário já existe (Telefone ou Email duplicado).' });
+    }
     res.status(500).json({ error: 'Erro ao criar conta: ' + error.message });
   }
 };

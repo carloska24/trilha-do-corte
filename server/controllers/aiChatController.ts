@@ -20,6 +20,7 @@ async function getAvailabilityForNextDays() {
 
   interface DayAvailability {
     date: string;
+    weekday: string;
     slots: string[];
   }
   const nextDays: DayAvailability[] = [];
@@ -35,6 +36,12 @@ async function getAvailabilityForNextDays() {
     const day = String(date.getDate()).padStart(2, '0');
     const dateStr = `${year}-${month}-${day}`;
 
+    // Explicit Weekday Name for AI Context
+    const weekday = date.toLocaleDateString('pt-BR', {
+      weekday: 'long',
+      timeZone: 'America/Sao_Paulo',
+    });
+
     // Check if we are generating slots for TODAY (using BR time logic)
     const isToday = i === 0;
 
@@ -49,8 +56,6 @@ async function getAvailabilityForNextDays() {
           if (hour < currentHour) continue;
 
           // If current hour, skip past minutes
-          // Add 15 min buffer? Let's be strict: if 16:48, show 17:00.
-          // If 16:48, skip 16:45.
           if (hour === currentHour && min <= currentMin) continue;
         }
 
@@ -59,7 +64,7 @@ async function getAvailabilityForNextDays() {
       }
     }
 
-    nextDays.push({ date: dateStr, slots });
+    nextDays.push({ date: dateStr, weekday, slots });
   }
 
   return nextDays;
