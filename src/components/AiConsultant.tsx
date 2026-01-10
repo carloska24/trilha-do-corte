@@ -31,6 +31,7 @@ export const AiConsultant: React.FC<AiConsultantProps> = ({ onOpenBooking, onSav
   const [result, setResult] = useState<AiConsultationResponse | null>(null);
   const [isSaved, setIsSaved] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -42,14 +43,6 @@ export const AiConsultant: React.FC<AiConsultantProps> = ({ onOpenBooking, onSav
       reader.readAsDataURL(file);
     }
   };
-
-  // Add missing state for selectedImage if it was lost in previous edits,
-  // though step 281 showed it inside handleImageUpload but NOT in the state declaration!
-  // WAIT! In step 281, line 28 defines `generatedImage`, but `selectedImage` is MISSING from state declaration!
-  // Line 30 uses `setSelectedImage`, but it's not defined!
-  // THIS IS THE CRASH! "setSelectedImage is not defined" or "selectedImage is not defined".
-
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const handleConsultation = async (e: React.FormEvent) => {
     e.preventDefault();

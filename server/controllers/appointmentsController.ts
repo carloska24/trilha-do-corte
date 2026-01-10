@@ -195,6 +195,26 @@ export const createAppointment = async (req: Request, res: Response) => {
       },
     });
 
+    // --- CLIENT LIFECYCLE: Promote 'Guest/New' to 'Active' on Booking ---
+    if (finalClientId) {
+      try {
+        const client = await prisma.clients.findUnique({
+          where: { id: finalClientId },
+          select: { status: true },
+        });
+
+        if (client && (client.status === 'guest' || client.status === 'new')) {
+          await prisma.clients.update({
+            where: { id: finalClientId },
+            data: { status: 'active' },
+          });
+          console.log(`✨ Client ${finalClientId} promoted to ACTIVE.`);
+        }
+      } catch (e) {
+        console.warn('⚠️ Failed to update client status', e);
+      }
+    }
+
     res.json({
       message: 'success',
       data: newAppointment,
@@ -236,6 +256,31 @@ export const updateAppointment = async (req: Request, res: Response) => {
         where: { id },
         data,
       });
+
+      // --- CLIENT LIFECYCLE: Gamification & History ---
+      if (status === 'completed' && updated.clientId) {
+        try {
+          // Format Date YYYY-MM-DD -> DD/MM/YYYY
+          let formattedDate = new Date().toLocaleDateString('pt-BR'); // Default to today
+          if (updated.date) {
+            const [y, m, d] = updated.date.split('-');
+            formattedDate = `${d}/${m}/${y}`;
+          }
+
+          await prisma.clients.update({
+            where: { id: updated.clientId },
+            data: {
+              status: 'active', // Ensure active
+              lastVisit: formattedDate,
+              level: { increment: 1 },
+            },
+          });
+          console.log(`✨ Client ${updated.clientId} leveled up! Last visit: ${formattedDate}`);
+        } catch (e) {
+          console.error('⚠️ Failed to update client stats:', e);
+        }
+      }
+
       res.json({
         success: true,
         message: 'Agendamento atualizado com sucesso.',

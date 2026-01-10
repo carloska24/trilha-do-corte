@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
   X,
   Edit,
@@ -12,8 +12,10 @@ import {
   Clock,
   Scissors,
   MapPin,
+  Link,
 } from 'lucide-react';
 import { Client, Appointment, Service } from '../types';
+import { generateWhatsAppLink } from '../../utils/whatsappUtils';
 
 interface ClientProfileModalProps {
   client: Client;
@@ -36,16 +38,38 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({
   const [notes, setNotes] = useState(client.notes || '');
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
+  // Check if needs formalization
+  const isTemp =
+    client.status === 'new' ||
+    client.status === 'guest' ||
+    !client.email ||
+    !client.phone ||
+    client.phone === '00000000000' ||
+    client.phone.replace(/\D/g, '').length < 8;
+
   /* --- ACTIONS --- */
   const handleWhatsApp = () => {
-    const phone = client.phone.replace(/\D/g, '');
-    const msg = `Ola, ${client.name}! \uD83D\uDC88\n\nTudo bem?`;
-    const whatsappUrl = `https://api.whatsapp.com/send?phone=55${phone}&text=${encodeURIComponent(
-      msg
-    )}`;
-    window.open(whatsappUrl, '_blank');
-  };
+    const phone = client.phone?.replace(/\D/g, '') || '';
 
+    if (isTemp) {
+      // Formalization Flow
+      const magicLink = `${window.location.origin}/login?action=register&name=${encodeURIComponent(
+        client.name
+      )}&phone=${encodeURIComponent(client.phone)}`;
+
+      const message = `Olá ${client.name}! ✂️\n\nAqui é da Trilha do Corte. Seu pré-cadastro foi feito via IA.\n\nClique no link abaixo para finalizar seu cadastro e ter acesso exclusivo aos horários:\n\n${magicLink}`;
+
+      const link = generateWhatsAppLink(phone.length >= 10 ? client.phone : '', message);
+      window.open(link, '_blank');
+    } else {
+      // Standard Greeting
+      const msg = `Ola, ${client.name}! \uD83D\uDC88\n\nTudo bem?`;
+      const whatsappUrl = `https://api.whatsapp.com/send?phone=55${phone}&text=${encodeURIComponent(
+        msg
+      )}`;
+      window.open(whatsappUrl, '_blank');
+    }
+  };
   const handleSaveNotes = () => {
     setIsEditingNotes(false);
     // API call placeholder
@@ -55,7 +79,7 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({
   const getServiceName = (id: string | undefined) => {
     if (!id) return 'Serviço Personalizado';
     const s = services.find(serv => serv.id === id);
-    return s ? s.name : 'Serviço Personalizado';
+    return s ? s.name : 'ServiÃ§o Personalizado';
   };
 
   // FIX: Parse date safely as local time (YYYY-MM-DD -> Year, Month, Day)
@@ -231,6 +255,7 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({
                 Ligar
               </span>
             </a>
+            {/* WHATSAPP / FORMALIZE BUTTON */}
             <button
               onClick={handleWhatsApp}
               className="group flex items-center justify-center gap-2 py-3 rounded-xl bg-white/5 hover:bg-green-500/10 border border-white/5 hover:border-green-500/30 transition-all"
@@ -419,12 +444,12 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({
                   value={notes}
                   onChange={e => setNotes(e.target.value)}
                   className="w-full h-full bg-transparent text-xs text-zinc-300 focus:outline-none resize-none"
-                  placeholder="Adicione uma observação..."
+                  placeholder="Adicione uma observaÃ§Ã£o..."
                   autoFocus
                 />
               ) : (
                 <p className="text-xs text-zinc-400 italic leading-relaxed">
-                  "{notes || 'Sem observações.'}"
+                  "{notes || 'Sem observaÃ§Ãµes.'}"
                 </p>
               )}
             </div>

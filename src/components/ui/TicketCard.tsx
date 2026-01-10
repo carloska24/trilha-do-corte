@@ -22,23 +22,23 @@ const getTier = (count: number): Tier => {
 const TIER_STYLES = {
   SILVER: {
     gradient: 'bg-linear-to-br from-[#E2E4E9] via-[#F3F4F6] to-[#9CA3AF]', // Brighter silver body
-    border: 'border-white/40',
-    // CHANGED: Dark text for bright background
-    textMain: 'text-[#1F2937]', // Dark gray (almost black)
-    textSoft: 'text-[#4B5563]', // Medium gray
-    textMuted: 'text-[#6B7280]', // Light gray
-    accent: 'text-[#374151]',
-    icon: 'text-[#374151]',
-    shadow: 'shadow-[0_8px_20px_rgba(0,0,0,0.25)]',
-    // CHANGED: Anodized Dark Header
-    headerBg: 'bg-linear-to-b from-[#1F2328] to-[#2B2F36]',
-    headerBorder: 'border-[rgba(255,255,255,0.12)]',
-    headerText: 'text-[#E5E7EB] drop-shadow-sm',
-    headerTexture: 'opacity-[0.06]', // 6% Grid
+    border: 'border-white/60', // Sharper border
+    // CHANGED: Jet Black for maximum contrast
+    textMain: 'text-black',
+    textSoft: 'text-[#374151]',
+    textMuted: 'text-[#4B5563]',
+    accent: 'text-[#111827]',
+    icon: 'text-[#1F2937]',
+    shadow: 'shadow-[0_4px_10px_rgba(0,0,0,0.15)]', // Tighter shadow
+    // CHANGED: Clean Dark Header
+    headerBg: 'bg-[#111]',
+    headerBorder: 'border-white/10',
+    headerText: 'text-white font-bold tracking-[0.2em]',
+    headerTexture: 'opacity-0', // REMOVED texture for clean look
     headerTextureColor: '#FFFFFF',
-    textureOverlay: 'bg-white/10', // Crushed ice feel
+    textureOverlay: 'bg-transparent', // REMOVED overlay
     cutoutBorder: 'border-gray-400/50',
-    infoBox: 'bg-black/5 border-black/10', // Darken box for contrast
+    infoBox: 'bg-black/5 border-black/10',
     divider: 'bg-black/10',
   },
   GOLD: {
@@ -167,14 +167,14 @@ export const TicketCard: React.FC<TicketCardProps> = ({
     >
       {/* Outer Glow - Tier Specific */}
       <div
-        className={`absolute inset-0 blur-2xl rounded-[24px] transform scale-[0.9] pointer-events-none transition-opacity duration-500 z-0 ${
-          isAnimating ? 'opacity-0' : 'opacity-40 group-hover:opacity-60'
+        className={`absolute inset-0 rounded-[24px] transform scale-[0.98] pointer-events-none transition-opacity duration-500 z-0 ${
+          isAnimating ? 'opacity-0' : 'opacity-100'
         } ${
           tier === 'GOLD'
-            ? 'bg-[#F4D079]/30'
+            ? 'bg-[#F4D079]/10 shadow-[0_0_20px_rgba(244,208,121,0.2)]'
             : tier === 'PLATINUM'
-            ? 'bg-[#93C5FD]/20'
-            : 'bg-white/5'
+            ? 'bg-[#93C5FD]/10 shadow-[0_0_20px_rgba(147,197,253,0.2)]'
+            : 'shadow-[0_10px_30px_-10px_rgba(0,0,0,0.3)]' // Clean shadow for silver
         }`}
       ></div>
 
@@ -194,9 +194,9 @@ export const TicketCard: React.FC<TicketCardProps> = ({
               <div className="absolute inset-0 z-0 pointer-events-none">
                 <div className={`absolute inset-0 opacity-100 ${styles.gradient}`}></div>
 
-                {/* Micro-noise */}
+                {/* Micro-noise REDUCED */}
                 <div
-                  className="absolute inset-0 opacity-[0.15] mix-blend-overlay"
+                  className="absolute inset-0 opacity-[0.03] mix-blend-overlay"
                   style={{
                     backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
                   }}

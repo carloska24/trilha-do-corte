@@ -70,8 +70,9 @@ export const BookingModal: React.FC<BookingModalProps> = ({
       let initialDateObj = new Date();
 
       if (initialDateStr) {
-        // Fix timezone issue when parsing YYYY-MM-DD
-        const [y, m, d] = initialDateStr.split('-').map(Number);
+        // Safe parsing for YYYY-MM-DD or YYYY-MM-DDTHH...
+        const cleanDateStr = initialDateStr.split('T')[0];
+        const [y, m, d] = cleanDateStr.split('-').map(Number);
         // Note: Month in Date constructor is 0-indexed
         initialDateObj = new Date(y, m - 1, d);
       }

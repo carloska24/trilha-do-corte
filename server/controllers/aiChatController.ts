@@ -77,42 +77,46 @@ export const handleChat = async (req: Request, res: Response) => {
 
       SUAS INSTRUÇÕES:
       1. Seja educada, moderna (tom "Cyberpunk/Tech") e prestativa. Use emojis ocasionalmente (🤘, ✂️, 🔥).
-      2. LÓGICA DE AGENDAMENTO INTELIGENTE (IMPORTANTE):
-         - Verifique a duração do serviço solicitado.
-         - Se o serviço levar mais de 30min (ex: 60min, 90min), você só pode oferecer um horário se houver slots consecutivos livres suficientes.
-         - EXEMPLO: Para "Platinado" (90min) às 09:30, verifique se 09:30, 10:00 e 10:30 estão TODOS na lista de livres.
-         - Se houver "buracos" na agenda que impeçam o serviço completo, NÃO ofereça esse horário.
+      2. LÓGICA DE AGENDAMENTO E CADASTRO (IMPORTANTE):
+         - Antes de finalizar qualquer agendamento, você DEVE saber o NOME e o TELEFONE do cliente.
+         - Se o cliente não forneceu, pergunte algo como "Para finalizar, qual seu nome e WhatsApp?".
+         - NÃO CONFIRME agendamento sem esses dados.
       
-      3. APRESENTAÇÃO:
-         - Liste apenas os horários de INÍCIO válidos.
-         - Se o cliente perguntar "tem horário para Platinado?", calcule e mostre apenas os slots onde cabem 90 minutos.
+      3. LÓGICA DE HORÁRIOS:
+         - Verifique a duração do serviço (ex: Platinado 90min precisa de 3 slots).
+         - Use os slots de 'availability' fornecidos na lista.
 
-      4. Se o cliente quiser agendar, peça confirmação de: Serviço, Data e Horário.
-      
-      TOOL CALLING / AÇÕES:
-      1. Se o cliente pedir horários disponíveis, responda com JSON "PROPOSE_SLOTS".
-         No campo "slots", inclua APENAS os horários de início válidos para o serviço (se identificado) ou todos se for genérico.
-      {
-        "action": "PROPOSE_SLOTS",
-        "data": {
-          "date": "YYYY-MM-DD",
-          "slots": ["09:00", "10:00"] // Apenas os horários livres
-        }
-      }
+      4. APRESENTAÇÃO DOS HORÁRIOS (CRÍTICO):
+         - NUNCA escreva a lista de horários no texto da resposta (ex: "Tenho 09:00, 09:30..."). ISSO É PROIBIDO.
+         - Apenas diga algo como "Encontrei estes horários disponíveis para você:" ou "Veja os horários abaixo:".
+         - A interface do usuário cuidará de mostrar os botões bonitinhos baseados no seu JSON.
 
-      2. Se o cliente CONFIRMAR explicitamente um agendamento com todas as informações necessárias (Serviço, Data, Hora), NÃO responda com texto comum.
-      Responda EXATAMENTE um JSON neste formato para que o sistema execute a ação:
-      
+      5. TOOL CALLING / AÇÕES:
+         - Se o cliente pedir horários: JSON "PROPOSE_SLOTS".
+         
+         - Se o cliente quiser agendar mas você NÃO souber Nome/Telefone:
+           NÃO PERGUNTE EM TEXTO. Envie estritamente o JSON "REQUEST_CLIENT_DATA".
+           {
+             "action": "REQUEST_CLIENT_DATA"
+           }
+
+         - Se o cliente CONFIRMAR (e você JÁ TIVER Nome e Telefone):
+           Responda EXATAMENTE um JSON "PROPOSE_BOOKING".
+
       {
         "action": "PROPOSE_BOOKING",
         "data": {
-          "serviceId": "ID_DO_SERVICO_ENCONTRADO",
+          "serviceId": "ID_DO_SERVICO",
           "serviceName": "NOME_DO_SERVICO",
-          "price": 35.00, // Preço do serviço (numérico)
+          "price": 35.00,
           "date": "YYYY-MM-DD",
-          "time": "HH:MM"
+          "time": "HH:MM",
+          "clientName": "Nome Coletado",
+          "clientPhone": "Telefone Coletado"
         }
       }
+
+      Se faltar info, NÃO MANDE JSON, mande texto perguntando.
 
       Se faltar informação, APENAS pergunte ao cliente. NÃO invente horários.
       
@@ -122,40 +126,71 @@ export const handleChat = async (req: Request, res: Response) => {
       Cliente: "${message}"
     `;
 
-    // 3. Call Gemini
-    const result = await model.generateContent(systemPrompt);
+    // 3. Call Gemini with Fallback Strategy
+    let result;
+    try {
+      result = await model.generateContent(systemPrompt);
+    } catch (modelError: any) {
+      console.warn('⚠️ Primary Model 2.5 Failed. Trying Fallback 1.5-Flash...', modelError.message);
+      // Fallback
+      const fallbackModel = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-8b' });
+      result = await fallbackModel.generateContent(systemPrompt);
+    }
+
     const responseText = result.response.text();
 
     // 4. Check if response is JSON (Action)
+    // 4. Robust Response Parsing (Handles Text + JSON mixed content)
     let finalResponse;
-    try {
-      // Attempt to extract JSON if Gemini wrapped it in code blocks
-      const cleaned = responseText
-        .replace(/```json/g, '')
-        .replace(/```/g, '')
-        .trim();
-      // Check if it looks like a JSON object with an "action" field
-      if (
-        cleaned.startsWith('{') &&
-        (cleaned.includes('"action":') || cleaned.includes('"type":'))
-      ) {
-        const actionData = JSON.parse(cleaned);
+    const jsonBlockRegex = /```json([\s\S]*?)```/;
+    const match = responseText.match(jsonBlockRegex);
+
+    if (match) {
+      // Case A: Explicit Markdown JSON block found
+      const jsonString = match[1].trim();
+      const textPart = responseText.replace(match[0], '').trim();
+
+      try {
+        const actionData = JSON.parse(jsonString);
         finalResponse = {
           type: 'action',
+          text: textPart, // Include the conversational part
           ...actionData,
         };
-      } else {
-        finalResponse = {
-          type: 'text',
-          text: responseText,
-        };
+      } catch (e) {
+        // Only if JSON parse strictly fails
+        finalResponse = { type: 'text', text: responseText };
       }
-    } catch (e) {
-      // Fallback to text if parsing fails
-      finalResponse = {
-        type: 'text',
-        text: responseText,
-      };
+    } else {
+      // Case B: No Markdown, but maybe raw JSON?
+      const firstBrace = responseText.indexOf('{');
+      const lastBrace = responseText.lastIndexOf('}');
+
+      if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+        const potentialJson = responseText.substring(firstBrace, lastBrace + 1);
+        const potentialText = (
+          responseText.substring(0, firstBrace) + responseText.substring(lastBrace + 1)
+        ).trim();
+
+        try {
+          const actionData = JSON.parse(potentialJson);
+          if (actionData.action || actionData.type) {
+            finalResponse = {
+              type: 'action',
+              text: potentialText,
+              ...actionData,
+            };
+          } else {
+            // Just a random object mentioned in text
+            finalResponse = { type: 'text', text: responseText };
+          }
+        } catch (e) {
+          finalResponse = { type: 'text', text: responseText };
+        }
+      } else {
+        // Case C: Pure Text
+        finalResponse = { type: 'text', text: responseText };
+      }
     }
 
     res.json(finalResponse);
@@ -170,7 +205,7 @@ export const handleChat = async (req: Request, res: Response) => {
       type: 'text',
       text: isQuota
         ? '🤯 Eita! Muita gente falando comigo. Aguarde 30s e tente de novo? (Cota excedida)'
-        : `😵 Tive um problema técnico: ${error.message}`,
+        : `😵 Tive um problema técnico: ${error.message || 'Erro desconhecido'}`,
     });
   }
 };

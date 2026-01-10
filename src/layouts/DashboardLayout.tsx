@@ -28,8 +28,15 @@ const DEFAULT_BARBER_IMAGE =
 export const DashboardLayout: React.FC = () => {
   // Contexts
   const { currentUser, logout, updateProfile } = useAuth();
-  const { appointments, clients, services, updateAppointments, updateClients, updateServices } =
-    useData();
+  const {
+    appointments,
+    clients,
+    services,
+    shopSettings,
+    updateAppointments,
+    updateClients,
+    updateServices,
+  } = useData();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -63,8 +70,17 @@ export const DashboardLayout: React.FC = () => {
       utterance.lang = 'pt-BR';
       utterance.rate = 1.2; // Slightly faster
       // Try to find a good voice
+      // Try to find a good voice
       const voices = window.speechSynthesis.getVoices();
-      const brVoice = voices.find(v => v.lang.includes('PT-BR') || v.lang.includes('pt-BR'));
+      // Prioritize Google voices (usually better quality on Android/Windows)
+      let brVoice = voices.find(
+        v => (v.lang === 'pt-BR' || v.lang === 'pt_BR') && v.name.includes('Google')
+      );
+      // Fallback to any PT-BR
+      if (!brVoice) {
+        brVoice = voices.find(v => v.lang === 'pt-BR' || v.lang === 'pt_BR');
+      }
+
       if (brVoice) utterance.voice = brVoice;
 
       window.speechSynthesis.speak(utterance);
@@ -138,6 +154,48 @@ export const DashboardLayout: React.FC = () => {
         const appointmentDate = result.data.date || getLocalDateStr();
         const time = result.data.time || '12:00';
         const clientName = result.data.clientName || 'Cliente Voz';
+
+        // 🛡️ SECURITY: Validate Business Hours
+        const [h] = time.split(':').map(Number);
+        // Fix: accessing shopSettings from context
+        const { startHour, endHour } = shopSettings;
+
+        // 1. Validate Business Hours
+        if (h < startHour || h >= endHour) {
+          const msg = `A barbearia está fechada às ${time}. Funcionamos das ${startHour}h às ${endHour}h.`;
+          setAiResponse(`❌ ${msg}`);
+          speak(msg);
+          setTimeout(() => setAiResponse(null), 4000);
+          return;
+        }
+
+        // 2. Validate Sunday (Closed)
+        // appointmentDate is YYYY-MM-DD
+        const [y, m, d] = appointmentDate.split('-').map(Number);
+        const dateObj = new Date(y, m - 1, d); // Local Time construction
+        if (dateObj.getDay() === 0) {
+          const msg = 'Não abrimos aos domingos! Tente outro dia.';
+          setAiResponse(`❌ ${msg}`);
+          speak(msg);
+          setTimeout(() => setAiResponse(null), 4000);
+          return;
+        }
+
+        // 3. Validate Availability (Collision Check)
+        const isOccupied = appointments.some(
+          app =>
+            app.status !== 'cancelled' &&
+            app.time === time &&
+            (app.date === appointmentDate || app.date.toString().split('T')[0] === appointmentDate)
+        );
+
+        if (isOccupied) {
+          const msg = `O horário das ${time} já está ocupado.`;
+          setAiResponse(`❌ ${msg}`);
+          speak(msg);
+          setTimeout(() => setAiResponse(null), 4000);
+          return;
+        }
 
         // 1. Find Client via Fuzzy Search
         // We need the latest clients list. Use `clients` from context.

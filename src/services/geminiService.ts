@@ -2,6 +2,12 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { AiConsultationResponse } from '../types';
 
 const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+console.log(
+  'Gemini API Key Loaded:',
+  !!apiKey,
+  'Environment:',
+  (import.meta as any).env ? 'Vite' : 'Process'
+);
 const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
 
 // Função de espera para o Retry
@@ -231,38 +237,41 @@ export const generatePromoPhrase = async (serviceName: string, price: number, co
   }
 };
 
+// --- 4. GERAÇÃO DE DESCRIÇÃO (Backend Secure) ---
 export const generateServiceDescription = async (
   serviceName: string,
   category: string,
   duration: number
 ) => {
-  if (!genAI) return 'Serviço premium com acabamento impecável.';
-
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+    // Randomize the "Vibe" to prevent repetitive outputs
+    const vibes = [
+      'Luxo & Exclusividade',
+      'Rapidez & Praticidade',
+      'Estilo Urbano/Moderno',
+      'Clássico & Tradicional',
+      'Rejuvenescimento/Cuidado',
+      'Minimalista & Clean',
+      'Ousado & Artístico',
+    ];
+    const randomVibe = vibes[Math.floor(Math.random() * vibes.length)];
 
-    const prompt = `
-      Você é um Barbeiro Expert e Copywriter de Luxo para a "Barber Pro System".
-      Crie uma descrição curta, técnica e vendedora para o seguinte serviço:
+    const response = await fetch('/api/ai/generate-description', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ serviceName, category, duration, vibe: randomVibe }),
+    });
 
-      Serviço: ${serviceName}
-      Categoria: ${category}
-      Duração: ${duration} minutos
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('❌ Server Error Details:', errorData); // Log full details for User/Screenshot
+      throw new Error(errorData.details || errorData.error || `Server returned ${response.status}`);
+    }
 
-      Regras:
-      1. Use tom profissional, moderno e "premium".
-      2. Destaque os benefícios e a técnica.
-      3. Máximo de 180 caracteres (ideal para caber no card).
-      4. Sem emojis exagerados.
-      5. Foco na experiência do cliente.
-
-      Retorne APENAS o texto da descrição.
-    `;
-
-    const result = await model.generateContent(prompt);
-    return result.response.text().trim();
+    const data = await response.json();
+    return data.text;
   } catch (error) {
-    console.error('Error generating description:', error);
+    console.error('Error fetching description from backend:', error);
     return `O melhor ${serviceName} da região, feito com excelência em ${duration}min.`;
   }
 };

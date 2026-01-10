@@ -170,8 +170,15 @@ export const PublicAgenda: React.FC = () => {
     const status = getSlotStatus(timeStr);
     if (status !== 'available') return;
 
+    const dateStr =
+      selectedDate.getFullYear() +
+      '-' +
+      String(selectedDate.getMonth() + 1).padStart(2, '0') +
+      '-' +
+      String(selectedDate.getDate()).padStart(2, '0');
+
     const bookingData: Partial<BookingData> = {
-      date: selectedDate.toISOString(),
+      date: dateStr,
       time: timeStr,
       serviceId: services[0]?.id,
     };

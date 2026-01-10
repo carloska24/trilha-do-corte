@@ -64,9 +64,14 @@ const ClientCard: React.FC<{
     }
   };
 
-  // Check if needs formalization (Only if phone is missing/placeholder)
+  // Check if needs formalization (Guest, AI-created, or missing phone/email)
   const isTemp =
-    !client.phone || client.phone === '00000000000' || client.phone.replace(/\D/g, '').length < 8;
+    client.status === 'new' ||
+    client.status === 'guest' ||
+    !client.email || // Active clients without email are incomplete (booked via landing/voice)
+    !client.phone ||
+    client.phone === '00000000000' ||
+    client.phone.replace(/\D/g, '').length < 8;
 
   return (
     <div className="relative mb-2 group touch-pan-y">

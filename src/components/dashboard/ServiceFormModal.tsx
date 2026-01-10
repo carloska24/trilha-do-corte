@@ -185,8 +185,11 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
               </label>
               <input
                 type="number"
-                value={formData.priceValue}
-                onChange={e => setFormData({ ...formData, priceValue: parseFloat(e.target.value) })}
+                value={formData.priceValue || ''}
+                onChange={e => {
+                  const val = parseFloat(e.target.value);
+                  setFormData({ ...formData, priceValue: isNaN(val) ? 0 : val });
+                }}
                 className="w-full bg-[#1a1a1a] border border-gray-800 rounded-lg px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-neon-yellow transition-colors font-mono"
               />
             </div>
@@ -203,8 +206,11 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
                 <input
                   type="number"
                   step={5}
-                  value={formData.duration}
-                  onChange={e => setFormData({ ...formData, duration: parseInt(e.target.value) })}
+                  value={formData.duration || ''}
+                  onChange={e => {
+                    const val = parseInt(e.target.value);
+                    setFormData({ ...formData, duration: isNaN(val) ? 0 : val });
+                  }}
                   className="w-full bg-[#1a1a1a] border border-gray-800 rounded-lg pl-9 pr-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-neon-yellow transition-colors font-mono"
                 />
               </div>

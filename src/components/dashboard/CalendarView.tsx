@@ -465,8 +465,8 @@ export const CalendarView: React.FC = () => {
                       } else if (action.type === 'RESET_EXCEPTIONS') {
                         updateShopSettings({
                           ...shopSettings,
-                          startHour: 9,
-                          endHour: 19,
+                          startHour: 8,
+                          endHour: 20,
                           exceptions: {},
                         });
                         showToast(`♻️ Todos os dias resetados para o padrão (9-19h)!`);
