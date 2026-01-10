@@ -3,11 +3,12 @@ import { getOptimizedImageUrl } from '../../utils/imageUtils';
 import { ChairIcon } from '../icons/ChairIcon';
 import { Appointment, AppointmentStatus, ServiceItem } from '../../types';
 import { SERVICES as ALL_SERVICES, LOCAL_AVATARS } from '../../constants';
-import { Armchair, ChevronLeft, ChevronRight, User, Star } from 'lucide-react';
+import { Armchair, ChevronLeft, ChevronRight, User, Star, X } from 'lucide-react';
 import { sendBroadcastNotification } from '../../utils/notificationUtils';
 import { useData } from '../../contexts/DataContext';
 import { useShopStatus } from '../../hooks/useShopStatus';
 import { useOutletContext } from 'react-router-dom';
+import { api } from '../../services/api';
 
 interface DashboardOutletContext {
   initiateFinish: (id: string) => void;
@@ -228,8 +229,26 @@ export const DashboardHome: React.FC = () => {
   const { appointments, services, clients, updateAppointments } = useData();
   const { currentTime, shopStatus } = useShopStatus(); // Using Centralized Logic
   const { initiateFinish } = useOutletContext<DashboardOutletContext>();
+  const [isSkipModalOpen, setIsSkipModalOpen] = useState(false);
 
   const onInitiateFinish = initiateFinish;
+
+  const handleSkipConfirm = async () => {
+    if (!nextClient) return;
+    setIsSkipModalOpen(false);
+
+    // Optimistic Update
+    const updated = appointments.map(app =>
+      app.id === nextClient.id ? { ...app, status: 'cancelled' as const } : app
+    );
+    updateAppointments(updated);
+
+    try {
+      await api.updateAppointment(nextClient.id, { status: 'cancelled' });
+    } catch (err) {
+      console.error('Failed to cancel', err);
+    }
+  };
 
   const onStatusChange = (
     id: string,
@@ -521,9 +540,11 @@ export const DashboardHome: React.FC = () => {
                 </div>
               </button>
             ) : nextClient ? (
-              <button
+              <div
                 onClick={() => onStatusChange(nextClient.id, 'in_progress')}
                 className="w-full h-24 rounded-lg flex items-center px-0 relative overflow-hidden transition-all duration-500 bg-gradient-to-r from-amber-700 via-orange-600 to-red-800 shadow-[0_4px_20px_rgba(185,28,28,0.4)] active:scale-[0.98] cursor-pointer hover:shadow-[0_6px_25px_rgba(234,88,12,0.5)]"
+                role="button"
+                tabIndex={0}
               >
                 <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay"></div>
                 <div className="w-[30%] h-full flex items-center justify-center relative z-10 pl-1">
@@ -548,12 +569,26 @@ export const DashboardHome: React.FC = () => {
                       {nextClient.clientName ? nextClient.clientName.split(' ')[0] : 'CLIENTE'}
                     </span>
                   </div>
-                  <ChevronRight
-                    className="text-amber-200/60 animate-pulse flex-shrink-0 ml-2"
-                    size={36}
-                  />
+                  <div className="flex items-center gap-3">
+                    {/* Discrete Skip Button */}
+                    <button
+                      onClick={e => {
+                        e.stopPropagation();
+                        setIsSkipModalOpen(true);
+                      }}
+                      className="w-8 h-8 rounded-full bg-black/20 hover:bg-red-500/80 flex items-center justify-center text-white/40 hover:text-white transition-all backdrop-blur-sm z-50 group/skip"
+                      title="Cliente não veio (Cancelar)"
+                    >
+                      <X size={16} strokeWidth={3} />
+                    </button>
+
+                    <ChevronRight
+                      className="text-amber-200/60 animate-pulse flex-shrink-0"
+                      size={36}
+                    />
+                  </div>
                 </div>
-              </button>
+              </div>
             ) : (
               <button
                 onClick={() => {
@@ -591,6 +626,49 @@ export const DashboardHome: React.FC = () => {
                 </div>
               </button>
             )}
+          </div>
+        )}
+
+        {/* 5. CONFIRMATION MODAL (CUSTOM STYLE) */}
+        {isSkipModalOpen && nextClient && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+            <div
+              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+              onClick={() => setIsSkipModalOpen(false)}
+            ></div>
+            <div className="relative w-full max-w-sm bg-zinc-900 border border-red-500/30 rounded-2xl p-6 shadow-[0_0_40px_rgba(220,38,38,0.2)] animate-[fadeIn_0.2s_ease-out]">
+              {/* Warning Icon */}
+              <div className="flex justify-center mb-4">
+                <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mb-2 animate-pulse">
+                  <User size={32} className="text-red-500" />
+                  <div className="absolute text-red-500 transform translate-x-3 translate-y-3">
+                    <X size={16} strokeWidth={4} />
+                  </div>
+                </div>
+              </div>
+
+              <h3 className="text-2xl font-bold text-white text-center mb-2">Cliente não veio?</h3>
+              <p className="text-zinc-400 text-center text-sm mb-6">
+                Isso irá marcar{' '}
+                <span className="text-white font-bold">{nextClient.clientName}</span> como "Não
+                Compareceu" e chamar o próximo da fila.
+              </p>
+
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => setIsSkipModalOpen(false)}
+                  className="py-3 rounded-xl bg-zinc-800 text-zinc-300 font-bold hover:bg-zinc-700 transition-colors"
+                >
+                  Voltar
+                </button>
+                <button
+                  onClick={handleSkipConfirm}
+                  className="py-3 rounded-xl bg-gradient-to-r from-red-600 to-red-800 text-white font-bold shadow-lg shadow-red-900/30 hover:scale-105 active:scale-95 transition-transform"
+                >
+                  Pular Cliente
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
