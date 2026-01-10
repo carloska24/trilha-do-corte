@@ -22,7 +22,7 @@ const getTier = (count: number): Tier => {
 const TIER_STYLES = {
   SILVER: {
     gradient: 'bg-linear-to-br from-[#E2E4E9] via-[#F3F4F6] to-[#9CA3AF]', // Brighter silver body
-    border: 'border-white/60', // Sharper border
+    border: 'border-black/10 dark:border-white/60', // Adaptive border
     // CHANGED: Jet Black for maximum contrast
     textMain: 'text-black',
     textSoft: 'text-[#374151]',
@@ -43,7 +43,7 @@ const TIER_STYLES = {
   },
   GOLD: {
     gradient: 'bg-linear-to-br from-[#E0B65C] via-[#FDE68A] to-[#8C6A1E]',
-    border: 'border-[#FFD777]/80',
+    border: 'border-[#FFD777]/80 dark:border-[#FFD777]/80',
     // CHANGED: Dark Brown/Bronze for contrast on Gold
     textMain: 'text-[#422006]', // Deep bronze
     textSoft: 'text-[#713F12]',
@@ -64,7 +64,7 @@ const TIER_STYLES = {
   },
   PLATINUM: {
     gradient: 'bg-linear-to-br from-[#E5E7EB] via-[#F9FAFB] to-[#6B7280]',
-    border: 'border-white/45',
+    border: 'border-black/10 dark:border-white/45',
     // CHANGED: Dark Slate for contrast on Platinum/White
     textMain: 'text-[#0F172A]', // Dark Slate
     textSoft: 'text-[#334155]',

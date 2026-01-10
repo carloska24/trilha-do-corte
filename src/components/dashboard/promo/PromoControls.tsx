@@ -49,7 +49,7 @@ export const PromoControls: React.FC<PromoControlsProps> = ({
   setViewMode,
 }) => {
   return (
-    <div className="w-full lg:w-[450px] bg-[#151515] bg-[url('https://www.transparenttextures.com/patterns/black-felt.png')] border-r border-gray-800 flex flex-col h-auto lg:h-full z-20 shadow-2xl relative">
+    <div className="w-full lg:w-[450px] bg-[var(--bg-card)] bg-[url('https://www.transparenttextures.com/patterns/black-felt.png')] border-r border-[var(--border-color)] flex flex-col h-auto lg:h-full z-20 shadow-2xl relative transition-colors duration-300">
       {/* Vignette Overlay */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.6)_100%)] pointer-events-none z-0"></div>
 
@@ -58,22 +58,22 @@ export const PromoControls: React.FC<PromoControlsProps> = ({
         <div className="flex items-center justify-between">
           <button
             onClick={onBack}
-            className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors font-bold text-xs uppercase tracking-widest group"
+            className="flex items-center gap-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors font-bold text-xs uppercase tracking-widest group"
           >
             <div className="w-8 h-8 rounded-full bg-white/5 group-hover:bg-white/20 flex items-center justify-center transition-all">
               <ChevronRight className="rotate-180" size={14} />
             </div>
             Voltar
           </button>
-          <h3 className="text-white font-rye text-xl tracking-widest text-[#E6CCAA]">
+          <h3 className="text-[var(--text-primary)] font-rye text-xl tracking-widest text-[#E6CCAA]">
             Badge Creator
           </h3>
         </div>
 
         {/* 1. VARIANT - UNIFIED CONTAINER */}
-        <div className="bg-[#0f0f0f] rounded-3xl border border-white/5 shadow-2xl overflow-hidden relative group/container">
+        <div className="bg-[var(--bg-secondary)] rounded-3xl border border-[var(--border-color)] shadow-2xl overflow-hidden relative group/container">
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 bg-[#141414] border-b border-white/5 relative z-10 w-full gap-4">
+          <div className="flex items-center justify-between px-6 py-4 bg-[var(--bg-card)] border-b border-[var(--border-color)] relative z-10 w-full gap-4">
             <div className="shrink-0">
               <div className="w-10 h-10 flex items-center justify-center text-purple-500 opacity-80">
                 <LayoutTemplate size={24} />
@@ -81,10 +81,10 @@ export const PromoControls: React.FC<PromoControlsProps> = ({
             </div>
 
             <div className="flex-1 flex flex-col items-start justify-center overflow-hidden">
-              <h3 className="text-white font-black text-sm uppercase tracking-widest whitespace-nowrap drop-shadow-md">
+              <h3 className="text-[var(--text-primary)] font-black text-sm uppercase tracking-widest whitespace-nowrap drop-shadow-md">
                 CRIAÇÃO DE PROMOÇÕES
               </h3>
-              <p className="text-gray-500 text-[10px] font-bold uppercase tracking-[0.2em] whitespace-nowrap">
+              <p className="text-[var(--text-secondary)] text-[10px] font-bold uppercase tracking-[0.2em] whitespace-nowrap">
                 Selecione o estilo do destaque
               </p>
             </div>
@@ -105,8 +105,8 @@ export const PromoControls: React.FC<PromoControlsProps> = ({
                 className={`flex-1 relative flex flex-col items-center justify-center gap-4 transition-all duration-300
                   ${
                     config.variant === v.id
-                      ? 'bg-[#1a1025] text-white'
-                      : 'bg-[#0f0f0f] text-gray-600 hover:bg-[#151515] hover:text-gray-400'
+                      ? 'bg-purple-900/20 text-[var(--text-primary)]'
+                      : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-card)] hover:text-[var(--text-primary)]'
                   }
                 `}
               >
@@ -137,7 +137,7 @@ export const PromoControls: React.FC<PromoControlsProps> = ({
                 <div className="text-center z-10 block">
                   <span
                     className={`block text-xs font-black uppercase tracking-[0.2em] mb-1
-                    ${config.variant === v.id ? 'text-white' : 'text-current'}
+                    ${config.variant === v.id ? 'text-[var(--text-primary)]' : 'text-current'}
                   `}
                   >
                     {v.label.split(' ')[0]}
@@ -149,39 +149,39 @@ export const PromoControls: React.FC<PromoControlsProps> = ({
         </div>
 
         {/* 2. TEXT CONTENT */}
-        <div className="bg-[#1a1a1a] rounded-2xl border border-white/5 shadow-inner overflow-hidden">
-          <div className="bg-[#111] px-5 py-3 border-b border-white/5 flex items-center gap-2">
+        <div className="bg-[var(--bg-secondary)] rounded-2xl border border-[var(--border-color)] shadow-inner overflow-hidden">
+          <div className="bg-[var(--bg-card)] px-5 py-3 border-b border-[var(--border-color)] flex items-center gap-2">
             <Type size={14} className="text-blue-500" />
-            <span className="text-white font-bold uppercase text-xs tracking-[0.2em] opacity-80">
+            <span className="text-[var(--text-primary)] font-bold uppercase text-xs tracking-[0.2em] opacity-80">
               Conteúdo
             </span>
           </div>
 
           <div className="p-5 space-y-5">
             <div className="relative group">
-              <label className="absolute -top-2 left-3 bg-[#1a1a1a] px-2 text-[9px] font-bold text-gray-500 uppercase transition-colors group-focus-within:text-purple-500">
+              <label className="absolute -top-2 left-3 bg-[var(--bg-secondary)] px-2 text-[9px] font-bold text-[var(--text-secondary)] uppercase transition-colors group-focus-within:text-purple-500">
                 Texto Principal
               </label>
               <input
                 value={config.text}
                 onChange={e => setConfig({ ...config, text: e.target.value })}
-                className="w-full bg-[#111] border border-gray-800 rounded-xl px-4 py-3 text-white focus:border-purple-500 focus:bg-black outline-none font-bold text-sm transition-all"
+                className="w-full bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl px-4 py-3 text-[var(--text-primary)] focus:border-purple-500 focus:bg-[var(--bg-secondary)] outline-none font-bold text-sm transition-all"
                 placeholder="Ex: OFERTA"
               />
-              <div className="absolute right-3 bottom-3 opacity-30 text-[9px] font-mono">
+              <div className="absolute right-3 bottom-3 opacity-30 text-[9px] font-mono text-[var(--text-secondary)]">
                 {config.text.length}/12
               </div>
             </div>
 
             {config.variant === 'ribbon' && (
               <div className="relative group animate-[fadeIn_0.3s_ease-out]">
-                <label className="absolute -top-2 left-3 bg-[#1a1a1a] px-2 text-[9px] font-bold text-gray-500 uppercase transition-colors group-focus-within:text-purple-500">
+                <label className="absolute -top-2 left-3 bg-[var(--bg-secondary)] px-2 text-[9px] font-bold text-[var(--text-secondary)] uppercase transition-colors group-focus-within:text-purple-500">
                   Sub-texto
                 </label>
                 <input
                   value={config.subText || ''}
                   onChange={e => setConfig({ ...config, subText: e.target.value })}
-                  className="w-full bg-[#111] border border-gray-800 rounded-xl px-4 py-3 text-white focus:border-purple-500 focus:bg-black outline-none font-mono text-xs transition-all"
+                  className="w-full bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl px-4 py-3 text-[var(--text-primary)] focus:border-purple-500 focus:bg-[var(--bg-secondary)] outline-none font-mono text-xs transition-all"
                   placeholder="Ex: HOJE"
                 />
               </div>
@@ -192,9 +192,9 @@ export const PromoControls: React.FC<PromoControlsProps> = ({
         {/* 3. APPEARANCE */}
         <div className="space-y-6">
           {/* COLOR PALETTE */}
-          <div className="bg-[#111] rounded-2xl border border-white/5 shadow-inner overflow-hidden">
-            <div className="px-5 py-3 border-b border-white/5 bg-[#151515] flex items-center justify-between">
-              <span className="text-white font-black uppercase text-xs tracking-[0.2em] flex items-center gap-2">
+          <div className="bg-[var(--bg-secondary)] rounded-2xl border border-[var(--border-color)] shadow-inner overflow-hidden">
+            <div className="px-5 py-3 border-b border-[var(--border-color)] bg-[var(--bg-card)] flex items-center justify-between">
+              <span className="text-[var(--text-primary)] font-black uppercase text-xs tracking-[0.2em] flex items-center gap-2">
                 <Palette size={14} className="text-purple-500" />
                 Paleta de Cores
               </span>
@@ -231,16 +231,16 @@ export const PromoControls: React.FC<PromoControlsProps> = ({
           </div>
 
           {/* TYPOGRAPHY */}
-          <div className="bg-[#111] rounded-2xl border border-white/5 shadow-inner overflow-hidden">
-            <div className="px-5 py-3 border-b border-white/5 bg-[#151515] flex items-center justify-between">
-              <span className="text-white font-black uppercase text-xs tracking-[0.2em] flex items-center gap-2">
+          <div className="bg-[var(--bg-secondary)] rounded-2xl border border-[var(--border-color)] shadow-inner overflow-hidden">
+            <div className="px-5 py-3 border-b border-[var(--border-color)] bg-[var(--bg-card)] flex items-center justify-between">
+              <span className="text-[var(--text-primary)] font-black uppercase text-xs tracking-[0.2em] flex items-center gap-2">
                 <Type size={14} className="text-blue-500" />
                 Tipografia
               </span>
             </div>
             <div className="p-5 grid grid-cols-1 gap-6">
               <div>
-                <label className="text-[9px] font-bold text-gray-500 uppercase tracking-widest block mb-2 px-1">
+                <label className="text-[9px] font-bold text-[var(--text-secondary)] uppercase tracking-widest block mb-2 px-1">
                   Estilo da Fonte
                 </label>
                 <div className="grid grid-cols-2 gap-2 h-48 overflow-y-auto pr-2 custom-scrollbar content-start">
@@ -252,7 +252,7 @@ export const PromoControls: React.FC<PromoControlsProps> = ({
                                ${
                                  config.fontFamily === f.id
                                    ? 'bg-purple-600 text-white border-purple-500 shadow-lg'
-                                   : 'bg-[#151515] text-gray-400 border-white/5 hover:border-white/20 hover:text-white'
+                                   : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border-[var(--border-color)] hover:border-white/20 hover:text-[var(--text-primary)]'
                                } ${f.class}
                             `}
                     >
@@ -263,7 +263,7 @@ export const PromoControls: React.FC<PromoControlsProps> = ({
               </div>
 
               <div>
-                <label className="text-[9px] font-bold text-gray-500 uppercase tracking-widest block mb-2 px-1">
+                <label className="text-[9px] font-bold text-[var(--text-secondary)] uppercase tracking-widest block mb-2 px-1">
                   Cor do Texto
                 </label>
                 <div className="flex flex-wrap gap-2">
@@ -291,9 +291,9 @@ export const PromoControls: React.FC<PromoControlsProps> = ({
           </div>
 
           {/* ICONS */}
-          <div className="bg-[#111] rounded-2xl border border-white/5 shadow-inner overflow-hidden">
-            <div className="px-5 py-3 border-b border-white/5 bg-[#151515] flex items-center justify-between">
-              <span className="text-white font-black uppercase text-xs tracking-[0.2em] flex items-center gap-2">
+          <div className="bg-[var(--bg-secondary)] rounded-2xl border border-[var(--border-color)] shadow-inner overflow-hidden">
+            <div className="px-5 py-3 border-b border-[var(--border-color)] bg-[var(--bg-card)] flex items-center justify-between">
+              <span className="text-[var(--text-primary)] font-black uppercase text-xs tracking-[0.2em] flex items-center gap-2">
                 <Sparkles size={14} className="text-yellow-500" />
                 Ícone
               </span>
@@ -311,7 +311,7 @@ export const PromoControls: React.FC<PromoControlsProps> = ({
                                   ${
                                     isActive
                                       ? 'bg-purple-600/20 border-purple-500 text-white shadow-[0_0_15px_rgba(147,51,234,0.3)]'
-                                      : 'bg-[#151515] border-white/5 text-gray-500 hover:border-white/20 hover:text-gray-300'
+                                      : 'bg-[var(--bg-secondary)] border-[var(--border-color)] text-[var(--text-secondary)] hover:border-white/20 hover:text-[var(--text-primary)]'
                                   }
                               `}
                     >
@@ -319,12 +319,12 @@ export const PromoControls: React.FC<PromoControlsProps> = ({
                         size={24}
                         weight={isActive ? 'fill' : 'duotone'}
                         className={`transition-transform duration-300 group-hover:scale-110 drop-shadow-lg ${
-                          isActive ? 'text-purple-400' : 'text-gray-500'
+                          isActive ? 'text-purple-400' : 'text-[var(--text-secondary)]'
                         }`}
                       />
                       <span
                         className={`text-[8px] font-bold uppercase tracking-wider z-10 ${
-                          isActive ? 'text-white' : 'text-gray-600'
+                          isActive ? 'text-white' : 'text-[var(--text-secondary)]'
                         }`}
                       >
                         {i.label}
@@ -335,14 +335,14 @@ export const PromoControls: React.FC<PromoControlsProps> = ({
               </div>
 
               {/* ICON COLOR */}
-              <div className="pt-4 border-t border-white/5 mt-4">
-                <label className="text-[9px] font-bold text-gray-500 uppercase tracking-widest block mb-3 px-1">
+              <div className="pt-4 border-t border-[var(--border-color)] mt-4">
+                <label className="text-[9px] font-bold text-[var(--text-secondary)] uppercase tracking-widest block mb-3 px-1">
                   Cor do Ícone
                 </label>
                 <div className="flex flex-wrap gap-2">
                   <button
                     onClick={() => setConfig({ ...config, iconColor: undefined })}
-                    className={`w-8 h-8 rounded-full border border-white/10 flex items-center justify-center transition-all bg-[#151515]
+                    className={`w-8 h-8 rounded-full border border-white/10 flex items-center justify-center transition-all bg-[var(--bg-secondary)]
                          ${
                            !config.iconColor
                              ? 'ring-2 ring-white scale-110'
@@ -352,7 +352,7 @@ export const PromoControls: React.FC<PromoControlsProps> = ({
                     title="Original / Automático"
                   >
                     <div className="w-full h-full flex items-center justify-center">
-                      <span className="text-[10px] text-gray-500">Auto</span>
+                      <span className="text-[10px] text-[var(--text-secondary)]">Auto</span>
                     </div>
                   </button>
 
@@ -373,7 +373,7 @@ export const PromoControls: React.FC<PromoControlsProps> = ({
                     <button
                       key={color}
                       onClick={() => setConfig({ ...config, iconColor: color })}
-                      className={`w-8 h-8 rounded-full border border-white/5 flex items-center justify-center transition-all shadow-sm
+                      className={`w-8 h-8 rounded-full border border-[var(--border-color)] flex items-center justify-center transition-all shadow-sm
                            ${
                              config.iconColor === color
                                ? 'ring-2 ring-white scale-110 z-10'
@@ -411,10 +411,10 @@ export const PromoControls: React.FC<PromoControlsProps> = ({
         </div>
 
         {/* 4. POSITION */}
-        <div className="bg-[#1a1a1a] rounded-2xl border border-white/5 shadow-inner overflow-hidden">
-          <div className="bg-[#111] px-5 py-3 border-b border-white/5 flex items-center gap-2">
+        <div className="bg-[var(--bg-secondary)] rounded-2xl border border-[var(--border-color)] shadow-inner overflow-hidden">
+          <div className="bg-[var(--bg-card)] px-5 py-3 border-b border-[var(--border-color)] flex items-center gap-2">
             <Move size={14} className="text-orange-500" />
-            <span className="text-white font-bold uppercase text-xs tracking-[0.2em] opacity-80">
+            <span className="text-[var(--text-primary)] font-bold uppercase text-xs tracking-[0.2em] opacity-80">
               Posição
             </span>
           </div>
@@ -449,7 +449,7 @@ export const PromoControls: React.FC<PromoControlsProps> = ({
               </div>
             </div>
 
-            <p className="text-center text-[10px] text-gray-500 mt-3 font-mono">
+            <p className="text-center text-[10px] text-[var(--text-secondary)] mt-3 font-mono">
               Toque na área do card para posicionar
             </p>
           </div>

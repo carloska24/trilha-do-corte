@@ -87,14 +87,14 @@ const ClientCard: React.FC<{
         dragElastic={0.1}
         onDragEnd={handleDragEnd}
         animate={controls}
-        className="relative bg-[#0a0a0a] backdrop-blur-xl border border-white/5 p-3 rounded-2xl z-10 shadow-lg flex items-center gap-3 cursor-pointer active:cursor-grabbing"
+        className="relative bg-[var(--bg-card)] backdrop-blur-xl border border-[var(--border-color)] p-3 rounded-2xl z-10 shadow-lg flex items-center gap-3 cursor-pointer active:cursor-grabbing transition-colors duration-300"
         onClick={() => onSelect(client)}
         style={{ touchAction: 'pan-y' }}
       >
         {/* AVATAR */}
         <div className="relative flex-shrink-0">
           <div className={`w-16 h-16 rounded-full p-[3px] border-2 ${ringColor} ${ringShadow}`}>
-            <div className="w-full h-full rounded-full overflow-hidden bg-zinc-900 border border-black relative">
+            <div className="w-full h-full rounded-full overflow-hidden bg-[var(--bg-secondary)] border border-[var(--border-color)] relative">
               {client.img ? (
                 <img
                   src={getOptimizedImageUrl(client.img, 100, 100)}
@@ -103,14 +103,14 @@ const ClientCard: React.FC<{
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-zinc-600">
+                <div className="w-full h-full flex items-center justify-center text-[var(--text-secondary)]">
                   <User size={24} />
                 </div>
               )}
             </div>
           </div>
           <div
-            className={`absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-[#0a0a0a] ${
+            className={`absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-[var(--bg-card)] ${
               isTemp ? 'bg-neon-yellow animate-pulse' : statusColor
             } z-20`}
           ></div>
@@ -119,7 +119,7 @@ const ClientCard: React.FC<{
         {/* DATA */}
         <div className="flex flex-col flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1.5">
-            <h3 className="text-xl font-black text-white leading-none uppercase tracking-wide truncate group-hover:text-neon-yellow transition-colors">
+            <h3 className="text-xl font-black text-[var(--text-primary)] leading-none uppercase tracking-wide truncate group-hover:text-neon-yellow transition-colors">
               {client.name}
             </h3>
             {isTemp && (
@@ -135,8 +135,8 @@ const ClientCard: React.FC<{
                 LVL {client.level || 1}
               </span>
             </div>
-            <div className="w-[1px] h-3 bg-zinc-700"></div>
-            <span className="text-[8px] font-bold text-zinc-500 uppercase tracking-wider">
+            <div className="w-[1px] h-3 bg-[var(--border-color)]"></div>
+            <span className="text-[8px] font-bold text-[var(--text-secondary)] uppercase tracking-wider">
               {!client.lastVisit || client.lastVisit === 'Nunca'
                 ? 'NOVO CLIENTE'
                 : `VISITOU: ${client.lastVisit}`}
@@ -311,14 +311,14 @@ export const ClientsManager: React.FC = () => {
       {/* DELETE CONFIRMATION MODAL */}
       {clientToDelete && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-          <div className="bg-zinc-950 border border-red-500/30 w-full max-w-sm rounded-2xl p-6 shadow-[0_0_50px_rgba(239,68,68,0.2)] relative text-center">
+          <div className="bg-[var(--bg-card)] border border-red-500/30 w-full max-w-sm rounded-2xl p-6 shadow-[0_0_50px_rgba(239,68,68,0.2)] relative text-center transition-colors duration-300">
             <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/20 shadow-[0_0_20px_rgba(239,68,68,0.2)]">
               <Trash2 size={40} className="text-red-500" />
             </div>
-            <h2 className="text-2xl font-graffiti text-white mb-2 uppercase">
+            <h2 className="text-2xl font-graffiti text-[var(--text-primary)] mb-2 uppercase">
               Excluir Passageiro?
             </h2>
-            <p className="text-zinc-400 text-sm mb-8 leading-relaxed">
+            <p className="text-[var(--text-secondary)] text-sm mb-8 leading-relaxed">
               Essa ação removerá permanentemente o cadastro.
               <br />
               <span className="text-red-400 font-bold">Isso não pode ser desfeito.</span>
@@ -332,7 +332,7 @@ export const ClientsManager: React.FC = () => {
               </button>
               <button
                 onClick={() => setClientToDelete(null)}
-                className="w-full py-3.5 bg-transparent border border-zinc-800 text-zinc-500 font-bold uppercase tracking-widest rounded-xl hover:bg-zinc-900 transition-all active:scale-95 hover:text-white"
+                className="w-full py-3.5 bg-transparent border border-[var(--border-color)] text-[var(--text-secondary)] font-bold uppercase tracking-widest rounded-xl hover:bg-[var(--bg-secondary)] transition-all active:scale-95 hover:text-[var(--text-primary)]"
               >
                 Cancelar
               </button>
@@ -342,11 +342,11 @@ export const ClientsManager: React.FC = () => {
       )}
       {/* Header Section */}
       <div className="mb-8 mt-2 flex-shrink-0">
-        <h1 className="text-4xl font-graffiti text-transparent bg-clip-text bg-gradient-to-r from-gray-900 via-gray-700 to-gray-500 dark:from-white dark:via-gray-200 dark:to-gray-500 leading-none drop-shadow-sm dark:drop-shadow-[0_0_10px_rgba(255,255,255,0.1)] mb-2 transition-all">
+        <h1 className="text-4xl font-graffiti text-[var(--text-primary)] leading-none drop-shadow-sm mb-2 transition-colors">
           CLIENTES
         </h1>
         <div className="w-24 h-1 bg-neon-yellow rounded-full shadow-[0_0_10px_rgba(227,253,0,0.5)]"></div>
-        <p className="text-text-secondary text-[10px] font-bold uppercase tracking-[0.4em] mt-3">
+        <p className="text-[var(--text-secondary)] text-[10px] font-bold uppercase tracking-[0.4em] mt-3">
           Base de Passageiros
         </p>
       </div>
@@ -360,7 +360,7 @@ export const ClientsManager: React.FC = () => {
             placeholder="SCANNEAR PASSAGEIRO..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            className="w-full bg-black/40 backdrop-blur-md border border-gray-800 text-white placeholder-gray-500/50 py-5 pl-12 pr-4 text-sm font-mono uppercase tracking-wider focus:outline-none focus:border-neon-yellow/50 focus:bg-black/60 transition-all shadow-inner"
+            className="w-full bg-[var(--bg-card)] backdrop-blur-md border border-[var(--border-color)] text-[var(--text-primary)] placeholder-[var(--text-secondary)]/50 py-5 pl-12 pr-4 text-sm font-mono uppercase tracking-wider focus:outline-none focus:border-neon-yellow/50 focus:bg-[var(--bg-secondary)] transition-all shadow-inner"
             style={{ clipPath: 'polygon(0 0, 100% 0, 100% 85%, 98% 100%, 0 100%)' }}
           />
           <Search
@@ -369,7 +369,7 @@ export const ClientsManager: React.FC = () => {
           />
           {/* Tech Decorations */}
           <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-neon-yellow/30"></div>
-          <div className="absolute bottom-0 right-8 w-8 h-[2px] bg-gray-800"></div>
+          <div className="absolute bottom-0 right-8 w-8 h-[2px] bg-[var(--border-color)]"></div>
         </div>
       </div>
 
@@ -389,8 +389,8 @@ export const ClientsManager: React.FC = () => {
           {/* Empty State */}
           {filteredClients.length === 0 && (
             <div className="flex flex-col items-center justify-center mt-20 opacity-50">
-              <User size={64} className="text-zinc-800 mb-4" />
-              <p className="text-zinc-600 font-graffiti text-xl text-center">
+              <User size={64} className="text-[var(--text-secondary)] mb-4" />
+              <p className="text-[var(--text-secondary)] font-graffiti text-xl text-center">
                 BANCO DE DADOS VAZIO
                 <br />
                 <span className="text-sm font-sans font-normal opacity-50">
@@ -417,50 +417,52 @@ export const ClientsManager: React.FC = () => {
       {/* MODAL ADICIONAR CLIENTE */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in">
-          <div className="bg-zinc-950 w-full max-w-md p-8 rounded-xl shadow-[0_0_50px_rgba(0,0,0,0.8)] relative border border-white/10 transition-colors">
+          <div className="bg-[var(--bg-card)] w-full max-w-md p-8 rounded-xl shadow-[0_0_50px_rgba(0,0,0,0.8)] relative border border-[var(--border-color)] transition-colors duration-300">
             <button
               onClick={() => setIsAddModalOpen(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
+              className="absolute top-4 right-4 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
             >
               <X size={24} />
             </button>
 
-            <h2 className="text-3xl font-graffiti text-white mb-1">NOVO PASSAGEIRO</h2>
+            <h2 className="text-3xl font-graffiti text-[var(--text-primary)] mb-1">
+              NOVO PASSAGEIRO
+            </h2>
             <div className="w-16 h-1 bg-neon-yellow rounded-full mb-8 shadow-[0_0_10px_rgba(227,253,0,0.5)]"></div>
 
             <div className="space-y-6">
               <div className="group">
-                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] block mb-2 group-focus-within:text-neon-yellow transition-colors">
+                <label className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-[0.2em] block mb-2 group-focus-within:text-neon-yellow transition-colors">
                   Nome do Cliente
                 </label>
                 <input
                   type="text"
                   value={newClientData.name}
                   onChange={e => setNewClientData({ ...newClientData, name: e.target.value })}
-                  className="w-full bg-black border-b-2 border-zinc-800 text-white py-3 text-lg font-bold focus:outline-none focus:border-neon-yellow transition-colors placeholder-zinc-700"
+                  className="w-full bg-[var(--bg-secondary)] border-b-2 border-[var(--border-color)] text-[var(--text-primary)] py-3 text-lg font-bold focus:outline-none focus:border-neon-yellow transition-colors placeholder-[var(--text-secondary)]/50"
                   placeholder="DIGITE O NOME..."
                 />
               </div>
               <div className="group">
-                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] block mb-2 group-focus-within:text-neon-yellow transition-colors">
+                <label className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-[0.2em] block mb-2 group-focus-within:text-neon-yellow transition-colors">
                   Telefone / WhatsApp
                 </label>
                 <input
                   type="text"
                   value={newClientData.phone}
                   onChange={e => setNewClientData({ ...newClientData, phone: e.target.value })}
-                  className="w-full bg-black border-b-2 border-zinc-800 text-white py-3 text-lg font-bold focus:outline-none focus:border-neon-yellow transition-colors placeholder-zinc-700"
+                  className="w-full bg-[var(--bg-secondary)] border-b-2 border-[var(--border-color)] text-[var(--text-primary)] py-3 text-lg font-bold focus:outline-none focus:border-neon-yellow transition-colors placeholder-[var(--text-secondary)]/50"
                   placeholder="(00) 00000-0000"
                 />
               </div>
               <div className="group">
-                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] block mb-2 group-focus-within:text-neon-yellow transition-colors">
+                <label className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-[0.2em] block mb-2 group-focus-within:text-neon-yellow transition-colors">
                   Notas Iniciais
                 </label>
                 <textarea
                   value={newClientData.notes}
                   onChange={e => setNewClientData({ ...newClientData, notes: e.target.value })}
-                  className="w-full bg-black border-2 border-zinc-800 rounded-lg p-4 text-white focus:outline-none focus:border-neon-yellow transition-colors h-24 resize-none text-sm font-medium placeholder-zinc-700"
+                  className="w-full bg-[var(--bg-secondary)] border-2 border-[var(--border-color)] rounded-lg p-4 text-[var(--text-primary)] focus:outline-none focus:border-neon-yellow transition-colors h-24 resize-none text-sm font-medium placeholder-[var(--text-secondary)]/50"
                   placeholder="Preferências de corte, estilo, etc..."
                 />
               </div>

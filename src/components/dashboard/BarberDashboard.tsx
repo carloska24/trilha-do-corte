@@ -280,7 +280,7 @@ export const BarberDashboard: React.FC<BarberDashboardProps> = ({
       </button>
 
       {/* HEADER PIXEL PERFECT */}
-      <header className="fixed top-0 left-0 right-0 h-16 bg-street-dark z-40 flex items-center justify-between px-4 border-b border-border-color transition-colors duration-300">
+      <header className="fixed top-0 left-0 right-0 h-16 bg-[var(--bg-card)] z-40 flex items-center justify-between px-4 border-b border-[var(--border-color)] transition-colors duration-300">
         {/* BRANDING (Left) */}
         <div className="flex items-center gap-3">
           {/* Logo - Restored Chair in Yellow Box */}
@@ -293,7 +293,7 @@ export const BarberDashboard: React.FC<BarberDashboardProps> = ({
 
           <div className="flex flex-col justify-center translate-y-[2px]">
             {/* Main Title with Glow */}
-            <h1 className="text-2xl md:text-3xl text-white tracking-wide leading-none font-rye drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+            <h1 className="text-2xl md:text-3xl text-[var(--text-primary)] tracking-wide leading-none font-rye drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
               Trilha do Corte
             </h1>
             <div className="flex items-center gap-2 pl-1">
@@ -312,13 +312,13 @@ export const BarberDashboard: React.FC<BarberDashboardProps> = ({
             onClick={() => setShowFinancials(true)}
             className="group flex items-center justify-center transition-transform hover:scale-110"
           >
-            <AnimatedWallet className="w-10 h-10 text-white drop-shadow-xl filter brightness-110" />
+            <AnimatedWallet className="w-10 h-10 text-[var(--text-primary)] drop-shadow-xl filter brightness-110" />
           </button>
 
           {/* Barber Profile */}
           <button
             onClick={() => setShowProfileModal(true)}
-            className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-street-gray shadow-md hover:border-[#FFD700] transition-colors"
+            className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-[var(--border-color)] shadow-md hover:border-[#FFD700] transition-colors"
           >
             <img
               src={barberProfile.photoUrl || DEFAULT_BARBER_IMAGE}
@@ -333,7 +333,7 @@ export const BarberDashboard: React.FC<BarberDashboardProps> = ({
       {/* FLOATING ACTION BUTTON (AI VOICE) */}
 
       {/* BOTTOM NAV PIXEL PERFECT */}
-      <nav className="fixed bottom-0 left-0 right-0 h-20 bg-street-dark border-t border-border-color z-50 flex justify-around items-center px-2 pb-2 transition-colors duration-300 relative">
+      <nav className="fixed bottom-0 left-0 right-0 h-20 bg-[var(--bg-card)] border-t border-[var(--border-color)] z-50 flex justify-around items-center px-2 pb-2 transition-colors duration-300 relative">
         {/* AI VOICE BUTTON (Piggybacked) */}
         <button
           onClick={isListening ? stopListening : startListening}
@@ -623,7 +623,7 @@ export const BarberDashboard: React.FC<BarberDashboardProps> = ({
               <X />
             </button>
             <div className="text-center mb-6 w-full">
-              <span className="text-[10px] font-black text-neon-yellow uppercase tracking-[0.2em] border-b border-gray-800 pb-2 mb-4 block">
+              <span className="text-[10px] font-black text-neon-yellow uppercase tracking-[0.2em] border-b border-[var(--border-color)] pb-2 mb-4 block">
                 Identificação do Maquinista
               </span>
               <div
@@ -646,8 +646,10 @@ export const BarberDashboard: React.FC<BarberDashboardProps> = ({
                   onChange={handleProfilePhotoChange}
                 />
               </div>
-              <h2 className="text-3xl font-graffiti text-white mb-1">{barberProfile.name}</h2>
-              <p className="text-gray-500 font-mono text-xs uppercase tracking-widest">
+              <h2 className="text-3xl font-graffiti text-[var(--text-primary)] mb-1">
+                {barberProfile.name}
+              </h2>
+              <p className="text-[var(--text-secondary)] font-mono text-xs uppercase tracking-widest">
                 {barberProfile.email}
               </p>
             </div>
@@ -679,13 +681,13 @@ export const BarberDashboard: React.FC<BarberDashboardProps> = ({
             padding="none"
             className="w-full max-w-md flex flex-col max-h-[90vh]"
           >
-            <div className="p-4 md:p-6 border-b border-gray-800 flex justify-between items-center bg-[#151515]">
-              <h3 className="font-black text-white uppercase tracking-wider text-base md:text-lg">
+            <div className="p-4 md:p-6 border-b border-[var(--border-color)] flex justify-between items-center bg-[var(--bg-secondary)]">
+              <h3 className="font-black text-[var(--text-primary)] uppercase tracking-wider text-base md:text-lg">
                 Registrar Obra
               </h3>
               <button
                 onClick={() => setFinishingAppId(null)}
-                className="text-gray-500 hover:text-white"
+                className="text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               >
                 <X size={20} />
               </button>
@@ -693,7 +695,7 @@ export const BarberDashboard: React.FC<BarberDashboardProps> = ({
             <div className="p-4 md:p-6 overflow-y-auto space-y-4 md:space-y-6">
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="w-full aspect-video bg-[#050505] border-2 border-dashed border-gray-700 hover:border-neon-yellow cursor-pointer flex flex-col items-center justify-center transition-all group relative overflow-hidden rounded-sm"
+                className="w-full aspect-video bg-[var(--bg-primary)] border-2 border-dashed border-[var(--border-color)] hover:border-neon-yellow cursor-pointer flex flex-col items-center justify-center transition-all group relative overflow-hidden rounded-sm"
               >
                 {photoPreview ? (
                   <>
@@ -711,7 +713,7 @@ export const BarberDashboard: React.FC<BarberDashboardProps> = ({
                       className="text-gray-600 group-hover:text-neon-yellow mb-2 transition-colors"
                       size={24}
                     />
-                    <span className="text-gray-600 text-[10px] font-bold uppercase tracking-widest group-hover:text-white">
+                    <span className="text-[var(--text-secondary)] text-[10px] font-bold uppercase tracking-widest group-hover:text-[var(--text-primary)]">
                       Adicionar Foto
                     </span>
                   </>
@@ -726,7 +728,7 @@ export const BarberDashboard: React.FC<BarberDashboardProps> = ({
               </div>
               <div>
                 <div className="flex justify-between mb-2 items-center">
-                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                  <label className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest">
                     Observações do Maquinista
                   </label>
                   {hasSpeechSupport && (
@@ -753,8 +755,8 @@ export const BarberDashboard: React.FC<BarberDashboardProps> = ({
                 <textarea
                   value={barberNotes}
                   onChange={e => setBarberNotes(e.target.value)}
-                  className={`w-full bg-[#050505] border p-3 text-sm text-white focus:outline-none focus:border-neon-yellow h-24 md:h-32 resize-none rounded-sm transition-colors ${
-                    isRecording ? 'border-red-600' : 'border-gray-700'
+                  className={`w-full bg-[var(--bg-primary)] border p-3 text-sm text-[var(--text-primary)] focus:outline-none focus:border-neon-yellow h-24 md:h-32 resize-none rounded-sm transition-colors ${
+                    isRecording ? 'border-red-600' : 'border-[var(--border-color)]'
                   }`}
                   placeholder={
                     isRecording ? 'Ouvindo sua voz...' : 'Descreva o corte, produtos usados...'
@@ -762,7 +764,7 @@ export const BarberDashboard: React.FC<BarberDashboardProps> = ({
                 />
               </div>
             </div>
-            <div className="p-4 border-t border-gray-800 bg-[#151515]">
+            <div className="p-4 border-t border-[var(--border-color)] bg-[var(--bg-secondary)]">
               <Button variant="primary" size="lg" fullWidth onClick={confirmFinish}>
                 Confirmar e Liberar <Check size={16} />
               </Button>

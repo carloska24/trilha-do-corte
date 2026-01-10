@@ -10,7 +10,13 @@ const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
  * Helper: Normalizes availability check logic.
  */
 async function getAvailabilityForNextDays() {
-  const today = new Date();
+  const now = new Date();
+
+  // Explicitly convert to Brazil Time (server might be UTC)
+  const brTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+
+  const currentHour = brTime.getHours();
+  const currentMin = brTime.getMinutes();
 
   interface DayAvailability {
     date: string;
@@ -18,10 +24,10 @@ async function getAvailabilityForNextDays() {
   }
   const nextDays: DayAvailability[] = [];
 
-  // Reduce to 7 days to avoid payload getting too large
+  // Reduce to 7 days
   for (let i = 0; i < 7; i++) {
-    const date = new Date(today);
-    date.setDate(today.getDate() + i);
+    const date = new Date(brTime); // Start from BRAZIL time
+    date.setDate(brTime.getDate() + i);
 
     // Use local YYYY-MM-DD manually to avoid locale issues
     const year = date.getFullYear();
@@ -29,10 +35,25 @@ async function getAvailabilityForNextDays() {
     const day = String(date.getDate()).padStart(2, '0');
     const dateStr = `${year}-${month}-${day}`;
 
-    // MOCK: Generate slots every 30 mins from 09:00 to 19:00 (Full availability for testing)
+    // Check if we are generating slots for TODAY (using BR time logic)
+    const isToday = i === 0;
+
+    // Use 15-min intervals to match real agenda (00, 15, 30, 45)
+    // Range: 09:00 to 19:00
     const slots: string[] = [];
     for (let hour = 9; hour < 19; hour++) {
-      for (let min of [0, 30]) {
+      for (let min of [0, 15, 30, 45]) {
+        // If it's today, STRICT filtering
+        if (isToday) {
+          // If past hour, skip
+          if (hour < currentHour) continue;
+
+          // If current hour, skip past minutes
+          // Add 15 min buffer? Let's be strict: if 16:48, show 17:00.
+          // If 16:48, skip 16:45.
+          if (hour === currentHour && min <= currentMin) continue;
+        }
+
         const time = `${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`;
         slots.push(time);
       }

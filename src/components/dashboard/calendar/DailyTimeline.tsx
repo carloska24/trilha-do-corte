@@ -229,18 +229,20 @@ export const DailyTimeline: React.FC<DailyTimelineProps> = ({
             key={`${item.time}-${idx}`}
             onDragOver={handleDragOver}
             onDrop={e => handleDrop(e, item.time)}
-            className={`flex min-h-[100px] border-b border-white/5 group relative transition-colors duration-200 ${
-              item.type === 'empty' && !isPast ? 'hover:bg-white/5' : ''
+            className={`flex min-h-[100px] border-b border-[var(--border-color)] group relative transition-colors duration-200 ${
+              item.type === 'empty' && !isPast ? 'hover:bg-[var(--bg-secondary)]' : ''
             }`}
           >
             {/* Time Column */}
             <div
               id={`hour-${item.time.split(':')[0]}`} // ID for scroll target
-              className={`w-16 md:w-20 py-4 pl-2 md:pl-4 text-xs md:text-sm font-mono font-bold flex flex-col items-start border-r border-white/5 ${
-                isPast ? 'text-zinc-700' : 'text-zinc-500'
+              className={`w-16 md:w-20 py-4 pl-2 md:pl-4 text-xs md:text-sm font-mono font-bold flex flex-col items-start border-r border-[var(--border-color)] ${
+                isPast ? 'text-[var(--text-secondary)] opacity-50' : 'text-[var(--text-secondary)]'
               }`}
             >
-              <span className={item.type === 'app' ? 'text-white' : ''}>{item.time}</span>
+              <span className={item.type === 'app' ? 'text-[var(--text-primary)]' : ''}>
+                {item.time}
+              </span>
             </div>
 
             {/* Content Column */}
@@ -249,7 +251,7 @@ export const DailyTimeline: React.FC<DailyTimelineProps> = ({
                 <div className="absolute inset-0 z-10 px-2 py-1">
                   {/* SWIPE ACTIONS */}
                   <div
-                    className={`absolute inset-0 flex items-center justify-start gap-4 pl-4 bg-[#111] rounded-xl border border-white/5 z-0 transition-opacity duration-300 ${
+                    className={`absolute inset-0 flex items-center justify-start gap-4 pl-4 bg-[var(--bg-card)] rounded-xl border border-[var(--border-color)] z-0 transition-opacity duration-300 ${
                       swipedAppId === item.data.id
                         ? 'opacity-100 pointer-events-auto'
                         : 'opacity-0 pointer-events-none'
@@ -288,7 +290,7 @@ export const DailyTimeline: React.FC<DailyTimelineProps> = ({
                         ${
                           item.data.status === 'completed'
                             ? 'bg-linear-to-br from-[#064e3b] via-[#022c22] to-black border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.2)]'
-                            : 'bg-linear-to-br from-[#1E1E1E] to-[#121212] border-white/10 hover:border-yellow-500/30 hover:shadow-[0_4px_20px_rgba(0,0,0,0.5)]'
+                            : 'bg-linear-to-br from-[var(--bg-secondary)] to-[var(--bg-card)] border-[var(--border-color)] hover:border-yellow-500/30 hover:shadow-[0_4px_20px_rgba(0,0,0,0.5)]'
                         }
                         transition-all duration-300
                     `}
@@ -312,14 +314,14 @@ export const DailyTimeline: React.FC<DailyTimelineProps> = ({
                       className={`flex justify-between items-center px-3 py-2 border-b ${
                         item.data.status === 'completed'
                           ? 'bg-black/20 border-emerald-500/20'
-                          : 'bg-white/5 border-white/5'
+                          : 'bg-white/5 border-[var(--border-color)]'
                       }`}
                     >
                       <h3
                         className={`font-black text-sm md:text-base uppercase tracking-wider truncate flex items-center gap-2 ${
                           item.data.status === 'completed'
                             ? 'text-emerald-100 drop-shadow-sm'
-                            : 'text-zinc-100 drop-shadow-md'
+                            : 'text-[var(--text-primary)] drop-shadow-md'
                         }`}
                       >
                         {item.data.clientName}
@@ -329,7 +331,7 @@ export const DailyTimeline: React.FC<DailyTimelineProps> = ({
                       </h3>
                       {item.data.status !== 'completed' && (
                         <button
-                          className="w-6 h-6 flex items-center justify-center text-zinc-500 hover:text-neon-yellow transition-all focus:outline-none active:scale-95"
+                          className="w-6 h-6 flex items-center justify-center text-[var(--text-secondary)] hover:text-neon-yellow transition-all focus:outline-none active:scale-95"
                           onClick={e => handleWhatsAppReminder(e, item.data, item.service.name)}
                         >
                           <Bell size={18} strokeWidth={2.5} />
@@ -344,19 +346,23 @@ export const DailyTimeline: React.FC<DailyTimelineProps> = ({
                         className={`w-[60px] flex flex-col items-center justify-center border-r  ${
                           item.data.status === 'completed'
                             ? 'bg-black/20 border-emerald-500/20'
-                            : 'bg-black/40 border-white/5'
+                            : 'bg-[var(--bg-secondary)] border-[var(--border-color)]'
                         }`}
                       >
                         <span
                           className={`font-black text-lg leading-none ${
-                            item.data.status === 'completed' ? 'text-emerald-400' : 'text-white'
+                            item.data.status === 'completed'
+                              ? 'text-emerald-400'
+                              : 'text-[var(--text-primary)]'
                           }`}
                         >
                           {item.time.split(':')[0]}
                         </span>
                         <span
                           className={`font-bold text-[10px] uppercase ${
-                            item.data.status === 'completed' ? 'text-emerald-600' : 'text-zinc-500'
+                            item.data.status === 'completed'
+                              ? 'text-emerald-600'
+                              : 'text-[var(--text-secondary)]'
                           }`}
                         >
                           {item.time.split(':')[1]}
@@ -369,14 +375,14 @@ export const DailyTimeline: React.FC<DailyTimelineProps> = ({
                           className={`flex-1 px-3 flex items-center border-b ${
                             item.data.status === 'completed'
                               ? 'bg-transparent border-emerald-500/10'
-                              : 'bg-transparent border-white/5'
+                              : 'bg-transparent border-[var(--border-color)]'
                           }`}
                         >
                           <span
                             className={`text-xs font-black uppercase tracking-wide line-clamp-1 ${
                               item.data.status === 'completed'
                                 ? 'text-emerald-200/80'
-                                : 'text-zinc-300 group-hover/card:text-white transition-colors'
+                                : 'text-[var(--text-secondary)] group-hover/card:text-[var(--text-primary)] transition-colors'
                             }`}
                           >
                             {item.service.name}
@@ -386,21 +392,23 @@ export const DailyTimeline: React.FC<DailyTimelineProps> = ({
                         {/* FOOTER */}
                         <div
                           className={`relative px-3 py-1.5 flex justify-between items-center ${
-                            item.data.status === 'completed' ? 'bg-black/40' : 'bg-black/20'
+                            item.data.status === 'completed'
+                              ? 'bg-black/40'
+                              : 'bg-[var(--bg-secondary)]'
                           }`}
                         >
                           <div
                             className={`flex items-center justify-center border rounded px-2 py-0.5 ${
                               item.data.status === 'completed'
                                 ? 'bg-emerald-900/30 border-emerald-500/30'
-                                : 'bg-white/5 border-white/10'
+                                : 'bg-white/5 border-[var(--border-color)]'
                             }`}
                           >
                             <span
                               className={`text-xs font-bold ${
                                 item.data.status === 'completed'
                                   ? 'text-emerald-400'
-                                  : 'text-zinc-300'
+                                  : 'text-[var(--text-secondary)]'
                               }`}
                             >
                               {item.service.duration || '30'}m
@@ -451,17 +459,17 @@ export const DailyTimeline: React.FC<DailyTimelineProps> = ({
                   <div
                     className={`w-full h-full border-2 border-dashed rounded-xl flex items-center justify-center transition-all ${
                       isPast
-                        ? 'border-zinc-900'
-                        : 'border-zinc-900 group-hover/empty:border-zinc-800'
+                        ? 'border-[var(--border-color)]'
+                        : 'border-[var(--border-color)] group-hover/empty:border-[var(--text-secondary)]'
                     }`}
                   >
                     {isPast ? (
-                      <span className="text-[10px] font-bold text-zinc-800 uppercase tracking-widest">
+                      <span className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest">
                         Encerrado
                       </span>
                     ) : (
                       <Plus
-                        className="text-zinc-800 group-hover/empty:text-zinc-600 transition-colors"
+                        className="text-[var(--text-secondary)] group-hover/empty:text-[var(--text-primary)] transition-colors"
                         size={24}
                       />
                     )}

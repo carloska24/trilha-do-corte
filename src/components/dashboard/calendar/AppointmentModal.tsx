@@ -73,7 +73,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl animate-fade-in">
-      <div className="bg-[#0f0f0f] w-full max-w-sm rounded-3xl border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.8)] p-8 relative overflow-hidden group">
+      <div className="bg-[var(--bg-card)] w-full max-w-sm rounded-3xl border border-[var(--border-color)] shadow-[0_0_50px_rgba(0,0,0,0.8)] p-8 relative overflow-hidden group transition-colors duration-300">
         {/* Ambient Background Glows */}
         <div className="absolute -top-20 -right-20 w-60 h-60 bg-neon-yellow/5 rounded-full blur-3xl pointer-events-none"></div>
         <div className="absolute -bottom-20 -left-20 w-60 h-60 bg-purple-500/5 rounded-full blur-3xl pointer-events-none"></div>
@@ -83,10 +83,10 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
 
         <div className="flex justify-between items-start mb-8 relative z-10">
           <div>
-            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] mb-1 block">
+            <span className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.2em] mb-1 block">
               {initialData.id ? 'Editar Detalhes' : 'Nova Solicitação'}
             </span>
-            <h3 className="text-3xl font-black text-white uppercase italic tracking-wider leading-none">
+            <h3 className="text-3xl font-black text-[var(--text-primary)] uppercase italic tracking-wider leading-none">
               Agendar
               <span className="block text-transparent bg-clip-text bg-linear-to-r from-neon-yellow to-yellow-600">
                 Horário
@@ -105,9 +105,9 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
           {/* DATE & TIME CAPSULE */}
           <div className="bg-black/40 p-1 rounded-2xl border border-white/5 flex gap-1">
             {/* DATE */}
-            <div className="flex-1 bg-[#1a1a1a] rounded-xl border border-white/5 p-3 flex flex-col justify-between group/date hover:border-white/10 transition-colors relative overflow-hidden">
+            <div className="flex-1 bg-[var(--bg-secondary)] rounded-xl border border-[var(--border-color)] p-3 flex flex-col justify-between group/date hover:border-white/10 transition-colors relative overflow-hidden">
               <div className="absolute inset-0 bg-linear-to-br from-white/5 to-transparent opacity-0 group-hover/date:opacity-100 transition-opacity"></div>
-              <label className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest z-10">
+              <label className="text-[9px] font-bold text-[var(--text-secondary)] uppercase tracking-widest z-10">
                 Data
               </label>
               <div className="flex items-center justify-between mt-1 z-10">
@@ -117,11 +117,11 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
                     d.setDate(d.getDate() - 1);
                     setCurrentDate(d);
                   }}
-                  className="p-1 hover:bg-white/10 rounded text-zinc-500 hover:text-white transition-colors"
+                  className="p-1 hover:bg-white/10 rounded text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
                 >
                   <ChevronLeft size={14} />
                 </button>
-                <span className="text-white font-bold text-sm uppercase">
+                <span className="text-[var(--text-primary)] font-bold text-sm uppercase">
                   {currentDate
                     .toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
                     .replace('.', '')}
@@ -132,7 +132,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
                     d.setDate(d.getDate() + 1);
                     setCurrentDate(d);
                   }}
-                  className="p-1 hover:bg-white/10 rounded text-zinc-500 hover:text-white transition-colors"
+                  className="p-1 hover:bg-white/10 rounded text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
                 >
                   <ChevronRight size={14} />
                 </button>
@@ -140,9 +140,9 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
             </div>
 
             {/* TIME */}
-            <div className="flex-[0.8] bg-[#1a1a1a] rounded-xl border border-white/5 p-3 flex flex-col justify-between group/time hover:border-neon-yellow/30 transition-colors relative overflow-hidden">
+            <div className="flex-[0.8] bg-[var(--bg-secondary)] rounded-xl border border-[var(--border-color)] p-3 flex flex-col justify-between group/time hover:border-neon-yellow/30 transition-colors relative overflow-hidden">
               <div className="absolute inset-0 bg-neon-yellow/5 opacity-0 group-hover/time:opacity-100 transition-opacity"></div>
-              <label className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest z-10">
+              <label className="text-[9px] font-bold text-[var(--text-secondary)] uppercase tracking-widest z-10">
                 Horário
               </label>
 
@@ -163,7 +163,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
 
               {/* TIME DROPDOWN */}
               {isTimeListOpen && (
-                <div className="absolute top-full right-0 mt-2 bg-[#151515] border border-white/10 rounded-xl overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,1)] z-50 w-40 max-h-48 overflow-y-auto custom-scrollbar p-1">
+                <div className="absolute top-full right-0 mt-2 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,1)] z-50 w-40 max-h-48 overflow-y-auto custom-scrollbar p-1">
                   <div className="grid grid-cols-2 gap-1">
                     {Array.from(
                       {
@@ -190,7 +190,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
                             className={`px-2 py-2 text-xs font-mono font-bold rounded-lg transition-colors ${
                               currentTime === timeStr
                                 ? 'bg-neon-yellow text-black'
-                                : 'text-zinc-400 hover:text-white hover:bg-white/10'
+                                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-white/10'
                             }`}
                           >
                             {timeStr}
@@ -208,7 +208,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
           <div className="space-y-4">
             {/* CLIENT NAME */}
             <div className="group relative">
-              <div className="absolute left-4 top-3.5 pointer-events-none text-zinc-500 group-focus-within:text-neon-yellow transition-colors">
+              <div className="absolute left-4 top-3.5 pointer-events-none text-[var(--text-secondary)] group-focus-within:text-neon-yellow transition-colors">
                 <span className="text-xs uppercase font-bold tracking-widest">Cliente</span>
               </div>
               <input
@@ -216,7 +216,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
                 value={clientName}
                 onChange={e => setClientName(e.target.value)}
                 placeholder="Nome do cliente..."
-                className="w-full bg-[#151515] border border-white/5 rounded-xl px-4 pt-8 pb-3 text-white font-bold placeholder:text-zinc-700 focus:outline-none focus:border-neon-yellow/50 focus:bg-[#1a1a1a] transition-all"
+                className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl px-4 pt-8 pb-3 text-[var(--text-primary)] font-bold placeholder:text-[var(--text-secondary)] focus:outline-none focus:border-neon-yellow/50 focus:bg-[#1a1a1a] transition-all"
               />
               <div className="absolute right-4 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-zinc-800 group-focus-within:bg-neon-yellow transition-colors shadow-[0_0_10px_rgba(234,179,8,0)] group-focus-within:shadow-[0_0_10px_rgba(234,179,8,0.5)]"></div>
             </div>
@@ -225,13 +225,17 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
             <div className="group relative">
               <button
                 onClick={() => setIsServiceListOpen(!isServiceListOpen)}
-                className="w-full bg-[#151515] border border-white/5 rounded-xl px-4 pt-8 pb-3 text-left font-bold focus:outline-none focus:border-neon-yellow/50 focus:bg-[#1a1a1a] transition-all flex justify-between items-center group-focus:border-neon-yellow/50"
+                className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl px-4 pt-8 pb-3 text-left font-bold focus:outline-none focus:border-neon-yellow/50 focus:bg-[#1a1a1a] transition-all flex justify-between items-center group-focus:border-neon-yellow/50"
               >
-                <div className="absolute left-4 top-3.5 pointer-events-none text-zinc-500 group-hover:text-neon-yellow transition-colors">
+                <div className="absolute left-4 top-3.5 pointer-events-none text-[var(--text-secondary)] group-hover:text-neon-yellow transition-colors">
                   <span className="text-xs uppercase font-bold tracking-widest">Serviço</span>
                 </div>
 
-                <span className={`text-white ${!selectedService ? 'text-zinc-600' : ''}`}>
+                <span
+                  className={`text-[var(--text-primary)] ${
+                    !selectedService ? 'text-[var(--text-secondary)]' : ''
+                  }`}
+                >
                   {selectedService?.name || 'Selecione...'}
                 </span>
 
@@ -242,7 +246,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
 
               {/* SERVICE DROPDOWN */}
               {isServiceListOpen && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-[#151515] border border-white/10 rounded-xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.9)] z-50 max-h-56 overflow-y-auto custom-scrollbar">
+                <div className="absolute top-full left-0 right-0 mt-2 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.9)] z-50 max-h-56 overflow-y-auto custom-scrollbar">
                   {services.map(s => (
                     <button
                       key={s.id}
@@ -250,11 +254,11 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
                         setSelectedServiceId(s.id);
                         setIsServiceListOpen(false);
                       }}
-                      className={`w-full text-left px-4 py-3 text-sm font-bold border-b border-white/5 transition-colors flex justify-between items-center group/opt
+                      className={`w-full text-left px-4 py-3 text-sm font-bold border-b border-[var(--border-color)] transition-colors flex justify-between items-center group/opt
                             ${
                               selectedServiceId === s.id
                                 ? 'bg-neon-yellow/10 text-neon-yellow'
-                                : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-white/5'
                             }
                         `}
                     >
@@ -263,7 +267,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
                         className={`text-xs opacity-50 ${
                           selectedServiceId === s.id
                             ? 'text-neon-yellow'
-                            : 'group-hover/opt:text-white'
+                            : 'group-hover/opt:text-[var(--text-primary)]'
                         }`}
                       >
                         {s.price}

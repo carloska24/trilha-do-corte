@@ -31,8 +31,8 @@ export const FinancialModal: React.FC<FinancialModalProps> = ({
   const getServiceName = (id: string) => SERVICES.find(s => s.id === id)?.name || 'Serviço';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-[fadeIn_0.2s_ease-out]">
-      <div className="relative w-full max-w-md bg-[#151515] rounded-3xl border border-gray-800 shadow-2xl overflow-hidden flex flex-col max-h-[90vh] transition-colors duration-300">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-[fadeIn_0.2s_ease-out]">
+      <div className="relative w-full max-w-md bg-[var(--bg-card)] rounded-3xl border border-[var(--border-color)] shadow-2xl overflow-hidden flex flex-col max-h-[90vh] transition-colors duration-300">
         {/* Header */}
         <div className="p-6 pb-2 flex justify-between items-start">
           <div className="flex items-center gap-4">
@@ -40,7 +40,7 @@ export const FinancialModal: React.FC<FinancialModalProps> = ({
               <Wallet className="text-green-500" size={24} />
             </div>
             <div>
-              <h2 className="font-black text-white text-lg uppercase tracking-wider">
+              <h2 className="font-black text-[var(--text-primary)] text-lg uppercase tracking-wider">
                 Fluxo Caixa
               </h2>
               <p className="text-[10px] text-green-500 font-bold uppercase tracking-widest flex items-center gap-1">
@@ -56,7 +56,7 @@ export const FinancialModal: React.FC<FinancialModalProps> = ({
             className={`w-10 h-10 border rounded-lg flex items-center justify-center transition-colors cursor-pointer ${
               isEditingGoal
                 ? 'border-neon-yellow text-neon-yellow bg-neon-yellow/10'
-                : 'border-gray-700 text-gray-400 hover:text-white hover:border-gray-500'
+                : 'border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--text-secondary)]'
             }`}
             title="Ajustar Meta"
           >
@@ -67,12 +67,12 @@ export const FinancialModal: React.FC<FinancialModalProps> = ({
         <div className="p-6 space-y-8 overflow-y-auto custom-scrollbar">
           {/* Total Big Display */}
           <div className="text-center">
-            <p className="text-gray-500 text-[10px] font-bold uppercase tracking-[0.2em] mb-2">
+            <p className="text-[var(--text-secondary)] text-[10px] font-bold uppercase tracking-[0.2em] mb-2">
               Total do Dia
             </p>
             <div className="flex items-center justify-center gap-1">
               <span className="text-green-500 font-bold text-xl mt-2">R$</span>
-              <span className="text-6xl font-black text-white tracking-tighter drop-shadow-[0_0_15px_rgba(34,197,94,0.4)]">
+              <span className="text-6xl font-black text-[var(--text-primary)] tracking-tighter drop-shadow-[0_0_15px_rgba(34,197,94,0.4)] transition-colors">
                 {todayRevenue.toFixed(2).replace('.', ',')}
               </span>
             </div>
@@ -82,14 +82,14 @@ export const FinancialModal: React.FC<FinancialModalProps> = ({
           <div className="grid grid-cols-2 gap-4">
             {/* Meta Card - COM MODO DE EDIÇÃO */}
             <div
-              className={`bg-[#0A0A0A] border rounded-xl p-4 transition-colors ${
-                isEditingGoal ? 'border-neon-yellow/50' : 'border-gray-800'
+              className={`bg-[var(--bg-secondary)] border rounded-xl p-4 transition-colors ${
+                isEditingGoal ? 'border-neon-yellow/50' : 'border-[var(--border-color)]'
               }`}
             >
               <div className="flex justify-between items-start mb-4">
                 <span
                   className={`text-[10px] font-bold uppercase ${
-                    isEditingGoal ? 'text-neon-yellow' : 'text-gray-500'
+                    isEditingGoal ? 'text-neon-yellow' : 'text-[var(--text-secondary)]'
                   }`}
                 >
                   {isEditingGoal ? 'Definir Meta' : 'Meta Diária'}
@@ -99,13 +99,13 @@ export const FinancialModal: React.FC<FinancialModalProps> = ({
 
               {isEditingGoal ? (
                 <div className="mb-2 flex items-center gap-2">
-                  <span className="text-gray-500 text-xs">R$</span>
+                  <span className="text-[var(--text-secondary)] text-xs">R$</span>
                   <input
                     autoFocus
                     type="number"
                     value={dailyGoal}
                     onChange={e => setDailyGoal(Number(e.target.value))}
-                    className="w-full bg-transparent border-b border-neon-yellow text-white font-bold outline-none text-lg p-0"
+                    className="w-full bg-transparent border-b border-neon-yellow text-[var(--text-primary)] font-bold outline-none text-lg p-0"
                   />
                   <button
                     onClick={() => setIsEditingGoal(false)}
@@ -116,8 +116,10 @@ export const FinancialModal: React.FC<FinancialModalProps> = ({
                 </div>
               ) : (
                 <div className="mb-2">
-                  <span className="text-white font-bold">R$ {Math.round(todayRevenue)}</span>
-                  <span className="text-gray-600 text-xs"> / {dailyGoal}</span>
+                  <span className="text-[var(--text-primary)] font-bold">
+                    R$ {Math.round(todayRevenue)}
+                  </span>
+                  <span className="text-[var(--text-secondary)] text-xs"> / {dailyGoal}</span>
                 </div>
               )}
 
@@ -134,31 +136,37 @@ export const FinancialModal: React.FC<FinancialModalProps> = ({
             </div>
 
             {/* Ticket Card */}
-            <div className="bg-[#0A0A0A] border border-gray-800 rounded-xl p-4 transition-colors">
+            <div className="bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl p-4 transition-colors">
               <div className="flex justify-between items-start mb-4">
-                <span className="text-[10px] font-bold text-gray-500 uppercase">Ticket Médio</span>
+                <span className="text-[10px] font-bold text-[var(--text-secondary)] uppercase">
+                  Ticket Médio
+                </span>
                 <BarChart3 size={12} className="text-green-800" />
               </div>
               <div className="mb-1">
-                <span className="text-gray-600 text-xs mr-1">R$</span>
-                <span className="text-white font-bold text-xl">
+                <span className="text-[var(--text-secondary)] text-xs mr-1">R$</span>
+                <span className="text-[var(--text-primary)] font-bold text-xl">
                   {completedCount > 0 ? (todayRevenue / completedCount).toFixed(2) : '0'}
                 </span>
               </div>
-              <p className="text-gray-600 text-[10px]">{completedCount} atendimentos</p>
+              <p className="text-[var(--text-secondary)] text-[10px]">
+                {completedCount} atendimentos
+              </p>
             </div>
           </div>
 
           {/* Historic Section - COM BOTÃO LIMPAR FUNCIONAL */}
           <div>
             <div className="flex justify-between items-end mb-4">
-              <h3 className="text-xs font-bold text-white uppercase tracking-widest">
+              <h3 className="text-xs font-bold text-[var(--text-primary)] uppercase tracking-widest transition-colors">
                 Histórico Recente
               </h3>
               <button
                 onClick={() => setHistoryCleared(!historyCleared)}
                 className={`text-[9px] uppercase tracking-widest cursor-pointer transition-colors ${
-                  historyCleared ? 'text-neon-yellow' : 'text-gray-600 hover:text-white'
+                  historyCleared
+                    ? 'text-neon-yellow'
+                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                 }`}
               >
                 {historyCleared ? 'Mostrar' : 'Limpar'}
@@ -169,17 +177,19 @@ export const FinancialModal: React.FC<FinancialModalProps> = ({
                 finished.slice(0, 3).map(app => (
                   <div
                     key={app.id}
-                    className="bg-[#0A0A0A] rounded-xl p-3 flex items-center justify-between border border-transparent hover:border-gray-800 transition-colors animate-[fadeIn_0.3s_ease-out]"
+                    className="bg-[var(--bg-secondary)] rounded-xl p-3 flex items-center justify-between border border-transparent hover:border-[var(--border-color)] transition-colors animate-[fadeIn_0.3s_ease-out]"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-black border border-gray-800 flex items-center justify-center shadow-sm">
-                        <Receipt size={14} className="text-gray-500" />
+                      <div className="w-8 h-8 rounded-full bg-[var(--bg-primary)] border border-[var(--border-color)] flex items-center justify-center shadow-sm">
+                        <Receipt size={14} className="text-[var(--text-secondary)]" />
                       </div>
                       <div>
-                        <p className="text-white text-xs font-bold">
+                        <p className="text-[var(--text-primary)] text-xs font-bold">
                           {getServiceName(app.serviceId)}
                         </p>
-                        <p className="text-gray-600 text-[10px] font-mono">{app.time}</p>
+                        <p className="text-[var(--text-secondary)] text-[10px] font-mono">
+                          {app.time}
+                        </p>
                       </div>
                     </div>
                     <span className="text-green-500 font-mono font-bold text-sm">
@@ -188,9 +198,9 @@ export const FinancialModal: React.FC<FinancialModalProps> = ({
                   </div>
                 ))
               ) : (
-                <div className="py-8 text-center border-2 border-dashed border-gray-800 rounded-xl animate-[fadeIn_0.3s_ease-out]">
-                  <EyeOff size={24} className="mx-auto text-gray-700 mb-2" />
-                  <p className="text-gray-600 text-[10px] uppercase font-bold tracking-widest">
+                <div className="py-8 text-center border-2 border-dashed border-[var(--border-color)] rounded-xl animate-[fadeIn_0.3s_ease-out]">
+                  <EyeOff size={24} className="mx-auto text-[var(--text-secondary)] mb-2" />
+                  <p className="text-[var(--text-secondary)] text-[10px] uppercase font-bold tracking-widest">
                     Visualização Oculta
                   </p>
                 </div>

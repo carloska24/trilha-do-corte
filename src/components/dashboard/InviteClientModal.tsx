@@ -43,12 +43,12 @@ export const InviteClientModal: React.FC<InviteClientModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in">
-      <div className="bg-zinc-950 w-full max-w-sm rounded-2xl border border-neon-yellow/30 p-6 shadow-[0_0_50px_rgba(227,253,0,0.15)] relative">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
+      <div className="bg-[var(--bg-card)] w-full max-w-sm rounded-2xl border border-neon-yellow/30 p-6 shadow-[0_0_50px_rgba(227,253,0,0.15)] relative transition-colors duration-300">
         {/* Header */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-zinc-500 hover:text-white transition-colors"
+          className="absolute top-4 right-4 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
         >
           <X size={24} />
         </button>
@@ -57,10 +57,10 @@ export const InviteClientModal: React.FC<InviteClientModalProps> = ({
           <div className="w-16 h-16 bg-neon-yellow/10 rounded-full flex items-center justify-center mb-4 border border-neon-yellow/20 shadow-[0_0_20px_rgba(227,253,0,0.2)]">
             <Link size={32} className="text-neon-yellow" />
           </div>
-          <h2 className="text-2xl font-graffiti text-white uppercase leading-none">
+          <h2 className="text-2xl font-graffiti text-[var(--text-primary)] uppercase leading-none">
             Formalizar <span className="text-neon-yellow">Cliente</span>
           </h2>
-          <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest mt-2">
+          <p className="text-[var(--text-secondary)] text-xs font-bold uppercase tracking-widest mt-2">
             Envie o convite para {client.name}
           </p>
         </div>
@@ -76,15 +76,19 @@ export const InviteClientModal: React.FC<InviteClientModalProps> = ({
           </button>
 
           <div className="relative group">
-            <div className="absolute inset-0 bg-zinc-900 rounded-xl border border-white/5"></div>
+            <div className="absolute inset-0 bg-[var(--bg-secondary)] rounded-xl border border-[var(--border-color)]"></div>
             <div className="relative flex items-center justify-between p-4">
               <div className="flex-1 min-w-0 pr-4">
-                <p className="text-[10px] uppercase font-bold text-zinc-500 mb-1">Link Mágico</p>
-                <p className="text-xs text-zinc-300 truncate font-mono select-all">{magicLink}</p>
+                <p className="text-[10px] uppercase font-bold text-[var(--text-secondary)] mb-1">
+                  Link Mágico
+                </p>
+                <p className="text-xs text-[var(--text-primary)] truncate font-mono select-all">
+                  {magicLink}
+                </p>
               </div>
               <button
                 onClick={handleCopyLink}
-                className="p-2 hover:bg-white/10 rounded-lg transition-colors text-zinc-400 hover:text-white"
+                className="p-2 hover:bg-[var(--bg-primary)] rounded-lg transition-colors text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               >
                 {copied ? <Check size={20} className="text-green-500" /> : <Copy size={20} />}
               </button>
@@ -92,8 +96,8 @@ export const InviteClientModal: React.FC<InviteClientModalProps> = ({
           </div>
         </div>
 
-        <div className="mt-6 pt-4 border-t border-white/5 text-center">
-          <p className="text-[10px] text-zinc-600 max-w-[200px] mx-auto leading-relaxed">
+        <div className="mt-6 pt-4 border-t border-[var(--border-color)] text-center">
+          <p className="text-[10px] text-[var(--text-secondary)] max-w-[200px] mx-auto leading-relaxed">
             Ao clicar no link, o cliente poderá definir senha e confirmar seus dados.
           </p>
         </div>

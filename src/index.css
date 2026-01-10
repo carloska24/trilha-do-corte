@@ -18,6 +18,7 @@
   --color-street-dark: var(--bg-primary);
   --color-street-gray: var(--bg-card);
   --color-text-primary: var(--text-primary);
+  --color-text-inverted: var(--text-inverted); /* New semantic var */
   --color-text-secondary: var(--text-secondary);
   --color-border-color: var(--border-color);
   --color-neon-yellow: #eab308;
@@ -83,26 +84,44 @@
 
 html {
   scroll-behavior: smooth;
-  background-color: #000000;
+  background-color: var(--bg-primary); /* CHANGED force var */
   margin: 0;
   padding: 0;
 }
 
 :root {
-  --bg-primary: #fafafa;
-  --bg-secondary: #f4f4f5;
-  --bg-card: #ffffff;
-  --text-primary: #09090b;
-  --text-secondary: #52525b;
-  --border-color: #e4e4e7;
+  /* Default: PROBABLY should be one or the other. Let's make :root LIGHT by default (standard) 
+     but since app was dark, check UIContext default. 
+     Variables here will apply if no class. */
+  --bg-primary: #121212; /* Fallback safe dark */
+  --bg-secondary: #09090b;
+  --bg-card: #1e1e1e;
+  --text-primary: #ffffff;
+  --text-inverted: #000000;
+  --text-secondary: #a1a1aa;
+  --border-color: rgba(255, 255, 255, 0.05);
+  --stripe-color: rgba(255, 255, 255, 0.03);
+}
+
+:root[class='light'] {
+  /* LABORATORY WHITE THEME - High Tech */
+  --bg-primary: #f8fafc; /* Slate 50 - Clinical White */
+  --bg-secondary: #ffffff; /* Pure White */
+  --bg-card: #e2e8f0; /* Slate 200 - Metallic Gray/White */
+  --text-primary: #0f172a; /* Slate 900 */
+  --text-inverted: #ffffff;
+  --text-secondary: #64748b; /* Slate 500 */
+  --border-color: #cbd5e1; /* Slate 300 */
   --stripe-color: rgba(0, 0, 0, 0.04);
 }
 
 :root[class='dark'] {
+  /* CYBERPUNK DARK THEME */
   --bg-primary: #121212;
   --bg-secondary: #09090b;
   --bg-card: #1e1e1e;
   --text-primary: #ffffff;
+  --text-inverted: #000000;
   --text-secondary: #a1a1aa;
   --border-color: rgba(255, 255, 255, 0.05);
   --stripe-color: rgba(255, 255, 255, 0.03);

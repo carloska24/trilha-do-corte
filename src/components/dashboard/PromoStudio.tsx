@@ -208,9 +208,9 @@ export const PromoStudio: React.FC<PromoStudioProps> = ({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/95 backdrop-blur-md animate-[fadeIn_0.2s_ease-out]">
-      <div className="bg-[#111] border border-gray-800 w-full max-w-5xl rounded-2xl shadow-2xl overflow-hidden flex flex-col h-[90vh]">
+      <div className="bg-[var(--bg-card)] border border-[var(--border-color)] w-full max-w-5xl rounded-2xl shadow-2xl overflow-hidden flex flex-col h-[90vh]">
         {/* Header - Full Width Banner */}
-        <div className="relative w-full h-32 bg-[#151515] border-b border-gray-800 p-0 overflow-hidden flex items-center justify-center">
+        <div className="relative w-full h-32 bg-[var(--bg-secondary)] border-b border-[var(--border-color)] p-0 overflow-hidden flex items-center justify-center">
           <div className="absolute inset-0 z-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/black-felt.png')]"></div>
 
           {/* Left Logo Container - 30% */}
@@ -255,7 +255,7 @@ export const PromoStudio: React.FC<PromoStudioProps> = ({
 
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/20 hover:bg-black/50 backdrop-blur-md flex items-center justify-center text-gray-400 hover:text-white border border-white/5 hover:border-white/20 transition-all z-20"
+            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/20 hover:bg-black/50 backdrop-blur-md flex items-center justify-center text-[var(--text-secondary)] hover:text-white border border-white/5 hover:border-white/20 transition-all z-20"
           >
             <X size={20} />
           </button>
@@ -296,7 +296,7 @@ export const PromoStudio: React.FC<PromoStudioProps> = ({
               />
 
               {/* RIGHT: PREVIEW */}
-              <div className="w-full h-auto min-h-[400px] lg:h-full border-t border-white/10 lg:border-none">
+              <div className="w-full h-auto min-h-[400px] lg:h-full border-t border-[var(--border-color)] lg:border-none">
                 <PromoPreview selectedService={selectedService} badges={badges} />
               </div>
             </div>

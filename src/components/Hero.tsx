@@ -9,12 +9,12 @@ export const Hero: React.FC<HeroProps> = ({ onOpenBooking }) => {
   return (
     <section
       id="home"
-      className="relative min-h-screen w-full overflow-hidden bg-street-dark flex flex-col pt-20 scroll-mt-20"
+      className="relative min-h-screen w-full overflow-hidden bg-[var(--bg-primary)] flex flex-col pt-20 scroll-mt-20"
     >
       {/* Background Image with Overlay */}
       <div className="absolute inset-0 z-0">
-        <div className="absolute inset-0 bg-gradient-to-t from-street-dark via-street-dark/80 to-transparent"></div>
-        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/concrete-wall.png')] opacity-20 mix-blend-overlay"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-primary)] via-[var(--bg-primary)]/80 to-transparent"></div>
+        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/concrete-wall.png')] opacity-20 mix-blend-overlay dark:mix-blend-overlay"></div>
       </div>
 
       {/* Animated Train Track Element - Central Vertical Line */}
@@ -37,14 +37,14 @@ export const Hero: React.FC<HeroProps> = ({ onOpenBooking }) => {
       {/* Content */}
       <div className="relative z-10 w-full max-w-7xl mx-auto px-4 flex flex-col items-center text-center mt-6">
         {/* Restored Text Content */}
-        <h1 className="text-5xl md:text-8xl font-graffiti text-white mb-6 leading-none graffiti-text tracking-wider mt-4">
+        <h1 className="text-5xl md:text-8xl font-graffiti text-[var(--text-primary)] mb-6 leading-none graffiti-text tracking-wider mt-4">
           O TREM <br />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-neon-yellow to-neon-orange">
             DO ESTILO
           </span>
         </h1>
 
-        <p className="mt-4 max-w-2xl mx-auto text-xl text-gray-400 font-light font-sans mb-8">
+        <p className="mt-4 max-w-2xl mx-auto text-xl text-[var(--text-secondary)] font-light font-sans mb-8">
           Não é só um corte, é o embarque para sua melhor versão. Barbearia clássica com a alma das
           ruas.
         </p>
@@ -52,7 +52,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenBooking }) => {
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
           <button
             onClick={onOpenBooking}
-            className="px-8 py-4 bg-neon-yellow text-black font-black text-lg uppercase tracking-wider hover:bg-white hover:scale-105 transform transition-all shadow-[4px_4px_0px_0px_rgba(255,255,255,0.2)] skew-x-[-10deg] cursor-pointer"
+            className="px-8 py-4 bg-neon-yellow text-black font-black text-lg uppercase tracking-wider hover:bg-[var(--text-primary)] hover:text-[var(--bg-primary)] hover:scale-105 transform transition-all shadow-[4px_4px_0px_0px_rgba(255,255,255,0.2)] skew-x-[-10deg] cursor-pointer"
           >
             <span className="skew-x-[10deg] block">Embarcar Agora</span>
           </button>
@@ -62,7 +62,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenBooking }) => {
               e.preventDefault();
               document.getElementById('agenda')?.scrollIntoView({ behavior: 'smooth' });
             }}
-            className="px-8 py-4 border-2 border-white/20 text-white font-bold text-lg uppercase tracking-wider hover:border-neon-orange hover:text-neon-orange transition-all skew-x-[-10deg] cursor-pointer inline-block"
+            className="px-8 py-4 border-2 border-[var(--text-primary)]/20 text-[var(--text-primary)] font-bold text-lg uppercase tracking-wider hover:border-neon-orange hover:text-neon-orange transition-all skew-x-[-10deg] cursor-pointer inline-block"
           >
             <span className="skew-x-[10deg] block">Ver Bilheteria</span>
           </a>
@@ -72,7 +72,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenBooking }) => {
       {/* Scroll Indicator */}
       <button
         onClick={() => document.getElementById('agenda')?.scrollIntoView({ behavior: 'smooth' })}
-        className="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce text-white/50 hover:text-neon-yellow transition-colors cursor-pointer bg-transparent border-none p-2 outline-none"
+        className="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce text-[var(--text-secondary)] hover:text-neon-yellow transition-colors cursor-pointer bg-transparent border-none p-2 outline-none"
         aria-label="Rolar para baixo"
       >
         <ChevronDown size={32} />

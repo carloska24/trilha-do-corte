@@ -13,15 +13,15 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
   onExportClick,
 }) => {
   return (
-    <div className="pt-6 px-4 md:px-6 bg-[#111] border-b border-gray-800">
+    <div className="pt-6 px-4 md:px-6 bg-[var(--bg-card)] border-b border-[var(--border-color)] transition-colors">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl md:text-4xl font-graffiti text-white tracking-wide drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">
+        <h1 className="text-3xl md:text-4xl font-graffiti text-[var(--text-primary)] tracking-wide drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">
           AGENDA
         </h1>
         {/* WhatsApp Share Button */}
         <button
           onClick={onExportClick}
-          className="group relative px-2 pr-4 py-1.5 bg-[#0a0a0a] border border-green-500/30 rounded-xl flex items-center gap-3 hover:border-green-500 hover:shadow-[0_0_15px_rgba(34,197,94,0.2)] transition-all overflow-hidden active:scale-95"
+          className="group relative px-2 pr-4 py-1.5 bg-[var(--bg-secondary)] border border-green-500/30 rounded-xl flex items-center gap-3 hover:border-green-500 hover:shadow-[0_0_15px_rgba(34,197,94,0.2)] transition-all overflow-hidden active:scale-95"
         >
           <div className="absolute inset-0 bg-green-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
 
@@ -39,7 +39,7 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
             <span className="text-[9px] font-bold text-green-500 uppercase tracking-widest leading-none mb-0.5 group-hover:text-green-400">
               WhatsApp
             </span>
-            <span className="text-xs font-black text-white uppercase tracking-wider leading-none">
+            <span className="text-xs font-black text-[var(--text-primary)] uppercase tracking-wider leading-none">
               Compartilhar
             </span>
           </div>
@@ -54,7 +54,7 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
             className={`pb-3 border-b-2 text-xs md:text-sm font-bold tracking-widest transition-all whitespace-nowrap ${
               activeTab === 'daily'
                 ? 'border-neon-yellow text-neon-yellow'
-                : 'border-transparent text-gray-500 hover:text-white'
+                : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
             }`}
           >
             DIÁRIO
@@ -64,7 +64,7 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
             className={`pb-3 border-b-2 text-xs md:text-sm font-bold tracking-widest transition-all whitespace-nowrap ${
               activeTab === 'monthly'
                 ? 'border-neon-yellow text-neon-yellow'
-                : 'border-transparent text-gray-500 hover:text-white'
+                : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
             }`}
           >
             CALENDÁRIO
@@ -74,7 +74,7 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
             className={`pb-3 border-b-2 text-xs md:text-sm font-bold tracking-widest transition-all whitespace-nowrap ${
               activeTab === 'config'
                 ? 'border-neon-yellow text-neon-yellow'
-                : 'border-transparent text-gray-500 hover:text-white'
+                : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
             }`}
           >
             AJUSTES

@@ -539,20 +539,20 @@ export const DashboardLayout: React.FC = () => {
     <div className="min-h-screen bg-transparent text-text-primary font-sans selection:bg-yellow-500 selection:text-black transition-colors duration-300">
       {/* HEADER PIXEL PERFECT */}
       {/* HEADER PIXEL PERFECT */}
-      <header className="fixed top-0 left-0 right-0 h-16 bg-black z-40 flex items-center justify-between px-4 border-b border-border-color transition-colors duration-300">
+      <header className="fixed top-0 left-0 right-0 h-16 bg-[var(--bg-secondary)] z-40 flex items-center justify-between px-4 border-b border-[var(--border-color)] transition-colors duration-300">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-[#FFD700] rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(234,179,8,0.2)] group hover:shadow-[0_0_30px_rgba(234,179,8,0.4)] transition-all duration-300">
+          <div className="w-12 h-12 bg-[var(--color-neon-yellow)] rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(234,179,8,0.2)] group hover:shadow-[0_0_30px_rgba(234,179,8,0.4)] transition-all duration-300">
             <ChairIcon
               size={28}
-              className="text-black group-hover:scale-110 transition-transform"
+              className="text-[var(--text-inverted)] group-hover:scale-110 transition-transform"
             />
           </div>
           <div className="flex flex-col justify-center translate-y-[2px]">
-            <h1 className="text-xl md:text-3xl text-white tracking-wide leading-none font-rye drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] whitespace-nowrap">
+            <h1 className="text-xl md:text-3xl text-[var(--text-primary)] tracking-wide leading-none font-rye drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] whitespace-nowrap">
               Trilha do Corte
             </h1>
             <div className="flex items-center gap-2 pl-1">
-              <span className="text-[10px] md:text-xs font-bold text-[#FFD700] uppercase tracking-[0.35em] drop-shadow-sm opacity-90 font-sans whitespace-nowrap">
+              <span className="text-[10px] md:text-xs font-bold text-[var(--color-neon-yellow)] uppercase tracking-[0.35em] drop-shadow-sm opacity-90 font-sans whitespace-nowrap">
                 Barber Club
               </span>
             </div>
@@ -564,18 +564,18 @@ export const DashboardLayout: React.FC = () => {
             onClick={() => setShowFinancials(true)}
             className="group flex items-center justify-center transition-transform hover:scale-110"
           >
-            <AnimatedWallet className="w-10 h-10 text-white drop-shadow-xl filter brightness-110" />
+            <AnimatedWallet className="w-10 h-10 text-[var(--text-primary)] drop-shadow-xl filter brightness-110" />
           </button>
           <button
             onClick={() => setShowProfileModal(true)}
-            className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-street-gray shadow-md hover:border-[#FFD700] transition-colors"
+            className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-[var(--bg-card)] shadow-md hover:border-[var(--color-neon-yellow)] transition-colors"
           >
             <img
               src={getOptimizedImageUrl(barberProfile?.photoUrl || DEFAULT_BARBER_IMAGE, 100, 100)}
               alt="Profile"
               className="w-full h-full object-cover"
             />
-            <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-street-dark animate-pulse"></div>
+            <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-[var(--bg-primary)] animate-pulse"></div>
           </button>
         </div>
       </header>
@@ -634,7 +634,7 @@ export const DashboardLayout: React.FC = () => {
       )}
 
       {/* BOTTOM NAV PIXEL PERFECT */}
-      <nav className="fixed bottom-0 left-0 right-0 h-20 bg-black border-t border-border-color z-50 flex justify-around items-center px-2 pb-2 transition-colors duration-300">
+      <nav className="fixed bottom-0 left-0 right-0 h-20 bg-[var(--bg-secondary)] border-t border-[var(--border-color)] z-50 flex justify-around items-center px-2 pb-2 transition-colors duration-300">
         <button
           onClick={() => navigate('/dashboard')}
           className="flex flex-col items-center justify-center gap-1 w-16 h-16 rounded-xl group"
@@ -752,7 +752,7 @@ export const DashboardLayout: React.FC = () => {
       </nav>
 
       {/* MAIN CONTENT AREA */}
-      <main className="pt-20 pb-24 px-4 min-h-screen bg-transparent relative overflow-hidden transition-colors duration-300">
+      <main className="pt-20 pb-24 px-4 min-h-screen bg-[var(--bg-primary)] relative overflow-hidden transition-colors duration-300">
         <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.02)_25%,rgba(255,255,255,0.02)_50%,transparent_50%,transparent_75%,rgba(255,255,255,0.02)_75%,rgba(255,255,255,0.02)_100%)] bg-[length:24px_24px] opacity-20 pointer-events-none"></div>
         <Outlet context={outletContext} />
       </main>

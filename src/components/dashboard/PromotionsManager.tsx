@@ -111,7 +111,7 @@ export const PromotionsManager: React.FC<PromotionsManagerProps> = ({ services }
           </h2>
           <button
             onClick={() => setIsEditing(false)}
-            className="w-full md:w-auto p-3 md:p-0 bg-transparent rounded-lg text-gray-500 hover:text-white uppercase font-bold text-xs flex justify-center border border-gray-800 hover:border-white transition-all"
+            className="w-full md:w-auto p-3 md:p-0 bg-transparent rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] uppercase font-bold text-xs flex justify-center border border-[var(--border-color)] hover:border-[var(--text-primary)] transition-all"
           >
             Cancelar
           </button>
@@ -121,7 +121,7 @@ export const PromotionsManager: React.FC<PromotionsManagerProps> = ({ services }
           {/* Image Upload with Compression */}
           <div className="flex justify-center">
             <div
-              className="relative w-full h-48 rounded-xl bg-[#151515] border-2 border-dashed border-gray-800 hover:border-neon-yellow flex flex-col items-center justify-center cursor-pointer overflow-hidden group transition-colors"
+              className="relative w-full h-48 rounded-xl bg-[var(--bg-secondary)] border-2 border-dashed border-[var(--border-color)] hover:border-neon-yellow flex flex-col items-center justify-center cursor-pointer overflow-hidden group transition-colors"
               onClick={() => document.getElementById('combo-image-upload')?.click()}
             >
               {editingCombo.image ? (
@@ -132,7 +132,7 @@ export const PromotionsManager: React.FC<PromotionsManagerProps> = ({ services }
                     className="text-gray-600 mb-2 group-hover:text-neon-yellow"
                     size={40}
                   />
-                  <span className="text-gray-500 text-xs font-bold uppercase tracking-widest group-hover:text-white">
+                  <span className="text-[var(--text-secondary)] text-xs font-bold uppercase tracking-widest group-hover:text-[var(--text-primary)]">
                     Carregar Capa do Combo
                   </span>
                 </>
@@ -173,7 +173,7 @@ export const PromotionsManager: React.FC<PromotionsManagerProps> = ({ services }
           {/* Title & Subtitle */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+              <label className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest">
                 Nome do Combo
               </label>
               <input
@@ -181,7 +181,7 @@ export const PromotionsManager: React.FC<PromotionsManagerProps> = ({ services }
                 value={editingCombo.title}
                 onChange={e => setEditingCombo({ ...editingCombo, title: e.target.value })}
                 placeholder="Ex: Dia do Noivo"
-                className="w-full bg-[#111] border border-gray-800 p-3 rounded text-white focus:border-neon-yellow outline-none uppercase font-bold"
+                className="w-full bg-[var(--bg-card)] border border-[var(--border-color)] p-3 rounded text-[var(--text-primary)] focus:border-neon-yellow outline-none uppercase font-bold"
               />
             </div>
             <div className="space-y-2">
@@ -193,7 +193,7 @@ export const PromotionsManager: React.FC<PromotionsManagerProps> = ({ services }
                 value={editingCombo.subtitle}
                 onChange={e => setEditingCombo({ ...editingCombo, subtitle: e.target.value })}
                 placeholder="Ex: Experiência Completa"
-                className="w-full bg-[#111] border border-gray-800 p-3 rounded text-white focus:border-neon-yellow outline-none"
+                className="w-full bg-[var(--bg-card)] border border-[var(--border-color)] p-3 rounded text-[var(--text-primary)] focus:border-neon-yellow outline-none"
               />
             </div>
           </div>
@@ -206,17 +206,17 @@ export const PromotionsManager: React.FC<PromotionsManagerProps> = ({ services }
             <textarea
               value={editingCombo.description}
               onChange={e => setEditingCombo({ ...editingCombo, description: e.target.value })}
-              className="w-full bg-[#111] border border-gray-800 p-3 rounded text-white focus:border-neon-yellow outline-none h-24 resize-none"
+              className="w-full bg-[var(--bg-card)] border border-[var(--border-color)] p-3 rounded text-[var(--text-primary)] focus:border-neon-yellow outline-none h-24 resize-none"
             />
           </div>
 
           {/* Service Selection */}
           <div className="space-y-2">
-            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
+            <label className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest flex items-center gap-2">
               <Scissors size={12} /> Serviços Inclusos
             </label>
             {/* Selected Items List (Allows removing items not in the list) */}
-            <div className="flex flex-wrap gap-2 mb-3 bg-[#0a0a0a] p-3 rounded-lg border border-gray-800">
+            <div className="flex flex-wrap gap-2 mb-3 bg-[var(--bg-secondary)] p-3 rounded-lg border border-[var(--border-color)]">
               {editingCombo.items?.map((item, idx) => (
                 <div
                   key={idx}
@@ -239,7 +239,7 @@ export const PromotionsManager: React.FC<PromotionsManagerProps> = ({ services }
                 </div>
               ))}
               {(!editingCombo.items || editingCombo.items.length === 0) && (
-                <span className="text-gray-600 text-[10px] italic flex items-center gap-2">
+                <span className="text-[var(--text-secondary)] text-[10px] italic flex items-center gap-2">
                   <Scissors size={12} /> Nenhum serviço adicionado. Selecione abaixo.
                 </span>
               )}
@@ -254,8 +254,8 @@ export const PromotionsManager: React.FC<PromotionsManagerProps> = ({ services }
                     onClick={() => toggleService(s.id)}
                     className={`p-3 rounded border cursor-pointer flex items-center justify-between transition-colors ${
                       isSelected
-                        ? 'bg-neon-yellow/10 border-neon-yellow text-white'
-                        : 'bg-[#111] border-gray-800 text-gray-500 hover:border-gray-600'
+                        ? 'bg-neon-yellow/10 border-neon-yellow text-[var(--text-primary)]'
+                        : 'bg-[var(--bg-card)] border-[var(--border-color)] text-[var(--text-secondary)] hover:border-[var(--text-primary)]'
                     }`}
                   >
                     <span className="text-xs font-bold uppercase">{s.name}</span>
@@ -268,7 +268,7 @@ export const PromotionsManager: React.FC<PromotionsManagerProps> = ({ services }
 
           {/* Theme Picker */}
           <div className="space-y-4">
-            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
+            <label className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest flex items-center gap-2">
               Tema Visual (Efeito)
             </label>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -296,7 +296,7 @@ export const PromotionsManager: React.FC<PromotionsManagerProps> = ({ services }
           {/* Price */}
           <div className="flex gap-4 items-end">
             <div className="space-y-2 flex-1">
-              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+              <label className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest">
                 Preço Final
               </label>
               <div className="relative">
@@ -322,7 +322,7 @@ export const PromotionsManager: React.FC<PromotionsManagerProps> = ({ services }
                 value={editingCombo.badge || ''}
                 onChange={e => setEditingCombo({ ...editingCombo, badge: e.target.value })}
                 placeholder="Ex: PREMIUM"
-                className="w-full bg-[#111] border border-gray-800 p-3 rounded text-white focus:border-neon-yellow outline-none uppercase font-bold"
+                className="w-full bg-[var(--bg-card)] border border-[var(--border-color)] p-3 rounded text-[var(--text-primary)] focus:border-neon-yellow outline-none uppercase font-bold"
               />
             </div>
           </div>
@@ -342,10 +342,10 @@ export const PromotionsManager: React.FC<PromotionsManagerProps> = ({ services }
     <div className="animate-[fadeIn_0.5s_ease-out]">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 border-b border-gray-800 pb-6">
         <div>
-          <h2 className="text-3xl font-graffiti text-white uppercase tracking-wider mb-2 leading-none">
+          <h2 className="text-3xl font-graffiti text-[var(--text-primary)] uppercase tracking-wider mb-2 leading-none">
             Central de Marketing
           </h2>
-          <p className="text-gray-500 text-[10px] font-bold uppercase tracking-[0.2em]">
+          <p className="text-[var(--text-secondary)] text-[10px] font-bold uppercase tracking-[0.2em]">
             Gerencie Combos e Ofertas Especiais
           </p>
         </div>
@@ -361,7 +361,7 @@ export const PromotionsManager: React.FC<PromotionsManagerProps> = ({ services }
         {combos.map(combo => (
           <div
             key={combo.id}
-            className="bg-[#111] border border-gray-800 rounded-2xl overflow-hidden group hover:border-gray-600 transition-all hover:shadow-2xl hover:-translate-y-1 duration-300"
+            className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-2xl overflow-hidden group hover:border-[var(--text-secondary)] transition-all hover:shadow-2xl hover:-translate-y-1 duration-300"
           >
             <div
               className={`h-40 relative bg-gradient-to-r ${
@@ -401,16 +401,16 @@ export const PromotionsManager: React.FC<PromotionsManagerProps> = ({ services }
             </div>
 
             <div className="p-5">
-              <p className="text-gray-400 text-xs mb-6 leading-relaxed line-clamp-2 min-h-[2.5em]">
+              <p className="text-[var(--text-secondary)] text-xs mb-6 leading-relaxed line-clamp-2 min-h-[2.5em]">
                 {combo.description || 'Sem descrição definida.'}
               </p>
 
-              <div className="flex items-center justify-between border-t border-gray-800 pt-4 mt-2">
+              <div className="flex items-center justify-between border-t border-[var(--border-color)] pt-4 mt-2">
                 <div className="flex flex-col">
-                  <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">
+                  <span className="text-[10px] text-[var(--text-secondary)] font-bold uppercase tracking-widest">
                     Valor Final
                   </span>
-                  <span className="text-xl font-black text-white tracking-tight">
+                  <span className="text-xl font-black text-[var(--text-primary)] tracking-tight">
                     R$ {combo.priceValue.toFixed(2)}
                   </span>
                 </div>
@@ -418,14 +418,14 @@ export const PromotionsManager: React.FC<PromotionsManagerProps> = ({ services }
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleDelete(combo.id)}
-                    className="w-10 h-10 flex items-center justify-center rounded-lg bg-gray-900 text-gray-500 hover:bg-red-500/10 hover:text-red-500 border border-gray-800 hover:border-red-500/50 transition-all"
+                    className="w-10 h-10 flex items-center justify-center rounded-lg bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-red-500/10 hover:text-red-500 border border-[var(--border-color)] hover:border-red-500/50 transition-all"
                     title="Excluir"
                   >
                     <Trash2 size={18} />
                   </button>
                   <button
                     onClick={() => handleEdit(combo)}
-                    className="w-10 h-10 flex items-center justify-center rounded-lg bg-gray-900 text-gray-500 hover:bg-white hover:text-black border border-gray-800 hover:border-white transition-all"
+                    className="w-10 h-10 flex items-center justify-center rounded-lg bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-card)] hover:text-[var(--text-primary)] border border-[var(--border-color)] hover:border-[var(--text-primary)] transition-all"
                     title="Editar"
                   >
                     <Edit2 size={18} />

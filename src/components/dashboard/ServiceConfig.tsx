@@ -175,13 +175,13 @@ export const ServiceConfig: React.FC = () => {
             </p>
           </div>
 
-          <div className="flex p-1 bg-[#111] border border-gray-800 rounded-xl">
+          <div className="flex p-1 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl">
             <button
               onClick={() => setActiveTab('services')}
               className={`px-6 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all ${
                 activeTab === 'services'
-                  ? 'bg-gray-800 text-white shadow-lg'
-                  : 'text-gray-500 hover:text-white'
+                  ? 'bg-[var(--bg-card)] text-[var(--text-primary)] shadow-lg'
+                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
               }`}
             >
               Oficina
@@ -191,7 +191,7 @@ export const ServiceConfig: React.FC = () => {
               className={`px-6 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all ${
                 activeTab === 'marketing'
                   ? 'bg-neon-yellow text-black shadow-[0_0_15px_rgba(234,179,8,0.4)]'
-                  : 'text-gray-500 hover:text-white'
+                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
               }`}
             >
               Marketing
@@ -204,7 +204,7 @@ export const ServiceConfig: React.FC = () => {
           <div className="flex justify-end gap-4">
             <button
               onClick={() => setIsPromoStudioOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-[#1a1a1a] border border-gray-800 rounded-lg hover:border-purple-500 text-gray-300 hover:text-white transition-all group"
+              className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg hover:border-purple-500 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all group"
             >
               <Sparkles size={16} className="text-purple-500 group-hover:animate-spin-slow" />
               <span className="text-xs font-bold uppercase tracking-wider">Studio Promo</span>
@@ -233,11 +233,11 @@ export const ServiceConfig: React.FC = () => {
             return (
               <div key={category} className="animate-fade-in-up">
                 <div className="flex items-center gap-4 mb-6">
-                  <h3 className="text-2xl font-black text-white uppercase tracking-tighter italic">
+                  <h3 className="text-2xl font-black text-[var(--text-primary)] uppercase tracking-tighter italic">
                     {category}
                   </h3>
-                  <div className="h-px flex-1 bg-gradient-to-r from-gray-800 to-transparent"></div>
-                  <span className="text-xs font-mono text-gray-500 bg-[#1a1a1a] px-2 py-1 rounded">
+                  <div className="h-px flex-1 bg-gradient-to-r from-[var(--border-color)] to-transparent"></div>
+                  <span className="text-xs font-mono text-[var(--text-secondary)] bg-[var(--bg-secondary)] px-2 py-1 rounded">
                     {catServices.length} ITEMS
                   </span>
                 </div>

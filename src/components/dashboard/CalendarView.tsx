@@ -354,7 +354,7 @@ export const CalendarView: React.FC = () => {
   // CALENDAR GRID LOGIC moved to CalendarGrid component
 
   return (
-    <div className="flex flex-col h-full bg-[#111] text-white relative">
+    <div className="flex flex-col h-full bg-[var(--bg-primary)] text-[var(--text-primary)] relative transition-colors duration-300">
       <style>
         {`
           @keyframes fade-in-down {
@@ -389,11 +389,11 @@ export const CalendarView: React.FC = () => {
             {/* Header Section */}
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-2xl font-black text-white uppercase tracking-wider flex items-center gap-3">
+                <h2 className="text-2xl font-black text-[var(--text-primary)] uppercase tracking-wider flex items-center gap-3">
                   <Clock size={24} className="text-neon-yellow" />
                   Ajustes
                 </h2>
-                <p className="text-xs text-gray-500 font-bold uppercase tracking-widest mt-1 pl-9">
+                <p className="text-xs text-[var(--text-secondary)] font-bold uppercase tracking-widest mt-1 pl-9">
                   Personalize sua agenda
                 </p>
               </div>
@@ -488,7 +488,7 @@ export const CalendarView: React.FC = () => {
                     ${
                       isListening
                         ? 'bg-red-500 text-white shadow-[0_0_20px_rgba(239,68,68,0.6)] animate-pulse'
-                        : 'bg-[#1A1A1A] text-neon-yellow border-2 border-neon-yellow/30 hover:bg-neon-yellow hover:text-black hover:scale-105'
+                        : 'bg-[var(--bg-card)] text-neon-yellow border-2 border-neon-yellow/30 hover:bg-neon-yellow hover:text-black hover:scale-105'
                     }
                   `}
               >
@@ -504,7 +504,7 @@ export const CalendarView: React.FC = () => {
             </div>
 
             {/* Main Card */}
-            <div className="bg-[#1A1A1A] rounded-2xl border border-white/5 overflow-hidden shadow-2xl relative">
+            <div className="bg-[var(--bg-card)] rounded-2xl border border-[var(--border-color)] overflow-hidden shadow-2xl relative transition-colors">
               {/* Subtle Gradient Glow */}
               <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-transparent via-neon-yellow to-transparent opacity-50"></div>
 
@@ -519,12 +519,12 @@ export const CalendarView: React.FC = () => {
 
                 <div className="grid gap-2">
                   {/* Start Hour */}
-                  <div className="flex items-center justify-between p-4 rounded-xl bg-[#111] border border-white/5 hover:border-white/10 transition-colors group">
+                  <div className="flex items-center justify-between p-4 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] hover:border-[var(--text-secondary)] transition-colors group">
                     <div>
-                      <span className="text-gray-500 font-bold uppercase text-[10px] tracking-widest block mb-1">
+                      <span className="text-[var(--text-secondary)] font-bold uppercase text-[10px] tracking-widest block mb-1">
                         Abertura
                       </span>
-                      <span className="text-white font-black text-2xl group-hover:text-neon-yellow transition-colors">
+                      <span className="text-[var(--text-primary)] font-black text-2xl group-hover:text-neon-yellow transition-colors">
                         {String(shopSettings.startHour).padStart(2, '0')}:00
                       </span>
                     </div>
@@ -536,7 +536,7 @@ export const CalendarView: React.FC = () => {
                           updateShopSettings({ ...shopSettings, startHour: newStart });
                           showToast('Abertura salva!');
                         }}
-                        className="w-10 h-10 rounded-lg bg-[#1E1E1E] hover:bg-neon-yellow hover:text-black border border-white/5 flex items-center justify-center transition-all active:scale-95 text-gray-400"
+                        className="w-10 h-10 rounded-lg bg-[var(--bg-primary)] hover:bg-neon-yellow hover:text-black border border-[var(--border-color)] flex items-center justify-center transition-all active:scale-95 text-[var(--text-secondary)]"
                       >
                         <Minus size={18} strokeWidth={3} />
                       </button>
@@ -550,7 +550,7 @@ export const CalendarView: React.FC = () => {
                           updateShopSettings({ ...shopSettings, startHour: newStart });
                           showToast('Abertura salva!');
                         }}
-                        className="w-10 h-10 rounded-lg bg-[#1E1E1E] hover:bg-neon-yellow hover:text-black border border-white/5 flex items-center justify-center transition-all active:scale-95 text-gray-400"
+                        className="w-10 h-10 rounded-lg bg-[var(--bg-primary)] hover:bg-neon-yellow hover:text-black border border-[var(--border-color)] flex items-center justify-center transition-all active:scale-95 text-[var(--text-secondary)]"
                       >
                         <Plus size={18} strokeWidth={3} />
                       </button>
@@ -558,12 +558,12 @@ export const CalendarView: React.FC = () => {
                   </div>
 
                   {/* End Hour */}
-                  <div className="flex items-center justify-between p-4 rounded-xl bg-[#111] border border-white/5 hover:border-white/10 transition-colors group">
+                  <div className="flex items-center justify-between p-4 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] hover:border-[var(--text-secondary)] transition-colors group">
                     <div>
-                      <span className="text-gray-500 font-bold uppercase text-[10px] tracking-widest block mb-1">
+                      <span className="text-[var(--text-secondary)] font-bold uppercase text-[10px] tracking-widest block mb-1">
                         Fechamento
                       </span>
-                      <span className="text-white font-black text-2xl group-hover:text-neon-yellow transition-colors">
+                      <span className="text-[var(--text-primary)] font-black text-2xl group-hover:text-neon-yellow transition-colors">
                         {String(shopSettings.endHour).padStart(2, '0')}:00
                       </span>
                     </div>
@@ -578,7 +578,7 @@ export const CalendarView: React.FC = () => {
                           updateShopSettings({ ...shopSettings, endHour: newEnd });
                           showToast('Fechamento salvo!');
                         }}
-                        className="w-10 h-10 rounded-lg bg-[#1E1E1E] hover:bg-neon-yellow hover:text-black border border-white/5 flex items-center justify-center transition-all active:scale-95 text-gray-400"
+                        className="w-10 h-10 rounded-lg bg-[var(--bg-primary)] hover:bg-neon-yellow hover:text-black border border-[var(--border-color)] flex items-center justify-center transition-all active:scale-95 text-[var(--text-secondary)]"
                       >
                         <Minus size={18} strokeWidth={3} />
                       </button>
@@ -589,7 +589,7 @@ export const CalendarView: React.FC = () => {
                           updateShopSettings({ ...shopSettings, endHour: newEnd });
                           showToast('Fechamento salvo!');
                         }}
-                        className="w-10 h-10 rounded-lg bg-[#1E1E1E] hover:bg-neon-yellow hover:text-black border border-white/5 flex items-center justify-center transition-all active:scale-95 text-gray-400"
+                        className="w-10 h-10 rounded-lg bg-[var(--bg-primary)] hover:bg-neon-yellow hover:text-black border border-[var(--border-color)] flex items-center justify-center transition-all active:scale-95 text-[var(--text-secondary)]"
                       >
                         <Plus size={18} strokeWidth={3} />
                       </button>
@@ -599,13 +599,13 @@ export const CalendarView: React.FC = () => {
               </div>
 
               {/* Divider */}
-              <div className="h-px bg-white/5 mx-6"></div>
+              <div className="h-px bg-[var(--border-color)] mx-6"></div>
 
               {/* SECTION 2: INTERVAL */}
               <div className="p-6">
                 <div className="flex items-center gap-2 mb-4">
                   <div className="w-1 h-4 bg-purple-500 rounded-full"></div>
-                  <h3 className="text-white font-bold uppercase tracking-widest text-sm">
+                  <h3 className="text-[var(--text-primary)] font-bold uppercase tracking-widest text-sm">
                     Duração dos Cortes
                   </h3>
                 </div>
@@ -624,7 +624,7 @@ export const CalendarView: React.FC = () => {
                                         ${
                                           (shopSettings.slotInterval || 60) === min
                                             ? 'bg-neon-yellow border-neon-yellow text-black'
-                                            : 'bg-[#111] border-white/5 text-gray-500 hover:border-white/20 hover:text-white'
+                                            : 'bg-[var(--bg-secondary)] border-[var(--border-color)] text-[var(--text-secondary)] hover:border-[var(--text-primary)] hover:text-[var(--text-primary)]'
                                         }
                                     `}
                     >
@@ -633,7 +633,7 @@ export const CalendarView: React.FC = () => {
                         className={`text-[8px] font-bold uppercase relative z-10 ${
                           (shopSettings.slotInterval || 60) === min
                             ? 'text-black/70'
-                            : 'text-gray-600 group-hover/btn:text-gray-400'
+                            : 'text-[var(--text-secondary)] group-hover/btn:text-[var(--text-secondary)]'
                         }`}
                       >
                         MIN
@@ -657,21 +657,21 @@ export const CalendarView: React.FC = () => {
         ) : (
           <>
             {/* Daily Nav */}
-            <div className="flex items-center justify-between px-4 md:px-6 py-4 bg-[#151515] border-b border-gray-800 sticky top-0 z-20 shadow-xl">
+            <div className="flex items-center justify-between px-4 md:px-6 py-4 bg-[var(--bg-card)] border-b border-[var(--border-color)] sticky top-0 z-20 shadow-xl transition-colors">
               <button
                 onClick={e => {
                   e.stopPropagation();
                   changeDate(-1);
                 }}
-                className="text-gray-400 hover:text-white transition-colors bg-[#0a0a0a] p-2 rounded-lg border border-gray-800 relative z-50"
+                className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors bg-[var(--bg-secondary)] p-2 rounded-lg border border-[var(--border-color)] relative z-50"
               >
                 <ChevronLeft size={20} />
               </button>
               <div className="text-center relative">
-                <span className="absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] block">
+                <span className="absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.2em] block">
                   Data Selecionada
                 </span>
-                <h2 className="text-base md:text-lg font-black text-white uppercase tracking-wider flex items-center justify-center gap-3">
+                <h2 className="text-base md:text-lg font-black text-[var(--text-primary)] uppercase tracking-wider flex items-center justify-center gap-3">
                   <CalendarIcon size={16} className="text-neon-yellow" />
                   <span>
                     {selectedDate
@@ -695,7 +695,7 @@ export const CalendarView: React.FC = () => {
                   console.log('Next Day Clicked');
                   changeDate(1);
                 }}
-                className="text-gray-400 hover:text-white transition-colors bg-[#0a0a0a] p-2 rounded-lg border border-gray-800 relative z-50"
+                className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors bg-[var(--bg-secondary)] p-2 rounded-lg border border-[var(--border-color)] relative z-50"
               >
                 <ChevronRight size={20} />
               </button>
@@ -734,28 +734,30 @@ export const CalendarView: React.FC = () => {
 
       {/* EXPORT MODAL */}
       {isExportOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in">
-          <div className="bg-[#111] w-full max-w-sm rounded-2xl border border-gray-800 shadow-2xl p-6 relative overflow-hidden">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
+          <div className="bg-[var(--bg-card)] w-full max-w-sm rounded-2xl border border-[var(--border-color)] shadow-2xl p-6 relative overflow-hidden transition-colors">
             {/* Neon Top Bar */}
             <div className="absolute top-0 left-0 w-full h-1 bg-green-500 shadow-[0_0_20px_#22c55e]"></div>
 
             <div className="flex justify-between items-center mb-6 mt-2">
-              <h3 className="text-xl font-black text-white uppercase tracking-wider flex items-center gap-2">
+              <h3 className="text-xl font-black text-[var(--text-primary)] uppercase tracking-wider flex items-center gap-2">
                 <Share2 size={24} className="text-green-500" />
                 Exportar Agenda
               </h3>
               <button
                 onClick={() => setIsExportOpen(false)}
-                className="bg-gray-800 p-2 rounded-lg text-gray-400 hover:text-white transition-colors"
+                className="bg-[var(--bg-secondary)] p-2 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
               >
                 <ChevronLeft size={20} className="rotate-180" />
               </button>
             </div>
 
-            <p className="text-gray-400 text-sm mb-6 leading-relaxed">
+            <p className="text-[var(--text-secondary)] text-sm mb-6 leading-relaxed">
               Deseja gerar a lista de agendamentos do dia{' '}
-              <strong className="text-white">{selectedDate.toLocaleDateString('pt-BR')}</strong> e
-              abrir no WhatsApp?
+              <strong className="text-[var(--text-primary)]">
+                {selectedDate.toLocaleDateString('pt-BR')}
+              </strong>{' '}
+              e abrir no WhatsApp?
             </p>
 
             <button

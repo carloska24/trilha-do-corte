@@ -106,20 +106,20 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="bg-[#111] w-full max-w-lg rounded-2xl border border-gray-800 shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="bg-[var(--bg-card)] w-full max-w-lg rounded-2xl border border-[var(--border-color)] shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh] transition-colors duration-300">
         {/* Modal Header */}
-        <div className="p-6 border-b border-gray-800 flex justify-between items-center bg-[#151515]">
+        <div className="p-6 border-b border-[var(--border-color)] flex justify-between items-center bg-[var(--bg-secondary)] transition-colors duration-300">
           <div>
-            <h3 className="text-xl font-black text-white uppercase italic tracking-wider">
+            <h3 className="text-xl font-black text-[var(--text-primary)] uppercase italic tracking-wider transition-colors">
               {editingServiceId ? 'Editar Serviço' : 'Novo Serviço'}
             </h3>
-            <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mt-1">
+            <p className="text-[var(--text-secondary)] text-xs font-bold uppercase tracking-widest mt-1">
               Preencha os detalhes do serviço
             </p>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-lg bg-gray-900 border border-gray-700 text-gray-400 hover:text-white hover:border-gray-500 transition-all"
+            className="w-8 h-8 flex items-center justify-center rounded-lg bg-[var(--bg-primary)] border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--text-secondary)] transition-all"
           >
             <X size={16} />
           </button>
@@ -130,7 +130,7 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
           {/* Image Upload */}
           <div className="flex justify-center">
             <div
-              className="relative group w-full h-40 rounded-xl bg-black border-2 border-dashed border-gray-800 hover:border-neon-yellow transition-colors cursor-pointer overflow-hidden flex flex-col items-center justify-center"
+              className="relative group w-full h-40 rounded-xl bg-[var(--bg-primary)] border-2 border-dashed border-[var(--border-color)] hover:border-neon-yellow transition-colors cursor-pointer overflow-hidden flex flex-col items-center justify-center"
               onClick={() => fileInputRef.current?.click()}
             >
               {formData.image ? (
@@ -147,10 +147,10 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
               ) : (
                 <>
                   <Upload
-                    className="text-gray-600 mb-2 group-hover:text-neon-yellow transition-colors"
+                    className="text-[var(--text-secondary)] mb-2 group-hover:text-neon-yellow transition-colors"
                     size={32}
                   />
-                  <span className="text-gray-600 text-xs font-bold uppercase tracking-widest group-hover:text-white transition-colors">
+                  <span className="text-[var(--text-secondary)] text-xs font-bold uppercase tracking-widest group-hover:text-[var(--text-primary)] transition-colors">
                     Upload da Imagem
                   </span>
                 </>
@@ -168,19 +168,19 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
           {/* Basic Fields */}
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2">
-              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 block">
+              <label className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest mb-1.5 block">
                 Nome do Serviço
               </label>
               <input
                 value={formData.name}
                 onChange={e => setFormData({ ...formData, name: e.target.value })}
                 placeholder="Ex: Corte Degrade"
-                className="w-full bg-[#1a1a1a] border border-gray-800 rounded-lg px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-neon-yellow transition-colors font-bold"
+                className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg px-4 py-3 text-[var(--text-primary)] placeholder-[var(--text-secondary)]/50 focus:outline-none focus:border-neon-yellow transition-colors font-bold"
               />
             </div>
 
             <div>
-              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 block">
+              <label className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest mb-1.5 block">
                 Preço (R$)
               </label>
               <input
@@ -190,18 +190,18 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
                   const val = parseFloat(e.target.value);
                   setFormData({ ...formData, priceValue: isNaN(val) ? 0 : val });
                 }}
-                className="w-full bg-[#1a1a1a] border border-gray-800 rounded-lg px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-neon-yellow transition-colors font-mono"
+                className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg px-4 py-3 text-[var(--text-primary)] placeholder-[var(--text-secondary)]/50 focus:outline-none focus:border-neon-yellow transition-colors font-mono"
               />
             </div>
 
             <div>
-              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 block">
+              <label className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest mb-1.5 block">
                 Duração (Min)
               </label>
               <div className="relative">
                 <Clock
                   size={14}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]"
                 />
                 <input
                   type="number"
@@ -211,7 +211,7 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
                     const val = parseInt(e.target.value);
                     setFormData({ ...formData, duration: isNaN(val) ? 0 : val });
                   }}
-                  className="w-full bg-[#1a1a1a] border border-gray-800 rounded-lg pl-9 pr-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-neon-yellow transition-colors font-mono"
+                  className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg pl-9 pr-4 py-3 text-[var(--text-primary)] placeholder-[var(--text-secondary)]/50 focus:outline-none focus:border-neon-yellow transition-colors font-mono"
                 />
               </div>
             </div>
@@ -220,14 +220,14 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
           {/* Category & Tags */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 block">
+              <label className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest mb-1.5 block">
                 Categoria
               </label>
               <div className="relative">
                 <select
                   value={formData.category}
                   onChange={e => setFormData({ ...formData, category: e.target.value })}
-                  className="w-full bg-[#1a1a1a] border border-gray-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-neon-yellow appearance-none cursor-pointer"
+                  className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg px-4 py-3 text-[var(--text-primary)] focus:outline-none focus:border-neon-yellow appearance-none cursor-pointer transition-colors"
                 >
                   {CATEGORIES.map(c => (
                     <option key={c} value={c}>
@@ -236,21 +236,21 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
                   ))}
                 </select>
                 <ChevronDown
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] pointer-events-none"
                   size={16}
                 />
               </div>
             </div>
 
             <div>
-              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 block">
+              <label className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest mb-1.5 block">
                 Tag (Opcional)
               </label>
               <input
                 value={formData.tag || ''}
                 onChange={e => setFormData({ ...formData, tag: e.target.value })}
                 placeholder="Ex: Premium"
-                className="w-full bg-[#1a1a1a] border border-gray-800 rounded-lg px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-neon-yellow transition-colors text-xs"
+                className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg px-4 py-3 text-[var(--text-primary)] placeholder-[var(--text-secondary)]/50 focus:outline-none focus:border-neon-yellow transition-colors text-xs"
               />
             </div>
           </div>
@@ -258,7 +258,7 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
           {/* Description & AI */}
           <div>
             <div className="flex justify-between items-end mb-1.5">
-              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block">
+              <label className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest block">
                 Descrição do Serviço
               </label>
               <button
@@ -277,19 +277,19 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
             <textarea
               value={formData.description || ''}
               onChange={e => setFormData({ ...formData, description: e.target.value })}
-              className="w-full bg-[#1a1a1a] border border-gray-800 rounded-lg px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-neon-yellow transition-colors text-sm leading-relaxed min-h-[100px] resize-none"
+              className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg px-4 py-3 text-[var(--text-primary)] placeholder-[var(--text-secondary)]/50 focus:outline-none focus:border-neon-yellow transition-colors text-sm leading-relaxed min-h-[100px] resize-none"
               placeholder="Descreva o serviço..."
             />
           </div>
         </div>
 
         {/* Modal Footer */}
-        <div className="p-6 border-t border-gray-800 bg-[#151515] flex flex-col gap-3">
+        <div className="p-6 border-t border-[var(--border-color)] bg-[var(--bg-secondary)] flex flex-col gap-3 transition-colors duration-300">
           {/* NEW: Badge Creator Trigger */}
           <button
             type="button"
             onClick={onOpenPromoStudio}
-            className="w-full py-4 rounded-xl bg-gradient-to-r from-[#1a1a1a] to-[#222] border border-purple-500/30 text-white font-bold uppercase text-xs tracking-widest hover:border-purple-500 hover:shadow-[0_0_20px_rgba(168,85,247,0.3)] transition-all flex items-center justify-center gap-3 group relative overflow-hidden"
+            className="w-full py-4 rounded-xl bg-[var(--bg-primary)] border border-purple-500/30 text-[var(--text-primary)] font-bold uppercase text-xs tracking-widest hover:border-purple-500 hover:shadow-[0_0_20px_rgba(168,85,247,0.3)] transition-all flex items-center justify-center gap-3 group relative overflow-hidden"
           >
             <div className="absolute inset-0 bg-purple-500/5 group-hover:bg-purple-500/10 transition-colors"></div>
             <div className="bg-purple-500/20 p-2 rounded-lg group-hover:bg-purple-500 group-hover:text-black transition-colors relative z-10">
@@ -303,7 +303,7 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
           <div className="flex gap-3 w-full">
             <button
               onClick={onClose}
-              className="flex-1 py-3 rounded-xl border border-gray-700 text-gray-300 font-bold uppercase text-xs tracking-widest hover:border-white hover:text-white transition-all"
+              className="flex-1 py-3 rounded-xl border border-[var(--border-color)] text-[var(--text-secondary)] font-bold uppercase text-xs tracking-widest hover:border-[var(--text-primary)] hover:text-[var(--text-primary)] transition-all"
             >
               Cancelar
             </button>

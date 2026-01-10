@@ -3,14 +3,17 @@ import { MapPin, Phone, Instagram, Facebook } from 'lucide-react';
 
 export const Footer: React.FC = () => {
   return (
-    <footer id="contact" className="bg-black text-white pt-20 pb-10 border-t border-gray-800">
+    <footer
+      id="contact"
+      className="bg-[var(--bg-card)] text-[var(--text-primary)] pt-20 pb-10 border-t border-[var(--border-color)]"
+    >
       <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-12">
         {/* Brand */}
         <div>
           <h3 className="font-graffiti text-3xl mb-6 text-neon-yellow">
-            NA TRILHA <span className="text-white">DO CORTE</span>
+            NA TRILHA <span className="text-[var(--text-primary)]">DO CORTE</span>
           </h3>
-          <p className="text-gray-500 mb-6 max-w-xs">
+          <p className="text-[var(--text-secondary)] mb-6 max-w-xs">
             A barbearia que segue o ritmo da cidade. Estilo, precisão e cultura urbana em cada
             detalhe.
           </p>
@@ -19,7 +22,7 @@ export const Footer: React.FC = () => {
               href="https://instagram.com/trilhadocorte"
               target="_blank"
               rel="noopener noreferrer"
-              className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-neon-yellow hover:text-black transition-all"
+              className="w-10 h-10 bg-[var(--bg-secondary)] rounded-full flex items-center justify-center hover:bg-neon-yellow hover:text-black transition-all"
             >
               <Instagram size={20} />
             </a>
@@ -27,7 +30,7 @@ export const Footer: React.FC = () => {
               href="https://facebook.com/trilhadocorte"
               target="_blank"
               rel="noopener noreferrer"
-              className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-neon-yellow hover:text-black transition-all"
+              className="w-10 h-10 bg-[var(--bg-secondary)] rounded-full flex items-center justify-center hover:bg-neon-yellow hover:text-black transition-all"
             >
               <Facebook size={20} />
             </a>
@@ -37,7 +40,7 @@ export const Footer: React.FC = () => {
         {/* Contact */}
         <div>
           <h4 className="text-xl font-bold uppercase mb-6 tracking-wider">Contato</h4>
-          <ul className="space-y-4 text-gray-400">
+          <ul className="space-y-4 text-[var(--text-secondary)]">
             <li>
               <a
                 href="https://www.google.com/maps?q=Rua+Monsenhor+Landell+de+Moura,+129+Campinas+SP"
@@ -70,16 +73,16 @@ export const Footer: React.FC = () => {
         {/* Hours */}
         <div>
           <h4 className="text-xl font-bold uppercase mb-6 tracking-wider">Horários</h4>
-          <ul className="space-y-2 text-gray-400">
-            <li className="flex justify-between border-b border-gray-800 pb-2">
+          <ul className="space-y-2 text-[var(--text-secondary)]">
+            <li className="flex justify-between border-b border-[var(--border-color)] pb-2">
               <span>Seg - Sex</span>
-              <span className="text-white">08:00 - 19:00</span>
+              <span className="text-[var(--text-primary)]">08:00 - 19:00</span>
             </li>
-            <li className="flex justify-between border-b border-gray-800 pb-2">
+            <li className="flex justify-between border-b border-[var(--border-color)] pb-2">
               <span>Sábado</span>
-              <span className="text-white">08:00 - 18:00</span>
+              <span className="text-[var(--text-primary)]">08:00 - 18:00</span>
             </li>
-            <li className="flex justify-between border-b border-gray-800 pb-2">
+            <li className="flex justify-between border-b border-[var(--border-color)] pb-2">
               <span>Domingo</span>
               <span className="text-neon-orange">Fechado</span>
             </li>
@@ -87,7 +90,7 @@ export const Footer: React.FC = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 mt-16 pt-8 border-t border-gray-900 text-center text-gray-600 text-sm">
+      <div className="max-w-7xl mx-auto px-4 mt-16 pt-8 border-t border-[var(--border-color)] text-center text-[var(--text-secondary)] text-sm">
         <p>&copy; {new Date().getFullYear()} Na Trilha do Corte. Todos os direitos reservados.</p>
       </div>
     </footer>

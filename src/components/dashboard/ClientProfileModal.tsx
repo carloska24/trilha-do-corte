@@ -179,13 +179,13 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-fade-in">
       {/* MAIN CARD CONTAINER */}
-      <div className="w-full max-w-sm bg-[#09090b] rounded-[32px] border border-white/5 shadow-2xl shadow-black overflow-hidden flex flex-col max-h-[85vh]">
+      <div className="w-full max-w-sm bg-[var(--bg-card)] rounded-[32px] border border-[var(--border-color)] shadow-2xl overflow-hidden flex flex-col max-h-[85vh] transition-colors duration-300">
         {/* --- HEADER --- */}
-        <div className="relative pt-6 pb-4 px-6 bg-linear-to-b from-[#18181b] to-[#09090b] text-center border-b border-white/5 shrink-0">
+        <div className="relative pt-6 pb-4 px-6 bg-[var(--bg-secondary)] text-center border-b border-[var(--border-color)] shrink-0 transition-colors duration-300">
           {/* Close Button */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 text-zinc-500 hover:text-white transition-colors bg-white/5 p-2 rounded-full backdrop-blur-md z-50"
+            className="absolute top-4 right-4 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors bg-[var(--bg-primary)]/50 p-2 rounded-full backdrop-blur-md z-50"
           >
             <X size={16} />
           </button>
@@ -205,14 +205,14 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({
                   'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop'
                 }
                 alt={client.name}
-                className="w-full h-full rounded-full object-cover border-2 border-[#09090b]"
+                className="w-full h-full rounded-full object-cover border-2 border-[var(--bg-primary)]"
               />
             </div>
           </div>
 
           {/* Name & Tier Row */}
           <div className="flex flex-col items-center justify-center mb-3">
-            <h2 className="text-2xl font-black text-white italic uppercase tracking-wider leading-none mb-2">
+            <h2 className="text-2xl font-black text-[var(--text-primary)] italic uppercase tracking-wider leading-none mb-2 transition-colors">
               {client.name}
             </h2>
 
@@ -237,7 +237,7 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({
                   VISITANTE
                 </span>
               ) : (
-                <span className="text-[10px] font-mono font-bold text-zinc-600 tracking-widest px-2 py-0.5 rounded">
+                <span className="text-[10px] font-mono font-bold text-[var(--text-secondary)] tracking-widest px-2 py-0.5 rounded">
                   #{String(client.id || '0000').slice(-4)}
                 </span>
               )}
@@ -248,26 +248,29 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({
           <div className="grid grid-cols-2 gap-2">
             <a
               href={`tel:${client.phone}`}
-              className="group flex items-center justify-center gap-2 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-all"
+              className="group flex items-center justify-center gap-2 py-3 rounded-xl bg-[var(--bg-primary)]/50 hover:bg-[var(--bg-primary)] border border-[var(--border-color)] transition-all"
             >
-              <Phone size={16} className="text-zinc-400 group-hover:text-white transition-colors" />
-              <span className="text-xs font-bold text-zinc-300 group-hover:text-white uppercase tracking-wider">
+              <Phone
+                size={16}
+                className="text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] transition-colors"
+              />
+              <span className="text-xs font-bold text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] uppercase tracking-wider">
                 Ligar
               </span>
             </a>
             {/* WHATSAPP / FORMALIZE BUTTON */}
             <button
               onClick={handleWhatsApp}
-              className="group flex items-center justify-center gap-2 py-3 rounded-xl bg-white/5 hover:bg-green-500/10 border border-white/5 hover:border-green-500/30 transition-all"
+              className="group flex items-center justify-center gap-2 py-3 rounded-xl bg-[var(--bg-primary)]/50 hover:bg-green-500/10 border border-[var(--border-color)] hover:border-green-500/30 transition-all"
             >
               <svg
                 viewBox="0 0 512 512"
-                className="w-4 h-4 text-zinc-400 group-hover:text-green-500 transition-colors fill-current"
+                className="w-4 h-4 text-[var(--text-secondary)] group-hover:text-green-500 transition-colors fill-current"
                 xmlns="http://www.w3.org/2000/svg"
               >
                 <path d="m317.12 285.93c-9.69 3.96-15.88 19.13-22.16 26.88-3.22 3.97-7.06 4.59-12.01 2.6-36.37-14.49-64.25-38.76-84.32-72.23-3.4-5.19-2.79-9.29 1.31-14.11 6.06-7.14 13.68-15.25 15.32-24.87 3.64-21.28-24.18-87.29-60.92-57.38-105.72 86.15 176.36 314.64 227.27 191.06 14.4-35.03-48.43-58.53-64.49-51.95zm-61.12 181.35c-37.39 0-74.18-9.94-106.39-28.76-5.17-3.03-11.42-3.83-17.2-2.26l-69.99 19.21 24.38-53.71c3.32-7.31 2.47-15.82-2.22-22.32-26.08-36.15-39.87-78.83-39.87-123.44 0-116.51 94.78-211.29 211.29-211.29s211.28 94.78 211.28 211.29c0 116.5-94.78 211.28-211.28 211.28zm0-467.28c-141.16 0-256 114.84-256 256 0 49.66 14.1 97.35 40.89 138.74l-38.89 85.65c-3.59 7.91-2.28 17.17 3.34 23.76 4.32 5.05 10.57 7.85 17.02 7.85 14.42 0 93.05-24.71 113.06-30.2 36.99 19.79 78.48 30.2 120.58 30.2 141.15 0 256-114.85 256-256 0-141.16-114.85-256-256-256z" />
               </svg>
-              <span className="text-xs font-bold text-zinc-300 group-hover:text-green-500 uppercase tracking-wider">
+              <span className="text-xs font-bold text-[var(--text-secondary)] group-hover:text-green-500 uppercase tracking-wider">
                 WhatsApp
               </span>
             </button>
@@ -275,26 +278,28 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({
         </div>
 
         {/* --- SCROLLABLE CONTENT --- */}
-        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6 custom-scrollbar bg-[#09090b]">
+        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6 custom-scrollbar bg-[var(--bg-card)] transition-colors duration-300">
           {/* METRICS ROW */}
           <div className="grid grid-cols-2 gap-4">
             <div
-              className={`bg-[#121214] rounded-2xl p-4 border border-white/5 flex flex-col items-center justify-center relative overflow-hidden group ${tier.border} border-opacity-20`}
+              className={`bg-[var(--bg-secondary)] rounded-2xl p-4 border border-[var(--border-color)] flex flex-col items-center justify-center relative overflow-hidden group ${tier.border} border-opacity-20 transition-colors`}
             >
               <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-20 transition-opacity">
                 <Star size={32} className={`${tier.color}`} />
               </div>
               <span className={`text-2xl font-black mb-1 ${tier.color}`}>{rating}</span>
-              <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">
+              <span className="text-[9px] font-bold text-[var(--text-secondary)] uppercase tracking-widest">
                 Rating
               </span>
             </div>
-            <div className="bg-[#121214] rounded-2xl p-4 border border-white/5 flex flex-col items-center justify-center relative overflow-hidden group">
+            <div className="bg-[var(--bg-secondary)] rounded-2xl p-4 border border-[var(--border-color)] flex flex-col items-center justify-center relative overflow-hidden group transition-colors">
               <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-20 transition-opacity">
-                <History size={32} />
+                <History size={32} className="text-[var(--text-primary)]" />
               </div>
-              <span className="text-2xl font-black text-white mb-1">{totalVisits}</span>
-              <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">
+              <span className="text-2xl font-black text-[var(--text-primary)] mb-1 transition-colors">
+                {totalVisits}
+              </span>
+              <span className="text-[9px] font-bold text-[var(--text-secondary)] uppercase tracking-widest">
                 Visitas
               </span>
             </div>
@@ -303,8 +308,8 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({
           {/* NEXT APPOINTMENT (PREMIUM TICKET STYLE - CAROUSEL) */}
           <div>
             <div className="flex items-center gap-2 mb-3 opacity-60">
-              <Clock size={12} className="text-white" />
-              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-[0.2em]">
+              <Clock size={12} className="text-[var(--text-primary)]" />
+              <span className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.2em]">
                 {futureApps.length > 1 ? 'Próximas Viagens' : 'Próxima Viagem'}
               </span>
             </div>
@@ -316,17 +321,17 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({
                   return (
                     <div
                       key={app.id || idx}
-                      className="min-w-full snap-center bg-[#121214] border border-white/5 rounded-2xl overflow-hidden flex group hover:border-white/10 transition-colors shadow-lg"
+                      className="min-w-full snap-center bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-2xl overflow-hidden flex group hover:border-[var(--border-color)] transition-colors shadow-lg"
                     >
                       {/* Left: Date Box */}
-                      <div className="w-24 bg-[#18181b] flex flex-col items-center justify-center border-r border-white/5 p-2 gap-0.5">
-                        <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">
+                      <div className="w-24 bg-[var(--bg-primary)] flex flex-col items-center justify-center border-r border-[var(--border-color)] p-2 gap-0.5">
+                        <span className="text-[10px] text-[var(--text-secondary)] font-bold uppercase tracking-widest">
                           {parts.weekday}
                         </span>
-                        <span className="text-4xl font-black text-white tracking-tighter leading-none my-1">
+                        <span className="text-4xl font-black text-[var(--text-primary)] tracking-tighter leading-none my-1">
                           {parts.day}
                         </span>
-                        <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">
+                        <span className="text-[10px] text-[var(--text-secondary)] font-bold uppercase tracking-widest">
                           {parts.month}
                         </span>
                       </div>
@@ -335,21 +340,23 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({
                       <div className="flex-1 p-5 flex flex-col justify-center relative">
                         {/* Top: Service */}
                         <div className="flex-1 flex items-center">
-                          <span className="text-sm font-black text-white uppercase tracking-wide leading-tight line-clamp-2">
+                          <span className="text-sm font-black text-[var(--text-primary)] uppercase tracking-wide leading-tight line-clamp-2">
                             {getServiceName(app.serviceId)}
                           </span>
                         </div>
 
                         {/* Bottom: Meta */}
                         <div className="flex items-center justify-between mt-2">
-                          <div className="flex items-center gap-2 text-zinc-500 bg-white/5 px-3 py-1.5 rounded-lg">
-                            <Clock size={14} className="text-zinc-400" />
-                            <span className="text-sm font-bold font-mono text-zinc-300">
+                          <div className="flex items-center gap-2 text-[var(--text-secondary)] bg-[var(--bg-primary)] px-3 py-1.5 rounded-lg">
+                            <Clock size={14} className="text-[var(--text-secondary)]" />
+                            <span className="text-sm font-bold font-mono text-[var(--text-primary)]">
                               {app.time}
                             </span>
                           </div>
 
-                          <span className="text-lg font-black text-white">R$ {app.price}</span>
+                          <span className="text-lg font-black text-[var(--text-primary)]">
+                            R$ {app.price}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -366,12 +373,12 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({
           </div>
 
           {/* HISTORY (COLLAPSIBLE) */}
-          <div className="border-t border-white/5 pt-2">
+          <div className="border-t border-[var(--border-color)] pt-2">
             <button
               onClick={() => setIsHistoryOpen(!isHistoryOpen)}
-              className="w-full flex justify-between items-center py-4 group hover:bg-white/5 px-2 -mx-2 rounded-lg transition-colors"
+              className="w-full flex justify-between items-center py-4 group hover:bg-[var(--bg-primary)] px-2 -mx-2 rounded-lg transition-colors"
             >
-              <div className="flex items-center gap-2 text-zinc-400 group-hover:text-white transition-colors">
+              <div className="flex items-center gap-2 text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] transition-colors">
                 <History size={14} />
                 <span className="text-[10px] font-bold uppercase tracking-widest">
                   Histórico de Cortes
@@ -389,19 +396,21 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({
                 isHistoryOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
               }`}
             >
-              <div className="pl-4 border-l border-white/10 ml-2 space-y-4 py-2">
+              <div className="pl-4 border-l border-[var(--border-color)] ml-2 space-y-4 py-2">
                 {completedApps.length === 0 ? (
-                  <p className="text-[10px] text-zinc-600 italic">Nenhum corte finalizado.</p>
+                  <p className="text-[10px] text-[var(--text-secondary)] italic">
+                    Nenhum corte finalizado.
+                  </p>
                 ) : (
                   completedApps
                     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
                     .map((app, idx) => (
                       <div key={idx} className="relative flex justify-between items-baseline group">
                         {/* Timeline Dot */}
-                        <div className="absolute -left-[21px] top-1.5 w-2.5 h-2.5 rounded-full bg-[#09090b] border border-zinc-700 group-hover:border-yellow-500 group-hover:bg-yellow-500/20 transition-colors"></div>
+                        <div className="absolute -left-[21px] top-1.5 w-2.5 h-2.5 rounded-full bg-[var(--bg-secondary)] border border-[var(--border-color)] group-hover:border-yellow-500 group-hover:bg-yellow-500/20 transition-colors"></div>
 
                         <div className="flex flex-col">
-                          <span className="text-xs font-bold text-zinc-300 group-hover:text-white transition-colors">
+                          <span className="text-xs font-bold text-[var(--text-primary)] group-hover:text-[var(--text-primary)] transition-colors">
                             {formatAppDate(app.date)}
                           </span>
                           <span className="text-[10px] text-zinc-500">
@@ -424,32 +433,32 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({
           {/* NOTES AREA */}
           <div className="pb-4">
             <div className="flex justify-between items-center mb-2">
-              <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+              <span className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest">
                 Notas
               </span>
               <button
                 onClick={() => (isEditingNotes ? handleSaveNotes() : setIsEditingNotes(true))}
-                className="text-zinc-600 hover:text-white transition-colors"
+                className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
               >
                 <Edit size={12} />
               </button>
             </div>
             <div
-              className={`bg-[#121214] border ${
-                isEditingNotes ? 'border-yellow-500/50' : 'border-zinc-900'
+              className={`bg-[var(--bg-secondary)] border ${
+                isEditingNotes ? 'border-yellow-500/50' : 'border-[var(--border-color)]'
               } rounded-xl p-3 min-h-[80px] transition-all`}
             >
               {isEditingNotes ? (
                 <textarea
                   value={notes}
                   onChange={e => setNotes(e.target.value)}
-                  className="w-full h-full bg-transparent text-xs text-zinc-300 focus:outline-none resize-none"
-                  placeholder="Adicione uma observaÃ§Ã£o..."
+                  className="w-full h-full bg-transparent text-xs text-[var(--text-primary)] focus:outline-none resize-none"
+                  placeholder="Adicione uma observação..."
                   autoFocus
                 />
               ) : (
-                <p className="text-xs text-zinc-400 italic leading-relaxed">
-                  "{notes || 'Sem observaÃ§Ãµes.'}"
+                <p className="text-xs text-[var(--text-secondary)] italic leading-relaxed">
+                  "{notes || 'Sem observações.'}"
                 </p>
               )}
             </div>

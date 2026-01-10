@@ -72,13 +72,13 @@ export const Navbar: React.FC<NavbarProps> = ({
   if (isAuth) return null;
 
   return (
-    <nav className="fixed w-full z-50 bg-[#09090b]/95 border-b border-white/10 backdrop-blur-sm">
+    <nav className="fixed w-full z-50 bg-[var(--bg-secondary)]/95 border-b border-[var(--border-color)] backdrop-blur-sm transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           <div className="flex items-center cursor-pointer" onClick={() => onViewChange('landing')}>
             <div className="flex-shrink-0 text-neon-yellow flex items-center gap-2">
               <CustomScissors className="h-10 w-10 text-neon-yellow" />
-              <span className="font-graffiti text-2xl tracking-wider text-white">
+              <span className="font-graffiti text-2xl tracking-wider text-[var(--text-primary)]">
                 NA TRILHA <span className="text-neon-orange">DO CORTE</span>
               </span>
             </div>
@@ -92,7 +92,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     key={link.name}
                     href={link.href}
                     onClick={e => handleNavClick(e, link.href)}
-                    className="text-gray-300 hover:text-neon-yellow px-3 py-2 rounded-md text-sm font-medium transition-colors uppercase tracking-widest font-sans cursor-pointer"
+                    className="text-[var(--text-secondary)] hover:text-neon-yellow px-3 py-2 rounded-md text-sm font-medium transition-colors uppercase tracking-widest font-sans cursor-pointer"
                   >
                     {link.name}
                   </a>
@@ -110,7 +110,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                        ${
                          barberView === link.id
                            ? 'text-neon-yellow border-b-2 border-neon-yellow'
-                           : 'text-gray-300 hover:text-white'
+                           : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                        }`}
                   >
                     {link.label}
@@ -118,18 +118,18 @@ export const Navbar: React.FC<NavbarProps> = ({
                 ))}
 
               {/* Action Buttons based on View */}
-              <div className="flex items-center gap-4 ml-4 pl-4 border-l border-gray-700">
+              <div className="flex items-center gap-4 ml-4 pl-4 border-l border-[var(--border-color)]">
                 {currentView === 'landing' ? (
                   <>
                     <button
                       onClick={() => onViewChange('login-client')}
-                      className="text-gray-300 hover:text-white flex items-center gap-2 text-xs uppercase font-bold tracking-wider"
+                      className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] flex items-center gap-2 text-xs uppercase font-bold tracking-wider"
                     >
                       <User size={16} /> Login Cliente
                     </button>
                     <button
                       onClick={() => onViewChange('login-barber')}
-                      className="text-gray-300 hover:text-white flex items-center gap-2 text-xs uppercase font-bold tracking-wider"
+                      className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] flex items-center gap-2 text-xs uppercase font-bold tracking-wider"
                     >
                       <LayoutDashboard size={16} /> Área Barbeiro
                     </button>
@@ -155,7 +155,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div className="-mr-2 flex md:hidden">
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none cursor-pointer"
+              className="inline-flex items-center justify-center p-2 rounded-md text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] focus:outline-none cursor-pointer"
             >
               {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
@@ -165,7 +165,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Mobile menu */}
       {isOpen && (
-        <div className="md:hidden bg-street-dark border-b border-gray-800 absolute w-full left-0 top-20 shadow-xl max-h-[calc(100vh-80px)] overflow-y-auto z-[60]">
+        <div className="md:hidden bg-[var(--bg-secondary)] border-b border-[var(--border-color)] absolute w-full left-0 top-20 shadow-xl max-h-[calc(100vh-80px)] overflow-y-auto z-[60]">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             {currentView === 'landing' &&
               navLinks.map(link => (
@@ -173,7 +173,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   key={link.name}
                   href={link.href}
                   onClick={e => handleNavClick(e, link.href)}
-                  className="text-gray-300 hover:text-neon-yellow block px-3 py-2 rounded-md text-base font-medium cursor-pointer"
+                  className="text-[var(--text-secondary)] hover:text-neon-yellow block px-3 py-2 rounded-md text-base font-medium cursor-pointer"
                 >
                   {link.name}
                 </a>
@@ -181,8 +181,10 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             {/* Links de navegação do Barbeiro no Mobile */}
             {currentView === 'barber' && (
-              <div className="py-2 space-y-2 border-b border-gray-700 mb-2">
-                <p className="px-3 text-xs text-gray-500 uppercase font-bold">Painel de Controle</p>
+              <div className="py-2 space-y-2 border-b border-[var(--border-color)] mb-2">
+                <p className="px-3 text-xs text-[var(--text-secondary)] uppercase font-bold">
+                  Painel de Controle
+                </p>
                 {barberLinks.map(link => {
                   const Icon = link.icon;
                   return (
@@ -196,7 +198,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                               ${
                                 barberView === link.id
                                   ? 'bg-neon-yellow text-black font-bold'
-                                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                                  : 'text-[var(--text-secondary)] hover:bg-[var(--bg-primary)] hover:text-[var(--text-primary)]'
                               }`}
                     >
                       <Icon size={18} />
@@ -207,7 +209,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               </div>
             )}
 
-            <div className="border-t border-gray-700 mt-2 pt-2 space-y-2">
+            <div className="border-t border-[var(--border-color)] mt-2 pt-2 space-y-2">
               {currentView === 'landing' && (
                 <>
                   <button
@@ -215,7 +217,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       setIsOpen(false);
                       onViewChange('login-client');
                     }}
-                    className="w-full text-left px-3 py-2 text-gray-300 hover:text-white flex items-center gap-2"
+                    className="w-full text-left px-3 py-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] flex items-center gap-2"
                   >
                     <User size={16} /> Login Cliente
                   </button>
@@ -224,7 +226,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       setIsOpen(false);
                       onViewChange('login-barber');
                     }}
-                    className="w-full text-left px-3 py-2 text-gray-300 hover:text-white flex items-center gap-2"
+                    className="w-full text-left px-3 py-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] flex items-center gap-2"
                   >
                     <LayoutDashboard size={16} /> Área Barbeiro
                   </button>

@@ -92,7 +92,7 @@ const QueueTicker = React.memo(
           </span>
         </div>
 
-        <div className="w-full h-40 bg-[#050505] border border-gray-800 rounded-2xl overflow-hidden relative flex items-center shadow-2xl transform-gpu ring-1 ring-white/5 pt-4 group/carousel">
+        <div className="w-full h-40 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-2xl overflow-hidden relative flex items-center shadow-2xl transform-gpu ring-1 ring-white/5 pt-4 group/carousel transition-colors duration-300">
           {/* Neon Glow Decoration */}
           <div className="absolute inset-0 pointer-events-none">
             <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-50"></div>
@@ -151,7 +151,7 @@ const QueueTicker = React.memo(
                 return (
                   <div
                     key={`${client.id}-${i}`}
-                    className="flex-shrink-0 w-72 h-28 bg-black/40 backdrop-blur-md rounded-xl border border-white/10 mr-5 flex flex-col relative overflow-hidden group/card hover:border-cyan-400 transition-all duration-300 shadow-lg hover:shadow-[0_0_20px_rgba(6,182,212,0.15)] select-none"
+                    className="flex-shrink-0 w-72 h-28 bg-[var(--bg-secondary)] backdrop-blur-md rounded-xl border border-[var(--border-color)] mr-5 flex flex-col relative overflow-hidden group/card hover:border-cyan-400 transition-all duration-300 shadow-lg hover:shadow-[0_0_20px_rgba(6,182,212,0.15)] select-none"
                   >
                     {/* Vibrant Gradient Background on Hover */}
                     <div className="absolute inset-0 bg-gradient-to-r from-cyan-900/10 via-blue-900/10 to-purple-900/10 opacity-0 group-hover/card:opacity-100 transition-opacity duration-300"></div>
@@ -190,7 +190,7 @@ const QueueTicker = React.memo(
                       <div className="ml-3 flex flex-col justify-between flex-1 min-w-0 h-full py-1">
                         {/* Top: Client Name (Only First Name, Higher Up) */}
                         <div className="flex items-start w-full mt-0.5">
-                          <span className="text-white font-black text-2xl uppercase truncate leading-none tracking-tight group-hover/card:text-cyan-200 transition-colors">
+                          <span className="text-[var(--text-primary)] font-black text-2xl uppercase truncate leading-none tracking-tight group-hover/card:text-cyan-200 transition-colors">
                             {client.clientName ? client.clientName.split(' ')[0] : 'Cliente'}
                           </span>
                         </div>
@@ -198,13 +198,13 @@ const QueueTicker = React.memo(
                         {/* Middle: Service Name (Larger font, centered vertically relative to spacing) */}
                         <div className="flex items-center w-full mt-1 mb-1">
                           <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 mr-2 flex-shrink-0 animate-pulse"></div>
-                          <span className="text-base font-bold text-gray-300 font-mono uppercase tracking-wide truncate">
+                          <span className="text-base font-bold text-[var(--text-secondary)] font-mono uppercase tracking-wide truncate">
                             {serviceName}
                           </span>
                         </div>
 
                         {/* Bottom: Divider & Time */}
-                        <div className="relative w-full pt-1 border-t border-white/10 mt-auto flex justify-end">
+                        <div className="relative w-full pt-1 border-t border-[var(--border-color)] mt-auto flex justify-end">
                           <div className="flex items-center justify-center bg-cyan-500/10 border border-cyan-400/20 rounded-md px-3 py-1 shadow-[0_0_10px_rgba(6,182,212,0.1)] group-hover/card:border-cyan-400/50 transition-all">
                             <span className="text-sm font-black text-cyan-400 font-mono tracking-wider leading-none">
                               {client.time}
@@ -310,14 +310,14 @@ export const DashboardHome: React.FC = () => {
     <div className="flex flex-col items-center w-full max-w-md mx-auto h-full animate-[fadeIn_0.5s_ease-out] transition-colors duration-300">
       {/* 1. CLOCK & DATE */}
       <div className="flex flex-col items-center mt-0 mb-4">
-        <h1 className="text-6xl font-bold text-text-primary tracking-tighter leading-none font-sans drop-shadow-lg">
+        <h1 className="text-6xl font-bold text-[var(--text-primary)] tracking-tighter leading-none font-sans drop-shadow-lg transition-colors">
           {currentTime.toLocaleTimeString([], {
             hour: '2-digit',
             minute: '2-digit',
             second: '2-digit',
           })}
         </h1>
-        <p className="text-text-secondary text-xs font-bold uppercase tracking-widest mt-1 opacity-80">
+        <p className="text-[var(--text-secondary)] text-xs font-bold uppercase tracking-widest mt-1 opacity-80 transition-colors">
           {dateString}
         </p>
       </div>
@@ -331,7 +331,7 @@ export const DashboardHome: React.FC = () => {
           }`}
         >
           {/* Main Status Container */}
-          <div className="w-full aspect-square md:aspect-auto md:h-[500px] relative bg-[#050505] rounded-md overflow-hidden shadow-2xl border border-white/5 group">
+          <div className="w-full aspect-square md:aspect-auto md:h-[500px] relative bg-[var(--bg-card)] rounded-md overflow-hidden shadow-2xl border border-[var(--border-color)] group transition-colors duration-300">
             {/* 1. STATUS SIGNAGE (TOP ABSOLUTE) - Hide when In Progress */}
             {/* 1. STATUS SIGNAGE (TOP ABSOLUTE) - Hide when In Progress */}
             {!inProgress && (
@@ -376,7 +376,7 @@ export const DashboardHome: React.FC = () => {
               /* --- IN PROGRESS (FULL COVER + ROTATION) --- */
               <div className="w-full h-full relative animate-[flipInY_0.8s_ease-out] [perspective:1000px]">
                 {/* 1. BACKGROUND CONTAINER */}
-                <div className="absolute inset-0 bg-[#050505] z-0">
+                <div className="absolute inset-0 bg-[var(--bg-card)] z-0 transition-colors">
                   <img
                     src="/background-teste.png"
                     className="absolute inset-0 w-full h-full object-cover object-top opacity-100"

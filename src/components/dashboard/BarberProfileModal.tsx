@@ -123,13 +123,16 @@ export const BarberProfileModal: React.FC<BarberProfileModalProps> = ({ barber, 
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/95 backdrop-blur-sm animate-[fadeIn_0.2s_ease-out]">
-      <div className="bg-[#111] border border-gray-800 w-full max-w-md rounded-xl shadow-2xl relative flex flex-col overflow-hidden">
+      <div className="bg-[var(--bg-card)] border border-[var(--border-color)] w-full max-w-md rounded-xl shadow-2xl relative flex flex-col overflow-hidden transition-colors duration-300">
         {/* Header */}
-        <div className="bg-[#1a1a1a] p-4 border-b border-white/5 flex justify-between items-center">
-          <h3 className="font-graffiti text-xl text-white tracking-wide">
+        <div className="bg-[var(--bg-secondary)] p-4 border-b border-[var(--border-color)] flex justify-between items-center transition-colors">
+          <h3 className="font-graffiti text-xl text-[var(--text-primary)] tracking-wide">
             PERFIL DO <span className="text-[#FFD700]">MAQUINISTA</span>
           </h3>
-          <button onClick={onClose} className="text-gray-500 hover:text-white transition-colors">
+          <button
+            onClick={onClose}
+            className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+          >
             <X size={20} />
           </button>
         </div>
@@ -142,7 +145,7 @@ export const BarberProfileModal: React.FC<BarberProfileModalProps> = ({ barber, 
               className="relative group cursor-pointer w-32 h-32"
               onClick={() => !loading && profilePhotoInputRef.current?.click()}
             >
-              <div className="w-32 h-32 rounded-full border-4 border-[#FFD700] p-1 bg-black shadow-[0_0_20px_rgba(255,215,0,0.3)] overflow-hidden">
+              <div className="w-32 h-32 rounded-full border-4 border-[#FFD700] p-1 bg-[var(--bg-primary)] shadow-[0_0_20px_rgba(255,215,0,0.3)] overflow-hidden transition-colors">
                 <img
                   src={getOptimizedImageUrl(barber.photoUrl || DEFAULT_BARBER_IMAGE, 300, 300)}
                   alt="Perfil"
@@ -165,7 +168,7 @@ export const BarberProfileModal: React.FC<BarberProfileModalProps> = ({ barber, 
             <div className="flex flex-col gap-2 items-center mt-4">
               <button
                 onClick={() => setShowAvatarSelector(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-[#1a1a1a] hover:bg-[#222] border border-white/10 hover:border-[#FFD700]/50 rounded-lg text-xs font-bold text-gray-300 hover:text-[#FFD700] transition-all group"
+                className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-secondary)] hover:bg-[var(--bg-primary)] border border-[var(--border-color)] hover:border-[#FFD700]/50 rounded-lg text-xs font-bold text-[var(--text-secondary)] hover:text-[#FFD700] transition-all group"
               >
                 <User size={14} className="group-hover:text-[#FFD700]" />
                 ESCOLHER AVATAR
@@ -174,16 +177,16 @@ export const BarberProfileModal: React.FC<BarberProfileModalProps> = ({ barber, 
 
             {!isEditing && (
               <div className="mt-4 text-center animate-fade-in-up">
-                <h2 className="text-2xl font-bold text-white">{barber.name}</h2>
-                <p className="text-gray-500 font-mono text-xs uppercase tracking-widest mt-1">
+                <h2 className="text-2xl font-bold text-[var(--text-primary)]">{barber.name}</h2>
+                <p className="text-[var(--text-secondary)] font-mono text-xs uppercase tracking-widest mt-1">
                   {barber.email}
                 </p>
                 <div className="flex justify-center gap-2 mt-3">
-                  <span className="bg-white/5 text-xs text-gray-300 px-3 py-1 rounded-full border border-white/10">
+                  <span className="bg-[var(--bg-secondary)] text-xs text-[var(--text-secondary)] px-3 py-1 rounded-full border border-[var(--border-color)]">
                     Nível: Mestre
                   </span>
                   {barber.phone && (
-                    <span className="bg-white/5 text-xs text-gray-300 px-3 py-1 rounded-full border border-white/10">
+                    <span className="bg-[var(--bg-secondary)] text-xs text-[var(--text-secondary)] px-3 py-1 rounded-full border border-[var(--border-color)]">
                       {barber.phone}
                     </span>
                   )}
@@ -209,54 +212,54 @@ export const BarberProfileModal: React.FC<BarberProfileModalProps> = ({ barber, 
             <div className="space-y-4 animate-fade-in-up">
               {/* Name */}
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider ml-1">
+                <label className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-wider ml-1">
                   Nome Completo
                 </label>
                 <div className="relative">
-                  <User className="absolute left-3 top-3 text-gray-600" size={16} />
+                  <User className="absolute left-3 top-3 text-[var(--text-secondary)]" size={16} />
                   <input
                     type="text"
                     value={formData.name}
                     onChange={e => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full bg-black/40 border border-white/10 rounded-lg pl-10 pr-4 py-2.5 text-white text-sm focus:outline-none focus:border-[#FFD700] transition-colors"
+                    className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg pl-10 pr-4 py-2.5 text-[var(--text-primary)] text-sm focus:outline-none focus:border-[#FFD700] transition-colors placeholder-[var(--text-secondary)]/50"
                   />
                 </div>
               </div>
 
               {/* Email */}
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider ml-1">
+                <label className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-wider ml-1">
                   Email
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-3 text-gray-600" size={16} />
+                  <Mail className="absolute left-3 top-3 text-[var(--text-secondary)]" size={16} />
                   <input
                     type="email"
                     value={formData.email}
                     onChange={e => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full bg-black/40 border border-white/10 rounded-lg pl-10 pr-4 py-2.5 text-white text-sm focus:outline-none focus:border-[#FFD700] transition-colors"
+                    className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg pl-10 pr-4 py-2.5 text-[var(--text-primary)] text-sm focus:outline-none focus:border-[#FFD700] transition-colors placeholder-[var(--text-secondary)]/50"
                   />
                 </div>
               </div>
 
               {/* Phone */}
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider ml-1">
+                <label className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-wider ml-1">
                   Telefone
                 </label>
                 <div className="relative">
-                  <Phone className="absolute left-3 top-3 text-gray-600" size={16} />
+                  <Phone className="absolute left-3 top-3 text-[var(--text-secondary)]" size={16} />
                   <input
                     type="text"
                     value={formData.phone}
                     onChange={e => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full bg-black/40 border border-white/10 rounded-lg pl-10 pr-4 py-2.5 text-white text-sm focus:outline-none focus:border-[#FFD700] transition-colors"
+                    className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg pl-10 pr-4 py-2.5 text-[var(--text-primary)] text-sm focus:outline-none focus:border-[#FFD700] transition-colors placeholder-[var(--text-secondary)]/50"
                     placeholder="(00) 00000-0000"
                   />
                 </div>
               </div>
 
-              <div className="border-t border-white/5 my-4"></div>
+              <div className="border-t border-[var(--border-color)] my-4"></div>
 
               {/* Password Section */}
               <div className="space-y-3">
@@ -269,7 +272,7 @@ export const BarberProfileModal: React.FC<BarberProfileModalProps> = ({ barber, 
                     type="password"
                     value={formData.password}
                     onChange={e => setFormData({ ...formData, password: e.target.value })}
-                    className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-[#FFD700] transition-colors placeholder-gray-700"
+                    className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg px-4 py-2.5 text-[var(--text-primary)] text-sm focus:outline-none focus:border-[#FFD700] transition-colors placeholder-[var(--text-secondary)]/50"
                     placeholder="Nova Senha (deixe vazio para manter)"
                   />
                 </div>
@@ -280,7 +283,7 @@ export const BarberProfileModal: React.FC<BarberProfileModalProps> = ({ barber, 
                       type="password"
                       value={formData.confirmPassword}
                       onChange={e => setFormData({ ...formData, confirmPassword: e.target.value })}
-                      className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-[#FFD700] transition-colors placeholder-gray-700"
+                      className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg px-4 py-2.5 text-[var(--text-primary)] text-sm focus:outline-none focus:border-[#FFD700] transition-colors placeholder-[var(--text-secondary)]/50"
                       placeholder="Confirme a Nova Senha"
                     />
                   </div>
@@ -290,7 +293,7 @@ export const BarberProfileModal: React.FC<BarberProfileModalProps> = ({ barber, 
               <div className="pt-4 flex gap-3">
                 <button
                   onClick={() => setIsEditing(false)}
-                  className="flex-1 bg-white/5 hover:bg-white/10 text-gray-300 py-3 rounded-lg font-bold text-xs uppercase tracking-wider border border-white/5 transition-colors"
+                  className="flex-1 bg-[var(--bg-secondary)] hover:bg-[var(--bg-primary)] text-[var(--text-secondary)] py-3 rounded-lg font-bold text-xs uppercase tracking-wider border border-[var(--border-color)] transition-colors"
                 >
                   Cancelar
                 </button>
@@ -307,11 +310,11 @@ export const BarberProfileModal: React.FC<BarberProfileModalProps> = ({ barber, 
             <div className="space-y-3">
               <button
                 onClick={() => setIsEditing(true)}
-                className="w-full bg-[#1a1a1a] hover:bg-[#222] text-white py-4 flex items-center justify-center gap-3 text-xs font-black uppercase tracking-widest border border-gray-800 transition-colors shadow-lg group"
+                className="w-full bg-[var(--bg-primary)] hover:bg-[var(--bg-secondary)] text-[var(--text-primary)] py-4 flex items-center justify-center gap-3 text-xs font-black uppercase tracking-widest border border-[var(--border-color)] transition-colors shadow-lg group"
               >
                 <User
                   size={16}
-                  className="text-gray-500 group-hover:text-[#FFD700] transition-colors"
+                  className="text-[var(--text-secondary)] group-hover:text-[#FFD700] transition-colors"
                 />
                 Editar Informações
               </button>
@@ -330,8 +333,8 @@ export const BarberProfileModal: React.FC<BarberProfileModalProps> = ({ barber, 
         </div>
 
         {/* Footer */}
-        <div className="bg-[#0a0a0a] p-3 text-center border-t border-white/5">
-          <p className="text-[10px] text-gray-600 font-mono uppercase">
+        <div className="bg-[var(--bg-primary)] p-3 text-center border-t border-[var(--border-color)] transition-colors">
+          <p className="text-[10px] text-[var(--text-secondary)] font-mono uppercase">
             Sistema Seguro &bull; Trilha do Corte ID: {barber.id.slice(0, 8)}
           </p>
         </div>
@@ -347,7 +350,7 @@ export const BarberProfileModal: React.FC<BarberProfileModalProps> = ({ barber, 
               </h3>
               <button
                 onClick={() => setShowAvatarSelector(false)}
-                className="text-gray-400 hover:text-white p-2"
+                className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] p-2 transition-colors"
               >
                 <X size={24} />
               </button>
@@ -373,7 +376,7 @@ export const BarberProfileModal: React.FC<BarberProfileModalProps> = ({ barber, 
                       setLoading(false);
                     }
                   }}
-                  className="relative aspect-square rounded-xl overflow-hidden border border-white/10 hover:border-[#FFD700] hover:shadow-[0_0_15px_rgba(255,215,0,0.5)] transition-all group bg-black"
+                  className="relative aspect-square rounded-xl overflow-hidden border border-[var(--border-color)] hover:border-[#FFD700] hover:shadow-[0_0_15px_rgba(255,215,0,0.5)] transition-all group bg-[var(--bg-secondary)]"
                 >
                   <img
                     src={url}
