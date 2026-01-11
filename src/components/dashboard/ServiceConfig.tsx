@@ -23,6 +23,7 @@ import { PromotionsManager } from './PromotionsManager';
 import { NewServiceIcon } from '../icons/NewServiceIcon';
 import { ServiceFormModal } from './ServiceFormModal';
 import { ServiceCard } from '../ui/ServiceCard';
+import { ConfirmModal } from '../ui/ConfirmModal';
 import { useAuth } from '../../contexts/AuthContext';
 import { useData } from '../../contexts/DataContext';
 
@@ -141,23 +142,41 @@ export const ServiceConfig: React.FC = () => {
     setIsAddModalOpen(false);
   };
 
+  // Confirm Modal State
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
+
   const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (window.confirm('Tem certeza que deseja remover este serviço?')) {
-      // Optimistic Update
-      const updated = services.filter(s => s.id !== id);
-      onUpdateServices(updated);
 
-      // Backend Call
-      try {
-        const { api } = await import('../../services/api');
-        await api.deleteService(id);
-      } catch (error) {
-        console.error('Failed to delete service:', error);
-        alert('Erro ao excluir do servidor.');
-        // Revert if needed (optional)
-      }
-    }
+    setConfirmModal({
+      isOpen: true,
+      title: 'Remover Serviço',
+      message: 'Tem certeza que deseja remover este serviço? Esta ação não pode ser desfeita.',
+      onConfirm: async () => {
+        // Optimistic Update
+        const updated = services.filter(s => s.id !== id);
+        onUpdateServices(updated);
+
+        // Backend Call
+        try {
+          const { api } = await import('../../services/api');
+          await api.deleteService(id);
+        } catch (error) {
+          console.error('Failed to delete service:', error);
+          alert('Erro ao excluir do servidor.');
+        }
+      },
+    });
   };
 
   return (
@@ -300,6 +319,15 @@ export const ServiceConfig: React.FC = () => {
           }}
         />
       )}
+
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        isDanger={true}
+      />
     </div>
   );
 };

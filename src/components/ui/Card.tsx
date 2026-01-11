@@ -17,10 +17,11 @@ export const Card: React.FC<CardProps> = ({
   const baseStyles = 'rounded-sm transition-all duration-300 relative overflow-hidden';
 
   const variants = {
-    default: 'bg-[#111] border border-gray-800 shadow-xl',
-    glass: 'bg-black/50 backdrop-blur-md border border-white/10 shadow-lg',
-    neon: 'bg-[#0a0a0a] border border-gray-800 hover:border-neon-yellow/50 shadow-[0_0_15px_rgba(0,0,0,0.5)]',
-    outlined: 'bg-transparent border border-gray-800 hover:border-gray-700',
+    default: 'bg-[var(--bg-card)] border border-[var(--border-color)] shadow-xl',
+    glass: 'glass-panel shadow-lg',
+    neon: 'bg-[var(--bg-card)] border border-[var(--border-color)] hover:border-neon-yellow/50 shadow-[0_0_15px_rgba(0,0,0,0.5)]',
+    outlined:
+      'bg-transparent border border-[var(--border-color)] hover:border-[var(--text-secondary)]',
   };
 
   const paddings = {

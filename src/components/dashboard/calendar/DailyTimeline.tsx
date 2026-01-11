@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Clock, Trash2, Edit, CheckCircle2, Bell, Wallet, Plus } from 'lucide-react';
+import { ConfirmModal } from '../../ui/ConfirmModal';
 import { useData } from '../../../contexts/DataContext';
 import { api } from '../../../services/api'; // Adjust path
 import { Appointment, Service } from '../../../types';
@@ -22,6 +23,22 @@ export const DailyTimeline: React.FC<DailyTimelineProps> = ({
   const { appointments, services, shopSettings, updateAppointments, clients } = useData();
   const [swipedAppId, setSwipedAppId] = useState<string | null>(null);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null);
+
+  // Confirm Modal State
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    variant?: 'danger' | 'warning' | 'info';
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    description: '',
+    variant: 'danger',
+    onConfirm: () => {},
+  });
 
   // Helper to get service details
   const getServiceDetails = (id: string | number) => {
@@ -81,21 +98,96 @@ export const DailyTimeline: React.FC<DailyTimelineProps> = ({
       });
     } catch (err) {
       console.error(err);
-      // Revert if failed (simple reload or re-fetch would be better, but basic revert:)
-      // updateAppointments(appointments);
-      // Ideally trigger a re-fetch or toast
     }
   };
 
-  const handleCancelAppointment = async (id: string, e: React.MouseEvent) => {
+  const handleCancelAppointment = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!window.confirm('Cancelar este agendamento?')) return;
+    setConfirmModal({
+      isOpen: true,
+      title: 'Cancelar Agendamento',
+      description: 'Deseja realmente cancelar este agendamento? O horário ficará livre novamente.',
+      variant: 'danger',
+      onConfirm: async () => {
+        const updated = appointments.map(a =>
+          a.id === id ? { ...a, status: 'cancelled' as const } : a
+        );
+        updateAppointments(updated);
+        await api.updateAppointment(id, { status: 'cancelled' });
 
+        setSwipedAppId(null);
+        setSwipeDirection(null);
+      },
+    });
+  };
+
+  const handleNoShow = (id: string, e: React.MouseEvent, app: Appointment) => {
+    e.stopPropagation();
+
+    setConfirmModal({
+      isOpen: true,
+      title: 'Confirmar Ausência',
+      description:
+        'Deseja marcar este agendamento como "Não Veio"? O cliente será penalizado e notificado via WhatsApp.',
+      variant: 'danger',
+      onConfirm: async () => {
+        // 1. WhatsApp Notification
+        let phone = app.clientPhone;
+        let client = clients.find(c => c.id === app.clientId);
+
+        // Fallback search by name
+        if (!client) {
+          client = clients.find(c => c.name.toLowerCase() === app.clientName.toLowerCase());
+        }
+
+        if (!phone && client) phone = client.phone;
+
+        const cleanPhone = phone?.replace(/\D/g, '') || '';
+        const firstName = app.clientName.split(' ')[0];
+
+        const message = `Olá *${firstName}*, notamos que você não compareceu ao seu horário hoje na *Trilha do Corte* 😕\n\n⚠️ *Aviso de Penalidade*: Para manter a qualidade da nossa agenda, pedimos que cancelamentos sejam feitos com **30 minutos de antecedência**.\n\n📉 Devido à ausência sem aviso, seu nível de fidelidade foi rebaixado.\n\nContamos com sua compreensão na próxima! 👊`;
+
+        if (cleanPhone) {
+          const link = `https://api.whatsapp.com/send?phone=55${cleanPhone}&text=${encodeURIComponent(
+            message
+          )}`;
+          window.open(link, '_blank');
+        }
+
+        // 2. Downgrade Level (Penalty)
+        if (client && client.id) {
+          const currentLevel = client.level || 1;
+          if (currentLevel > 1) {
+            try {
+              await api.updateClient(client.id, { level: currentLevel - 1 });
+            } catch (err) {
+              console.error('Failed to downgrade client', err);
+            }
+          }
+        }
+
+        // 3. Cancel Appointment
+        const updated = appointments.map(a =>
+          a.id === id ? { ...a, status: 'cancelled' as const } : a
+        );
+        updateAppointments(updated);
+        await api.updateAppointment(id, { status: 'cancelled' });
+
+        setSwipedAppId(null);
+        setSwipeDirection(null);
+      },
+    });
+  };
+
+  const handleCompleteAppointment = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
     const updated = appointments.map(a =>
-      a.id === id ? { ...a, status: 'cancelled' as const } : a
+      a.id === id ? { ...a, status: 'completed' as const } : a
     );
     updateAppointments(updated);
-    await api.updateAppointment(id, { status: 'cancelled' });
+    await api.updateAppointment(id, { status: 'completed' });
+    setSwipedAppId(null);
+    setSwipeDirection(null);
   };
 
   const handleWhatsAppReminder = (
@@ -246,13 +338,13 @@ export const DailyTimeline: React.FC<DailyTimelineProps> = ({
             </div>
 
             {/* Content Column */}
-            <div className="flex-1 px-2 md:px-3 py-2 relative">
+            <div className="flex-1 px-2 md:px-3 py-2 relative overflow-hidden">
               {item.type === 'app' ? (
                 <div className="absolute inset-0 z-10 px-2 py-1">
-                  {/* SWIPE ACTIONS */}
+                  {/* SWIPE ACTIONS (LEFT - EDIT/CANCEL) */}
                   <div
                     className={`absolute inset-0 flex items-center justify-start gap-4 pl-4 bg-[var(--bg-card)] rounded-xl border border-[var(--border-color)] z-0 transition-opacity duration-300 ${
-                      swipedAppId === item.data.id
+                      swipedAppId === item.data.id && swipeDirection === 'right'
                         ? 'opacity-100 pointer-events-auto'
                         : 'opacity-0 pointer-events-none'
                     }`}
@@ -261,6 +353,7 @@ export const DailyTimeline: React.FC<DailyTimelineProps> = ({
                       onClick={e => {
                         handleCancelAppointment(item.data.id, e);
                         setSwipedAppId(null);
+                        setSwipeDirection(null);
                       }}
                       className="w-10 h-10 rounded-full bg-red-500/10 border border-red-500/50 flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-all scale-90 hover:scale-100"
                     >
@@ -271,12 +364,44 @@ export const DailyTimeline: React.FC<DailyTimelineProps> = ({
                         e.stopPropagation();
                         onEditAppointment(item.data);
                         setSwipedAppId(null);
+                        setSwipeDirection(null);
                       }}
                       className="w-10 h-10 rounded-full bg-blue-500/10 border border-blue-500/50 flex items-center justify-center text-blue-500 hover:bg-blue-500 hover:text-white transition-all scale-90 hover:scale-100"
                     >
                       <Edit size={18} />
                     </button>
-                    <div className="flex-1 h-full" onClick={() => setSwipedAppId(null)}></div>
+                  </div>
+
+                  {/* SWIPE ACTIONS (RIGHT - COMPLETE/NOSHOW) */}
+                  <div
+                    className={`absolute inset-0 flex flex-col items-end justify-center gap-2 pr-2 bg-[var(--bg-card)] rounded-xl border border-[var(--border-color)] z-0 transition-opacity duration-300 ${
+                      swipedAppId === item.data.id && swipeDirection === 'left'
+                        ? 'opacity-100 pointer-events-auto'
+                        : 'opacity-0 pointer-events-none'
+                    }`}
+                  >
+                    <button
+                      onClick={e => {
+                        handleNoShow(item.data.id, e, item.data);
+                      }}
+                      className="w-24 h-8 rounded-lg bg-red-500/10 border border-red-500/50 flex items-center justify-center gap-2 text-red-500 hover:bg-red-500 hover:text-white transition-all active:scale-95"
+                    >
+                      <span className="text-[9px] font-black uppercase tracking-wider">
+                        Não Veio
+                      </span>
+                    </button>
+
+                    <div className="h-[1px] w-16 bg-[var(--border-color)]/50"></div>
+
+                    <button
+                      onClick={e => handleCompleteAppointment(item.data.id, e)}
+                      className="w-24 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/50 flex items-center justify-center gap-2 text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all active:scale-95"
+                    >
+                      <CheckCircle2 size={14} />
+                      <span className="text-[9px] font-black uppercase tracking-wider">
+                        Concluir
+                      </span>
+                    </button>
                   </div>
 
                   {/* CARD */}
@@ -284,7 +409,9 @@ export const DailyTimeline: React.FC<DailyTimelineProps> = ({
                     className={`w-full h-full rounded-xl overflow-hidden border shadow-lg relative z-10 cursor-grab active:cursor-grabbing group/card touch-pan-y flex flex-col
                         ${
                           swipedAppId === item.data.id
-                            ? 'translate-x-[120px] opacity-50'
+                            ? swipeDirection === 'right'
+                              ? 'translate-x-[120px] opacity-50'
+                              : 'translate-x-[-120px] opacity-50'
                             : 'translate-x-0 opacity-100'
                         }
                         ${
@@ -300,13 +427,35 @@ export const DailyTimeline: React.FC<DailyTimelineProps> = ({
                     onTouchEnd={e => {
                       if (touchStartX === null) return;
                       const diff = e.changedTouches[0].clientX - touchStartX;
-                      if (diff > 50) setSwipedAppId(item.data.id);
-                      else if (diff < -50) setSwipedAppId(null);
+
+                      // Handling logic based on current state
+                      if (swipedAppId === item.data.id) {
+                        // Already swiped, check if swipe back
+                        if (swipeDirection === 'right' && diff < -30) {
+                          setSwipedAppId(null);
+                          setSwipeDirection(null);
+                        } else if (swipeDirection === 'left' && diff > 30) {
+                          setSwipedAppId(null);
+                          setSwipeDirection(null);
+                        }
+                      } else {
+                        // Not swiped yet
+                        if (diff > 50) {
+                          setSwipedAppId(item.data.id);
+                          setSwipeDirection('right');
+                        } else if (diff < -50) {
+                          setSwipedAppId(item.data.id);
+                          setSwipeDirection('left');
+                        }
+                      }
+
                       setTouchStartX(null);
                     }}
                     onClick={() => {
-                      if (swipedAppId === item.data.id) setSwipedAppId(null);
-                      else onSelectClient(item.data.clientName);
+                      if (swipedAppId === item.data.id) {
+                        setSwipedAppId(null);
+                        setSwipeDirection(null);
+                      } else onSelectClient(item.data.clientName);
                     }}
                   >
                     {/* HEADER */}
@@ -460,7 +609,7 @@ export const DailyTimeline: React.FC<DailyTimelineProps> = ({
                     className={`w-full h-full border-2 border-dashed rounded-xl flex items-center justify-center transition-all ${
                       isPast
                         ? 'border-[var(--border-color)]'
-                        : 'border-[var(--border-color)] group-hover/empty:border-[var(--text-secondary)]'
+                        : 'border-[var(--border-color)] group-hover/empty:border-neon-yellow/50 group-hover/empty:bg-neon-yellow/5'
                     }`}
                   >
                     {isPast ? (
@@ -469,7 +618,7 @@ export const DailyTimeline: React.FC<DailyTimelineProps> = ({
                       </span>
                     ) : (
                       <Plus
-                        className="text-[var(--text-secondary)] group-hover/empty:text-[var(--text-primary)] transition-colors"
+                        className="text-[var(--text-secondary)] group-hover/empty:text-neon-yellow transition-colors"
                         size={24}
                       />
                     )}
@@ -480,6 +629,16 @@ export const DailyTimeline: React.FC<DailyTimelineProps> = ({
           </div>
         );
       })}
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.description}
+        isDanger={confirmModal.variant === 'danger'}
+        confirmLabel="Confirmar"
+        cancelLabel="Voltar"
+      />
     </>
   );
 };

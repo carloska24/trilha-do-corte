@@ -15,7 +15,7 @@ export const registerClientSchema = z.object({
   email: z.string().email('Email inválido'),
   phone: z.string().min(10, 'Telefone inválido (mínimo 10 dígitos)'),
   password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres'),
-  photoUrl: z.string().optional(),
+  photoUrl: z.string().optional().nullable(),
 });
 
 export const registerBarberSchema = z.object({
@@ -23,7 +23,7 @@ export const registerBarberSchema = z.object({
   email: z.string().email('Email inválido'),
   phone: z.string().min(10, 'Telefone inválido'),
   password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres'),
-  photoUrl: z.string().optional(),
+  photoUrl: z.string().optional().nullable(),
 });
 
 export const appointmentSchema = z.object({

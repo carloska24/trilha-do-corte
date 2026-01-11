@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { Appointment, ServiceItem, Client, ShopSettings } from '../types';
+import { SERVICES } from '../constants';
 import { api } from '../services/api';
 
 interface DataContextType {
@@ -82,7 +83,21 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
       });
 
-      setServices(normalizedServices);
+      // Sort services based on the order in constants.SERVICES
+      const sortedServices = normalizedServices.sort((a: any, b: any) => {
+        let indexA = SERVICES.findIndex(s => s.id === a.id);
+        let indexB = SERVICES.findIndex(s => s.id === b.id);
+
+        if (indexA === -1) indexA = SERVICES.findIndex(s => s.name === a.name);
+        if (indexB === -1) indexB = SERVICES.findIndex(s => s.name === b.name);
+
+        const valA = indexA === -1 ? 999 : indexA;
+        const valB = indexB === -1 ? 999 : indexB;
+
+        return valA - valB;
+      });
+
+      setServices(sortedServices);
       setAppointments(fetchedAppointments);
       setClients(fetchedClients);
 

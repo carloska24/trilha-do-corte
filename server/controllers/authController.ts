@@ -129,13 +129,22 @@ export const registerClient = async (req: Request, res: Response) => {
       // 3. If no password (Provisional/invite), UPDATE the record
       console.log(`🔄 Upgrading provisional client: ${existingClient.name} (${existingClient.id})`);
 
+      let finalPhotoUrl = photoUrl || existingClient.img;
+
+      // If still no photo (provisional didn't have one and user didn't upload), assign default
+      if (!finalPhotoUrl) {
+        const randomNum = Math.floor(Math.random() * 23) + 1;
+        const numStr = String(randomNum).padStart(2, '0');
+        finalPhotoUrl = `/avatars/avatar_cyberpunk_${numStr}.png`;
+      }
+
       const updatedClient = await prisma.clients.update({
         where: { id: existingClient.id },
         data: {
           name, // Update name in case they corrected it
           email, // Update email
           password: hashedPassword,
-          img: photoUrl || existingClient.img,
+          img: finalPhotoUrl,
           status: 'active', // Activate account
           notes: existingClient.notes ? existingClient.notes : 'Cadastro finalizado via Magic Link',
         },
@@ -159,6 +168,20 @@ export const registerClient = async (req: Request, res: Response) => {
 
     // 4. If user does NOT exist, CREATE new (Standard flow)
     const id = uuidv4();
+
+    // Default Avatar Logic (Cyberpunk Theme)
+    let finalPhotoUrl = photoUrl;
+    if (!finalPhotoUrl) {
+      const randomNum = Math.floor(Math.random() * 23) + 1; // 1 to 23
+      const numStr = String(randomNum).padStart(2, '0');
+      // Construct URL based on backend serving static files
+      // Assuming BASE_URL is set or using relative path if frontend handles it.
+      // Ideally full URL: `${process.env.VITE_API_URL || 'http://localhost:3000'}/avatars/avatar_cyberpunk_${numStr}.png`
+      // But preserving just the path is safer if frontend handles base.
+      // Let's store the full path relative to server root which acts as static root
+      finalPhotoUrl = `/avatars/avatar_cyberpunk_${numStr}.png`;
+    }
+
     const newClient = await prisma.clients.create({
       data: {
         id,
@@ -166,7 +189,7 @@ export const registerClient = async (req: Request, res: Response) => {
         phone,
         email,
         password: hashedPassword,
-        img: photoUrl,
+        img: finalPhotoUrl,
         level: 1,
         status: 'active', // Explicitly active
         notes: '',

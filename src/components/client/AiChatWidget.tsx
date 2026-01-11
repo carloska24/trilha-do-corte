@@ -15,6 +15,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../../services/api';
 import { LOCAL_AVATARS } from '../../constants';
+import { ConfirmModal } from '../ui/ConfirmModal';
 
 interface Message {
   id: string;
@@ -37,6 +38,7 @@ declare global {
 
 export function AiChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 'welcome',
@@ -267,15 +269,18 @@ export function AiChatWidget() {
 
   // Clear Chat Logic
   const handleClearChat = () => {
-    if (window.confirm('Limpar histórico da conversa?')) {
-      setMessages([
-        {
-          id: 'welcome',
-          sender: 'ai',
-          text: 'Olá! Sou a Trilha AI 🤖. Posso verificar horários livres ou agendar seu corte. Como posso ajudar?',
-        },
-      ]);
-    }
+    setShowClearConfirm(true);
+  };
+
+  const confirmClear = () => {
+    setMessages([
+      {
+        id: 'welcome',
+        sender: 'ai',
+        text: 'Olá! Sou a Trilha AI 🤖. Posso verificar horários livres ou agendar seu corte. Como posso ajudar?',
+      },
+    ]);
+    setShowClearConfirm(false);
   };
 
   return (
@@ -287,25 +292,43 @@ export function AiChatWidget() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="pointer-events-auto bg-white/95 dark:bg-zinc-950/95 backdrop-blur-xl border border-zinc-200/80 dark:border-zinc-800/80 rounded-3xl shadow-2xl w-[90vw] max-w-[380px] h-[600px] flex flex-col overflow-hidden mb-6 ring-1 ring-black/5 dark:ring-white/5"
+            className="pointer-events-auto bg-zinc-950/95 backdrop-blur-xl border border-zinc-800/80 rounded-3xl shadow-2xl w-[90vw] max-w-[380px] h-[600px] flex flex-col overflow-hidden mb-6 ring-1 ring-white/5"
           >
             {/* Header - High Tech Look */}
-            <div className="bg-zinc-50/80 dark:bg-zinc-900/80 backdrop-blur-md p-4 border-b border-zinc-200/50 dark:border-zinc-800/50 flex justify-between items-center z-10 sticky top-0">
+            <div className="bg-zinc-900/80 backdrop-blur-md p-4 border-b border-zinc-800/50 flex justify-between items-center z-10 sticky top-0">
               <div className="flex items-center gap-3">
                 <div className="relative">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/20">
-                    <Sparkles size={20} className="text-white fill-white/20" />
-                  </div>
-                  <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-zinc-900" />
+                  <svg
+                    viewBox="0 0 64 64"
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="w-10 h-10 text-white drop-shadow-md"
+                  >
+                    <linearGradient
+                      id="header-robot-gradient"
+                      gradientUnits="userSpaceOnUse"
+                      x1="4.001"
+                      x2="59.999"
+                      y1="32"
+                      y2="32"
+                    >
+                      <stop offset="0" stopColor="#00c0ff"></stop>
+                      <stop offset="1" stopColor="#5558ff"></stop>
+                    </linearGradient>
+                    <path
+                      d="m47.21406 51.20557v-11.97246a7.92841 7.92841 0 0 1 0 11.97246zm-21.22654-26.62314v3.85757h1.99874v-3.85757a3.442 3.442 0 1 0 -1.99874 0zm19.2178 27.88229a8.01186 8.01186 0 0 1 -7.98493 7.53528h-20.467a8.01079 8.01079 0 0 1 -7.99493-7.99492s0-13.88122.01-14.03115a8.01185 8.01185 0 0 1 7.98493-7.5352h20.467a8.01185 8.01185 0 0 1 7.98493 7.5352c.00877.15327.01 14.34092 0 14.49079zm-21.74622-11.58254a3.90264 3.90264 0 0 0 -7.805-.00009 3.90264 3.90264 0 0 0 7.805.00009zm11.37279 9.15408a10.48167 10.48167 0 0 1 -7.845 3.69767 10.50434 10.50434 0 0 1 -7.845-3.69762.99754.99754 0 0 0 -1.5391 1.26917 12.56221 12.56221 0 0 0 9.38406 4.42718 12.55562 12.55562 0 0 0 9.38415-4.42718.99756.99756 0 0 0 -1.53911-1.26922zm-.40959-13.06172c-5.15279.12917-5.15388 7.68511-.00012 7.81505a3.90778 3.90778 0 0 0 .00012-7.81505zm-12.96193 3.90755a1.90393 1.90393 0 0 0 -3.80758.00009 1.90393 1.90393 0 0 0 3.80758-.00009zm12.96181-1.90882a1.909 1.909 0 0 0 .00008 3.81758 1.909 1.909 0 0 0 -.00008-3.81758zm-30.42072 6.246a7.79 7.79 0 0 0 2.75826 5.98626v-11.97242a7.84447 7.84447 0 0 0 -2.75826 5.9862zm37.766-17.57882-4.98682.7095a.99774.99774 0 0 1 -1.1293-1.12922l.70966-4.98673c-6.21245-12.77437 9.67246-24.40586 19.94733-14.54089 9.9411 10.0446-2.00133 26.32616-14.54083 19.94738zm-.2898-14.61073h5.99616a.99948.99948 0 0 0 0-1.99874h-5.99612a.99948.99948 0 0 0 0 1.99878zm11.99244 5.99628h-11.99235a.99948.99948 0 0 0 -.00005 1.99873h11.9924a.99948.99948 0 0 0 0-1.99873zm0-3.99747h-11.99235a.99948.99948 0 0 0 -.00005 1.99873h11.9924a.99948.99948 0 0 0 0-1.99877z"
+                      fill="url(#header-robot-gradient)"
+                    ></path>
+                  </svg>
+                  <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-zinc-900 shadow-sm" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-zinc-900 dark:text-zinc-100 text-sm tracking-wide flex items-center gap-2">
+                  <h3 className="font-bold text-zinc-100 text-sm tracking-wide flex items-center gap-2">
                     TRILHA AI
-                    <span className="px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-500/20">
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-violet-500/10 text-violet-400 border border-violet-500/20">
                       BETA
                     </span>
                   </h3>
-                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 font-medium">
+                  <p className="text-[11px] text-zinc-400 font-medium">
                     Assistente Virtual Inteligente
                   </p>
                 </div>
@@ -314,14 +337,14 @@ export function AiChatWidget() {
                 <button
                   onClick={handleClearChat}
                   title="Limpar Conversa"
-                  className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg text-zinc-500 dark:text-zinc-400 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+                  className="p-2 hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-red-400 transition-colors"
                 >
                   <Trash2 size={18} />
                 </button>
                 <div className="w-px h-4 bg-zinc-200 dark:bg-zinc-800 mx-1" />
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
+                  className="p-2 hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-white transition-colors"
                 >
                   <X size={20} />
                 </button>
@@ -329,7 +352,7 @@ export function AiChatWidget() {
             </div>
 
             {/* Chat Body */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-6 scrollbar-thin scrollbar-thumb-zinc-200 dark:scrollbar-thumb-zinc-800 scrollbar-track-transparent">
+            <div className="flex-1 overflow-y-auto p-4 space-y-6 scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-transparent">
               {messages.map(msg => (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
@@ -343,7 +366,13 @@ export function AiChatWidget() {
                     }`}
                   >
                     {/* Sender Label (Optional, adds nice touch) */}
-                    <span className="text-[10px] text-zinc-400 dark:text-zinc-500 mb-1 px-1 font-medium tracking-wider uppercase">
+                    <span
+                      className={`text-[10px] mb-1 px-1 font-bold tracking-widest uppercase ${
+                        msg.sender === 'user'
+                          ? 'text-zinc-500'
+                          : 'text-violet-400 drop-shadow-[0_0_8px_rgba(167,139,250,0.5)]'
+                      }`}
+                    >
                       {msg.sender === 'user' ? 'Você' : 'Trilha AI'}
                     </span>
 
@@ -351,7 +380,7 @@ export function AiChatWidget() {
                       className={`rounded-2xl p-3.5 text-sm leading-relaxed shadow-sm relative group transition-all duration-200 ${
                         msg.sender === 'user'
                           ? 'bg-gradient-to-br from-violet-600 to-indigo-600 text-white rounded-tr-sm shadow-indigo-500/10'
-                          : 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-200 rounded-tl-sm hover:border-zinc-300 dark:hover:border-zinc-700'
+                          : 'bg-zinc-900 border border-zinc-800 text-zinc-200 rounded-tl-sm hover:border-zinc-700'
                       }`}
                     >
                       {msg.text && (
@@ -368,7 +397,7 @@ export function AiChatWidget() {
                             <Clock size={12} />
                             <span>Horários Disponíveis</span>
                           </div>
-                          <div className="grid grid-cols-3 gap-2">
+                          <div className="grid grid-cols-2 gap-2">
                             {(msg.action.data.slots || []).map((slot: string) => {
                               const isSelected = messages.some(
                                 m => m.sender === 'user' && m.text?.includes(slot)
@@ -383,7 +412,7 @@ export function AiChatWidget() {
                                 ${
                                   isSelected
                                     ? 'bg-violet-600 border-violet-500 text-white opacity-50 cursor-default'
-                                    : 'bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-300 hover:border-violet-500 hover:bg-violet-500/10 hover:text-violet-600 dark:hover:text-white hover:scale-105 active:scale-95'
+                                    : 'bg-zinc-950 border-zinc-800 text-zinc-300 hover:border-violet-500 hover:bg-violet-500/10 hover:text-white hover:scale-105 active:scale-95'
                                 }
                               `}
                                 >
@@ -398,7 +427,7 @@ export function AiChatWidget() {
 
                       {/* CLIENT DATA FORM (REQUEST_CLIENT_DATA) */}
                       {msg.action && msg.action.action === 'REQUEST_CLIENT_DATA' && (
-                        <div className="mt-4 bg-zinc-50 dark:bg-zinc-950 rounded-xl p-4 border border-zinc-200 dark:border-zinc-800 shadow-xl">
+                        <div className="mt-4 bg-zinc-950 rounded-xl p-4 border border-zinc-800 shadow-xl">
                           <div className="mb-4 flex items-center gap-2 text-violet-600 dark:text-violet-400">
                             <div className="p-1.5 bg-violet-500/10 rounded-lg">
                               <User size={14} />
@@ -417,7 +446,7 @@ export function AiChatWidget() {
                                 type="text"
                                 id={`name-${msg.id}`}
                                 placeholder="Como prefere ser chamado?"
-                                className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-white focus:border-violet-500 focus:ring-1 focus:ring-violet-500 outline-none transition-all placeholder:text-zinc-400 dark:placeholder:text-zinc-600"
+                                className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:border-violet-500 focus:ring-1 focus:ring-violet-500 outline-none transition-all placeholder:text-zinc-600"
                               />
                             </div>
                             <div>
@@ -428,7 +457,7 @@ export function AiChatWidget() {
                                 type="tel"
                                 id={`phone-${msg.id}`}
                                 placeholder="(00) 00000-0000"
-                                className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-white focus:border-violet-500 focus:ring-1 focus:ring-violet-500 outline-none transition-all placeholder:text-zinc-400 dark:placeholder:text-zinc-600"
+                                className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:border-violet-500 focus:ring-1 focus:ring-violet-500 outline-none transition-all placeholder:text-zinc-600"
                               />
                             </div>
                             <button
@@ -457,8 +486,8 @@ export function AiChatWidget() {
 
                       {/* CONFIRMATION CARD */}
                       {msg.action && msg.action.action === 'PROPOSE_BOOKING' && (
-                        <div className="mt-4 bg-zinc-50 dark:bg-zinc-950 rounded-xl p-0 overflow-hidden border border-zinc-200 dark:border-zinc-800 group-hover:border-zinc-300 dark:group-hover:border-zinc-700 transition-colors">
-                          <div className="bg-zinc-100/50 dark:bg-zinc-900/50 p-3 border-b border-zinc-200 dark:border-zinc-800 flex items-center gap-2">
+                        <div className="mt-4 bg-zinc-950 rounded-xl p-0 overflow-hidden border border-zinc-800 group-hover:border-zinc-700 transition-colors">
+                          <div className="bg-zinc-900/50 p-3 border-b border-zinc-800 flex items-center gap-2">
                             <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-500">
                               <Calendar size={16} />
                             </div>
@@ -486,12 +515,12 @@ export function AiChatWidget() {
                             </div>
                             <div className="flex justify-between items-center text-xs">
                               <span className="text-zinc-500">Horário</span>
-                              <span className="font-bold text-zinc-700 dark:text-zinc-200 bg-zinc-200 dark:bg-zinc-800 px-2 py-0.5 rounded">
+                              <span className="font-bold text-zinc-200 bg-zinc-800 px-2 py-0.5 rounded">
                                 {msg.action.data.time}
                               </span>
                             </div>
                           </div>
-                          <div className="p-3 bg-zinc-100/30 dark:bg-zinc-900/30 border-t border-zinc-200 dark:border-zinc-800">
+                          <div className="p-3 bg-zinc-900/30 border-t border-zinc-800">
                             <button
                               onClick={() => handleConfirmAction(msg.action?.data)}
                               className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold tracking-wide transition-all shadow-lg shadow-emerald-500/20 active:translate-y-0.5 flex items-center justify-center gap-2"
@@ -514,13 +543,15 @@ export function AiChatWidget() {
                   animate={{ opacity: 1 }}
                   className="flex justify-start"
                 >
-                  <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 rounded-tl-sm flex items-center gap-1.5">
-                    <span className="text-[10px] text-zinc-400 dark:text-zinc-500 font-medium tracking-wider uppercase mr-2.5">
-                      Trilha AI digitando
+                  <div className="bg-zinc-950/80 border border-violet-500/20 rounded-2xl p-4 rounded-tl-sm flex items-center gap-2 shadow-[0_0_15px_rgba(139,92,246,0.1)]">
+                    <span className="text-[10px] text-violet-400 font-bold tracking-widest uppercase mr-1 animate-pulse">
+                      Digitando
                     </span>
-                    <div className="w-1.5 h-1.5 bg-zinc-400 dark:bg-zinc-500 rounded-full animate-bounce [animation-delay:-0.3s]" />
-                    <div className="w-1.5 h-1.5 bg-zinc-400 dark:bg-zinc-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
-                    <div className="w-1.5 h-1.5 bg-zinc-400 dark:bg-zinc-500 rounded-full animate-bounce" />
+                    <div className="flex gap-1">
+                      <div className="w-1.5 h-1.5 bg-violet-500 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                      <div className="w-1.5 h-1.5 bg-violet-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                      <div className="w-1.5 h-1.5 bg-violet-500 rounded-full animate-bounce" />
+                    </div>
                   </div>
                 </motion.div>
               )}
@@ -528,7 +559,7 @@ export function AiChatWidget() {
             </div>
 
             {/* Input Area */}
-            <div className="p-4 bg-zinc-50/90 dark:bg-zinc-900/90 backdrop-blur-md border-t border-zinc-200 dark:border-zinc-800">
+            <div className="p-4 bg-zinc-900/90 backdrop-blur-md border-t border-zinc-800">
               <div className="relative flex items-center gap-2">
                 <button
                   onClick={toggleListening}
@@ -537,7 +568,7 @@ export function AiChatWidget() {
                     ${
                       isListening
                         ? 'bg-red-500/10 text-red-500 ring-1 ring-red-500/50 animate-pulse'
-                        : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-300 dark:hover:bg-zinc-700 hover:text-zinc-900 dark:hover:text-white'
+                        : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white'
                     }
                   `}
                 >
@@ -551,7 +582,7 @@ export function AiChatWidget() {
                     onChange={e => setInputText(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && handleSendMessage()}
                     placeholder={isListening ? 'Ouvindo...' : 'Digite sua mensagem...'}
-                    className="w-full bg-white dark:bg-black/50 border border-zinc-200 dark:border-zinc-800 rounded-xl pl-4 pr-12 py-3 text-sm text-zinc-900 dark:text-zinc-200 focus:outline-none focus:ring-1 focus:ring-violet-500/50 focus:border-violet-500/50 transition-all placeholder:text-zinc-400 dark:placeholder:text-zinc-600"
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl pl-4 pr-12 py-3 text-sm text-zinc-200 focus:outline-none focus:ring-1 focus:ring-violet-500/50 focus:border-violet-500/50 transition-all placeholder:text-zinc-600"
                   />
                   <div className="absolute right-1 top-1 bottom-1">
                     <button
@@ -569,13 +600,24 @@ export function AiChatWidget() {
         )}
       </AnimatePresence>
 
+      <ConfirmModal
+        isOpen={showClearConfirm}
+        onClose={() => setShowClearConfirm(false)}
+        onConfirm={confirmClear}
+        title="Reiniciar Conversa"
+        message="Tem certeza que deseja apagar todo o histórico? Isso não pode ser desfeito."
+        confirmLabel="Sim, Limpar"
+        cancelLabel="Voltar"
+        isDanger
+      />
+
       <motion.button
         onClick={() => setIsOpen(!isOpen)}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         className={`pointer-events-auto flex items-center justify-center transition-all duration-300 z-50 ${
           isOpen
-            ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 rounded-full w-14 h-14 rotate-90 ring-4 ring-white dark:ring-zinc-900 shadow-xl'
+            ? 'bg-zinc-800 text-zinc-400 rounded-full w-14 h-14 rotate-90 ring-4 ring-zinc-900 shadow-xl'
             : 'bg-transparent filter drop-shadow-2xl hover:drop-shadow-[0_0_15px_rgba(113,40,242,0.5)]'
         }`}
       >

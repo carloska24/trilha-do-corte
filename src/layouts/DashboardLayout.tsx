@@ -536,7 +536,7 @@ export const DashboardLayout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-transparent text-text-primary font-sans selection:bg-yellow-500 selection:text-black transition-colors duration-300">
+    <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] font-sans selection:bg-yellow-500 selection:text-black transition-colors duration-300">
       {/* HEADER PIXEL PERFECT */}
       {/* HEADER PIXEL PERFECT */}
       <header className="fixed top-0 left-0 right-0 h-16 bg-[var(--bg-secondary)] z-40 flex items-center justify-between px-4 border-b border-[var(--border-color)] transition-colors duration-300">
@@ -604,7 +604,7 @@ export const DashboardLayout: React.FC = () => {
       {(isListening || aiResponse) && (
         <div className="fixed bottom-32 left-1/2 -translate-x-1/2 md:bottom-10 md:left-1/2 md:-translate-x-1/2 z-[1000] flex flex-col items-center gap-2 pointer-events-none w-full px-4">
           {isListening && (
-            <div className="bg-black/90 backdrop-blur-md text-white px-6 py-3 rounded-full border border-neon-yellow/30 shadow-[0_0_30px_rgba(234,179,8,0.2)] flex items-center gap-3 animate-fade-in-up">
+            <div className="bg-[var(--bg-card)]/90 backdrop-blur-md text-[var(--text-primary)] px-6 py-3 rounded-full border border-neon-yellow/30 shadow-[0_0_30px_rgba(234,179,8,0.2)] flex items-center gap-3 animate-fade-in-up">
               <div className="flex gap-1 h-3 items-end">
                 <div className="w-1 bg-neon-yellow animate-[music-bar_0.5s_ease-in-out_infinite] h-full"></div>
                 <div className="w-1 bg-neon-yellow animate-[music-bar_0.7s_ease-in-out_infinite] h-2/3"></div>
@@ -618,7 +618,7 @@ export const DashboardLayout: React.FC = () => {
           )}
 
           {aiResponse && (
-            <div className="bg-[#111] text-white px-6 py-4 rounded-xl border border-gray-700 shadow-2xl flex items-center gap-3 animate-fade-in-up w-auto min-w-[300px]">
+            <div className="bg-[var(--bg-card)] text-[var(--text-primary)] px-6 py-4 rounded-xl border border-[var(--border-color)] shadow-2xl flex items-center gap-3 animate-fade-in-up w-auto min-w-[300px]">
               <div className="bg-blue-500/20 p-2 rounded-full">
                 <Briefcase size={18} className="text-blue-400" />
               </div>
@@ -786,10 +786,10 @@ export const DashboardLayout: React.FC = () => {
 
       {/* MODAL FINALIZAR */}
       {finishingAppId && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/95 backdrop-blur-sm animate-[fadeIn_0.2s_ease-out]">
-          <div className="bg-[#111] border border-gray-800 w-full max-w-md flex flex-col shadow-2xl max-h-[90vh] rounded-sm">
-            <div className="p-4 md:p-6 border-b border-gray-800 flex justify-between items-center bg-[#151515]">
-              <h3 className="font-black text-white uppercase tracking-wider text-base md:text-lg">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-[fadeIn_0.2s_ease-out]">
+          <div className="bg-[var(--bg-card)] border border-[var(--border-color)] w-full max-w-md flex flex-col shadow-2xl max-h-[90vh] rounded-sm">
+            <div className="p-4 md:p-6 border-b border-[var(--border-color)] flex justify-between items-center bg-[var(--bg-secondary)]">
+              <h3 className="font-black text-[var(--text-primary)] uppercase tracking-wider text-base md:text-lg">
                 Registrar Obra
               </h3>
               <button

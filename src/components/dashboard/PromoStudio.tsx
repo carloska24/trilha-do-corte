@@ -210,8 +210,8 @@ export const PromoStudio: React.FC<PromoStudioProps> = ({
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/95 backdrop-blur-md animate-[fadeIn_0.2s_ease-out]">
       <div className="bg-[var(--bg-card)] border border-[var(--border-color)] w-full max-w-5xl rounded-2xl shadow-2xl overflow-hidden flex flex-col h-[90vh]">
         {/* Header - Full Width Banner */}
-        <div className="relative w-full h-32 bg-[var(--bg-secondary)] border-b border-[var(--border-color)] p-0 overflow-hidden flex items-center justify-center">
-          <div className="absolute inset-0 z-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/black-felt.png')]"></div>
+        <div className="relative w-full h-32 bg-[#101010] border-b border-[#222] p-0 overflow-hidden flex items-center justify-center">
+          <div className="absolute inset-0 z-0 opacity-30 bg-[url('https://www.transparenttextures.com/patterns/black-felt.png')]"></div>
 
           {/* Left Logo Container - 30% */}
           <div className="absolute left-0 top-0 h-full w-[30%] flex items-center justify-center z-10 pointer-events-none">

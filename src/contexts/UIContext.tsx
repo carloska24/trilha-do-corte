@@ -21,24 +21,20 @@ export const UIProvider: React.FC<{ children: React.ReactNode }> = ({ children }
     undefined
   );
 
-  // Initialize theme from localStorage or default to 'dark' (Barber default)
-  const [theme, setTheme] = useState<Theme>(() => {
-    if (typeof window !== 'undefined') {
-      return (localStorage.getItem('ui_theme') as Theme) || 'dark';
-    }
-    return 'dark';
-  });
+  // Initialize theme - ALWAYS DARK
+  const [theme, setTheme] = useState<Theme>('dark');
 
   // Apply theme to HTML element
   useEffect(() => {
     const root = window.document.documentElement;
-    root.classList.remove('light', 'dark');
-    root.classList.add(theme);
-    localStorage.setItem('ui_theme', theme);
-  }, [theme]);
+    root.classList.remove('light');
+    root.classList.add('dark');
+    localStorage.setItem('ui_theme', 'dark');
+  }, []); // Run once on mount to enforce
 
   const toggleTheme = () => {
-    setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
+    // Disabled - ensure it stays dark
+    setTheme('dark');
   };
 
   const openBooking = (data?: Partial<BookingData>) => {

@@ -14,7 +14,6 @@ async function getAvailabilityForNextDays() {
 
   // Explicitly convert to Brazil Time (server might be UTC)
   const brTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
-
   const currentHour = brTime.getHours();
   const currentMin = brTime.getMinutes();
 
@@ -24,6 +23,34 @@ async function getAvailabilityForNextDays() {
     slots: string[];
   }
   const nextDays: DayAvailability[] = [];
+
+  // Fetch existing appointments for the next 7 days to filter availability
+  // We need a range query
+  const startDate = new Date(brTime);
+  const endDate = new Date(brTime);
+  endDate.setDate(endDate.getDate() + 7);
+
+  const startStr = startDate.toISOString().split('T')[0];
+  const endStr = endDate.toISOString().split('T')[0];
+
+  const existingAppointments = await prisma.appointments.findMany({
+    where: {
+      date: {
+        gte: startStr,
+        lte: endStr,
+      },
+      status: {
+        not: 'cancelled', // Don't block cancelled slots
+      },
+    },
+    select: {
+      date: true,
+      time: true,
+    },
+  });
+
+  // Create a Set for fast lookup: "YYYY-MM-DD HH:MM"
+  const busySlots = new Set(existingAppointments.map(app => `${app.date} ${app.time}`));
 
   // Reduce to 7 days
   for (let i = 0; i < 7; i++) {
@@ -45,11 +72,12 @@ async function getAvailabilityForNextDays() {
     // Check if we are generating slots for TODAY (using BR time logic)
     const isToday = i === 0;
 
-    // Use 15-min intervals to match real agenda (00, 15, 30, 45)
+    // Use 30-min intervals for Chat simplicity (AI works better with fewer options)
     // Range: 09:00 to 19:00
     const slots: string[] = [];
     for (let hour = 9; hour < 19; hour++) {
-      for (let min of [0, 15, 30, 45]) {
+      for (let min of [0, 30]) {
+        // Changed to 30min intervals for cleaner chat options
         // If it's today, STRICT filtering
         if (isToday) {
           // If past hour, skip
@@ -60,11 +88,17 @@ async function getAvailabilityForNextDays() {
         }
 
         const time = `${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`;
-        slots.push(time);
+
+        // CHECK IF BUSY
+        if (!busySlots.has(`${dateStr} ${time}`)) {
+          slots.push(time);
+        }
       }
     }
 
-    nextDays.push({ date: dateStr, weekday, slots });
+    if (slots.length > 0) {
+      nextDays.push({ date: dateStr, weekday, slots });
+    }
   }
 
   return nextDays;
@@ -108,39 +142,41 @@ export const handleChat = async (req: Request, res: Response) => {
          - Se o cliente não forneceu, pergunte algo como "Para finalizar, qual seu nome e WhatsApp?".
          - NÃO CONFIRME agendamento sem esses dados.
       
-      3. LÓGICA DE HORÁRIOS:
-         - Verifique a duração do serviço (ex: Platinado 90min precisa de 3 slots).
-         - Use os slots de 'availability' fornecidos na lista.
-
-      4. APRESENTAÇÃO DOS HORÁRIOS (CRÍTICO):
-         - NUNCA escreva a lista de horários no texto da resposta (ex: "Tenho 09:00, 09:30..."). ISSO É PROIBIDO.
-         - Apenas diga algo como "Encontrei estes horários disponíveis para você:" ou "Veja os horários abaixo:".
-         - A interface do usuário cuidará de mostrar os botões bonitinhos baseados no seu JSON.
-
-      5. TOOL CALLING / AÇÕES:
-         - Se o cliente pedir horários: JSON "PROPOSE_SLOTS".
+      4. APRESENTAÇÃO DOS HORÁRIOS (CRÍTICO - NÃO FALHE):
+         - Se encontrar horários, você DEVE retornar o JSON "PROPOSE_SLOTS".
+         - NUNCA escreva os horários no texto. O texto deve ser apenas: "Encontrei estes horários para [DIA]:".
          
-         - Se o cliente quiser agendar mas você NÃO souber Nome/Telefone:
-           NÃO PERGUNTE EM TEXTO. Envie estritamente o JSON "REQUEST_CLIENT_DATA".
+      5. LÓGICA DE DURAÇÃO (INTELIGÊNCIA):
+         - Se o serviço levar 60min (ex: Platinado), você precisa de 2 slots de 30min SEGUIDOS (ex: 14:00 e 14:30).
+         - Se o serviço levar 45min, arredonde para 2 slots de 30min (60min total) para segurança.
+         - O array 'slots' que você recebeu são slots livres INDIVIDUAIS. Cabe a VOCÊ filtrar apenas os que permitem o serviço completo.
+         - Liste no JSON apenas o horários de INÍCIO possíveis.
+
+      6. TOOL CALLING / AÇÕES:
+         - RETORNAR HORÁRIOS:
            {
-             "action": "REQUEST_CLIENT_DATA"
+             "action": "PROPOSE_SLOTS",
+             "data": {
+               "slots": ["09:00", "14:00", "15:30"] // Apenas horários de início válidos
+             }
            }
+         
+         - SOLICITAR DADOS (Se faltar Nome/Telefone para agendar):
+           { "action": "REQUEST_CLIENT_DATA" }
 
-         - Se o cliente CONFIRMAR (e você JÁ TIVER Nome e Telefone):
-           Responda EXATAMENTE um JSON "PROPOSE_BOOKING".
-
-      {
-        "action": "PROPOSE_BOOKING",
-        "data": {
-          "serviceId": "ID_DO_SERVICO",
-          "serviceName": "NOME_DO_SERVICO",
-          "price": 35.00,
-          "date": "YYYY-MM-DD",
-          "time": "HH:MM",
-          "clientName": "Nome Coletado",
-          "clientPhone": "Telefone Coletado"
-        }
-      }
+         - CONFIRMAR AGENDAMENTO (Se tiver tudo):
+           {
+             "action": "PROPOSE_BOOKING",
+             "data": {
+               "serviceId": "ID",
+               "serviceName": "Nome",
+               "price": 35.00,
+               "date": "YYYY-MM-DD",
+               "time": "HH:MM",
+               "clientName": "Nome",
+               "clientPhone": "Tel"
+             }
+           }
 
       Se faltar info, NÃO MANDE JSON, mande texto perguntando.
 

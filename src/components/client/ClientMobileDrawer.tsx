@@ -30,7 +30,7 @@ export const ClientMobileDrawer: React.FC<ClientMobileDrawerProps> = ({
 
       {/* Floating Command Panel */}
       <div
-        className="fixed top-20 right-4 w-72 bg-[#0a0a0a]/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.8)] z-[70] origin-top-right animate-[scaleIn_0.2s_ease-out] flex flex-col overflow-hidden"
+        className="fixed top-20 right-4 w-72 bg-(--bg-card)/95 backdrop-blur-xl border border-(--border-color) rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.8)] z-70 origin-top-right animate-[scaleIn_0.2s_ease-out] flex flex-col overflow-hidden"
         style={{ animationName: 'scaleIn' }}
       >
         <style>{`
@@ -41,11 +41,11 @@ export const ClientMobileDrawer: React.FC<ClientMobileDrawerProps> = ({
         `}</style>
 
         {/* Glow Effect */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-neon-yellow via-neon-orange to-neon-yellow opacity-50"></div>
+        <div className="absolute top-0 left-0 right-0 h-1 bg-linear-to-r from-neon-yellow via-neon-orange to-neon-yellow opacity-50"></div>
 
         {/* Compact User Info */}
-        <div className="p-4 bg-white/5 border-b border-white/5 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-black border border-white/10 overflow-hidden flex-shrink-0">
+        <div className="p-4 bg-(--bg-primary) border-b border-(--border-color) flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-(--bg-secondary) border border-(--border-color) overflow-hidden shrink-0">
             {client.photoUrl ? (
               <img src={client.photoUrl} className="w-full h-full object-cover" />
             ) : (
@@ -55,8 +55,10 @@ export const ClientMobileDrawer: React.FC<ClientMobileDrawerProps> = ({
             )}
           </div>
           <div className="min-w-0">
-            <p className="text-white font-bold truncate text-sm leading-tight">{client.name}</p>
-            <p className="text-[10px] text-gray-500 font-mono tracking-wider">
+            <p className="text-(--text-primary) font-bold truncate text-sm leading-tight">
+              {client.name}
+            </p>
+            <p className="text-[10px] text-(--text-secondary) font-mono tracking-wider">
               ID: {client.id.substring(0, 6)}
             </p>
           </div>
@@ -70,7 +72,7 @@ export const ClientMobileDrawer: React.FC<ClientMobileDrawerProps> = ({
               onClose();
               onOpenProfile();
             }}
-            className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 text-gray-300 hover:text-white transition-colors group"
+            className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-(--bg-primary) text-(--text-secondary) hover:text-(--text-primary) transition-colors group"
           >
             <Settings
               size={18}
@@ -82,7 +84,7 @@ export const ClientMobileDrawer: React.FC<ClientMobileDrawerProps> = ({
           {/* Support */}
           <button
             onClick={() => window.open('https://wa.me/5519991611609', '_blank')}
-            className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 text-gray-300 hover:text-white transition-colors group"
+            className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-(--bg-primary) text-(--text-secondary) hover:text-(--text-primary) transition-colors group"
           >
             <HelpCircle
               size={18}
@@ -93,7 +95,7 @@ export const ClientMobileDrawer: React.FC<ClientMobileDrawerProps> = ({
         </div>
 
         {/* Footer Actions */}
-        <div className="p-2 border-t border-white/5 bg-black/20">
+        <div className="p-2 border-t border-(--border-color) bg-(--bg-primary)/50">
           <button
             onClick={onLogout}
             className="w-full flex items-center justify-center gap-2 p-3 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all font-bold uppercase text-[10px] tracking-widest border border-red-500/10 hover:border-red-500"

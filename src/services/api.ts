@@ -53,13 +53,17 @@ export const api = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
-      if (!response.ok) return null;
+      if (!response.ok) {
+        const err = await response.json();
+        console.warn('⚠️ Register failed:', err);
+        throw new Error(err.error || 'Falha no cadastro');
+      }
       const json = await response.json();
       if (json.token) localStorage.setItem('token', json.token);
       return json.data;
     } catch (error) {
       console.error('Register error:', error);
-      return null;
+      throw error; // Re-throw to be caught by UI
     }
   },
 

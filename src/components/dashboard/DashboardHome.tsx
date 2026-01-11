@@ -103,7 +103,7 @@ const QueueTicker = React.memo(
           {/* Navigation Buttons (Visible on Hover/Focus) */}
           <button
             onClick={() => scroll('left')}
-            className="absolute left-0 top-0 bottom-0 z-30 w-12 bg-gradient-to-r from-black/80 to-transparent flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-opacity duration-300 hover:from-black/90 cursor-pointer text-white/70 hover:text-cyan-400"
+            className="absolute left-0 top-0 bottom-0 z-30 w-12 bg-gradient-to-r from-[var(--bg-card)] to-transparent flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-opacity duration-300 cursor-pointer text-[var(--text-secondary)] hover:text-cyan-400"
             aria-label="Previous"
           >
             <ChevronLeft size={32} />
@@ -111,7 +111,7 @@ const QueueTicker = React.memo(
 
           <button
             onClick={() => scroll('right')}
-            className="absolute right-0 top-0 bottom-0 z-30 w-12 bg-gradient-to-l from-black/80 to-transparent flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-opacity duration-300 hover:from-black/90 cursor-pointer text-white/70 hover:text-cyan-400"
+            className="absolute right-0 top-0 bottom-0 z-30 w-12 bg-gradient-to-l from-[var(--bg-card)] to-transparent flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-opacity duration-300 cursor-pointer text-[var(--text-secondary)] hover:text-cyan-400"
             aria-label="Next"
           >
             <ChevronRight size={32} />
@@ -355,7 +355,7 @@ export const DashboardHome: React.FC = () => {
             {/* 1. STATUS SIGNAGE (TOP ABSOLUTE) - Hide when In Progress */}
             {!inProgress && (
               <div className="absolute top-8 left-2 z-30 pointer-events-none transform rotate-[-8deg] scale-[0.6] origin-top-left">
-                <div className="relative rounded-2xl px-10 py-3 bg-black/90 flex flex-col items-center">
+                <div className="relative rounded-2xl px-10 py-3 bg-black/90 flex flex-col items-center shadow-lg backdrop-blur-sm border border-white/10">
                   {/* DYNAMIC GLOW & BORDER LAYER */}
                   <div
                     className={`absolute inset-0 border-[5px] rounded-2xl animate-pulse z-0 ${
@@ -450,7 +450,7 @@ export const DashboardHome: React.FC = () => {
 
                 {/* Client Neon Sign (Bottom) */}
                 <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 w-[80%] max-w-[280px]">
-                  <div className="relative border-2 border-green-400/80 rounded-xl px-4 pt-4 pb-2 bg-black/80 backdrop-blur-md shadow-[0_0_20px_rgba(74,222,128,0.3),inset_0_0_10px_rgba(74,222,128,0.1)] flex flex-col items-center transform hover:scale-105 transition-transform duration-300">
+                  <div className="relative border-2 border-green-400/80 rounded-xl px-4 pt-4 pb-2 bg-[var(--bg-card)]/80 backdrop-blur-md shadow-[0_0_20px_rgba(74,222,128,0.3),inset_0_0_10px_rgba(74,222,128,0.1)] flex flex-col items-center transform hover:scale-105 transition-transform duration-300">
                     <div className="absolute -top-5 left-0 right-0 text-center z-20">
                       <span
                         className="font-script text-4xl text-[#FFD700] -rotate-3 drop-shadow-[0_0_5px_#FACC15] block"
@@ -462,7 +462,7 @@ export const DashboardHome: React.FC = () => {
                     <Star className="absolute top-2 left-2 text-yellow-400 w-4 h-4 animate-pulse drop-shadow-[0_0_4px_#FACC15] fill-yellow-400" />
                     <Star className="absolute top-2 right-2 text-yellow-400 w-4 h-4 animate-pulse drop-shadow-[0_0_4px_#FACC15] fill-yellow-400" />
                     <div className="flex flex-col items-center relative z-10 w-full mt-1">
-                      <h2 className="text-3xl font-black text-white uppercase tracking-tighter text-center leading-none drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]">
+                      <h2 className="text-3xl font-black text-[var(--text-primary)] uppercase tracking-tighter text-center leading-none drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]">
                         {inProgress.clientName ? inProgress.clientName.split(' ')[0] : 'Cliente'}
                       </h2>
                       <div className="w-1/2 h-[2px] bg-gradient-to-r from-transparent via-green-500 to-transparent mt-1 mb-1"></div>
@@ -599,7 +599,7 @@ export const DashboardHome: React.FC = () => {
                   );
                   alert('Notificação enviada para todos os clientes!');
                 }}
-                className="w-full h-24 rounded-lg flex items-center px-0 relative overflow-hidden transition-all duration-500 bg-gradient-to-r from-neutral-900 via-stone-900 to-neutral-900 shadow-[0_4px_20px_rgba(0,0,0,0.5)] active:scale-[0.95] cursor-pointer hover:shadow-[0_0_30px_rgba(251,191,36,0.15)] border border-white/5 group/radar"
+                className="w-full h-24 rounded-lg flex items-center px-0 relative overflow-hidden transition-all duration-500 bg-[var(--bg-card)] border border-[var(--border-color)] shadow-[0_4px_20px_rgba(0,0,0,0.1)] active:scale-[0.95] cursor-pointer hover:shadow-[0_0_30px_rgba(251,191,36,0.15)] group/radar"
               >
                 {/* Radar Content */}
                 <div className="w-full h-full flex items-center justify-between px-6 relative z-10">
@@ -612,15 +612,15 @@ export const DashboardHome: React.FC = () => {
                     </div>
                   </div>
                   <div className="flex flex-col items-start flex-1 ml-4 leading-tight opacity-50 group-hover/radar:opacity-100 transition-opacity duration-300">
-                    <span className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">
+                    <span className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.2em]">
                       Status: Ocioso
                     </span>
-                    <span className="text-xl font-bold text-white uppercase leading-none tracking-tight mt-0.5">
+                    <span className="text-xl font-bold text-[var(--text-primary)] uppercase leading-none tracking-tight mt-0.5">
                       Buscar Cliente
                     </span>
                   </div>
                   <ChevronRight
-                    className="text-white/10 group-hover/radar:text-amber-500/50 transition-colors duration-300"
+                    className="text-[var(--text-secondary)] group-hover/radar:text-amber-500/50 transition-colors duration-300"
                     size={24}
                   />
                 </div>
@@ -633,10 +633,10 @@ export const DashboardHome: React.FC = () => {
         {isSkipModalOpen && nextClient && (
           <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
             <div
-              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
               onClick={() => setIsSkipModalOpen(false)}
             ></div>
-            <div className="relative w-full max-w-sm bg-zinc-900 border border-red-500/30 rounded-2xl p-6 shadow-[0_0_40px_rgba(220,38,38,0.2)] animate-[fadeIn_0.2s_ease-out]">
+            <div className="relative w-full max-w-sm bg-[var(--bg-card)] border border-[var(--border-color)] rounded-2xl p-6 shadow-2xl animate-[fadeIn_0.2s_ease-out]">
               {/* Warning Icon */}
               <div className="flex justify-center mb-4">
                 <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mb-2 animate-pulse">
@@ -647,17 +647,21 @@ export const DashboardHome: React.FC = () => {
                 </div>
               </div>
 
-              <h3 className="text-2xl font-bold text-white text-center mb-2">Cliente não veio?</h3>
-              <p className="text-zinc-400 text-center text-sm mb-6">
+              <h3 className="text-2xl font-bold text-[var(--text-primary)] text-center mb-2">
+                Cliente não veio?
+              </h3>
+              <p className="text-[var(--text-secondary)] text-center text-sm mb-6">
                 Isso irá marcar{' '}
-                <span className="text-white font-bold">{nextClient.clientName}</span> como "Não
-                Compareceu" e chamar o próximo da fila.
+                <span className="text-[var(--text-primary)] font-bold">
+                  {nextClient.clientName}
+                </span>{' '}
+                como "Não Compareceu" e chamar o próximo da fila.
               </p>
 
               <div className="grid grid-cols-2 gap-3">
                 <button
                   onClick={() => setIsSkipModalOpen(false)}
-                  className="py-3 rounded-xl bg-zinc-800 text-zinc-300 font-bold hover:bg-zinc-700 transition-colors"
+                  className="py-3 rounded-xl bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] font-bold hover:bg-[var(--bg-primary)] transition-colors"
                 >
                   Voltar
                 </button>

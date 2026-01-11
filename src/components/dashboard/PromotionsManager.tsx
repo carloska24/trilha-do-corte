@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Plus, Trash2, Edit2, Image as ImageIcon, Check, Scissors } from 'lucide-react';
+import { ConfirmModal } from '../ui/ConfirmModal';
 import { Combo, ServiceItem } from '../../types';
 import { MOCK_COMBOS } from '../../constants';
 
@@ -72,12 +73,31 @@ export const PromotionsManager: React.FC<PromotionsManagerProps> = ({ services }
     }
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm('Tem certeza que deseja excluir este combo?')) {
-      const newCombos = combos.filter(c => c.id !== id);
-      setCombos(newCombos);
-      localStorage.setItem('barberpro_combos', JSON.stringify(newCombos));
-    }
+  // Confirm Modal State
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
+
+  const handleDelete = (id: string, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setConfirmModal({
+      isOpen: true,
+      title: 'Excluir Combo',
+      message: 'Tem certeza que deseja excluir este combo? Esta ação não pode ser desfeita.',
+      onConfirm: () => {
+        const newCombos = combos.filter(c => c.id !== id);
+        setCombos(newCombos);
+        localStorage.setItem('barberpro_combos', JSON.stringify(newCombos));
+      },
+    });
   };
 
   const toggleService = (serviceId: string) => {
@@ -417,7 +437,7 @@ export const PromotionsManager: React.FC<PromotionsManagerProps> = ({ services }
 
                 <div className="flex gap-2">
                   <button
-                    onClick={() => handleDelete(combo.id)}
+                    onClick={e => handleDelete(combo.id, e)}
                     className="w-10 h-10 flex items-center justify-center rounded-lg bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-red-500/10 hover:text-red-500 border border-[var(--border-color)] hover:border-red-500/50 transition-all"
                     title="Excluir"
                   >
@@ -436,6 +456,14 @@ export const PromotionsManager: React.FC<PromotionsManagerProps> = ({ services }
           </div>
         ))}
       </div>
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        isDanger={true}
+      />
     </div>
   );
 };

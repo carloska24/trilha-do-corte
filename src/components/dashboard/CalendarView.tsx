@@ -293,18 +293,36 @@ export const CalendarView: React.FC = () => {
     }
   };
 
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
+
   const handleCancelAppointment = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent opening modal
-    if (!window.confirm('Cancelar este agendamento?')) return;
 
-    const updated = appointments.map(a =>
-      a.id === id ? { ...a, status: 'cancelled' as const } : a
-    );
-    updateAppointments(updated);
+    setConfirmModal({
+      isOpen: true,
+      title: 'Cancelar Agendamento',
+      message: 'Deseja realmente cancelar este agendamento?',
+      onConfirm: async () => {
+        const updated = appointments.map(a =>
+          a.id === id ? { ...a, status: 'cancelled' as const } : a
+        );
+        updateAppointments(updated);
 
-    // Persist to API
-    await api.updateAppointment(id, { status: 'cancelled' });
-    showToast('Agendamento cancelado.');
+        // Persist to API
+        await api.updateAppointment(id, { status: 'cancelled' });
+        showToast('Agendamento cancelado.');
+      },
+    });
   };
 
   const handleEditAppointment = (app: Appointment, e: React.MouseEvent) => {
@@ -775,6 +793,15 @@ export const CalendarView: React.FC = () => {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        isDanger={true}
+      />
     </div>
   );
 };
