@@ -41,6 +41,7 @@ import { FinancialModal } from './FinancialModal';
 import { ClientProfileModal } from './ClientProfileModal';
 import { SettingsView } from './SettingsView';
 import { useShopStatus } from '../../hooks/useShopStatus';
+import { useData } from '../../contexts/DataContext';
 import { useVoiceInterpreter } from '../../hooks/useVoiceInterpreter';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
@@ -122,9 +123,8 @@ export const BarberDashboard: React.FC<BarberDashboardProps> = ({
           time: result.data.time,
         });
         setTimeout(() => setAiResponse(null), 4000);
-      } else if (result.action === 'update_hours') {
-        setAiResponse(`🕒 ${result.message}`);
-        setTimeout(() => setAiResponse(null), 4000);
+      } else if (result.action === 'manage_shop') {
+        handleShopManagement(result.data);
       } else {
         setAiResponse(`❓ ${result.message}`);
         setTimeout(() => setAiResponse(null), 4000);
@@ -135,6 +135,65 @@ export const BarberDashboard: React.FC<BarberDashboardProps> = ({
     } finally {
       setVoiceProcessing(false);
     }
+  };
+
+  // --- SHOP MANAGEMENT LOGIC ---
+  const { shopSettings, updateShopSettings } = useData();
+
+  const handleShopManagement = (data: any) => {
+    const { action_type, dates, value } = data;
+
+    // Quick validation
+    if (!updateShopSettings || !shopSettings) {
+      setAiResponse('Erro: Configuração indisponível.');
+      return;
+    }
+
+    if (action_type === 'set_hours') {
+      const todayStr = new Date().toISOString().split('T')[0];
+      const targetDate = dates?.[0] || todayStr;
+
+      if (targetDate === todayStr) {
+        const newExceptions = { ...shopSettings.exceptions };
+        const hour = parseInt(value, 10);
+
+        newExceptions[targetDate] = {
+          open: true,
+          start: shopSettings.startHour,
+          end: hour,
+        };
+
+        updateShopSettings({ ...shopSettings, exceptions: newExceptions });
+        setAiResponse(`🕒 Hoje fecharemos às ${value}.`);
+        speak(`Hoje fecharemos às ${value}.`);
+      }
+    } else if (action_type === 'close_agenda') {
+      const newExceptions = { ...shopSettings.exceptions };
+      dates.forEach((date: string) => {
+        newExceptions[date] = { closed: true };
+      });
+      updateShopSettings({ ...shopSettings, exceptions: newExceptions });
+
+      const formattedDates = dates.map((d: string) => d.split('-').reverse().slice(0, 2).join('/'));
+      setAiResponse(`🔒 Agenda fechada: ${formattedDates.join(', ')}.`);
+      speak(`Agenda fechada para os dias: ${formattedDates.join(', ')}.`);
+    } else if (action_type === 'open_agenda') {
+      const newExceptions = { ...shopSettings.exceptions };
+      dates.forEach((date: string) => {
+        newExceptions[date] = {
+          open: true,
+          start: shopSettings.startHour,
+          end: shopSettings.endHour,
+        };
+      });
+      updateShopSettings({ ...shopSettings, exceptions: newExceptions });
+
+      const formattedDates = dates.map((d: string) => d.split('-').reverse().slice(0, 2).join('/'));
+      setAiResponse(`🔓 Agenda aberta: ${formattedDates.join(', ')}.`);
+      speak(`Agenda reaberta para os dias: ${formattedDates.join(', ')}.`);
+    }
+
+    setTimeout(() => setAiResponse(null), 5000);
   };
 
   // UI State

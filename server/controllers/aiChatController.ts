@@ -49,6 +49,13 @@ async function getAvailabilityForNextDays() {
     },
   });
 
+  // Fetch Shop Settings from DB
+  const settings = await prisma.shop_settings.findFirst();
+  const startHourConfig = settings?.startHour || 9;
+  const endHourConfig = settings?.endHour || 19;
+  const closedDays = settings?.closedDays || [0];
+  const exceptions = (settings?.exceptions as any) || {};
+
   // Create a Set for fast lookup: "YYYY-MM-DD HH:MM"
   const busySlots = new Set(existingAppointments.map(app => `${app.date} ${app.time}`));
 
@@ -62,6 +69,7 @@ async function getAvailabilityForNextDays() {
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     const dateStr = `${year}-${month}-${day}`;
+    const dayOfWeek = date.getDay(); // 0 = Sunday
 
     // Explicit Weekday Name for AI Context
     const weekday = date.toLocaleDateString('pt-BR', {
@@ -69,13 +77,27 @@ async function getAvailabilityForNextDays() {
       timeZone: 'America/Sao_Paulo',
     });
 
-    // Check if we are generating slots for TODAY (using BR time logic)
+    // Check if we are generation slots for TODAY
     const isToday = i === 0;
 
-    // Use 30-min intervals for Chat simplicity (AI works better with fewer options)
-    // Range: 09:00 to 19:00
+    // --- CHECK CLOSED LOGIC ---
+    let isClosed = closedDays.includes(dayOfWeek);
+    let dailyStart = startHourConfig;
+    let dailyEnd = endHourConfig;
+
+    // Check Exceptions
+    if (exceptions[dateStr]) {
+      if (exceptions[dateStr].closed !== undefined) isClosed = exceptions[dateStr].closed;
+      if (exceptions[dateStr].start !== undefined) dailyStart = exceptions[dateStr].start;
+      if (exceptions[dateStr].end !== undefined) dailyEnd = exceptions[dateStr].end;
+      // If explicitly OPEN in exception (closed: false), ensure isClosed is false
+      if (exceptions[dateStr].open === true) isClosed = false;
+    }
+
+    if (isClosed) continue;
+
     const slots: string[] = [];
-    for (let hour = 9; hour < 19; hour++) {
+    for (let hour = dailyStart; hour < dailyEnd; hour++) {
       for (let min of [0, 30]) {
         // Changed to 30min intervals for cleaner chat options
         // If it's today, STRICT filtering

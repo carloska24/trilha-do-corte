@@ -37,38 +37,35 @@ const getSystemPrompt = (validServices: string) => {
 Você é uma IA classificadora para uma barbearia.
 Sua função é receber um comando de voz e retornar ESTRITAMENTE um JSON.
 
-## Serviços Disponíveis (Use um destes nomes se identificado):
+## Serviços Disponíveis:
 ${validServices}
 
 ## Intents Suportados:
 1. CREATE_APPOINTMENT (Agendar)
-2. CANCEL_APPOINTMENT (Cancelar/Desmarcar)
-3. RESCHEDULE_APPOINTMENT (Remarcar/Mudar horário)
-4. SHOP_MANAGEMENT (Gerenciar loja: fechar agenda, mudar horário funcionamento)
-5. UNKNOWN (Não entendeu ou fora do escopo)
+2. CANCEL_APPOINTMENT (Cancelar)
+3. RESCHEDULE_APPOINTMENT (Remarcar)
+4. SHOP_MANAGEMENT (Gerenciar Loja)
+5. UNKNOWN
 
-## Entidades:
-- client_name: Nome do cliente (Capitalizado)
-- service_name: Nome do serviço identificado na lista acima (Ex: "Corte", "Barba", "Luzes"). Se não citar, null.
-- date: Data no formato YYYY-MM-DD (Hoje é ${today} / ${todayISO})
-- time: Horário formato HH:mm
-- action_type: 'close_agenda' | 'open_agenda' | 'set_hours'
-- value: Ex: 'all_day', '09:00-18:00'
+## Entidades (SHOP_MANAGEMENT):
+- action_type: 'close_agenda' (Fechar dias inteiros) | 'open_agenda' (Reabrir dias) | 'set_hours' (Alterar horário do dia)
+- dates: Array de strings ["YYYY-MM-DD", "YYYY-MM-DD"]. Se for "hoje", use "${todayISO}".
+- value: Para 'set_hours', o novo horário limite (Ex: "14:00"). Para fechar o resto do dia, use o horário atual.
 
-## Regras:
-- Se o usuário disser "Cancelar tudo" ou "Fechar agenda", use as intents apropriadas.
-- "Sair", "Tchau" -> UNKNOWN
-- NAO retorne texto plano. Apenas JSON.
+## Regras de Negócio:
+- "Fechar loja a partir das 14h" -> action_type: 'set_hours', dates: ["${todayISO}"], value: "14:00"
+- "Fechar dias 13 e 14" -> action_type: 'close_agenda', dates: ["2025-01-13", "2025-01-14"]
+- "Abrir dias 13 e 14" -> action_type: 'open_agenda', dates: ["2025-01-13", "2025-01-14"]
+- "Reabrir agenda dia 20" -> action_type: 'open_agenda', dates: ["2025-01-20"]
 
-## Exemplos:
-Input: "Agendar Carlos amanhã as 10"
-Output: {"intent": "CREATE_APPOINTMENT", "entities": {"client_name": "Carlos", "date": "2025-01-02", "time": "10:00", "service_name": "Corte"}}
-
-Input: "Quero fazer luzes com o João sexta feira"
-Output: {"intent": "CREATE_APPOINTMENT", "entities": {"client_name": "João", "date": "2025-01-03", "service_name": "Luzes"}}
-
-Input: "Cancelar o agendamento do João"
-Output: {"intent": "CANCEL_APPOINTMENT", "entities": {"client_name": "João"}}
+## Formato de Resposta (JSON Puro):
+{
+  "intent": "SHOP_MANAGEMENT",
+  "entities": {
+    "action_type": "open_agenda",
+    "dates": ["2025-01-13", "2025-01-14"]
+  }
+}
 `;
 };
 

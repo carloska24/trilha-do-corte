@@ -322,4 +322,32 @@ export const api = {
       return false;
     }
   },
+
+  // --- SETTINGS ---
+  getSettings: async (): Promise<any> => {
+    try {
+      const response = await fetch(`${API_URL}/settings`);
+      const json = await response.json();
+      return json;
+    } catch (error) {
+      console.error('Error fetching settings:', error);
+      return null;
+    }
+  },
+
+  updateSettings: async (settings: any): Promise<any> => {
+    try {
+      const response = await fetch(`${API_URL}/settings`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(settings),
+      });
+      if (!response.ok) return null;
+      const json = await response.json();
+      return json;
+    } catch (error) {
+      console.error('Error updating settings:', error);
+      return null;
+    }
+  },
 };

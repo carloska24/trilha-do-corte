@@ -66,3 +66,12 @@ model appointments {
 
   @@unique([date, time], map: "idx_appointments_unique_slot")
 }
+
+model shop_settings {
+  id           String @id @default(uuid())
+  startHour    Int    @default(9) @map("starthour")
+  endHour      Int    @default(19) @map("endhour")
+  slotInterval Int    @default(30) @map("slotinterval")
+  closedDays   Int[]  @default([0]) @map("closeddays") // 0 = Sunday
+  exceptions   Json?  @default("{}") // { "YYYY-MM-DD": { closed: boolean, start: int, end: int } }
+}

@@ -52,11 +52,13 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const token = localStorage.getItem('token');
       const clientsRequest = token ? api.getClients() : Promise.resolve([]);
 
-      const [fetchedServices, fetchedAppointments, fetchedClients] = await Promise.all([
-        servicesRequest,
-        appointmentsRequest,
-        clientsRequest,
-      ]);
+      const [fetchedServices, fetchedAppointments, fetchedClients, fetchedSettings] =
+        await Promise.all([
+          servicesRequest,
+          appointmentsRequest,
+          clientsRequest,
+          api.getSettings(),
+        ]);
 
       const normalizedServices = fetchedServices.map((s: any) => {
         // Handle Postgres lowercase keys
@@ -105,6 +107,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setServices(sortedServices);
       setAppointments(fetchedAppointments);
       setClients(fetchedClients);
+      if (fetchedSettings) {
+        setShopSettings(fetchedSettings);
+        localStorage.setItem('shopSettings', JSON.stringify(fetchedSettings));
+      }
 
       // We can still save to LS for backup, but we won't read from it on init
       localStorage.setItem('services', JSON.stringify(normalizedServices));
@@ -135,9 +141,18 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem('clients', JSON.stringify(clients));
   }, [clients]);
 
-  useEffect(() => {
-    localStorage.setItem('shopSettings', JSON.stringify(shopSettings));
-  }, [shopSettings]);
+  // Custom Update Function for Settings (Optimistic + API)
+  const handleUpdateShopSettings = async (newSettings: ShopSettings) => {
+    setShopSettings(newSettings); // Optimist
+    localStorage.setItem('shopSettings', JSON.stringify(newSettings));
+
+    // API Call
+    const updated = await api.updateSettings(newSettings);
+    if (!updated) {
+      console.error('Failed to sync settings with DB');
+      // Optionally revert or show toast (but simpler to just log for now)
+    }
+  };
 
   // LISTEN FOR CROSS-TAB CHANGES (Multi-Tab Sync)
   useEffect(() => {
@@ -172,7 +187,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         updateAppointments: setAppointments,
         updateServices: setServices,
         updateClients: setClients,
-        updateShopSettings: setShopSettings,
+        updateShopSettings: handleUpdateShopSettings,
       }}
     >
       {children}

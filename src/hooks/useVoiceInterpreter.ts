@@ -78,9 +78,23 @@ export const useVoiceInterpreter = () => {
     }
   }, [recognition]);
 
+  const speak = useCallback((text: string) => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'pt-BR';
+      // Try to find a good voice
+      const voices = window.speechSynthesis.getVoices();
+      const ptVoice = voices.find(v => v.lang.includes('PT-BR') || v.lang.includes('pt-BR'));
+      if (ptVoice) utterance.voice = ptVoice;
+
+      window.speechSynthesis.speak(utterance);
+    }
+  }, []);
+
   return {
     ...state,
     startListening,
     stopListening,
+    speak,
   };
 };
