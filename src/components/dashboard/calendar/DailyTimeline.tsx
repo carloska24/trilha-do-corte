@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { formatName } from '../../../utils/formatters';
 import { Clock, Trash2, Edit, CheckCircle2, Bell, Wallet, Plus } from 'lucide-react';
 import { ConfirmModal } from '../../ui/ConfirmModal';
 import { useData } from '../../../contexts/DataContext';
@@ -473,7 +474,7 @@ export const DailyTimeline: React.FC<DailyTimelineProps> = ({
                             : 'text-[var(--text-primary)] drop-shadow-md'
                         }`}
                       >
-                        {item.data.clientName}
+                        {formatName(item.data.clientName)}
                         {item.data.status === 'completed' && (
                           <CheckCircle2 size={14} className="text-emerald-400" />
                         )}

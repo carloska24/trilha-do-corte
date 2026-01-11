@@ -192,7 +192,7 @@ const QueueTicker = React.memo(
                         {/* Top: Client Name (Only First Name, Higher Up) */}
                         <div className="flex items-start w-full mt-0.5">
                           <span className="text-[var(--text-primary)] font-black text-2xl uppercase truncate leading-none tracking-tight group-hover/card:text-cyan-200 transition-colors">
-                            {client.clientName ? client.clientName.split(' ')[0] : 'Cliente'}
+                            {formatName(client.clientName) || 'CLIENTE'}
                           </span>
                         </div>
 

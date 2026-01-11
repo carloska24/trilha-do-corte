@@ -29,10 +29,18 @@ export const useShopStatus = () => {
     let endHour = shopSettings.endHour;
     let isClosedDay = false;
 
+    // A. Check Weekly Closed Days (e.g., Sunday)
+    if (shopSettings.closedDays?.includes(currentTime.getDay())) {
+      isClosedDay = true;
+    }
+
+    // B. Check Exceptions (Specific Date overrides)
     if (exception) {
-      if (exception.closed) {
-        isClosedDay = true;
-      } else {
+      if (exception.closed !== undefined) {
+        isClosedDay = exception.closed;
+      }
+
+      if (!isClosedDay) {
         if (exception.startHour !== undefined) startHour = exception.startHour;
         if (exception.endHour !== undefined) endHour = exception.endHour;
       }

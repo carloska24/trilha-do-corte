@@ -134,9 +134,31 @@ export const createAppointment = async (req: Request, res: Response) => {
         if (guestPhone.length > 8) {
           const found = await prisma.clients.findFirst({
             where: { phone: guestPhone },
-            select: { id: true },
+            select: { id: true, name: true }, // Select name for comparison
           });
-          if (found) existingClientId = found.id;
+
+          if (found) {
+            // PHONE CONFLICT CHECK
+            // If the name provided by the user is significantly different from the saved name, BLOCK IT.
+            // Normalize strings for comparison (remove spaces, lowercase)
+            const normalize = (s: string) => s.trim().toLowerCase();
+            const providedName = normalize(guestName || '');
+            const savedName = normalize(found.name || '');
+
+            // Simple logic: If the saved name is NOT contained in the provided name AND vice versa
+            // e.g. Saved: "Carlos", Provided: "Carlos A." -> OK
+            // Saved: "Carlos", Provided: "Joao" -> BLOCK
+
+            const match = savedName.includes(providedName) || providedName.includes(savedName);
+
+            if (!match) {
+              return res.status(409).json({
+                error: `Este telefone já está cadastrado para o cliente "${found.name}". Se for você, use o nome completo.`,
+              });
+            }
+
+            existingClientId = found.id;
+          }
         }
 
         if (existingClientId) {

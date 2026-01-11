@@ -254,12 +254,27 @@ export function AiChatWidget() {
       }
     } catch (error: any) {
       console.error('Booking Error:', error);
+
+      let errorMessage =
+        'Ops! Tive um problema ao salvar o agendamento no sistema. Tente novamente ou ligue para nós.';
+
+      // Handle Conflict (Phone Hijack)
+      if (error.message && error.message.includes('Este telefone já está cadastrado')) {
+        errorMessage = error.message;
+      }
+      // Handle custom API errors (if we threw them as Error objects with the message)
+      // The api.createAppointment wrapper catches errors and returns null usually,
+      // but if we modified it or if it throws, we need to be safe.
+      // Wait, api.createAppointment catches errors and returns null?
+      // Let's verify api.createAppointment implementation again.
+      // It returns null on error. We need to modify api.ts to throw/return the error message.
+
       setMessages(prev => [
         ...prev,
         {
           id: Date.now().toString(),
           sender: 'ai',
-          text: 'Ops! Tive um problema ao salvar o agendamento no sistema. Tente novamente ou ligue para nós.',
+          text: errorMessage,
         },
       ]);
     } finally {

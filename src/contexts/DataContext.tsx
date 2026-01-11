@@ -27,9 +27,14 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Settings with defaults (09:00 - 20:00, 60min interval)
   const [shopSettings, setShopSettings] = useState<ShopSettings>(() => {
     const saved = localStorage.getItem('shopSettings');
-    return saved
-      ? JSON.parse(saved)
-      : { startHour: 8, endHour: 20, slotInterval: 60, exceptions: {} };
+    const defaults = {
+      startHour: 8,
+      endHour: 20,
+      slotInterval: 60,
+      closedDays: [0],
+      exceptions: {},
+    };
+    return saved ? { ...defaults, ...JSON.parse(saved) } : defaults;
   });
 
   const [isLoading, setIsLoading] = useState(false);

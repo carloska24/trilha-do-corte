@@ -225,6 +225,7 @@ export interface ShopSettings {
   startHour: number;
   endHour: number;
   slotInterval: number; // in minutes (e.g., 30, 60)
+  closedDays?: number[]; // Array of day indexes (0=Sun, 6=Sat) to be closed by default
   exceptions?: Record<
     string,
     {
