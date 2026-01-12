@@ -2,6 +2,7 @@ import React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Appointment, ShopSettings } from '../../../types';
 import { getDaysInMonth, getLocalISODate } from '../../../utils/dateUtils';
+import { motion } from 'framer-motion';
 
 interface CalendarGridProps {
   currentMonth: Date;
@@ -23,101 +24,134 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
   shopSettings,
 }) => {
   const days = getDaysInMonth(currentMonth);
-  const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+  const weekDays = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
 
   return (
-    <div className="p-4 animate-fade-in-up">
-      {/* Month Header */}
-      <div className="flex justify-between items-center mb-6">
-        <button
+    <div className="p-4 pb-28">
+      {/* Month Header - Premium Style */}
+      <div className="flex justify-between items-center mb-6 p-4 rounded-2xl bg-zinc-900/50 border border-zinc-800/50">
+        <motion.button
+          whileTap={{ scale: 0.9 }}
           onClick={() => changeMonth(-1)}
-          className="p-2 hover:bg-white/10 rounded-full transition-colors"
+          className="w-10 h-10 flex items-center justify-center hover:bg-zinc-700 rounded-xl transition-colors"
         >
-          <ChevronLeft className="text-white" />
-        </button>
-        <h3 className="text-xl font-black text-white uppercase tracking-wider">
-          {currentMonth.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
-        </h3>
-        <button
+          <ChevronLeft className="text-zinc-400" size={20} />
+        </motion.button>
+        <div className="text-center">
+          <h3 className="text-lg font-black text-white uppercase tracking-wider">
+            {currentMonth.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+          </h3>
+        </div>
+        <motion.button
+          whileTap={{ scale: 0.9 }}
           onClick={() => changeMonth(1)}
-          className="p-2 hover:bg-white/10 rounded-full transition-colors"
+          className="w-10 h-10 flex items-center justify-center hover:bg-zinc-700 rounded-xl transition-colors"
         >
-          <ChevronRight className="text-white" />
-        </button>
+          <ChevronRight className="text-zinc-400" size={20} />
+        </motion.button>
       </div>
 
-      {/* Days Grid */}
-      <div className="grid grid-cols-7 gap-2 text-center">
-        {weekDays.map(d => (
-          <div
-            key={d}
-            className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2"
-          >
-            {d}
-          </div>
-        ))}
-
-        {days.map((day, idx) => {
-          if (!day) return <div key={`empty-${idx}`} className="aspect-square"></div>;
-
-          const count = getAppointmentsForDate(day).length;
-          const isSelected = day.toDateString() === selectedDate.toDateString();
-          const isToday = day.toDateString() === new Date().toDateString();
-          const dateKey = getLocalISODate(day);
-          const isSunday = day.getDay() === 0;
-          const isClosed = shopSettings.exceptions?.[dateKey]?.closed;
-
-          return (
+      {/* Calendar Container */}
+      <div className="p-4 rounded-2xl bg-zinc-900/50 border border-zinc-800/50">
+        {/* Week Days Header */}
+        <div className="grid grid-cols-7 gap-1 mb-3">
+          {weekDays.map((d, i) => (
             <div
-              key={day.toISOString()}
-              onClick={() => {
-                if (isSunday) return;
-                setSelectedDate(day);
-                setActiveTab('daily');
-              }}
-              className={`
-                aspect-square rounded-xl border flex flex-col items-center justify-center transition-all group relative
-                ${
-                  isSunday
-                    ? 'bg-zinc-900/30 border-white/5 text-zinc-700 cursor-not-allowed opacity-50 grayscale hover:scale-100' // Sunday Style
-                    : isClosed
-                    ? 'bg-red-900/20 border-red-900/50 text-red-500 cursor-pointer hover:scale-105'
-                    : isSelected
-                    ? 'bg-neon-yellow border-neon-yellow text-black cursor-pointer hover:scale-105'
-                    : 'bg-[#1a1a1a] border-gray-800 text-white hover:border-gray-600 cursor-pointer hover:scale-105'
-                }
-              `}
+              key={`${d}-${i}`}
+              className={`text-center text-[11px] font-bold uppercase tracking-widest py-2 ${
+                i === 0 ? 'text-red-500/50' : 'text-zinc-600'
+              }`}
             >
-              <span className={`text-sm font-bold ${isSelected ? 'text-black' : 'text-gray-300'}`}>
-                {day.getDate()}
-              </span>
-
-              {count > 0 && (
-                <div className="flex gap-1 mt-1">
-                  {[...Array(Math.min(count, 3))].map((_, i) => (
-                    <div
-                      key={i}
-                      className={`w-1 h-1 rounded-full ${
-                        isSelected ? 'bg-black' : 'bg-neon-yellow'
-                      }`}
-                    ></div>
-                  ))}
-                  {count > 3 && (
-                    <div
-                      className={`w-1 h-1 rounded-full ${isSelected ? 'bg-black' : 'bg-gray-500'}`}
-                    >
-                      +
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {isToday && !isSelected && (
-                <div className="absolute top-1 right-1 w-2 h-2 bg-blue-500 rounded-full"></div>
-              )}
+              {d}
             </div>
-          );
-        })}
+          ))}
+        </div>
+
+        {/* Days Grid */}
+        <div className="grid grid-cols-7 gap-1.5">
+          {days.map((day, idx) => {
+            if (!day) return <div key={`empty-${idx}`} className="aspect-square" />;
+
+            const count = getAppointmentsForDate(day).length;
+            const isSelected = day.toDateString() === selectedDate.toDateString();
+            const isToday = day.toDateString() === new Date().toDateString();
+            const dateKey = getLocalISODate(day);
+            const isSunday = day.getDay() === 0;
+            const isClosed = shopSettings.exceptions?.[dateKey]?.closed;
+
+            return (
+              <motion.div
+                key={day.toISOString()}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => {
+                  if (isSunday) return;
+                  setSelectedDate(day);
+                  setActiveTab('daily');
+                }}
+                className={`aspect-square rounded-xl flex flex-col items-center justify-center transition-all relative cursor-pointer ${
+                  isSunday
+                    ? 'bg-zinc-900/30 text-zinc-700 cursor-not-allowed'
+                    : isClosed
+                    ? 'bg-red-500/10 border border-red-500/30 text-red-400'
+                    : isSelected
+                    ? 'bg-yellow-500 text-black shadow-[0_0_20px_rgba(234,179,8,0.3)]'
+                    : isToday
+                    ? 'bg-zinc-800 border-2 border-yellow-500/50 text-white'
+                    : 'bg-zinc-800/50 text-zinc-300 hover:bg-zinc-700/50'
+                }`}
+              >
+                {/* Day Number */}
+                <span
+                  className={`text-sm font-bold ${
+                    isSelected ? 'text-black' : isSunday ? 'text-zinc-700' : ''
+                  }`}
+                >
+                  {day.getDate()}
+                </span>
+
+                {/* Appointment Indicators */}
+                {count > 0 && !isSunday && (
+                  <div className="flex gap-0.5 mt-1">
+                    {[...Array(Math.min(count, 3))].map((_, i) => (
+                      <div
+                        key={i}
+                        className={`w-1 h-1 rounded-full ${
+                          isSelected ? 'bg-black/50' : 'bg-yellow-500'
+                        }`}
+                      />
+                    ))}
+                    {count > 3 && (
+                      <span
+                        className={`text-[8px] font-bold ml-0.5 ${
+                          isSelected ? 'text-black/50' : 'text-yellow-500'
+                        }`}
+                      >
+                        +
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {/* Today Indicator (when not selected) */}
+                {isToday && !isSelected && (
+                  <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-yellow-500 rounded-full shadow-[0_0_6px_#eab308]" />
+                )}
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Legend */}
+      <div className="mt-4 flex justify-center gap-4 text-[10px] text-zinc-600">
+        <div className="flex items-center gap-1.5">
+          <div className="w-2 h-2 rounded-full bg-yellow-500" />
+          <span>Agendamentos</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="w-2 h-2 rounded-full bg-red-500/50" />
+          <span>Fechado</span>
+        </div>
       </div>
     </div>
   );

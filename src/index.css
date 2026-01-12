@@ -154,7 +154,7 @@ html {
 
 /* Global Background Setup */
 body {
-  background-color: var(--bg-primary);
+  background-color: #000000;
   color: var(--text-primary);
   margin: 0;
   padding: 0;
@@ -165,13 +165,18 @@ body {
   overflow-x: hidden;
   transition: background-color 0.3s ease, color 0.3s ease;
 
-  /* Enforced Dark Texture */
-  background-image: radial-gradient(circle at center, transparent 0%, #000000 100%),
-    linear-gradient(45deg, #111 25%, transparent 25%, transparent 75%, #111 75%, #111),
-    linear-gradient(45deg, #111 25%, transparent 25%, transparent 75%, #111 75%, #111);
-  background-position: 0 0, 0 0, 10px 10px;
-  background-size: 100% 100%, 20px 20px, 20px 20px;
+  /* Premium Gradient: Pure black at top, subtle dark gradient below */
+  background-image: linear-gradient(
+    to bottom,
+    #000000 0%,
+    #000000 15%,
+    #050505 30%,
+    #0a0a0a 50%,
+    #0d0d0d 70%,
+    #111111 100%
+  );
   background-attachment: fixed;
+  min-height: 100vh;
 }
 
 /* Custom Scrollbar */

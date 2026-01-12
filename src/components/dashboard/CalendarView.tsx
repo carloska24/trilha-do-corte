@@ -392,52 +392,66 @@ export const CalendarView: React.FC = () => {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         onExportClick={() => setIsExportOpen(true)}
+        appointmentCount={getAppointmentsForDate(selectedDate).length}
+        totalRevenue={getAppointmentsForDate(selectedDate).reduce(
+          (sum, a) => sum + (a.price || 0),
+          0
+        )}
+        selectedDate={selectedDate}
       />
 
       {/* CONTENT BODY */}
       <div className="flex-1 overflow-y-auto custom-scrollbar relative">
         {activeTab === 'config' ? (
-          // --- SETTINGS VIEW (REFINED) ---
-          <div className="p-4 md:p-6 max-w-lg mx-auto animate-fade-in-up pb-24">
-            {/* Header Section */}
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-2xl font-black text-[var(--text-primary)] uppercase tracking-wider flex items-center gap-3">
-                  <Clock size={24} className="text-neon-yellow" />
-                  Ajustes
-                </h2>
-                <p className="text-xs text-[var(--text-secondary)] font-bold uppercase tracking-widest mt-1 pl-9">
-                  Personalize sua agenda
-                </p>
+          // --- SETTINGS VIEW - PREMIUM REDESIGN ---
+          <div className="p-4 md:p-6 max-w-lg mx-auto pb-24">
+            {/* Hero Header */}
+            <div className="relative mb-6 p-5 rounded-2xl bg-linear-to-br from-zinc-800/80 to-zinc-900 border border-zinc-700/50 overflow-hidden">
+              {/* Glow Effect */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-500/10 rounded-full blur-3xl" />
+
+              <div className="relative flex items-center gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-yellow-500/10 border border-yellow-500/30 flex items-center justify-center">
+                  <Clock size={28} className="text-yellow-500" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-black text-white uppercase tracking-wide">
+                    Configurações
+                  </h2>
+                  <p className="text-xs text-zinc-500 font-medium mt-0.5">
+                    Personalize sua agenda e horários
+                  </p>
+                </div>
               </div>
             </div>
 
-            {/* Main Card */}
-            <div className="bg-[var(--bg-card)] rounded-2xl border border-[var(--border-color)] overflow-hidden shadow-2xl relative transition-colors">
-              {/* Subtle Gradient Glow */}
-              <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-transparent via-neon-yellow to-transparent opacity-50"></div>
-
-              {/* SECTION 1: HOURS */}
-              <div className="p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-1 h-4 bg-neon-yellow rounded-full"></div>
-                  <h3 className="text-white font-bold uppercase tracking-widest text-sm">
+            {/* SECTION 1: HOURS - Card Style */}
+            <div className="mb-4 p-5 rounded-2xl bg-zinc-900/50 border border-zinc-800/50 backdrop-blur-sm">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-8 h-8 rounded-lg bg-green-500/10 border border-green-500/30 flex items-center justify-center">
+                  <Clock size={16} className="text-green-500" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white uppercase tracking-wider">
                     Horário de Funcionamento
                   </h3>
+                  <p className="text-[10px] text-zinc-600">
+                    Defina quando a barbearia abre e fecha
+                  </p>
                 </div>
+              </div>
 
-                <div className="grid gap-2">
-                  {/* Start Hour */}
-                  <div className="flex items-center justify-between p-4 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] hover:border-[var(--text-secondary)] transition-colors group">
-                    <div>
-                      <span className="text-[var(--text-secondary)] font-bold uppercase text-[10px] tracking-widest block mb-1">
+              <div className="space-y-3">
+                {/* Start Hour - Slider Style */}
+                <div className="p-4 rounded-xl bg-zinc-800/40 border border-zinc-700/30">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]" />
+                      <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
                         Abertura
                       </span>
-                      <span className="text-[var(--text-primary)] font-black text-2xl group-hover:text-neon-yellow transition-colors">
-                        {String(shopSettings.startHour).padStart(2, '0')}:00
-                      </span>
                     </div>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-2">
                       <button
                         onClick={e => {
                           e.stopPropagation();
@@ -445,10 +459,13 @@ export const CalendarView: React.FC = () => {
                           updateShopSettings({ ...shopSettings, startHour: newStart });
                           showToast('Abertura salva!');
                         }}
-                        className="w-10 h-10 rounded-lg bg-[var(--bg-primary)] hover:bg-neon-yellow hover:text-black border border-[var(--border-color)] flex items-center justify-center transition-all active:scale-95 text-[var(--text-secondary)]"
+                        className="w-9 h-9 rounded-lg bg-zinc-700/50 hover:bg-zinc-600 border border-zinc-600/50 flex items-center justify-center transition-all active:scale-95 text-zinc-400 hover:text-white"
                       >
-                        <Minus size={18} strokeWidth={3} />
+                        <Minus size={16} strokeWidth={3} />
                       </button>
+                      <span className="w-16 text-center text-xl font-black text-white">
+                        {String(shopSettings.startHour).padStart(2, '0')}:00
+                      </span>
                       <button
                         onClick={e => {
                           e.stopPropagation();
@@ -459,24 +476,24 @@ export const CalendarView: React.FC = () => {
                           updateShopSettings({ ...shopSettings, startHour: newStart });
                           showToast('Abertura salva!');
                         }}
-                        className="w-10 h-10 rounded-lg bg-[var(--bg-primary)] hover:bg-neon-yellow hover:text-black border border-[var(--border-color)] flex items-center justify-center transition-all active:scale-95 text-[var(--text-secondary)]"
+                        className="w-9 h-9 rounded-lg bg-zinc-700/50 hover:bg-zinc-600 border border-zinc-600/50 flex items-center justify-center transition-all active:scale-95 text-zinc-400 hover:text-white"
                       >
-                        <Plus size={18} strokeWidth={3} />
+                        <Plus size={16} strokeWidth={3} />
                       </button>
                     </div>
                   </div>
+                </div>
 
-                  {/* End Hour */}
-                  <div className="flex items-center justify-between p-4 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] hover:border-[var(--text-secondary)] transition-colors group">
-                    <div>
-                      <span className="text-[var(--text-secondary)] font-bold uppercase text-[10px] tracking-widest block mb-1">
+                {/* End Hour - Slider Style */}
+                <div className="p-4 rounded-xl bg-zinc-800/40 border border-zinc-700/30">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_#ef4444]" />
+                      <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
                         Fechamento
                       </span>
-                      <span className="text-[var(--text-primary)] font-black text-2xl group-hover:text-neon-yellow transition-colors">
-                        {String(shopSettings.endHour).padStart(2, '0')}:00
-                      </span>
                     </div>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-2">
                       <button
                         onClick={e => {
                           e.stopPropagation();
@@ -487,10 +504,13 @@ export const CalendarView: React.FC = () => {
                           updateShopSettings({ ...shopSettings, endHour: newEnd });
                           showToast('Fechamento salvo!');
                         }}
-                        className="w-10 h-10 rounded-lg bg-[var(--bg-primary)] hover:bg-neon-yellow hover:text-black border border-[var(--border-color)] flex items-center justify-center transition-all active:scale-95 text-[var(--text-secondary)]"
+                        className="w-9 h-9 rounded-lg bg-zinc-700/50 hover:bg-zinc-600 border border-zinc-600/50 flex items-center justify-center transition-all active:scale-95 text-zinc-400 hover:text-white"
                       >
-                        <Minus size={18} strokeWidth={3} />
+                        <Minus size={16} strokeWidth={3} />
                       </button>
+                      <span className="w-16 text-center text-xl font-black text-white">
+                        {String(shopSettings.endHour).padStart(2, '0')}:00
+                      </span>
                       <button
                         onClick={e => {
                           e.stopPropagation();
@@ -498,29 +518,34 @@ export const CalendarView: React.FC = () => {
                           updateShopSettings({ ...shopSettings, endHour: newEnd });
                           showToast('Fechamento salvo!');
                         }}
-                        className="w-10 h-10 rounded-lg bg-[var(--bg-primary)] hover:bg-neon-yellow hover:text-black border border-[var(--border-color)] flex items-center justify-center transition-all active:scale-95 text-[var(--text-secondary)]"
+                        className="w-9 h-9 rounded-lg bg-zinc-700/50 hover:bg-zinc-600 border border-zinc-600/50 flex items-center justify-center transition-all active:scale-95 text-zinc-400 hover:text-white"
                       >
-                        <Plus size={18} strokeWidth={3} />
+                        <Plus size={16} strokeWidth={3} />
                       </button>
                     </div>
                   </div>
                 </div>
               </div>
+            </div>
 
-              {/* Divider */}
-              <div className="h-px bg-[var(--border-color)] mx-6"></div>
-
-              {/* SECTION 2: INTERVAL */}
-              <div className="p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-1 h-4 bg-purple-500 rounded-full"></div>
-                  <h3 className="text-[var(--text-primary)] font-bold uppercase tracking-widest text-sm">
-                    Duração dos Cortes
-                  </h3>
+            {/* SECTION 2: INTERVAL - Card Style */}
+            <div className="p-5 rounded-2xl bg-zinc-900/50 border border-zinc-800/50 backdrop-blur-sm">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/30 flex items-center justify-center">
+                  <Scissors size={16} className="text-purple-500" />
                 </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+                    Intervalo entre Cortes
+                  </h3>
+                  <p className="text-[10px] text-zinc-600">Duração padrão de cada atendimento</p>
+                </div>
+              </div>
 
-                <div className="grid grid-cols-4 gap-2">
-                  {[60, 30, 20, 15].map(min => (
+              <div className="grid grid-cols-4 gap-2">
+                {[60, 30, 20, 15].map(min => {
+                  const isActive = (shopSettings.slotInterval || 60) === min;
+                  return (
                     <button
                       key={min}
                       onClick={e => {
@@ -528,28 +553,41 @@ export const CalendarView: React.FC = () => {
                         updateShopSettings({ ...shopSettings, slotInterval: min });
                         showToast(`${min}min salvo!`);
                       }}
-                      className={`
-                                        flex flex-col items-center justify-center py-4 rounded-xl border transition-all active:scale-95 group/btn relative overflow-hidden
-                                        ${
-                                          (shopSettings.slotInterval || 60) === min
-                                            ? 'bg-neon-yellow border-neon-yellow text-black'
-                                            : 'bg-[var(--bg-secondary)] border-[var(--border-color)] text-[var(--text-secondary)] hover:border-[var(--text-primary)] hover:text-[var(--text-primary)]'
-                                        }
-                                    `}
+                      className={`relative flex flex-col items-center justify-center py-4 rounded-xl border transition-all active:scale-95 group/btn overflow-hidden ${
+                        isActive
+                          ? 'bg-yellow-500 border-yellow-400 text-black shadow-[0_0_20px_rgba(234,179,8,0.3)]'
+                          : 'bg-zinc-800/50 border-zinc-700/50 text-zinc-400 hover:border-zinc-600 hover:text-white hover:bg-zinc-800'
+                      }`}
                     >
-                      <span className="text-lg font-black relative z-10">{min}</span>
+                      {isActive && (
+                        <div className="absolute inset-0 bg-linear-to-br from-white/20 to-transparent" />
+                      )}
+                      <span className="text-xl font-black relative z-10">{min}</span>
                       <span
-                        className={`text-[8px] font-bold uppercase relative z-10 ${
-                          (shopSettings.slotInterval || 60) === min
-                            ? 'text-black/70'
-                            : 'text-[var(--text-secondary)] group-hover/btn:text-[var(--text-secondary)]'
+                        className={`text-[9px] font-bold uppercase tracking-widest relative z-10 ${
+                          isActive ? 'text-black/60' : 'text-zinc-600'
                         }`}
                       >
-                        MIN
+                        min
                       </span>
                     </button>
-                  ))}
+                  );
+                })}
+              </div>
+
+              {/* Visual indicator of selected duration */}
+              <div className="mt-4 flex items-center gap-3 p-3 rounded-lg bg-zinc-800/30 border border-zinc-700/30">
+                <div className="flex-1">
+                  <div className="h-1.5 rounded-full bg-zinc-700 overflow-hidden">
+                    <div
+                      className="h-full bg-linear-to-r from-yellow-500 to-yellow-400 rounded-full transition-all duration-500"
+                      style={{ width: `${((shopSettings.slotInterval || 60) / 60) * 100}%` }}
+                    />
+                  </div>
                 </div>
+                <span className="text-xs font-bold text-zinc-500">
+                  {shopSettings.slotInterval || 60} min por cliente
+                </span>
               </div>
             </div>
           </div>
@@ -565,46 +603,42 @@ export const CalendarView: React.FC = () => {
           />
         ) : (
           <>
-            {/* Daily Nav */}
-            <div className="flex items-center justify-between px-4 md:px-6 py-4 bg-[var(--bg-card)] border-b border-[var(--border-color)] sticky top-0 z-20 shadow-xl transition-colors">
+            {/* Daily Nav - Compact Premium */}
+            <div className="flex items-center justify-between px-4 md:px-6 py-3 bg-zinc-900/50 backdrop-blur-sm border-b border-zinc-800/50 sticky top-0 z-20">
               <button
                 onClick={e => {
                   e.stopPropagation();
                   changeDate(-1);
                 }}
-                className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors bg-[var(--bg-secondary)] p-2 rounded-lg border border-[var(--border-color)] relative z-50"
+                className="w-10 h-10 flex items-center justify-center text-zinc-400 hover:text-white transition-colors bg-zinc-800/50 hover:bg-zinc-700 rounded-xl border border-zinc-700/50"
               >
                 <ChevronLeft size={20} />
               </button>
-              <div className="text-center relative">
-                <span className="absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.2em] block">
-                  Data Selecionada
+
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-bold text-white uppercase tracking-wide">
+                  {selectedDate
+                    .toLocaleDateString('pt-BR', {
+                      weekday: 'short',
+                      day: '2-digit',
+                      month: 'short',
+                    })
+                    .toUpperCase()
+                    .replace('.', '')}
                 </span>
-                <h2 className="text-base md:text-lg font-black text-[var(--text-primary)] uppercase tracking-wider flex items-center justify-center gap-3">
-                  <CalendarIcon size={16} className="text-neon-yellow" />
-                  <span>
-                    {selectedDate
-                      .toLocaleDateString('pt-BR', {
-                        weekday: 'short',
-                        day: '2-digit',
-                        month: 'short',
-                      })
-                      .toUpperCase()}
+                {selectedDate.toDateString() === new Date().toDateString() && (
+                  <span className="text-[9px] font-bold text-green-500 uppercase tracking-widest bg-green-500/10 px-2.5 py-1 rounded-lg border border-green-500/30">
+                    HOJE
                   </span>
-                  {selectedDate.toDateString() === new Date().toDateString() && (
-                    <span className="text-[10px] text-green-500 font-bold uppercase tracking-wider bg-green-500/10 px-2 py-0.5 rounded border border-green-500/20">
-                      HOJE
-                    </span>
-                  )}
-                </h2>
+                )}
               </div>
+
               <button
                 onClick={e => {
                   e.stopPropagation();
-                  console.log('Next Day Clicked');
                   changeDate(1);
                 }}
-                className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors bg-[var(--bg-secondary)] p-2 rounded-lg border border-[var(--border-color)] relative z-50"
+                className="w-10 h-10 flex items-center justify-center text-zinc-400 hover:text-white transition-colors bg-zinc-800/50 hover:bg-zinc-700 rounded-xl border border-zinc-700/50"
               >
                 <ChevronRight size={20} />
               </button>

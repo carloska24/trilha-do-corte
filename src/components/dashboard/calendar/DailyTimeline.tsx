@@ -1,12 +1,23 @@
 import React, { useState } from 'react';
 import { formatName } from '../../../utils/formatters';
-import { Clock, Trash2, Edit, CheckCircle2, Bell, Wallet, Plus } from 'lucide-react';
+import {
+  Clock,
+  Trash2,
+  Edit,
+  CheckCircle2,
+  Bell,
+  Wallet,
+  Plus,
+  X,
+  MoreVertical,
+} from 'lucide-react';
 import { ConfirmModal } from '../../ui/ConfirmModal';
 import { useData } from '../../../contexts/DataContext';
-import { api } from '../../../services/api'; // Adjust path
+import { api } from '../../../services/api';
 import { Appointment, Service } from '../../../types';
 import { getLocalISODate } from '../../../utils/dateUtils';
 import { SERVICES as ALL_SERVICES } from '../../../constants';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface DailyTimelineProps {
   selectedDate: Date;
@@ -25,6 +36,7 @@ export const DailyTimeline: React.FC<DailyTimelineProps> = ({
   const [swipedAppId, setSwipedAppId] = useState<string | null>(null);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
   const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null);
+  const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
 
   // Confirm Modal State
   const [confirmModal, setConfirmModal] = useState<{
@@ -83,15 +95,13 @@ export const DailyTimeline: React.FC<DailyTimelineProps> = ({
     const app = appointments.find(a => a.id === appId);
     if (!app || app.time === targetTime) return;
 
-    const dateKey = getLocalISODate(selectedDate); // Move to selected date/time
+    const dateKey = getLocalISODate(selectedDate);
 
-    // Optimistic Update
     const updatedAppointments = appointments.map(a =>
       a.id === appId ? { ...a, time: targetTime, date: dateKey } : a
     );
     updateAppointments(updatedAppointments);
 
-    // API Call
     try {
       await api.updateAppointment(appId, {
         time: targetTime,
@@ -104,6 +114,7 @@ export const DailyTimeline: React.FC<DailyTimelineProps> = ({
 
   const handleCancelAppointment = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    setMenuOpenId(null);
     setConfirmModal({
       isOpen: true,
       title: 'Cancelar Agendamento',
@@ -124,6 +135,7 @@ export const DailyTimeline: React.FC<DailyTimelineProps> = ({
 
   const handleNoShow = (id: string, e: React.MouseEvent, app: Appointment) => {
     e.stopPropagation();
+    setMenuOpenId(null);
 
     setConfirmModal({
       isOpen: true,
@@ -132,11 +144,9 @@ export const DailyTimeline: React.FC<DailyTimelineProps> = ({
         'Deseja marcar este agendamento como "Não Veio"? O cliente será penalizado e notificado via WhatsApp.',
       variant: 'danger',
       onConfirm: async () => {
-        // 1. WhatsApp Notification
         let phone = app.clientPhone;
         let client = clients.find(c => c.id === app.clientId);
 
-        // Fallback search by name
         if (!client) {
           client = clients.find(c => c.name.toLowerCase() === app.clientName.toLowerCase());
         }
@@ -155,7 +165,6 @@ export const DailyTimeline: React.FC<DailyTimelineProps> = ({
           window.open(link, '_blank');
         }
 
-        // 2. Downgrade Level (Penalty)
         if (client && client.id) {
           const currentLevel = client.level || 1;
           if (currentLevel > 1) {
@@ -167,7 +176,6 @@ export const DailyTimeline: React.FC<DailyTimelineProps> = ({
           }
         }
 
-        // 3. Cancel Appointment
         const updated = appointments.map(a =>
           a.id === id ? { ...a, status: 'cancelled' as const } : a
         );
@@ -182,6 +190,7 @@ export const DailyTimeline: React.FC<DailyTimelineProps> = ({
 
   const handleCompleteAppointment = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    setMenuOpenId(null);
     const updated = appointments.map(a =>
       a.id === id ? { ...a, status: 'completed' as const } : a
     );
@@ -325,288 +334,201 @@ export const DailyTimeline: React.FC<DailyTimelineProps> = ({
         })();
 
         return (
-          <div
+          <motion.div
             key={`${item.time}-${idx}`}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: idx * 0.03 }}
             onDragOver={handleDragOver}
             onDrop={e => handleDrop(e, item.time)}
-            className={`flex min-h-[100px] border-b border-[var(--border-color)] group relative transition-colors duration-200 ${
-              item.type === 'empty' && !isPast ? 'hover:bg-[var(--bg-secondary)]' : ''
+            className={`flex border-b border-zinc-800/50 group transition-colors duration-200 ${
+              item.type === 'app' ? 'min-h-[90px]' : 'min-h-[50px]'
+            } ${item.type === 'empty' && !isPast ? 'hover:bg-zinc-900/30' : ''} ${
+              menuOpenId === item.data?.id ? 'z-50 relative' : 'relative'
             }`}
           >
             {/* Time Column */}
             <div
-              id={`hour-${item.time.split(':')[0]}`} // ID for scroll target
-              className={`w-16 md:w-20 py-4 pl-2 md:pl-4 text-xs md:text-sm font-mono font-bold flex flex-col items-start border-r border-[var(--border-color)] ${
-                isPast ? 'text-[var(--text-secondary)] opacity-50' : 'text-[var(--text-secondary)]'
+              id={`hour-${item.time.split(':')[0]}`}
+              className={`w-16 py-3 pl-3 text-sm font-mono font-bold flex flex-col items-start justify-center border-r border-zinc-800/50 ${
+                isPast ? 'text-zinc-600 opacity-50' : 'text-zinc-500'
               }`}
             >
-              <span className={item.type === 'app' ? 'text-[var(--text-primary)]' : ''}>
-                {item.time}
-              </span>
+              <span className={item.type === 'app' ? 'text-white' : ''}>{item.time}</span>
             </div>
 
             {/* Content Column */}
-            <div className="flex-1 px-2 md:px-3 py-2 relative overflow-hidden">
+            <div className="flex-1 px-2 py-2 relative">
               {item.type === 'app' ? (
-                <div className="absolute inset-0 z-10 px-2 py-1">
-                  {/* SWIPE ACTIONS (LEFT - EDIT/CANCEL) */}
-                  <div
-                    className={`absolute inset-0 flex items-center justify-start gap-4 pl-4 bg-[var(--bg-card)] rounded-xl border border-[var(--border-color)] z-0 transition-opacity duration-300 ${
-                      swipedAppId === item.data.id && swipeDirection === 'right'
-                        ? 'opacity-100 pointer-events-auto'
-                        : 'opacity-0 pointer-events-none'
+                <div className="h-full px-1">
+                  {/* Premium Appointment Card */}
+                  <motion.div
+                    draggable={item.data.status !== 'completed'}
+                    onDragStart={e => handleDragStart(e as unknown as React.DragEvent, item.data)}
+                    className={`w-full h-full rounded-xl border relative group/card transition-all duration-300 cursor-grab active:cursor-grabbing ${
+                      item.data.status === 'completed'
+                        ? 'bg-gradient-to-br from-emerald-950/80 to-zinc-950 border-emerald-500/40'
+                        : 'bg-gradient-to-br from-zinc-800/50 to-zinc-900/80 border-zinc-700/50 hover:border-yellow-500/40'
                     }`}
-                  >
-                    <button
-                      onClick={e => {
-                        handleCancelAppointment(item.data.id, e);
-                        setSwipedAppId(null);
-                        setSwipeDirection(null);
-                      }}
-                      className="w-10 h-10 rounded-full bg-red-500/10 border border-red-500/50 flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-all scale-90 hover:scale-100"
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                    <button
-                      onClick={e => {
-                        e.stopPropagation();
-                        onEditAppointment(item.data);
-                        setSwipedAppId(null);
-                        setSwipeDirection(null);
-                      }}
-                      className="w-10 h-10 rounded-full bg-blue-500/10 border border-blue-500/50 flex items-center justify-center text-blue-500 hover:bg-blue-500 hover:text-white transition-all scale-90 hover:scale-100"
-                    >
-                      <Edit size={18} />
-                    </button>
-                  </div>
-
-                  {/* SWIPE ACTIONS (RIGHT - COMPLETE/NOSHOW) */}
-                  <div
-                    className={`absolute inset-0 flex flex-col items-end justify-center gap-2 pr-2 bg-[var(--bg-card)] rounded-xl border border-[var(--border-color)] z-0 transition-opacity duration-300 ${
-                      swipedAppId === item.data.id && swipeDirection === 'left'
-                        ? 'opacity-100 pointer-events-auto'
-                        : 'opacity-0 pointer-events-none'
-                    }`}
-                  >
-                    <button
-                      onClick={e => {
-                        handleNoShow(item.data.id, e, item.data);
-                      }}
-                      className="w-24 h-8 rounded-lg bg-red-500/10 border border-red-500/50 flex items-center justify-center gap-2 text-red-500 hover:bg-red-500 hover:text-white transition-all active:scale-95"
-                    >
-                      <span className="text-[9px] font-black uppercase tracking-wider">
-                        Não Veio
-                      </span>
-                    </button>
-
-                    <div className="h-[1px] w-16 bg-[var(--border-color)]/50"></div>
-
-                    <button
-                      onClick={e => handleCompleteAppointment(item.data.id, e)}
-                      className="w-24 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/50 flex items-center justify-center gap-2 text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all active:scale-95"
-                    >
-                      <CheckCircle2 size={14} />
-                      <span className="text-[9px] font-black uppercase tracking-wider">
-                        Concluir
-                      </span>
-                    </button>
-                  </div>
-
-                  {/* CARD */}
-                  <div
-                    className={`w-full h-full rounded-xl overflow-hidden border shadow-lg relative z-10 cursor-grab active:cursor-grabbing group/card touch-pan-y flex flex-col
-                        ${
-                          swipedAppId === item.data.id
-                            ? swipeDirection === 'right'
-                              ? 'translate-x-[120px] opacity-50'
-                              : 'translate-x-[-120px] opacity-50'
-                            : 'translate-x-0 opacity-100'
-                        }
-                        ${
-                          item.data.status === 'completed'
-                            ? 'bg-linear-to-br from-[#064e3b] via-[#022c22] to-black border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.2)]'
-                            : 'bg-linear-to-br from-[var(--bg-secondary)] to-[var(--bg-card)] border-[var(--border-color)] hover:border-yellow-500/30 hover:shadow-[0_4px_20px_rgba(0,0,0,0.5)]'
-                        }
-                        transition-all duration-300
-                    `}
-                    draggable={true}
-                    onDragStart={e => handleDragStart(e, item.data)}
-                    onTouchStart={e => setTouchStartX(e.touches[0].clientX)}
-                    onTouchEnd={e => {
-                      if (touchStartX === null) return;
-                      const diff = e.changedTouches[0].clientX - touchStartX;
-
-                      // Handling logic based on current state
-                      if (swipedAppId === item.data.id) {
-                        // Already swiped, check if swipe back
-                        if (swipeDirection === 'right' && diff < -30) {
-                          setSwipedAppId(null);
-                          setSwipeDirection(null);
-                        } else if (swipeDirection === 'left' && diff > 30) {
-                          setSwipedAppId(null);
-                          setSwipeDirection(null);
-                        }
-                      } else {
-                        // Not swiped yet
-                        if (diff > 50) {
-                          setSwipedAppId(item.data.id);
-                          setSwipeDirection('right');
-                        } else if (diff < -50) {
-                          setSwipedAppId(item.data.id);
-                          setSwipeDirection('left');
-                        }
-                      }
-
-                      setTouchStartX(null);
-                    }}
+                    whileHover={{ scale: 1.01 }}
                     onClick={() => {
-                      if (swipedAppId === item.data.id) {
-                        setSwipedAppId(null);
-                        setSwipeDirection(null);
-                      } else onSelectClient(item.data.clientName);
+                      if (menuOpenId === item.data.id) {
+                        setMenuOpenId(null);
+                      } else {
+                        onSelectClient(item.data.clientName);
+                      }
                     }}
                   >
-                    {/* HEADER */}
-                    <div
-                      className={`flex justify-between items-center px-3 py-2 border-b ${
-                        item.data.status === 'completed'
-                          ? 'bg-black/20 border-emerald-500/20'
-                          : 'bg-white/5 border-[var(--border-color)]'
-                      }`}
-                    >
-                      <h3
-                        className={`font-black text-sm md:text-base uppercase tracking-wider truncate flex items-center gap-2 ${
-                          item.data.status === 'completed'
-                            ? 'text-emerald-100 drop-shadow-sm'
-                            : 'text-[var(--text-primary)] drop-shadow-md'
-                        }`}
-                      >
-                        {formatName(item.data.clientName)}
-                        {item.data.status === 'completed' && (
-                          <CheckCircle2 size={14} className="text-emerald-400" />
-                        )}
-                      </h3>
-                      {item.data.status !== 'completed' && (
-                        <button
-                          className="w-6 h-6 flex items-center justify-center text-[var(--text-secondary)] hover:text-neon-yellow transition-all focus:outline-none active:scale-95"
-                          onClick={e => handleWhatsAppReminder(e, item.data, item.service.name)}
-                        >
-                          <Bell size={18} strokeWidth={2.5} />
-                        </button>
-                      )}
-                    </div>
-
-                    {/* BODY */}
-                    <div className="flex flex-1">
-                      {/* TIME */}
-                      <div
-                        className={`w-[60px] flex flex-col items-center justify-center border-r  ${
-                          item.data.status === 'completed'
-                            ? 'bg-black/20 border-emerald-500/20'
-                            : 'bg-[var(--bg-secondary)] border-[var(--border-color)]'
-                        }`}
-                      >
-                        <span
-                          className={`font-black text-lg leading-none ${
-                            item.data.status === 'completed'
-                              ? 'text-emerald-400'
-                              : 'text-[var(--text-primary)]'
-                          }`}
-                        >
-                          {item.time.split(':')[0]}
-                        </span>
-                        <span
-                          className={`font-bold text-[10px] uppercase ${
-                            item.data.status === 'completed'
-                              ? 'text-emerald-600'
-                              : 'text-[var(--text-secondary)]'
-                          }`}
-                        >
-                          {item.time.split(':')[1]}
-                        </span>
-                      </div>
-
-                      {/* SERVICE */}
-                      <div className="flex-1 flex flex-col">
-                        <div
-                          className={`flex-1 px-3 flex items-center border-b ${
-                            item.data.status === 'completed'
-                              ? 'bg-transparent border-emerald-500/10'
-                              : 'bg-transparent border-[var(--border-color)]'
-                          }`}
-                        >
-                          <span
-                            className={`text-xs font-black uppercase tracking-wide line-clamp-1 ${
-                              item.data.status === 'completed'
-                                ? 'text-emerald-200/80'
-                                : 'text-[var(--text-secondary)] group-hover/card:text-[var(--text-primary)] transition-colors'
-                            }`}
-                          >
-                            {item.service.name}
-                          </span>
-                        </div>
-
-                        {/* FOOTER */}
-                        <div
-                          className={`relative px-3 py-1.5 flex justify-between items-center ${
-                            item.data.status === 'completed'
-                              ? 'bg-black/40'
-                              : 'bg-[var(--bg-secondary)]'
-                          }`}
-                        >
-                          <div
-                            className={`flex items-center justify-center border rounded px-2 py-0.5 ${
-                              item.data.status === 'completed'
-                                ? 'bg-emerald-900/30 border-emerald-500/30'
-                                : 'bg-white/5 border-[var(--border-color)]'
-                            }`}
-                          >
-                            <span
-                              className={`text-xs font-bold ${
-                                item.data.status === 'completed'
-                                  ? 'text-emerald-400'
-                                  : 'text-[var(--text-secondary)]'
-                              }`}
-                            >
-                              {item.service.duration || '30'}m
-                            </span>
-                          </div>
-
-                          <div className="flex items-center gap-2">
-                            {item.data.status === 'completed' ? (
-                              <div className="flex items-center gap-1 bg-emerald-500 text-black px-2 py-0.5 rounded shadow-[0_0_10px_rgba(16,185,129,0.5)]">
-                                <Wallet size={10} strokeWidth={3} />
-                                <span className="text-[10px] uppercase tracking-widest font-black">
-                                  PAGO
-                                </span>
-                              </div>
-                            ) : (
-                              <span className="text-yellow-400 font-black text-sm drop-shadow-[0_0_8px_rgba(250,204,21,0.3)]">
-                                {item.service.price}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* ACCENT LINE */}
+                    {/* Status Accent Line */}
                     <div
                       className={`absolute left-0 top-0 bottom-0 w-1 ${
                         item.data.status === 'completed'
-                          ? 'bg-emerald-400 shadow-[0_0_10px_#34d399]'
+                          ? 'bg-emerald-500 shadow-[0_0_10px_#10b981]'
                           : item.data.status === 'confirmed'
                           ? 'bg-green-500 shadow-[0_0_8px_#22c55e]'
-                          : 'bg-yellow-500 shadow-[0_0_8px_#EAB308]'
+                          : 'bg-yellow-500 shadow-[0_0_8px_#eab308]'
                       }`}
-                    ></div>
-                  </div>
+                    />
+
+                    {/* Card Content */}
+                    <div className="flex flex-col h-full pl-3">
+                      {/* Header Row */}
+                      <div className="flex items-center justify-between py-2 pr-2 border-b border-zinc-700/30">
+                        <h3
+                          className={`font-bold text-sm uppercase tracking-wide truncate flex items-center gap-2 ${
+                            item.data.status === 'completed' ? 'text-emerald-200' : 'text-white'
+                          }`}
+                        >
+                          {formatName(item.data.clientName)}
+                          {item.data.status === 'completed' && (
+                            <CheckCircle2 size={14} className="text-emerald-400" />
+                          )}
+                        </h3>
+
+                        {/* Quick Actions */}
+                        {item.data.status !== 'completed' && (
+                          <div className="flex items-center gap-1">
+                            {/* WhatsApp Reminder */}
+                            <button
+                              onClick={e => handleWhatsAppReminder(e, item.data, item.service.name)}
+                              className="w-7 h-7 flex items-center justify-center text-zinc-500 hover:text-yellow-500 hover:bg-yellow-500/10 rounded-lg transition-all"
+                              title="Enviar lembrete"
+                            >
+                              <Bell size={14} />
+                            </button>
+
+                            {/* Complete Action */}
+                            <button
+                              onClick={e => handleCompleteAppointment(item.data.id, e)}
+                              className="w-7 h-7 flex items-center justify-center text-zinc-500 hover:text-green-500 hover:bg-green-500/10 rounded-lg transition-all"
+                              title="Concluir"
+                            >
+                              <CheckCircle2 size={14} />
+                            </button>
+
+                            {/* More Menu */}
+                            <div className="relative">
+                              <button
+                                onClick={e => {
+                                  e.stopPropagation();
+                                  setMenuOpenId(menuOpenId === item.data.id ? null : item.data.id);
+                                }}
+                                className="w-7 h-7 flex items-center justify-center text-zinc-500 hover:text-white hover:bg-zinc-700 rounded-lg transition-all"
+                              >
+                                <MoreVertical size={14} />
+                              </button>
+
+                              {/* Dropdown Menu */}
+                              <AnimatePresence>
+                                {menuOpenId === item.data.id && (
+                                  <motion.div
+                                    initial={{ opacity: 0, scale: 0.95, y: -5 }}
+                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                    exit={{ opacity: 0, scale: 0.95, y: -5 }}
+                                    className="absolute right-0 top-full mt-1 z-[999] bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl overflow-hidden min-w-[140px]"
+                                  >
+                                    <button
+                                      onClick={e => {
+                                        e.stopPropagation();
+                                        setMenuOpenId(null);
+                                        onEditAppointment(item.data);
+                                      }}
+                                      className="w-full px-3 py-2.5 flex items-center gap-2 text-xs font-bold text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
+                                    >
+                                      <Edit size={14} />
+                                      Editar
+                                    </button>
+                                    <button
+                                      onClick={e => handleNoShow(item.data.id, e, item.data)}
+                                      className="w-full px-3 py-2.5 flex items-center gap-2 text-xs font-bold text-orange-400 hover:bg-orange-500/10 transition-colors"
+                                    >
+                                      <X size={14} />
+                                      Não Veio
+                                    </button>
+                                    <button
+                                      onClick={e => handleCancelAppointment(item.data.id, e)}
+                                      className="w-full px-3 py-2.5 flex items-center gap-2 text-xs font-bold text-red-400 hover:bg-red-500/10 transition-colors"
+                                    >
+                                      <Trash2 size={14} />
+                                      Cancelar
+                                    </button>
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Completed Badge */}
+                        {item.data.status === 'completed' && (
+                          <div className="flex items-center gap-1 bg-emerald-500 text-black px-2 py-0.5 rounded-lg text-[9px] font-black uppercase">
+                            <Wallet size={10} />
+                            PAGO
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Body Row */}
+                      <div className="flex-1 flex items-center justify-between py-2 pr-3">
+                        <div className="flex flex-col">
+                          <span
+                            className={`text-xs font-bold uppercase tracking-wide ${
+                              item.data.status === 'completed'
+                                ? 'text-emerald-300/70'
+                                : 'text-zinc-400'
+                            }`}
+                          >
+                            ✂️ {item.service.name}
+                          </span>
+                          <span
+                            className={`text-[10px] mt-0.5 ${
+                              item.data.status === 'completed'
+                                ? 'text-emerald-500/60'
+                                : 'text-zinc-600'
+                            }`}
+                          >
+                            ⏱️ {item.service.duration || 30} min
+                          </span>
+                        </div>
+
+                        <span
+                          className={`font-black text-sm ${
+                            item.data.status === 'completed'
+                              ? 'text-emerald-400'
+                              : 'text-yellow-500 drop-shadow-[0_0_8px_rgba(234,179,8,0.3)]'
+                          }`}
+                        >
+                          R$ {item.data.price || item.service.priceValue || 0}
+                        </span>
+                      </div>
+                    </div>
+                  </motion.div>
                 </div>
               ) : (
-                // EMPTY SLOT
+                // EMPTY SLOT - Minimal
                 <div
-                  className={`w-full h-full flex items-center justify-center group/empty ${
-                    isPast ? 'cursor-not-allowed opacity-30 select-none' : 'cursor-pointer'
+                  className={`w-full h-full flex items-center justify-center ${
+                    isPast ? 'cursor-not-allowed opacity-30' : 'cursor-pointer'
                   }`}
                   onClick={() => {
                     if (isPast) return;
@@ -614,27 +536,29 @@ export const DailyTimeline: React.FC<DailyTimelineProps> = ({
                   }}
                 >
                   <div
-                    className={`w-full h-full border-2 border-dashed rounded-xl flex items-center justify-center transition-all ${
-                      isPast
-                        ? 'border-[var(--border-color)]'
-                        : 'border-[var(--border-color)] group-hover/empty:border-neon-yellow/50 group-hover/empty:bg-neon-yellow/5'
+                    className={`w-full h-full flex items-center justify-center transition-all ${
+                      isPast ? '' : 'group-hover:bg-yellow-500/5'
                     }`}
                   >
                     {isPast ? (
-                      <span className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest">
-                        Encerrado
+                      <span className="text-[9px] font-bold text-zinc-700 uppercase tracking-widest">
+                        ─
                       </span>
                     ) : (
-                      <Plus
-                        className="text-[var(--text-secondary)] group-hover/empty:text-neon-yellow transition-colors"
-                        size={24}
-                      />
+                      <div className="flex items-center gap-2 opacity-30 group-hover:opacity-100 transition-opacity">
+                        <div className="h-px w-8 bg-zinc-700 group-hover:bg-yellow-500/50" />
+                        <Plus
+                          className="text-zinc-600 group-hover:text-yellow-500 transition-colors"
+                          size={16}
+                        />
+                        <div className="h-px w-8 bg-zinc-700 group-hover:bg-yellow-500/50" />
+                      </div>
                     )}
                   </div>
                 </div>
               )}
             </div>
-          </div>
+          </motion.div>
         );
       })}
       <ConfirmModal

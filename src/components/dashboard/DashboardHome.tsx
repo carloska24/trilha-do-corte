@@ -98,11 +98,29 @@ const QueueTicker = React.memo(
           </span>
         </div>
 
-        <div className="w-full h-40 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-2xl overflow-hidden relative flex items-center shadow-2xl transform-gpu ring-1 ring-white/5 pt-4 group/carousel transition-colors duration-300">
+        <div className="w-full h-40 relative overflow-hidden rounded-2xl shadow-2xl ring-1 ring-white/5 pt-4 group/carousel transition-colors duration-300">
+          {/* Premium Dark Background with Texture */}
+          <div className="absolute inset-0 bg-gradient-to-br from-zinc-900 via-[#0a0a0a] to-zinc-950">
+            {/* Grid Pattern */}
+            <div
+              className="absolute inset-0 opacity-[0.03]"
+              style={{
+                backgroundImage:
+                  'linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)',
+                backgroundSize: '20px 20px',
+              }}
+            />
+            {/* Gradient Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-transparent to-purple-500/5" />
+          </div>
+
           {/* Neon Glow Decoration */}
-          <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute inset-0 pointer-events-none z-10">
             <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-50"></div>
             <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-purple-500/20 to-transparent opacity-30"></div>
+            {/* Corner Accents */}
+            <div className="absolute top-0 left-0 w-16 h-16 border-l-2 border-t-2 border-cyan-500/20 rounded-tl-2xl" />
+            <div className="absolute bottom-0 right-0 w-16 h-16 border-r-2 border-b-2 border-purple-500/20 rounded-br-2xl" />
           </div>
 
           {/* Navigation Buttons (Visible on Hover/Focus) */}
@@ -157,13 +175,19 @@ const QueueTicker = React.memo(
                 return (
                   <div
                     key={`${client.id}-${i}`}
-                    className="flex-shrink-0 w-72 h-28 bg-[var(--bg-secondary)] backdrop-blur-md rounded-xl border border-[var(--border-color)] mr-5 flex flex-col relative overflow-hidden group/card hover:border-cyan-400 transition-all duration-300 shadow-lg hover:shadow-[0_0_20px_rgba(6,182,212,0.15)] select-none"
+                    className="flex-shrink-0 w-72 h-28 mr-5 flex flex-col relative overflow-hidden group/card select-none rounded-xl border border-zinc-700/50 hover:border-cyan-500/50 transition-all duration-300 shadow-lg hover:shadow-[0_0_25px_rgba(6,182,212,0.2)]"
                   >
+                    {/* Premium Dark Background */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-zinc-800/90 via-zinc-900 to-black" />
+
+                    {/* Subtle Shine Effect */}
+                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.02] to-transparent" />
+
                     {/* Vibrant Gradient Background on Hover */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-cyan-900/10 via-blue-900/10 to-purple-900/10 opacity-0 group-hover/card:opacity-100 transition-opacity duration-300"></div>
+                    <div className="absolute inset-0 bg-gradient-to-r from-cyan-900/20 via-blue-900/10 to-purple-900/20 opacity-0 group-hover/card:opacity-100 transition-opacity duration-300"></div>
 
                     {/* Decorative Side Bar */}
-                    <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-cyan-400 via-blue-500 to-purple-600"></div>
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-cyan-400 via-blue-500 to-purple-600 shadow-[0_0_10px_rgba(6,182,212,0.5)]"></div>
 
                     <div className="flex items-center h-full pl-4 pr-3 py-2 z-10 relative">
                       {/* Avatar */}
@@ -332,16 +356,16 @@ export const DashboardHome: React.FC = () => {
 
   return (
     <div className="flex flex-col items-center w-full max-w-md mx-auto h-full animate-[fadeIn_0.5s_ease-out] transition-colors duration-300">
-      {/* 1. CLOCK & DATE */}
-      <div className="flex flex-col items-center mt-0 mb-4">
-        <h1 className="text-6xl font-bold text-[var(--text-primary)] tracking-tighter leading-none font-sans drop-shadow-lg transition-colors">
+      {/* 1. CLOCK & DATE - iPhone Style */}
+      <div className="flex flex-col items-center mt-0 mb-4 py-6 px-8">
+        <h1 className="text-6xl font-bold text-white tracking-tighter leading-none font-sans">
           {currentTime.toLocaleTimeString([], {
             hour: '2-digit',
             minute: '2-digit',
             second: '2-digit',
           })}
         </h1>
-        <p className="text-[var(--text-secondary)] text-xs font-bold uppercase tracking-widest mt-1 opacity-80 transition-colors">
+        <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest mt-2">
           {dateString}
         </p>
       </div>

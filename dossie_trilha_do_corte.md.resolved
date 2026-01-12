@@ -1,0 +1,282 @@
+# 📊 Dossiê de Consultoria: Trilha do Corte
+
+**Data da Análise:** 12 de Janeiro de 2026  
+**Sistema:** Trilha do Corte - SaaS para Gestão de Barbearias  
+**Versão:** 1.0 (na-trilha-do-corte@0.0.0)
+
+---
+
+## 📋 Sumário Executivo
+
+O **Trilha do Corte** é uma plataforma SaaS moderna e funcional para gestão de barbearias, com design "High-Tech/Cyberpunk". O sistema encontra-se em **estado operacional estável**, com código limpo, build funcional e repositório Git atualizado.
+
+### Status Geral: ✅ SAUDÁVEL
+
+| Aspecto | Status | Observação |
+|---------|--------|------------|
+| Git Repository | ✅ Limpo | Branch `main` atualizada, sem arquivos pendentes |
+| Build Produção | ✅ Sucesso | 6.715 módulos, compilado em 1m 22s |
+| Estrutura de Código | ✅ Organizada | Arquitetura modular bem definida |
+| Caracteres/Encoding | ✅ Normal | Acentuação PT-BR correta nos arquivos |
+
+---
+
+## 🏗️ Arquitetura do Sistema
+
+### Stack Tecnológica
+
+```mermaid
+graph TD
+    subgraph "Frontend (PWA)"
+        React19[React 19 + TypeScript]
+        Vite[Vite 6.4]
+        TW[Tailwind CSS 4]
+        RM[React Router 7]
+    end
+    
+    subgraph "Backend (API)"
+        Express[Express 5]
+        Prisma[Prisma ORM 5.22]
+        JWT[JWT + Bcrypt]
+    end
+    
+    subgraph "Serviços Externos"
+        PG[(PostgreSQL)]
+        Gemini[Google Gemini AI]
+        Cloud[Cloudinary CDN]
+    end
+    
+    React19 --> Express
+    Express --> Prisma
+    Prisma --> PG
+    Express --> Gemini
+    Express --> Cloud
+```
+
+### Estrutura de Pastas
+
+| Pasta | Conteúdo | Arquivos |
+|-------|----------|----------|
+| `src/` | Frontend React | 102 itens (70+ componentes) |
+| `server/` | Backend Express | 61 itens (controllers, routes, migrations) |
+| [prisma/](file:///c:/Users/joaob/OneDrive/%C3%81rea%20de%20Trabalho/Trilha%20do%20Corte/trilha/prisma/schema.prisma) | Schema do banco | 1 arquivo (schema.prisma) |
+| `public/` | Assets estáticos | Avatares, imagens |
+
+---
+
+## 🔍 Sobre as "Bolinhas" nas Pastas
+
+![Imagem fornecida pelo usuário](C:/Users/joaob/.gemini/antigravity/brain/fa15479e-619b-4a41-a034-12594f7fa42f/uploaded_image_1768189375434.png)
+
+As bolinhas **amarela** (server) e **azul** (src) que aparecem ao lado das pastas no VS Code **NÃO são erros**. Elas indicam:
+
+- 🟡 **Amarela**: Arquivos com modificações não salvas ou pendentes
+- 🔵 **Azul**: Arquivos modificados desde o último commit Git
+
+**Resultado da verificação Git:**
+```
+On branch main
+Your branch is up to date with 'origin/main'.
+nothing to commit, working tree clean
+```
+
+> [!TIP]
+> O repositório está 100% sincronizado. As bolinhas podem ser um cache visual do VS Code. Tente reiniciar o editor ou executar `Git: Refresh` na paleta de comandos.
+
+---
+
+## 📁 Análise de Encoding e Caracteres
+
+Foram identificados arquivos com caracteres não-ASCII (acentuação portuguesa). **Isso é comportamento normal** para um projeto em PT-BR.
+
+### Arquivos com Acentuação (Exemplos)
+- [src/constants.ts](file:///c:/Users/joaob/OneDrive/%C3%81rea%20de%20Trabalho/Trilha%20do%20Corte/trilha/src/constants.ts) - Textos de serviços, badges
+- [src/components/Hero.tsx](file:///c:/Users/joaob/OneDrive/%C3%81rea%20de%20Trabalho/Trilha%20do%20Corte/trilha/src/components/Hero.tsx) - Títulos da landing page
+- [src/components/auth/AuthScreen.tsx](file:///c:/Users/joaob/OneDrive/%C3%81rea%20de%20Trabalho/Trilha%20do%20Corte/trilha/src/components/auth/AuthScreen.tsx) - Mensagens de erro
+- [server/index.ts](file:///c:/Users/joaob/OneDrive/%C3%81rea%20de%20Trabalho/Trilha%20do%20Corte/trilha/server/index.ts) - Mensagens de log
+
+> [!NOTE]
+> Nenhum erro de encoding foi detectado. Todos os arquivos estão em UTF-8 correto.
+
+---
+
+## 🛣️ Rotas da API
+
+### Arquivos de Rotas (`server/routes/`)
+
+| Rota | Arquivo | Endpoints |
+|------|---------|-----------|
+| `/api/login/*`, `/api/register/*` | authRoutes.ts | Autenticação |
+| `/api/services/*` | servicesRoutes.ts | CRUD de serviços |
+| `/api/appointments/*` | appointmentsRoutes.ts | Agendamentos |
+| `/api/clients`, `/api/barbers` | usersRoutes.ts | Gestão de usuários |
+| `/api/ai/command` | aiRoutes.ts | Comandos de voz IA |
+| `/api/avatars` | avatarRoutes.ts | Listagem de avatares |
+| `/api/settings` | settingsRoutes.ts | Configurações da loja |
+
+### Controllers (`server/controllers/`)
+
+| Controller | Responsabilidade |
+|------------|------------------|
+| authController.ts | Login/registro de clientes e barbeiros |
+| appointmentsController.ts | CRUD de agendamentos |
+| usersController.ts | Gestão de clientes e barbeiros |
+| servicesController.ts | CRUD de serviços |
+| settingsController.ts | Configurações da barbearia |
+| aiChatController.ts | Integração com Google Gemini |
+
+---
+
+## 🗄️ Modelo de Dados (Prisma)
+
+```mermaid
+erDiagram
+    clients ||--o{ appointments : has
+    barbers ||--o{ appointments : manages
+    services ||--o{ appointments : booked_for
+    
+    clients {
+        string id PK
+        string name
+        string phone
+        int level
+        string status
+        string password
+    }
+    
+    barbers {
+        string id PK
+        string name
+        string email
+        string specialty
+        string password
+    }
+    
+    services {
+        string id PK
+        string name
+        float priceValue
+        int duration
+        string category
+        string badges
+    }
+    
+    appointments {
+        string id PK
+        string clientId FK
+        string barberId FK
+        string serviceId FK
+        string date
+        string time
+        string status
+    }
+    
+    shop_settings {
+        string id PK
+        int startHour
+        int endHour
+        int slotInterval
+        int[] closedDays
+        json exceptions
+    }
+```
+
+---
+
+## 📱 Módulos do Frontend
+
+### Páginas e Rotas
+| Rota | Componente | Acesso |
+|------|------------|--------|
+| `/` | LandingPage | Público |
+| `/login` | LoginPage | Público |
+| `/client` | ConnectedClientDashboard | Cliente autenticado |
+| `/dashboard/*` | DashboardLayout | Barbeiro autenticado |
+
+### Dashboard do Barbeiro
+- **DashboardHome** - Visão geral do dia
+- **CalendarView** - Agenda semanal
+- **ClientsManager** - CRM de clientes
+- **ServiceConfig** - Gestão de serviços
+- **FinancialVault** - Relatórios financeiros
+- **SettingsView** - Configurações
+
+---
+
+## 📦 Análise do Build de Produção
+
+### Métricas de Build
+
+| Arquivo | Tamanho | Gzip |
+|---------|---------|------|
+| index.css | 241.85 KB | 28.16 KB |
+| index.js (bundle principal) | **744.76 KB** | 211.91 KB |
+| CalendarView.js | 41.13 KB | 11.24 KB |
+| ServiceConfig.js | 93.59 KB | 23.84 KB |
+
+> [!WARNING]
+> O bundle principal (`index.js`) excede 500KB. Recomenda-se implementar **code-splitting** adicional usando `React.lazy()` para componentes pesados como `BookingModal` (41KB source).
+
+### Chunks Já Code-Split (Lazy Loaded)
+- DashboardHome
+- ClientsManager
+- CalendarView
+- ServiceConfig
+- FinancialVault
+- SettingsView
+
+---
+
+## ✅ Testes Automatizados
+
+Foram identificados 2 arquivos de teste:
+
+| Arquivo | Tipo |
+|---------|------|
+| `src/utils/dateUtils.test.ts` | Unit test (Vitest) |
+| `src/utils/whatsappUtils.test.ts` | Unit test (Vitest) |
+
+**Comando para executar:** `npm test`
+
+---
+
+## 📊 Resumo de Números
+
+| Métrica | Valor |
+|---------|-------|
+| Componentes React | 70+ |
+| Rotas de API | 7 módulos |
+| Controllers | 6 |
+| Modelos Prisma | 5 (clients, barbers, services, appointments, shop_settings) |
+| Scripts de Migração/Debug | 30+ |
+| Dependências Prod | 18 |
+| Dependências Dev | 17 |
+| Módulos no Build | 6.715 |
+
+---
+
+## 💡 Recomendações
+
+### Prioridade Alta
+1. **Code-Splitting Adicional**: Implemente `React.lazy()` para `BookingModal.tsx` (41KB) e `AiConsultant.tsx` (18KB)
+2. **Limpeza de Scripts Debug**: A pasta `server/` contém 30+ scripts de debug/migration que podem ser arquivados
+
+### Prioridade Média
+3. **Aumentar Cobertura de Testes**: Apenas 2 arquivos de teste existem
+4. **Documentar Endpoints**: Implementar Swagger/OpenAPI para documentação da API
+
+### Prioridade Baixa
+5. **Implementar WebSockets**: Substituir polling por real-time updates (já no roadmap)
+6. **CI/CD Pipeline**: Automatizar testes e deploy
+
+---
+
+## 🎯 Conclusão
+
+O **Trilha do Corte** é um sistema **bem estruturado e funcional**, com arquitetura moderna e código organizado. As "bolinhas" mencionadas não indicam erros - são indicadores visuais do VS Code que podem ser um cache residual.
+
+**O projeto está pronto para produção**, com apenas otimizações menores recomendadas para performance (code-splitting) e manutenibilidade (limpeza de scripts de debug).
+
+---
+
+*Dossiê gerado por Equipe de Consultoria de Sistemas - Antigravity AI*

@@ -821,9 +821,12 @@ export const DashboardLayout: React.FC = () => {
       </nav>
 
       {/* MAIN CONTENT AREA */}
-      <main className="pt-20 pb-24 px-4 min-h-screen bg-[var(--bg-primary)] relative overflow-hidden transition-colors duration-300">
-        <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.02)_25%,rgba(255,255,255,0.02)_50%,transparent_50%,transparent_75%,rgba(255,255,255,0.02)_75%,rgba(255,255,255,0.02)_100%)] bg-[length:24px_24px] opacity-20 pointer-events-none"></div>
-        <Outlet context={outletContext} />
+      <main className="pt-20 pb-24 px-4 min-h-screen relative overflow-hidden transition-colors duration-300">
+        {/* Premium Gradient Background: Pure black at top, subtle gradient below */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black via-black to-zinc-950 pointer-events-none" />
+        <div className="relative z-10 w-full">
+          <Outlet context={outletContext} />
+        </div>
       </main>
 
       {/* MODALS */}

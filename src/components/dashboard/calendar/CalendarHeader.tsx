@@ -1,84 +1,145 @@
 import React from 'react';
-import { WhatsAppIcon } from '../../icons/WhatsAppIcon';
+import { CalendarDays, SlidersHorizontal, Share2, Sparkles, ListTodo } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface CalendarHeaderProps {
   activeTab: 'daily' | 'weekly' | 'monthly' | 'config';
   setActiveTab: (tab: 'daily' | 'weekly' | 'monthly' | 'config') => void;
   onExportClick: () => void;
+  appointmentCount?: number;
+  totalRevenue?: number;
+  selectedDate?: Date;
 }
 
 export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
   activeTab,
   setActiveTab,
   onExportClick,
+  appointmentCount = 0,
+  totalRevenue = 0,
+  selectedDate = new Date(),
 }) => {
+  const tabs = [
+    { id: 'daily' as const, label: 'Diário', icon: ListTodo, description: 'Lista de hoje' },
+    { id: 'monthly' as const, label: 'Mês', icon: CalendarDays, description: 'Ver calendário' },
+    {
+      id: 'config' as const,
+      label: 'Config',
+      icon: SlidersHorizontal,
+      description: 'Preferências',
+    },
+  ];
+
+  const formatDate = (date: Date) => {
+    return date
+      .toLocaleDateString('pt-BR', {
+        weekday: 'short',
+        day: '2-digit',
+        month: 'long',
+      })
+      .replace('.', '');
+  };
+
   return (
-    <div className="pt-6 px-4 md:px-6 bg-[var(--bg-card)] border-b border-[var(--border-color)] transition-colors">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl md:text-4xl font-graffiti text-[var(--text-primary)] tracking-wide drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">
-          AGENDA
-        </h1>
-        {/* WhatsApp Share Button */}
-        <button
-          onClick={onExportClick}
-          className="group relative px-2 pr-4 py-1.5 bg-[var(--bg-secondary)] border border-green-500/30 rounded-xl flex items-center gap-3 hover:border-green-500 hover:shadow-[0_0_15px_rgba(34,197,94,0.2)] transition-all overflow-hidden active:scale-95"
-        >
-          <div className="absolute inset-0 bg-green-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-
-          {/* Icon Badge */}
-          <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center border border-green-500/30 relative z-10 group-hover:bg-green-500 group-hover:text-black transition-colors">
-            <WhatsAppIcon
-              width={18}
-              height={18}
-              className="fill-green-500 group-hover:fill-black transition-colors"
-            />
+    <div className="bg-linear-to-b from-zinc-900 via-zinc-900/95 to-zinc-900 border-b border-zinc-800/50 transition-colors">
+      {/* Top Section - Title & Export */}
+      <div className="px-4 md:px-6 pt-5 pb-4">
+        <div className="flex justify-between items-start">
+          {/* Left - Title & Date */}
+          <div>
+            <div className="flex items-center gap-3 mb-1">
+              <div className="w-10 h-10 rounded-xl bg-yellow-500/10 border border-yellow-500/30 flex items-center justify-center">
+                <CalendarDays size={20} className="text-yellow-500" />
+              </div>
+              <div>
+                <h1 className="text-2xl md:text-3xl font-graffiti text-white tracking-wide">
+                  AGENDA
+                </h1>
+                <p className="text-[11px] text-zinc-500 font-medium capitalize">
+                  {formatDate(selectedDate)}
+                </p>
+              </div>
+            </div>
           </div>
 
-          {/* Text Stack */}
-          <div className="flex flex-col items-start relative z-10">
-            <span className="text-[9px] font-bold text-green-500 uppercase tracking-widest leading-none mb-0.5 group-hover:text-green-400">
-              WhatsApp
+          {/* Right - Export Button */}
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={onExportClick}
+            className="group relative px-4 py-2.5 bg-green-500/10 border border-green-500/30 rounded-xl flex items-center gap-2.5 hover:border-green-500/60 hover:bg-green-500/15 transition-all"
+          >
+            <Share2 size={16} className="text-green-500" />
+            <span className="text-xs font-bold text-green-500 uppercase tracking-wider hidden sm:block">
+              Enviar
             </span>
-            <span className="text-xs font-black text-[var(--text-primary)] uppercase tracking-wider leading-none">
-              Compartilhar
-            </span>
-          </div>
-        </button>
+          </motion.button>
+        </div>
+
+        {/* Summary Card */}
+        {activeTab === 'daily' && (appointmentCount > 0 || totalRevenue > 0) && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-4 flex items-center gap-4 p-3 bg-zinc-800/40 rounded-xl border border-zinc-700/50"
+          >
+            <div className="flex items-center gap-2">
+              <Sparkles size={14} className="text-yellow-500" />
+              <span className="text-sm font-bold text-white">{appointmentCount}</span>
+              <span className="text-xs text-zinc-500">
+                {appointmentCount === 1 ? 'cliente' : 'clientes'}
+              </span>
+            </div>
+            <div className="h-4 w-px bg-zinc-700" />
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold text-green-500">R$ {totalRevenue.toFixed(0)}</span>
+              <span className="text-xs text-zinc-500">hoje</span>
+            </div>
+          </motion.div>
+        )}
       </div>
 
-      {/* TABS */}
-      <div className="flex items-center justify-between gap-2 md:gap-4 overflow-x-auto custom-scrollbar pb-1 w-full">
-        <div className="flex gap-4">
-          <button
-            onClick={() => setActiveTab('daily')}
-            className={`pb-3 border-b-2 text-xs md:text-sm font-bold tracking-widest transition-all whitespace-nowrap ${
-              activeTab === 'daily'
-                ? 'border-neon-yellow text-neon-yellow'
-                : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-            }`}
-          >
-            DIÁRIO
-          </button>
-          <button
-            onClick={() => setActiveTab('monthly')}
-            className={`pb-3 border-b-2 text-xs md:text-sm font-bold tracking-widest transition-all whitespace-nowrap ${
-              activeTab === 'monthly'
-                ? 'border-neon-yellow text-neon-yellow'
-                : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-            }`}
-          >
-            CALENDÁRIO
-          </button>
-          <button
-            onClick={() => setActiveTab('config')}
-            className={`pb-3 border-b-2 text-xs md:text-sm font-bold tracking-widest transition-all whitespace-nowrap ${
-              activeTab === 'config'
-                ? 'border-neon-yellow text-neon-yellow'
-                : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-            }`}
-          >
-            AJUSTES
-          </button>
+      {/* Tabs - Premium Segmented Control */}
+      <div className="px-4 md:px-6 pb-4">
+        <div className="flex gap-1.5 bg-zinc-800/40 p-1.5 rounded-2xl border border-zinc-700/30 backdrop-blur-sm">
+          {tabs.map(tab => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+
+            return (
+              <motion.button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                whileTap={{ scale: 0.97 }}
+                className={`relative flex-1 flex flex-col items-center justify-center gap-1.5 py-3.5 px-2 rounded-xl transition-all duration-300 ${
+                  isActive ? 'text-black' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-700/30'
+                }`}
+              >
+                {/* Active Background with Glow */}
+                {isActive && (
+                  <motion.div
+                    layoutId="activeTabIndicator"
+                    className="absolute inset-0 bg-yellow-500 rounded-xl shadow-[0_0_20px_rgba(234,179,8,0.4),inset_0_1px_0_rgba(255,255,255,0.2)]"
+                    transition={{ type: 'spring', bounce: 0.2, duration: 0.5 }}
+                  />
+                )}
+
+                {/* Icon with Badge Effect */}
+                <div className={`relative z-10 ${isActive ? 'drop-shadow-sm' : ''}`}>
+                  <Icon size={20} strokeWidth={2.5} />
+                </div>
+
+                {/* Label */}
+                <span
+                  className={`relative z-10 text-[10px] font-bold uppercase tracking-widest ${
+                    isActive ? 'text-black' : ''
+                  }`}
+                >
+                  {tab.label}
+                </span>
+              </motion.button>
+            );
+          })}
         </div>
       </div>
     </div>

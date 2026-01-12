@@ -16,6 +16,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../../services/api';
 import { LOCAL_AVATARS } from '../../constants';
 import { ConfirmModal } from '../ui/ConfirmModal';
+import { useUI } from '../../contexts/UIContext';
 
 interface Message {
   id: string;
@@ -37,6 +38,7 @@ declare global {
 }
 
 export function AiChatWidget() {
+  const { openBooking } = useUI(); // Access booking modal
   const [isOpen, setIsOpen] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
@@ -203,6 +205,28 @@ export function AiChatWidget() {
     price: number;
   }
 
+  // Open BookingModal with pre-filled data from AI conversation
+  const handleOpenBookingModal = (actionData: BookingActionData) => {
+    setMessages(prev => [
+      ...prev,
+      {
+        id: Date.now().toString(),
+        sender: 'ai',
+        text: '🎫 Abrindo o formulário de agendamento com seus dados preenchidos...',
+      },
+    ]);
+
+    // Close chat widget and open booking modal with pre-filled data
+    setIsOpen(false);
+    openBooking({
+      name: actionData.clientName || '',
+      phone: actionData.clientPhone || '',
+      serviceId: actionData.serviceId,
+      date: actionData.date,
+      time: actionData.time,
+    });
+  };
+
   const handleConfirmAction = async (actionData: BookingActionData) => {
     setMessages(prev => [
       ...prev,
@@ -240,15 +264,45 @@ export function AiChatWidget() {
       const newAppt = await api.createAppointment(appointmentPayload);
 
       if (newAppt) {
+        // Format date for display
+        const dateParts = actionData.date.split('-');
+        const formattedDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
+
         setMessages(prev => [
           ...prev,
           {
             id: Date.now().toString(),
             sender: 'ai',
-            text: `✅ Agendamento Confirmado!\n\nServiço: ${actionData.serviceName}\nData: ${actionData.date} às ${actionData.time}\n\nTe esperamos na Trilha! 🚂`,
+            text: `✅ Agendamento Confirmado!\n\nServiço: ${actionData.serviceName}\nData: ${formattedDate} às ${actionData.time}\n\n📲 Enviando confirmação para seu WhatsApp...`,
           },
         ]);
-        // Trigger generic success visual if needed
+
+        // Send WhatsApp notification
+        // Google Maps short link with photo preview
+        const mapLink = 'https://maps.app.goo.gl/rSR7ZgNUEYzvPscTA';
+
+        // WhatsApp message with emojis
+        const whatsappMsg =
+          `${mapLink}\n\n` +
+          `✅ AGENDAMENTO CONFIRMADO\n\n` +
+          `👤 Nome do cliente\n` +
+          `${targetName}\n\n` +
+          `✂️ Serviço agendado\n` +
+          `${actionData.serviceName}\n\n` +
+          `📅 Data: ${formattedDate}\n` +
+          `🕐 Horário: ${actionData.time}\n` +
+          `📍 Unidade: Jardim São Marcos\n\n` +
+          `💈 Te esperamos para mais um corte de respeito!`;
+
+        const cleanPhone = targetPhone.replace(/\D/g, '');
+        const whatsappUrl = `https://api.whatsapp.com/send?phone=55${cleanPhone}&text=${encodeURIComponent(
+          whatsappMsg
+        )}`;
+
+        // Open WhatsApp in new tab after short delay
+        setTimeout(() => {
+          window.open(whatsappUrl, '_blank');
+        }, 1500);
       } else {
         throw new Error('Falha ao criar agendamento.');
       }
@@ -455,12 +509,12 @@ export function AiChatWidget() {
                           <div className="space-y-3">
                             <div>
                               <label className="text-[10px] text-zinc-500 dark:text-zinc-500 uppercase font-bold ml-1 mb-1 block">
-                                Seu Nome
+                                Nome Completo
                               </label>
                               <input
                                 type="text"
                                 id={`name-${msg.id}`}
-                                placeholder="Como prefere ser chamado?"
+                                placeholder="Nome e Sobrenome"
                                 className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:border-violet-500 focus:ring-1 focus:ring-violet-500 outline-none transition-all placeholder:text-zinc-600"
                               />
                             </div>
@@ -483,13 +537,32 @@ export function AiChatWidget() {
                                 const phoneInput = document.getElementById(
                                   `phone-${msg.id}`
                                 ) as HTMLInputElement;
-                                if (nameInput.value && phoneInput.value) {
-                                  handleSendMessage(
-                                    `Meus dados para cadastro: Nome: ${nameInput.value}, Telefone: ${phoneInput.value}. Pode confirmar?`
+
+                                const name = nameInput.value.trim();
+                                const phone = phoneInput.value.trim().replace(/\D/g, '');
+
+                                // Validate full name (must have at least 2 words)
+                                const nameParts = name.split(' ').filter(p => p.length > 0);
+                                if (nameParts.length < 2) {
+                                  alert(
+                                    '⚠️ Dados Incompletos!\n\nPor favor, insira seu nome completo (nome e sobrenome).'
                                   );
-                                } else {
-                                  alert('Por favor, preencha os dois campos!');
+                                  nameInput.focus();
+                                  return;
                                 }
+
+                                // Validate phone (must have at least 10 digits for Brazilian numbers)
+                                if (phone.length < 10) {
+                                  alert(
+                                    '⚠️ Dados Incompletos!\n\nPor favor, insira um telefone válido com DDD.'
+                                  );
+                                  phoneInput.focus();
+                                  return;
+                                }
+
+                                handleSendMessage(
+                                  `Meus dados para cadastro: Nome: ${name}, Telefone: ${phoneInput.value}. Pode confirmar?`
+                                );
                               }}
                               className="w-full mt-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-bold py-2.5 rounded-lg text-xs tracking-wide shadow-lg shadow-violet-900/20 active:scale-95 transition-all"
                             >
