@@ -180,7 +180,7 @@ export const ServiceConfig: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto animate-[fadeIn_0.3s_ease-out] pb-24 px-4 md:px-8">
+    <div className="max-w-7xl mx-auto animate-[fadeIn_0.3s_ease-out] pb-24 px-4 md:px-8 pt-4">
       {/* HEADER WITH TABS */}
       <div className="flex flex-col gap-6 mb-10">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">

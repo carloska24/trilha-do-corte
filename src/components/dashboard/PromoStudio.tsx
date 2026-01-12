@@ -207,10 +207,10 @@ export const PromoStudio: React.FC<PromoStudioProps> = ({
   const [viewMode, setViewMode] = useState(false);
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/95 backdrop-blur-md animate-[fadeIn_0.2s_ease-out]">
-      <div className="bg-[var(--bg-card)] border border-[var(--border-color)] w-full max-w-5xl rounded-2xl shadow-2xl overflow-hidden flex flex-col h-[90vh]">
+    <div className="fixed inset-0 z-[100] flex items-start justify-center p-4 pt-20 pb-24 bg-black/95 backdrop-blur-md animate-[fadeIn_0.2s_ease-out]">
+      <div className="bg-[var(--bg-card)] border border-[var(--border-color)] w-full max-w-5xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-full">
         {/* Header - Full Width Banner */}
-        <div className="relative w-full h-32 bg-[#101010] border-b border-[#222] p-0 overflow-hidden flex items-center justify-center">
+        <div className="relative w-full h-32 bg-[#101010] border-b border-[#222] p-0 overflow-hidden flex items-center justify-center shrink-0">
           <div className="absolute inset-0 z-0 opacity-30 bg-[url('https://www.transparenttextures.com/patterns/black-felt.png')]"></div>
 
           {/* Left Logo Container - 30% */}
