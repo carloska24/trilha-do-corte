@@ -36,6 +36,7 @@ export const DashboardLayout: React.FC = () => {
     updateAppointments,
     updateClients,
     updateServices,
+    updateShopSettings,
   } = useData();
   const navigate = useNavigate();
   const location = useLocation();
@@ -72,11 +73,29 @@ export const DashboardLayout: React.FC = () => {
       // Try to find a good voice
       // Try to find a good voice
       const voices = window.speechSynthesis.getVoices();
-      // Prioritize Google voices (usually better quality on Android/Windows)
-      let brVoice = voices.find(
-        v => (v.lang === 'pt-BR' || v.lang === 'pt_BR') && v.name.includes('Google')
-      );
-      // Fallback to any PT-BR
+
+      // 1. Priority: "Google Português do Brasil" (Standard Female in Chrome)
+      let brVoice = voices.find(v => v.name === 'Google Português do Brasil');
+
+      // 2. Fallback: Any PT-BR voice that contains "Luciana" (iOS) or "Female"
+      if (!brVoice) {
+        brVoice = voices.find(
+          v =>
+            (v.lang === 'pt-BR' || v.lang === 'pt_BR') &&
+            (v.name.includes('Luciana') ||
+              v.name.toLowerCase().includes('female') ||
+              v.name.toLowerCase().includes('feminino'))
+        );
+      }
+
+      // 3. Fallback: Any Google PT-BR (Usually decent)
+      if (!brVoice) {
+        brVoice = voices.find(
+          v => (v.lang === 'pt-BR' || v.lang === 'pt_BR') && v.name.includes('Google')
+        );
+      }
+
+      // 4. Last Resort: Any PT-BR
       if (!brVoice) {
         brVoice = voices.find(v => v.lang === 'pt-BR' || v.lang === 'pt_BR');
       }
@@ -218,11 +237,11 @@ export const DashboardLayout: React.FC = () => {
             const newClient = await api.createClient({
               name: result.data.clientName,
               phone: '00000000000', // Placeholder
-              email: `cliente.${Date.now()}@temp.com`,
-              // Fix: Use Local System Avatars (Random)
-              img: LOCAL_AVATARS[Math.floor(Math.random() * LOCAL_AVATARS.length)],
-              status: 'new',
-              notes: 'Cadastrado via IA de Voz',
+              status: 'active',
+              level: 1,
+              lastVisit: new Date().toISOString(),
+              img: null,
+              notes: 'Criado via IA de Voz',
             });
             if (newClient) {
               foundClient = newClient;
@@ -250,9 +269,6 @@ export const DashboardLayout: React.FC = () => {
           return;
         }
 
-        // finalClientId is already declared above.
-        // If we reached here, foundClient is guaranteed to exist due to the check at 123.
-        finalClientId = foundClient.id;
         const finalClientName = foundClient.name;
 
         // Find Service
@@ -281,7 +297,7 @@ export const DashboardLayout: React.FC = () => {
           time: time,
           status: 'pending' as const,
           price: servicePrice,
-          notes: 'Agendado via IA de Voz',
+          notes: `Agendado via IA de Voz. Serviço Solicitado: ${result.data.serviceName}`,
         };
 
         setAiResponse(`⏳ Agendando para ${clientName}...`);
@@ -298,10 +314,11 @@ export const DashboardLayout: React.FC = () => {
           updateAppointments([...appointments, created]);
         } else {
           setAiResponse('❌ Falha ao criar agendamento.');
+          speak('Não consegui criar o agendamento.');
         }
 
         setTimeout(() => setAiResponse(null), 4000);
-      } else if (result.action === 'cancel' || result.action === 'cancel_specific') {
+      } else if (result.action === 'cancel') {
         const targetName = result.data.clientName;
         // AI returns ISO now, or fallback today
         const targetDate = result.data.date || new Date().toISOString().split('T')[0];
@@ -318,8 +335,9 @@ export const DashboardLayout: React.FC = () => {
 
         if (toCancel.length === 0) {
           setAiResponse(
-            `⚠️ Não achei agendamento para ${targetName} ${result.data.date.toLowerCase()}.`
+            `⚠️ Não achei agendamento para ${targetName} ${result.data.date?.toLowerCase() || ''}.`
           );
+          speak(`Não encontrei agendamento para ${targetName} nesta data.`);
         } else {
           await Promise.all(
             toCancel.map(app => api.updateAppointment(app.id, { status: 'cancelled' }))
@@ -330,6 +348,7 @@ export const DashboardLayout: React.FC = () => {
           updateAppointments(freshApps);
 
           setAiResponse(`✅ Agendamento de ${targetName} cancelado!`);
+          speak(`O agendamento de ${targetName} foi cancelado.`);
         }
         setTimeout(() => setAiResponse(null), 4000);
       } else if (result.action === 'reschedule') {
@@ -352,44 +371,92 @@ export const DashboardLayout: React.FC = () => {
             time: newTime,
           });
           setAiResponse(`✅ Remarcado: ${targetName} para ${newDate} às ${newTime}`);
+          speak(
+            `Remarquei ${targetName} para o dia ${newDate
+              .split('-')
+              .reverse()
+              .join('/')} às ${newTime}.`
+          );
           const fresh = await api.getAppointments();
           updateAppointments(fresh);
         } else {
           setAiResponse(`⚠️ Não achei agendamento de ${targetName} para remarcar.`);
+          speak(`Não encontrei agendamento de ${targetName} para remarcar.`);
         }
         setTimeout(() => setAiResponse(null), 5000);
       } else if (result.action === 'manage_shop') {
-        // Shop Management Logic
-        setAiResponse(`🛠️ Comando Administrativo: ${result.data.action_type || 'Geral'}`);
-        console.log('Shop Management Command:', result.data);
-        // Placeholder for actual implementation (requires backend)
-        setTimeout(() => setAiResponse(null), 4000);
-      } else if (result.action === 'cancel_all') {
-        setAiResponse('🗑️ Cancelando tudo...');
-        // Loop through all PENDING appointments and cancel them
-        const pending = appointments.filter(a => a.status === 'pending');
+        // --- REAL SHOP MANAGEMENT LOGIC ---
+        const { action_type, dates, start_hour, end_hour } = result.data;
+        const currentExceptions = { ...shopSettings.exceptions };
 
-        if (pending.length === 0) {
-          setAiResponse('⚠️ Nenhum agendamento pendente para cancelar.');
-        } else {
-          await Promise.all(
-            pending.map(
-              app => api.updateAppointment(app.id, { status: 'cancelled' }) // Assuming updateAppointment exists
-            )
+        if (action_type === 'close_agenda' && dates && dates.length > 0) {
+          dates.forEach((date: string) => {
+            currentExceptions[date] = { closed: true };
+          });
+
+          api.updateSettings({ ...shopSettings, exceptions: currentExceptions });
+          updateShopSettings({ ...shopSettings, exceptions: currentExceptions });
+
+          const formattedDates = dates.map((d: string) =>
+            d.split('-').reverse().slice(0, 2).join('/')
           );
+          const msg = `🔒 Agenda fechada para: ${formattedDates.join(', ')}`;
+          setAiResponse(msg);
+          speak(`Fechei a agenda para o dia ${formattedDates.join(' e ')}.`);
+        } else if (action_type === 'open_agenda' && dates && dates.length > 0) {
+          dates.forEach((date: string) => {
+            // Remove explicitly or set closed: false
+            if (currentExceptions[date]) {
+              delete currentExceptions[date];
+            }
+          });
 
-          // Refresh data
-          const freshApps = await api.getAppointments();
-          updateAppointments(freshApps);
+          api.updateSettings({ ...shopSettings, exceptions: currentExceptions });
+          updateShopSettings({ ...shopSettings, exceptions: currentExceptions });
 
-          setAiResponse(`✅ ${pending.length} agendamentos cancelados.`);
+          const formattedDates = dates.map((d: string) =>
+            d.split('-').reverse().slice(0, 2).join('/')
+          );
+          const msg = `🔓 Agenda reaberta para: ${formattedDates.join(', ')}`;
+          setAiResponse(msg);
+          speak(`Reabri a agenda para o dia ${formattedDates.join(' e ')}.`);
+        } else if (action_type === 'set_hours') {
+          // Can be global or specific date
+          if (dates && dates.length > 0) {
+            // Specific Date
+            dates.forEach((date: string) => {
+              currentExceptions[date] = {
+                ...currentExceptions[date],
+                startHour: start_hour,
+                endHour: end_hour,
+                closed: false,
+              };
+            });
+            api.updateSettings({ ...shopSettings, exceptions: currentExceptions });
+            updateShopSettings({ ...shopSettings, exceptions: currentExceptions });
+            const formattedDates = dates.map((d: string) =>
+              d.split('-').reverse().slice(0, 2).join('/')
+            );
+            speak(`Horário alterado para o dia ${formattedDates[0]}.`);
+          } else {
+            // Global
+            const newSettings = { ...shopSettings };
+            if (start_hour) newSettings.startHour = start_hour;
+            if (end_hour) newSettings.endHour = end_hour;
+
+            api.updateSettings(newSettings);
+            updateShopSettings(newSettings);
+            speak(`Horário de funcionamento padrão atualizado.`);
+          }
+          setAiResponse(`🕒 Horário atualizado!`);
+        } else {
+          speak('Entendi o comando, mas faltaram informações como a data.');
         }
-        setTimeout(() => setAiResponse(null), 4000);
-      } else if (result.action === 'update_hours') {
-        setAiResponse(`🕒 ${result.message}`);
+
         setTimeout(() => setAiResponse(null), 4000);
       } else {
         setAiResponse(`❓ ${result.message}`);
+        speak(result.message || 'Desculpe, não entendi.');
         setTimeout(() => setAiResponse(null), 4000);
       }
     } catch (error) {
@@ -402,6 +469,7 @@ export const DashboardLayout: React.FC = () => {
         (error as any).status === 409
       ) {
         setAiResponse('⚠️ Horário já ocupado!');
+        speak('Esse horário já está ocupado.');
       } else {
         // Tentar extrair mensagem de erro da resposta se disponível
         let message = 'Erro ao processar comando.';
@@ -413,6 +481,7 @@ export const DashboardLayout: React.FC = () => {
 
         console.error('❌ AI Command Error:', error);
         setAiResponse(`❌ ${message}`);
+        speak('Ocorreu um erro ao processar seu comando.');
       }
       setTimeout(() => setAiResponse(null), 3000);
     } finally {
@@ -446,8 +515,8 @@ export const DashboardLayout: React.FC = () => {
       try {
         const url = await api.uploadImage(file);
         if (url && barberProfile) {
-          await api.updateBarber(barberProfile.id, { img: url }); // Persist to DB
-          updateProfile({ photoUrl: url }); // Update Local Context
+          await api.updateBarber(barberProfile.id, { image: url }); // Persist to DB (Barber type uses 'image')
+          updateProfile({ photoUrl: url }); // Update Local Context (BarberProfile uses 'photoUrl')
         }
       } catch (err) {
         alert('Erro ao enviar imagem. Tente novamente.');
@@ -733,7 +802,7 @@ export const DashboardLayout: React.FC = () => {
         >
           <SettingsIcon
             size={24}
-            className={`transition-colors ${
+            className={`transition-colors animate-float-slow ${
               currentView === 'settings'
                 ? 'text-[#FFD700]'
                 : 'text-gray-400 group-hover:text-gray-600 dark:text-gray-500 dark:group-hover:text-gray-300'

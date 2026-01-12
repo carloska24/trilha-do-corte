@@ -30,7 +30,7 @@ interface BookingModalProps {
 const STEPS = [
   { number: 1, title: 'Serviço' },
   { number: 2, title: 'Agenda' },
-  { number: 3, title: 'Passageiro' },
+  { number: 3, title: 'Cliente' },
   { number: 4, title: 'Bilhete' },
 ];
 
@@ -304,7 +304,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
     const msg =
       `${mapLink}\n\n` +
       `${EMOJI.CHECK} AGENDAMENTO CONFIRMADO\n\n` +
-      `${EMOJI.USER} Passageiro: ${formData.name}\n\n` +
+      `${EMOJI.USER} Cliente: ${formData.name}\n\n` +
       `${EMOJI.SCISSORS} Servico: ${selectedService?.name || ''}\n` +
       `${EMOJI.CALENDAR} Data: ${formattedDate}\n` +
       `${EMOJI.CLOCK} Horario: ${formData.time}\n` +
@@ -672,7 +672,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                   <div className="space-y-4 relative z-10">
                     <div>
                       <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1 block">
-                        Passageiro
+                        Cliente
                       </label>
                       <div className="flex items-center gap-3 bg-black/50 border border-gray-800 rounded-xl px-4 py-3 focus-within:border-neon-yellow transition-colors">
                         <User size={18} className="text-gray-400" />

@@ -231,11 +231,18 @@ export const DailyTimeline: React.FC<DailyTimelineProps> = ({
   const startLimit = exception?.startHour ?? shopSettings.startHour;
   const endLimit = exception?.endHour ?? shopSettings.endHour;
 
-  if (selectedDate.getDay() === 0) {
+  const isClosed = exception?.closed;
+
+  if (
+    selectedDate.getDay() === 0 ||
+    (isClosed && !shopSettings.closedDays?.includes(selectedDate.getDay()))
+  ) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-gray-500 opacity-50">
         <Clock className="w-12 h-12 mx-auto mb-4 opacity-20" />
-        <h3 className="text-sm font-bold uppercase tracking-widest mb-1">Domingo - Fechado</h3>
+        <h3 className="text-sm font-bold uppercase tracking-widest mb-1">
+          {isClosed ? 'Agenda Fechada' : 'Domingo - Fechado'}
+        </h3>
         <p className="text-[10px] uppercase tracking-widest opacity-60">Sem horários disponíveis</p>
       </div>
     );

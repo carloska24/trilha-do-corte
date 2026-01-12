@@ -112,6 +112,17 @@ export const createClientAdmin = async (req: Request, res: Response) => {
   const { name, phone, level, lastVisit, img, status, notes } = req.body;
   const id = uuidv4();
 
+  // Avatar Logic
+  let finalImg = img;
+  if (!finalImg) {
+    try {
+      const randomNum = Math.floor(Math.random() * 23) + 1;
+      finalImg = `/avatars/avatar_cyberpunk_${String(randomNum).padStart(2, '0')}.png`;
+    } catch (e) {
+      // ignore
+    }
+  }
+
   try {
     const newClient = await prisma.clients.create({
       data: {
@@ -120,7 +131,7 @@ export const createClientAdmin = async (req: Request, res: Response) => {
         phone,
         level,
         lastVisit,
-        img,
+        img: finalImg,
         status,
         notes,
       },

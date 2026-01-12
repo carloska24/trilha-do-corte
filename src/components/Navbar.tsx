@@ -40,7 +40,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const barberLinks = [
     { id: 'home', label: 'Estação Principal', icon: LayoutGrid },
-    { id: 'clients', label: 'Passageiros', icon: Users },
+    { id: 'clients', label: 'Clientes', icon: Users },
     { id: 'calendar', label: 'Itinerário', icon: CalendarRange },
     { id: 'financial', label: 'Bilheteria', icon: TrendingUp },
     { id: 'services', label: 'Oficina', icon: Settings },

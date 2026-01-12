@@ -113,13 +113,13 @@ export const FinancialVault: React.FC = () => {
 
         {/* Cards Secundários (Empilhados) */}
         <div className="grid grid-cols-1 gap-6">
-          {/* Card 1: Passageiros */}
+          {/* Card 1: Clientes */}
           <div className="bg-[#111] border border-gray-800 p-6 rounded-sm relative overflow-hidden group hover:border-blue-500/30 transition-colors">
             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
               <Users size={64} />
             </div>
             <p className="text-gray-500 text-[10px] uppercase font-bold tracking-[0.2em] mb-2">
-              Passageiros
+              Clientes
             </p>
             <p className="text-4xl font-mono font-bold text-white group-hover:text-blue-400 transition-colors">
               {completedCount}

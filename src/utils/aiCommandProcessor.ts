@@ -33,9 +33,20 @@ const getSystemPrompt = (validServices: string) => {
   const today = new Date().toLocaleDateString('pt-BR');
   const todayISO = new Date().toISOString().split('T')[0];
 
+  /* 
+    SECURITY: Helper to calculate dynamic dates for the prompt examples so the AI 
+    doesn't "hallucinate" the wrong year (e.g., using 2025 when it's 2026).
+  */
+  const d = new Date();
+  const year = d.getFullYear(); // 2026
+
   return `
 Você é uma IA classificadora para uma barbearia.
 Sua função é receber um comando de voz e retornar ESTRITAMENTE um JSON.
+
+## Contexto Temporal:
+- **HOJE:** ${today} (${todayISO})
+- **ANO ATUAL:** ${year}
 
 ## Serviços Disponíveis:
 ${validServices}
@@ -47,6 +58,12 @@ ${validServices}
 4. SHOP_MANAGEMENT (Gerenciar Loja)
 5. UNKNOWN
 
+## Entidades (CREATE_APPOINTMENT):
+- client_name: Nome do cliente
+- service_name: Nome do serviço (Ex: "Corte", "Barba", "Luzes")
+- date: "YYYY-MM-DD" ou "hoje"
+- time: "HH:MM"
+
 ## Entidades (SHOP_MANAGEMENT):
 - action_type: 'close_agenda' (Fechar dias inteiros) | 'open_agenda' (Reabrir dias) | 'set_hours' (Alterar horário do dia)
 - dates: Array de strings ["YYYY-MM-DD", "YYYY-MM-DD"]. Se for "hoje", use "${todayISO}".
@@ -54,16 +71,16 @@ ${validServices}
 
 ## Regras de Negócio:
 - "Fechar loja a partir das 14h" -> action_type: 'set_hours', dates: ["${todayISO}"], value: "14:00"
-- "Fechar dias 13 e 14" -> action_type: 'close_agenda', dates: ["2025-01-13", "2025-01-14"]
-- "Abrir dias 13 e 14" -> action_type: 'open_agenda', dates: ["2025-01-13", "2025-01-14"]
-- "Reabrir agenda dia 20" -> action_type: 'open_agenda', dates: ["2025-01-20"]
+- "Fechar dias 13 e 14" -> action_type: 'close_agenda', dates: ["${year}-01-13", "${year}-01-14"]
+- "Abrir dias 13 e 14" -> action_type: 'open_agenda', dates: ["${year}-01-13", "${year}-01-14"]
+- "Reabrir agenda dia 20" -> action_type: 'open_agenda', dates: ["${year}-01-20"]
 
 ## Formato de Resposta (JSON Puro):
 {
   "intent": "SHOP_MANAGEMENT",
   "entities": {
     "action_type": "open_agenda",
-    "dates": ["2025-01-13", "2025-01-14"]
+    "dates": ["${year}-01-13", "${year}-01-14"]
   }
 }
 `;
@@ -169,7 +186,7 @@ export const processVoiceCommand = async (
           action: 'schedule',
           data: {
             clientName: parsed.entities?.client_name,
-            serviceName: parsed.entities?.service_name,
+            serviceName: parsed.entities?.service_name || (parsed.entities as any)?.service,
             // 🛡️ Fix: AI sometimes returns "2026 01 06" (spaces) -> Normalize to YYYY-MM-DD
             date: parsed.entities?.date
               ? parsed.entities.date.replace(/ /g, '-')

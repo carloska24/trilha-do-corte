@@ -240,7 +240,7 @@ export const TicketCard: React.FC<TicketCardProps> = ({
                     <span
                       className={`text-[9px] font-black uppercase tracking-[0.2em] mb-0.5 ml-1 opacity-80 ${styles.textSoft}`}
                     >
-                      Passageiro
+                      Cliente
                     </span>
                     <h3
                       className={`text-3xl font-black uppercase tracking-wide leading-none ${styles.textMain}`}

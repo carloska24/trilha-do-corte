@@ -16,6 +16,11 @@ interface DashboardOutletContext {
 
 import { Client } from '../../types'; // Import Client type
 
+const formatName = (name: string | undefined | null) => {
+  if (!name) return '';
+  return name.split(' ')[0];
+};
+
 // --- ISOLATED COMPONENTS (PREVENT RE-RENDERS) ---
 const QueueTicker = React.memo(
   ({

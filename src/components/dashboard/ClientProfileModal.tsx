@@ -76,10 +76,25 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({
   };
 
   /* --- HELPERS --- */
-  const getServiceName = (id: string | undefined) => {
-    if (!id) return 'Serviço Personalizado';
-    const s = services.find(serv => serv.id === id);
-    return s ? s.name : 'ServiÃ§o Personalizado';
+  const getServiceName = (app: Appointment | undefined) => {
+    if (!app) return 'Serviço Personalizado';
+
+    // 1. Try to find valid service by ID
+    if (app.serviceId) {
+      const s = services.find(serv => serv.id === app.serviceId);
+      if (s) return s.name;
+    }
+
+    // 2. Fallback: Parse Notes if available
+    if (app.notes && app.notes.includes('Serviço Solicitado:')) {
+      try {
+        return app.notes.split('Serviço Solicitado:')[1].trim();
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    return 'Serviço Personalizado';
   };
 
   // FIX: Parse date safely as local time (YYYY-MM-DD -> Year, Month, Day)

@@ -136,11 +136,6 @@ const ClientCard: React.FC<{
               </span>
             </div>
             <div className="w-[1px] h-3 bg-[var(--border-color)]"></div>
-            <span className="text-[8px] font-bold text-[var(--text-secondary)] uppercase tracking-wider">
-              {!client.lastVisit || client.lastVisit === 'Nunca'
-                ? 'NOVO CLIENTE'
-                : `VISITOU: ${client.lastVisit}`}
-            </span>
           </div>
         </div>
 
@@ -316,7 +311,7 @@ export const ClientsManager: React.FC = () => {
               <Trash2 size={40} className="text-red-500" />
             </div>
             <h2 className="text-2xl font-graffiti text-[var(--text-primary)] mb-2 uppercase">
-              Excluir Passageiro?
+              Excluir Cliente?
             </h2>
             <p className="text-[var(--text-secondary)] text-sm mb-8 leading-relaxed">
               Essa ação removerá permanentemente o cadastro.
@@ -347,7 +342,7 @@ export const ClientsManager: React.FC = () => {
         </h1>
         <div className="w-24 h-1 bg-neon-yellow rounded-full shadow-[0_0_10px_rgba(227,253,0,0.5)]"></div>
         <p className="text-[var(--text-secondary)] text-[10px] font-bold uppercase tracking-[0.4em] mt-3">
-          Base de Passageiros
+          Base de Clientes
         </p>
       </div>
 
@@ -357,7 +352,7 @@ export const ClientsManager: React.FC = () => {
           <div className="absolute inset-y-0 left-0 w-1 bg-neon-yellow/50 rounded-l-md group-focus-within:bg-neon-yellow group-focus-within:shadow-[0_0_15px_#EAB308] transition-all duration-300"></div>
           <input
             type="text"
-            placeholder="SCANNEAR PASSAGEIRO..."
+            placeholder="SCANNEAR CLIENTE..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
             className="w-full bg-[var(--bg-card)] backdrop-blur-md border border-[var(--border-color)] text-[var(--text-primary)] placeholder-[var(--text-secondary)]/50 py-5 pl-12 pr-4 text-sm font-mono uppercase tracking-wider focus:outline-none focus:border-neon-yellow/50 focus:bg-[var(--bg-secondary)] transition-all shadow-inner"
@@ -394,7 +389,7 @@ export const ClientsManager: React.FC = () => {
                 BANCO DE DADOS VAZIO
                 <br />
                 <span className="text-sm font-sans font-normal opacity-50">
-                  Nenhum passageiro encontrado no sistema.
+                  Nenhum cliente encontrado no sistema.
                 </span>
               </p>
             </div>
@@ -425,9 +420,7 @@ export const ClientsManager: React.FC = () => {
               <X size={24} />
             </button>
 
-            <h2 className="text-3xl font-graffiti text-[var(--text-primary)] mb-1">
-              NOVO PASSAGEIRO
-            </h2>
+            <h2 className="text-3xl font-graffiti text-[var(--text-primary)] mb-1">NOVO CLIENTE</h2>
             <div className="w-16 h-1 bg-neon-yellow rounded-full mb-8 shadow-[0_0_10px_rgba(227,253,0,0.5)]"></div>
 
             <div className="space-y-6">

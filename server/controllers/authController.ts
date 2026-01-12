@@ -200,7 +200,7 @@ export const registerClient = async (req: Request, res: Response) => {
     res.json({
       success: true,
       token,
-      data: { ...newClient, img: photoUrl },
+      data: newClient,
     });
   } catch (error: any) {
     console.error('Register Error:', error);

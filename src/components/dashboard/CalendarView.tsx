@@ -15,8 +15,6 @@ import {
   CheckCircle2,
   AlertCircle,
   Minus,
-  Mic,
-  MicOff,
   MessageCircle, // WhatsApp Icon
   Share2,
   Trash2,
@@ -29,7 +27,7 @@ import { CalendarHeader } from './calendar/CalendarHeader';
 import { useData } from '../../contexts/DataContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useOutletContext } from 'react-router-dom';
-import { useVoiceCommand } from '../../hooks/useVoiceCommand';
+
 import { ConfirmModal } from '../ui/ConfirmModal';
 import { WhatsAppIcon } from '../icons/WhatsAppIcon';
 import { generateWhatsAppExportUrl } from '../../utils/whatsappUtils';
@@ -133,9 +131,6 @@ export const CalendarView: React.FC = () => {
     setToastMsg(msg);
     setTimeout(() => setToastMsg(null), 3000);
   };
-
-  // Voice Command Hook
-  const { isListening, startListening, stopListening } = useVoiceCommand();
 
   // Auto-Scroll to Current Time
   useEffect(() => {
@@ -415,110 +410,6 @@ export const CalendarView: React.FC = () => {
                   Personalize sua agenda
                 </p>
               </div>
-
-              {/* Voice Command Button - Floating or Inline */}
-              <button
-                onClick={() => {
-                  if (isListening) {
-                    stopListening();
-                  } else {
-                    startListening(action => {
-                      if (!action) return;
-
-                      if (action.type === 'SET_HOURS') {
-                        // Check if specific date
-                        if (action.payload.date) {
-                          const dateKey = action.payload.date;
-                          const currentException = shopSettings.exceptions?.[dateKey] || {};
-
-                          const newException = { ...currentException };
-                          if (action.payload.start !== undefined)
-                            newException.startHour = action.payload.start;
-                          if (action.payload.end !== undefined)
-                            newException.endHour = action.payload.end;
-
-                          const newExceptions = {
-                            ...shopSettings.exceptions,
-                            [dateKey]: newException,
-                          };
-                          updateShopSettings({ ...shopSettings, exceptions: newExceptions });
-
-                          const fmtDate = new Date(dateKey + 'T12:00:00').toLocaleDateString(
-                            'pt-BR',
-                            { day: '2-digit', month: '2-digit' }
-                          );
-                          showToast(`📅 Dia ${fmtDate} atualizado!`);
-                        } else {
-                          // Global Setting
-                          const updates: any = {};
-                          if (action.payload.start !== undefined)
-                            updates.startHour = action.payload.start;
-                          if (action.payload.end !== undefined)
-                            updates.endHour = action.payload.end;
-                          updateShopSettings({ ...shopSettings, ...updates });
-                          showToast(`Horário padrão atualizado!`);
-                        }
-                      } else if (action.type === 'SET_CLOSED') {
-                        // "Dia X Fechado" (Now handling multiple dates)
-                        if (action.payload.dates && action.payload.dates.length > 0) {
-                          const newExceptions = { ...shopSettings.exceptions };
-                          const formattedDates: string[] = [];
-
-                          action.payload.dates.forEach(dateKey => {
-                            const currentException = shopSettings.exceptions?.[dateKey] || {};
-                            newExceptions[dateKey] = { ...currentException, closed: true };
-
-                            const [y, m, d] = dateKey.split('-');
-                            formattedDates.push(`${d}/${m}`);
-                          });
-
-                          updateShopSettings({
-                            ...shopSettings,
-                            exceptions: newExceptions,
-                          });
-
-                          const datesString = formattedDates.join(', ');
-                          showToast(`🚫 Dias ${datesString} definidos como FECHADO!`);
-                        }
-                      } else if (action.type === 'RESET_EXCEPTIONS') {
-                        updateShopSettings({
-                          ...shopSettings,
-                          startHour: 8,
-                          endHour: 20,
-                          exceptions: {},
-                        });
-                        showToast(`♻️ Todos os dias resetados para o padrão (9-19h)!`);
-                      } else if (action.type === 'SET_INTERVAL') {
-                        updateShopSettings({
-                          ...shopSettings,
-                          slotInterval: action.payload.minutes,
-                        });
-                        showToast(`Intervalo de ${action.payload.minutes}min definido!`);
-                      } else {
-                        // Use a visual cue for failure (if toast allows HTML/ReactNode, otherwise just a different text prefix)
-                        showToast(`❌ Não entendi: "${action.transcript}"`);
-                      }
-                    });
-                  }
-                }}
-                className={`
-                    w-14 h-14 rounded-full flex items-center justify-center transition-all relative overflow-hidden group shadow-lg
-                    ${
-                      isListening
-                        ? 'bg-red-500 text-white shadow-[0_0_20px_rgba(239,68,68,0.6)] animate-pulse'
-                        : 'bg-[var(--bg-card)] text-neon-yellow border-2 border-neon-yellow/30 hover:bg-neon-yellow hover:text-black hover:scale-105'
-                    }
-                  `}
-              >
-                {isListening ? (
-                  <>
-                    <div className="absolute inset-0 bg-red-500 animate-ping opacity-20"></div>
-                    <MicOff size={24} />
-                  </>
-                ) : (
-                  <Mic size={24} />
-                )}
-              </button>
             </div>
 
             {/* Main Card */}

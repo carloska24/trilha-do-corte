@@ -14,7 +14,7 @@ export const registerClientSchema = z.object({
   name: z
     .string()
     .min(2, 'Nome deve ter pelo menos 2 caracteres')
-    .refine(val => val.trim().split(/\s+/).length >= 2, 'Por favor, informe seu Nome e Sobrenome.'),
+    .min(2, 'Nome deve ter pelo menos 2 caracteres'),
   email: z.string().email('Email inválido'),
   phone: z.string().min(10, 'Telefone inválido (mínimo 10 dígitos)'),
   password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres'),
@@ -33,7 +33,7 @@ export const appointmentSchema = z.object({
   clientName: z
     .string()
     .min(1, 'Nome do cliente obrigatório')
-    .refine(val => val.trim().split(/\s+/).length >= 2, 'Informe Nome e Sobrenome do passageiro.'),
+    .min(2, 'Nome deve ter pelo menos 2 caracteres'), // Relaxed validation
   serviceId: z.string().uuid().or(z.string().min(1)), // UUID or ID string
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Data inválida (formato YYYY-MM-DD)'),
   time: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Hora inválida (formato HH:MM)'),

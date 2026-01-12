@@ -167,17 +167,14 @@ export const createAppointment = async (req: Request, res: Response) => {
           // RANDOM AVATAR
           let randomAvatar = null;
           try {
-            const __filename = fileURLToPath(import.meta.url);
-            const __dirname = path.dirname(__filename);
-            const avatarsDir = path.join(__dirname, '../../public/avatars');
-
-            if (fs.existsSync(avatarsDir)) {
-              const files = fs.readdirSync(avatarsDir);
-              const images = files.filter(f => /\.(jpg|jpeg|png|gif|webp)$/i.test(f));
-              if (images.length > 0) {
-                const randomImage = images[Math.floor(Math.random() * images.length)];
-                randomAvatar = `/avatars/${randomImage}`;
-              }
+            // ROBUST RANDOM AVATAR SELECTION
+            // Since we know we have avatar_cyberpunk_01.png to 23.png
+            try {
+              const AVATAR_COUNT = 23;
+              const randomNum = Math.floor(Math.random() * AVATAR_COUNT) + 1;
+              randomAvatar = `/avatars/avatar_cyberpunk_${String(randomNum).padStart(2, '0')}.png`;
+            } catch (e) {
+              console.warn('⚠️ Failed to assign random avatar');
             }
           } catch (e) {
             console.warn('⚠️ Failed to select random avatar');

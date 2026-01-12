@@ -70,7 +70,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
     // DEBUG BACKDOOR FOR BLACK SCREEN TESTING
     if (formData.phone === '11999999999' || formData.email === 'test@client.com') {
       onLoginSuccess({
-        name: 'Passageiro Teste',
+        name: 'Cliente Teste',
         photoUrl:
           'https://images.unsplash.com/photo-1599351431202-1e0f0137899a?auto=format&fit=crop&q=80',
         emailOrPhone: formData.phone || formData.email,
@@ -153,7 +153,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
       if (formData.phone === '11999999999' || formData.email === 'test@client.com') {
         // ... existing fallback code ...
         onLoginSuccess({
-          name: 'Passageiro Teste',
+          name: 'Cliente Teste',
           photoUrl:
             'https://images.unsplash.com/photo-1599351431202-1e0f0137899a?auto=format&fit=crop&q=80',
           emailOrPhone: formData.phone || formData.email,
@@ -221,7 +221,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
               authMode === 'register' ? 'text-2xl' : 'text-3xl md:text-4xl'
             } font-graffiti text-white tracking-wide`}
           >
-            ACESSO <span className={themeColor}>{isClient ? 'PASSAGEIRO' : 'MAQUINISTA'}</span>
+            ACESSO <span className={themeColor}>{isClient ? 'CLIENTE' : 'MAQUINISTA'}</span>
           </h2>
 
           {(authMode === 'login' || !authMode) && (
