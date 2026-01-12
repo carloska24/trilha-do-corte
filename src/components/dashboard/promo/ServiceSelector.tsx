@@ -30,13 +30,13 @@ export const ServiceSelector: React.FC<ServiceSelectorProps> = ({
         <div className="absolute inset-0 bg-linear-to-b from-[#111] via-transparent to-[#111] z-10"></div>
       </div>
 
-      <div className="relative z-20 w-full p-8 overflow-y-auto custom-scrollbar flex-1">
+      <div className="relative z-20 w-full px-2 py-6 md:p-8 overflow-y-auto custom-scrollbar flex-1">
         <h3 className="text-3xl md:text-4xl font-graffiti font-black text-transparent bg-clip-text bg-linear-to-r from-purple-400 via-pink-400 to-amber-200 mb-10 text-center uppercase tracking-wider drop-shadow-sm animate-pulse-slow">
           Selecione para Customizar
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 w-full md:max-w-6xl mx-auto">
           {services.map(service => (
-            <div key={service.id} className="h-full relative">
+            <div key={service.id} className="h-full relative w-full">
               <ServiceCard
                 service={service}
                 isSelected={selectedServiceId === service.id}
