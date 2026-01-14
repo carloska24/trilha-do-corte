@@ -551,9 +551,11 @@ export const CalendarView: React.FC = () => {
                   return (
                     <button
                       key={min}
-                      onClick={e => {
+                      onClick={async e => {
                         e.stopPropagation();
-                        updateShopSettings({ ...shopSettings, slotInterval: min });
+                        const newSettings = { ...shopSettings, slotInterval: min };
+                        updateShopSettings(newSettings);
+                        await api.updateSettings(newSettings);
                         showToast(`${min}min salvo!`);
                       }}
                       className={`relative flex flex-col items-center justify-center py-4 rounded-xl border transition-all active:scale-95 group/btn overflow-hidden ${
