@@ -97,9 +97,17 @@ async function getAvailabilityForNextDays() {
     if (isClosed) continue;
 
     const slots: string[] = [];
+
+    // Use slotInterval from settings (default 30 if not set)
+    const slotInterval = settings?.slotInterval || 30;
+    const minuteSteps: number[] = [];
+    for (let m = 0; m < 60; m += slotInterval) {
+      minuteSteps.push(m);
+    }
+
     for (let hour = dailyStart; hour < dailyEnd; hour++) {
-      for (let min of [0, 30]) {
-        // Changed to 30min intervals for cleaner chat options
+      for (let min of minuteSteps) {
+        // Dynamic intervals based on settings
         // If it's today, STRICT filtering
         if (isToday) {
           // If past hour, skip

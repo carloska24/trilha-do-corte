@@ -267,8 +267,19 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
           >
             {/* Clients Badge */}
             <div className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-500/10 to-purple-600/5 rounded-xl border border-purple-500/20">
-              <div className="w-6 h-6 rounded-full bg-purple-500/20 flex items-center justify-center">
-                <Sparkles size={12} className="text-purple-400" />
+              <div className="w-7 h-7 rounded-full bg-purple-500/20 flex items-center justify-center">
+                <svg
+                  width={18}
+                  height={18}
+                  viewBox="0 0 32 32"
+                  fill="currentColor"
+                  className="text-purple-400"
+                >
+                  <g>
+                    <path d="m16 .5c-3.78998 0-6.87 3.07996-6.87 6.87 0 3.77997 3.08002 6.85999 6.87 6.85999s6.87-3.08002 6.87-6.85999c0-3.79004-3.08002-6.87-6.87-6.87z"></path>
+                    <path d="m28.37 24.85999c-.75-5.12-5.21002-8.97998-10.39001-8.97998h-3.95996c-5.18-.00001-9.64003 3.85998-10.39003 8.97998l-.39001 2.63c-.14001 1.01001.15002 2.02997.82001 2.79999.65997.77002 1.63 1.21002 2.65002 1.21002h18.57996c1.02002 0 1.99005-.44 2.65002-1.21002.66998-.77002.96002-1.78998.82001-2.79999z"></path>
+                  </g>
+                </svg>
               </div>
               <span className="text-lg font-black text-white">{appointmentCount}</span>
               <span className="text-[10px] text-purple-300/70 uppercase tracking-wider font-bold">
