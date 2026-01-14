@@ -91,11 +91,15 @@ export const api = {
         headers: getAuthHeaders(),
         body: JSON.stringify(data),
       });
-      if (!response.ok) return null;
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.warn(`⚠️ [API] updateClient failed: ${response.status}`, errorData);
+        return null;
+      }
       const json = await response.json();
       return json.data;
     } catch (error) {
-      console.error('Update Client error:', error);
+      console.error('❌ Update Client error:', error);
       return null;
     }
   },
@@ -195,11 +199,15 @@ export const api = {
         headers: getAuthHeaders(),
         body: JSON.stringify(data),
       });
-      if (!response.ok) return null;
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.warn(`⚠️ [API] updateBarber failed: ${response.status}`, errorData);
+        return null;
+      }
       const json = await response.json();
       return json.data;
     } catch (error) {
-      console.error('Update Barber error:', error);
+      console.error('❌ Update Barber error:', error);
       return null;
     }
   },
@@ -301,11 +309,15 @@ export const api = {
         headers: getAuthHeaders(),
         body: JSON.stringify(data),
       });
-      if (!response.ok) return null;
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.warn(`⚠️ [API] updateAppointment failed: ${response.status}`, errorData);
+        return null;
+      }
       const json = await response.json();
       return json.data;
     } catch (error) {
-      console.error('Error updating appointment:', error);
+      console.error('❌ Error updating appointment:', error);
       return null;
     }
   },
@@ -342,11 +354,15 @@ export const api = {
         headers: getAuthHeaders(),
         body: JSON.stringify(settings),
       });
-      if (!response.ok) return null;
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.warn(`⚠️ [API] updateSettings failed: ${response.status}`, errorData);
+        return null;
+      }
       const json = await response.json();
       return json;
     } catch (error) {
-      console.error('Error updating settings:', error);
+      console.error('❌ Error updating settings:', error);
       return null;
     }
   },

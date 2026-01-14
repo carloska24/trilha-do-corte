@@ -1,18 +1,48 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Service } from '../../types';
-import { X, Camera, Upload, Clock, Search, Sparkles, ChevronDown, Save } from 'lucide-react';
+import {
+  X,
+  Camera,
+  Upload,
+  Clock,
+  Sparkles,
+  ChevronDown,
+  Save,
+  Scissors,
+  DollarSign,
+  Tag,
+  FileText,
+} from 'lucide-react';
 import { generateServiceDescription } from '../../services/geminiService';
 
 interface ServiceFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  serviceConfig: Partial<Service>; // Initial data
+  serviceConfig: Partial<Service>;
   onSubmit: (data: Partial<Service>) => void;
-  onOpenPromoStudio: () => void; // Callback to open PromoStudio from within modal
+  onOpenPromoStudio: () => void;
   editingServiceId: string | null;
 }
 
 const CATEGORIES = ['Cabelo', 'Barba', 'Combo', 'Química', 'Estética', 'Outros'];
+
+// Category icons
+const getCategoryIcon = (cat: string) => {
+  switch (cat) {
+    case 'Cabelo':
+      return '✂️';
+    case 'Barba':
+      return '🧔';
+    case 'Combo':
+      return '💎';
+    case 'Química':
+      return '🧪';
+    case 'Estética':
+      return '✨';
+    default:
+      return '📦';
+  }
+};
 
 export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
   isOpen,
@@ -22,7 +52,6 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
   onOpenPromoStudio,
   editingServiceId,
 }) => {
-  // Local state to prevent parent re-renders on keystroke
   const [formData, setFormData] = useState<Partial<Service>>({
     name: '',
     priceValue: 0,
@@ -38,7 +67,6 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
   const [isGeneratingDesc, setIsGeneratingDesc] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Sync internal state when modal opens or serviceConfig changes
   useEffect(() => {
     if (isOpen) {
       setFormData({
@@ -71,20 +99,9 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Import api dynamically or assume it's available.
-      // Better to use dynamic import if we want to avoid top-level circular deps,
-      // or just standard import if compatible.
-      // Looking at the file, imports are top-level.
-      // I'll use the dynamic import pattern seen in ServiceConfig or add a standard import if possible.
-      // The file ServiceFormModal doesn't import 'api' yet.
-
       try {
-        // Use dynamic import to avoid circular dependency risks if any, purely for safety
-        // as ServiceConfig imports both api and ServiceFormModal.
         const { api } = await import('../../services/api');
-
         const url = await api.uploadImage(file);
-
         if (url) {
           setFormData(prev => ({ ...prev, image: url }));
         } else {
@@ -105,82 +122,98 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="bg-[var(--bg-card)] w-full max-w-lg rounded-2xl border border-[var(--border-color)] shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh] transition-colors duration-300">
-        {/* Modal Header */}
-        <div className="p-6 border-b border-[var(--border-color)] flex justify-between items-center bg-[var(--bg-secondary)] transition-colors duration-300">
-          <div>
-            <h3 className="text-xl font-black text-[var(--text-primary)] uppercase italic tracking-wider transition-colors">
-              {editingServiceId ? 'Editar Serviço' : 'Novo Serviço'}
-            </h3>
-            <p className="text-[var(--text-secondary)] text-xs font-bold uppercase tracking-widest mt-1">
-              Preencha os detalhes do serviço
-            </p>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+      {/* Modal Container - Premium Design - Centered */}
+      <div className="bg-gradient-to-b from-[#1a1a2e] to-[#0f0f1a] w-full max-w-lg rounded-3xl border border-white/10 shadow-[0_0_60px_rgba(0,0,0,0.5)] relative overflow-hidden flex flex-col max-h-[80vh] my-auto">
+        {/* Decorative Glow */}
+        <div className="absolute -top-20 -right-20 w-40 h-40 bg-yellow-500/20 blur-[80px] rounded-full pointer-events-none" />
+        <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-purple-500/20 blur-[80px] rounded-full pointer-events-none" />
+
+        {/* Modal Header - Premium */}
+        <div className="relative px-6 py-5 border-b border-white/10 flex justify-between items-center bg-black/30">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center shadow-lg">
+              <Scissors size={22} className="text-white" />
+            </div>
+            <div>
+              <h3 className="text-xl font-black text-white uppercase tracking-wide">
+                {editingServiceId ? 'Editar Serviço' : 'Novo Serviço'}
+              </h3>
+              <p className="text-gray-400 text-[10px] font-medium uppercase tracking-wider mt-0.5">
+                Preencha os detalhes do serviço
+              </p>
+            </div>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-lg bg-[var(--bg-primary)] border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--text-secondary)] transition-all"
+            className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all"
           >
-            <X size={16} />
+            <X size={18} />
           </button>
         </div>
 
-        {/* Modal Body */}
-        <div className="p-6 overflow-y-auto space-y-6 custom-scrollbar">
-          {/* Image Upload */}
-          <div className="flex justify-center">
-            <div
-              className="relative group w-full h-40 rounded-xl bg-[var(--bg-primary)] border-2 border-dashed border-[var(--border-color)] hover:border-neon-yellow transition-colors cursor-pointer overflow-hidden flex flex-col items-center justify-center"
-              onClick={() => fileInputRef.current?.click()}
-            >
-              {formData.image ? (
-                <>
-                  <img
-                    src={formData.image}
-                    className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity"
-                    alt="Preview"
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/50 transition-opacity">
-                    <Camera className="text-white" size={32} />
+        {/* Modal Body - Premium Scrollable */}
+        <div className="p-6 overflow-y-auto space-y-5 custom-scrollbar flex-1">
+          {/* Image Upload - Premium */}
+          <div
+            className="relative group w-full h-36 rounded-2xl bg-gradient-to-b from-white/5 to-white/[0.02] border-2 border-dashed border-white/20 hover:border-yellow-500/50 transition-all cursor-pointer overflow-hidden flex flex-col items-center justify-center"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            {formData.image ? (
+              <>
+                <img
+                  src={formData.image}
+                  className="w-full h-full object-cover opacity-70 group-hover:opacity-100 group-hover:scale-105 transition-all duration-300"
+                  alt="Preview"
+                />
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/60 transition-opacity">
+                  <div className="flex flex-col items-center gap-2">
+                    <Camera className="text-white" size={28} />
+                    <span className="text-white/80 text-xs font-bold uppercase">Trocar Imagem</span>
                   </div>
-                </>
-              ) : (
-                <>
+                </div>
+              </>
+            ) : (
+              <div className="flex flex-col items-center gap-3">
+                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-white/10 to-white/5 flex items-center justify-center group-hover:from-yellow-500/20 group-hover:to-orange-500/20 transition-all">
                   <Upload
-                    className="text-[var(--text-secondary)] mb-2 group-hover:text-neon-yellow transition-colors"
-                    size={32}
+                    className="text-gray-400 group-hover:text-yellow-400 transition-colors"
+                    size={24}
                   />
-                  <span className="text-[var(--text-secondary)] text-xs font-bold uppercase tracking-widest group-hover:text-[var(--text-primary)] transition-colors">
-                    Upload da Imagem
-                  </span>
-                </>
-              )}
-              <input
-                ref={fileInputRef}
-                type="file"
-                className="hidden"
-                accept="image/*"
-                onChange={handleImageUpload}
-              />
-            </div>
+                </div>
+                <span className="text-gray-500 text-xs font-bold uppercase tracking-wider group-hover:text-white transition-colors">
+                  Upload da Imagem
+                </span>
+              </div>
+            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              className="hidden"
+              accept="image/*"
+              onChange={handleImageUpload}
+            />
           </div>
 
-          {/* Basic Fields */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
-              <label className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest mb-1.5 block">
-                Nome do Serviço
-              </label>
-              <input
-                value={formData.name}
-                onChange={e => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Ex: Corte Degrade"
-                className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg px-4 py-3 text-[var(--text-primary)] placeholder-[var(--text-secondary)]/50 focus:outline-none focus:border-neon-yellow transition-colors font-bold"
-              />
-            </div>
+          {/* Name Field - Premium */}
+          <div className="space-y-2">
+            <label className="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+              <Scissors size={12} className="text-cyan-500" />
+              Nome do Serviço
+            </label>
+            <input
+              value={formData.name}
+              onChange={e => setFormData({ ...formData, name: e.target.value })}
+              placeholder="Ex: Corte Degradê"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder-gray-600 focus:outline-none focus:border-cyan-500/50 focus:bg-cyan-500/5 focus:shadow-[0_0_20px_rgba(6,182,212,0.1)] transition-all font-bold"
+            />
+          </div>
 
-            <div>
-              <label className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest mb-1.5 block">
+          {/* Price & Duration Row */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                <DollarSign size={12} className="text-green-500" />
                 Preço (R$)
               </label>
               <input
@@ -190,126 +223,127 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
                   const val = parseFloat(e.target.value);
                   setFormData({ ...formData, priceValue: isNaN(val) ? 0 : val });
                 }}
-                className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg px-4 py-3 text-[var(--text-primary)] placeholder-[var(--text-secondary)]/50 focus:outline-none focus:border-neon-yellow transition-colors font-mono"
+                placeholder="0.00"
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-green-500/50 focus:bg-green-500/5 transition-all font-mono"
               />
             </div>
 
-            <div>
-              <label className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest mb-1.5 block">
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                <Clock size={12} className="text-blue-500" />
                 Duração (Min)
               </label>
-              <div className="relative">
-                <Clock
-                  size={14}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]"
-                />
-                <input
-                  type="number"
-                  step={5}
-                  value={formData.duration || ''}
-                  onChange={e => {
-                    const val = parseInt(e.target.value);
-                    setFormData({ ...formData, duration: isNaN(val) ? 0 : val });
-                  }}
-                  className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg pl-9 pr-4 py-3 text-[var(--text-primary)] placeholder-[var(--text-secondary)]/50 focus:outline-none focus:border-neon-yellow transition-colors font-mono"
-                />
-              </div>
+              <input
+                type="number"
+                step={5}
+                value={formData.duration || ''}
+                onChange={e => {
+                  const val = parseInt(e.target.value);
+                  setFormData({ ...formData, duration: isNaN(val) ? 0 : val });
+                }}
+                placeholder="30"
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-blue-500/50 focus:bg-blue-500/5 transition-all font-mono"
+              />
             </div>
           </div>
 
-          {/* Category & Tags */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest mb-1.5 block">
+          {/* Category & Tag Row */}
+          <div className="grid grid-cols-2 gap-3 items-start">
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-wider h-4">
+                <span className="text-xs leading-none">
+                  {getCategoryIcon(formData.category || 'Outros')}
+                </span>
                 Categoria
               </label>
               <div className="relative">
                 <select
                   value={formData.category}
                   onChange={e => setFormData({ ...formData, category: e.target.value })}
-                  className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg px-4 py-3 text-[var(--text-primary)] focus:outline-none focus:border-neon-yellow appearance-none cursor-pointer transition-colors"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500/50 appearance-none cursor-pointer transition-all pr-10"
                 >
                   {CATEGORIES.map(c => (
-                    <option key={c} value={c}>
-                      {c}
+                    <option key={c} value={c} className="bg-[#1a1a2e] text-white">
+                      {getCategoryIcon(c)} {c}
                     </option>
                   ))}
                 </select>
                 <ChevronDown
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] pointer-events-none"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none"
                   size={16}
                 />
               </div>
             </div>
 
-            <div>
-              <label className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest mb-1.5 block">
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-wider h-4">
+                <Tag size={12} className="text-amber-500" />
                 Tag (Opcional)
               </label>
               <input
                 value={formData.tag || ''}
                 onChange={e => setFormData({ ...formData, tag: e.target.value })}
                 placeholder="Ex: Premium"
-                className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg px-4 py-3 text-[var(--text-primary)] placeholder-[var(--text-secondary)]/50 focus:outline-none focus:border-neon-yellow transition-colors text-xs"
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-amber-500/50 focus:bg-amber-500/5 transition-all text-sm"
               />
             </div>
           </div>
 
-          {/* Description & AI */}
-          <div>
-            <div className="flex justify-between items-end mb-1.5">
-              <label className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest block">
+          {/* Description with AI - Premium */}
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <label className="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                <FileText size={12} className="text-indigo-500" />
                 Descrição do Serviço
               </label>
               <button
                 onClick={handleGenerateDescription}
                 disabled={isGeneratingDesc || !formData.name}
-                className="flex items-center gap-1.5 text-[10px] font-bold bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-2 py-1 rounded hover:scale-105 transition-transform disabled:opacity-50 disabled:scale-100"
+                className="group flex items-center gap-1.5 text-[10px] font-bold bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-3 py-1.5 rounded-lg hover:from-purple-500 hover:to-indigo-500 transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-lg"
               >
-                {isGeneratingDesc ? (
-                  <Search size={10} className="animate-spin" />
-                ) : (
-                  <Sparkles size={10} />
-                )}
+                <Sparkles
+                  size={12}
+                  className={isGeneratingDesc ? 'animate-spin' : 'group-hover:animate-pulse'}
+                />
                 {isGeneratingDesc ? 'Gerando...' : 'Gerar com IA'}
               </button>
             </div>
             <textarea
               value={formData.description || ''}
               onChange={e => setFormData({ ...formData, description: e.target.value })}
-              className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg px-4 py-3 text-[var(--text-primary)] placeholder-[var(--text-secondary)]/50 focus:outline-none focus:border-neon-yellow transition-colors text-sm leading-relaxed min-h-[100px] resize-none"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-indigo-500/50 focus:bg-indigo-500/5 transition-all text-sm leading-relaxed min-h-[90px] resize-none"
               placeholder="Descreva o serviço..."
             />
           </div>
         </div>
 
-        {/* Modal Footer */}
-        <div className="p-6 border-t border-[var(--border-color)] bg-[var(--bg-secondary)] flex flex-col gap-3 transition-colors duration-300">
-          {/* NEW: Badge Creator Trigger */}
+        {/* Modal Footer - Premium */}
+        <div className="relative px-6 py-5 border-t border-white/10 bg-black/30 flex flex-col gap-3">
+          {/* Badge Creator Trigger - Premium */}
           <button
             type="button"
             onClick={onOpenPromoStudio}
-            className="w-full py-4 rounded-xl bg-[var(--bg-primary)] border border-purple-500/30 text-[var(--text-primary)] font-bold uppercase text-xs tracking-widest hover:border-purple-500 hover:shadow-[0_0_20px_rgba(168,85,247,0.3)] transition-all flex items-center justify-center gap-3 group relative overflow-hidden"
+            className="group w-full py-3.5 rounded-xl bg-gradient-to-b from-white/5 to-white/[0.02] border border-purple-500/30 text-white font-bold uppercase text-xs tracking-wider hover:border-purple-500/60 hover:from-purple-500/10 hover:to-purple-500/5 transition-all flex items-center justify-center gap-3 overflow-hidden"
           >
-            <div className="absolute inset-0 bg-purple-500/5 group-hover:bg-purple-500/10 transition-colors"></div>
-            <div className="bg-purple-500/20 p-2 rounded-lg group-hover:bg-purple-500 group-hover:text-black transition-colors relative z-10">
-              <Sparkles size={18} />
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-fuchsia-500 flex items-center justify-center shadow-lg group-hover:shadow-[0_0_15px_rgba(168,85,247,0.4)] transition-all">
+              <Sparkles size={16} className="text-white" />
             </div>
-            <span className="relative z-10 group-hover:text-purple-300 transition-colors">
+            <span className="group-hover:text-purple-300 transition-colors">
               Configurar Badge Promocional
             </span>
           </button>
 
+          {/* Action Buttons */}
           <div className="flex gap-3 w-full">
             <button
               onClick={onClose}
-              className="flex-1 py-3 rounded-xl border border-[var(--border-color)] text-[var(--text-secondary)] font-bold uppercase text-xs tracking-widest hover:border-[var(--text-primary)] hover:text-[var(--text-primary)] transition-all"
+              className="flex-1 py-3.5 rounded-xl bg-white/5 border border-white/10 text-gray-400 font-bold uppercase text-xs tracking-wider hover:bg-white/10 hover:text-white hover:border-white/20 transition-all"
             >
               Cancelar
             </button>
             <button
               onClick={handleSubmit}
-              className="flex-[2] py-3 rounded-xl bg-neon-yellow text-black font-black uppercase text-xs tracking-widest hover:bg-yellow-400 hover:shadow-[0_0_20px_rgba(234,179,8,0.4)] transition-all flex items-center justify-center gap-2"
+              className="flex-[2] py-3.5 rounded-xl bg-gradient-to-r from-yellow-500 to-orange-500 text-black font-black uppercase text-xs tracking-wider hover:from-yellow-400 hover:to-orange-400 hover:shadow-[0_0_25px_rgba(234,179,8,0.4)] transition-all flex items-center justify-center gap-2"
             >
               <Save size={16} /> Salvar
             </button>

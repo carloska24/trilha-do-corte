@@ -3,7 +3,16 @@ import { getOptimizedImageUrl } from '../../utils/imageUtils';
 import { ChairIcon } from '../icons/ChairIcon';
 import { Appointment, AppointmentStatus, ServiceItem } from '../../types';
 import { SERVICES as ALL_SERVICES, LOCAL_AVATARS } from '../../constants';
-import { Armchair, ChevronLeft, ChevronRight, User, Star, X } from 'lucide-react';
+import {
+  Armchair,
+  ChevronLeft,
+  ChevronRight,
+  User,
+  Star,
+  X,
+  Play,
+  SkipForward,
+} from 'lucide-react';
 import { sendBroadcastNotification } from '../../utils/notificationUtils';
 import { useData } from '../../contexts/DataContext';
 import { useShopStatus } from '../../hooks/useShopStatus';
@@ -172,77 +181,128 @@ const QueueTicker = React.memo(
                   ALL_SERVICES.find(s => s.id === client.serviceId);
                 const serviceName = service ? service.name : 'Corte & Estilo';
 
+                // Get client tier for avatar styling
+                const clientData = clients.find(c => c.id === client.clientId);
+                const level = clientData?.level || 1;
+                const tierColor =
+                  level >= 8
+                    ? 'from-purple-400 via-pink-500 to-purple-600'
+                    : level >= 5
+                    ? 'from-yellow-400 via-amber-500 to-orange-500'
+                    : level >= 3
+                    ? 'from-cyan-400 via-blue-500 to-cyan-600'
+                    : 'from-green-400 via-emerald-500 to-green-600';
+                const tierGlow =
+                  level >= 8
+                    ? 'shadow-[0_0_20px_rgba(168,85,247,0.5)]'
+                    : level >= 5
+                    ? 'shadow-[0_0_20px_rgba(250,204,21,0.5)]'
+                    : level >= 3
+                    ? 'shadow-[0_0_20px_rgba(6,182,212,0.5)]'
+                    : 'shadow-[0_0_15px_rgba(34,197,94,0.4)]';
+
                 return (
                   <div
                     key={`${client.id}-${i}`}
-                    className="flex-shrink-0 w-72 h-28 mr-5 flex flex-col relative overflow-hidden group/card select-none rounded-xl border border-zinc-700/50 hover:border-cyan-500/50 transition-all duration-300 shadow-lg hover:shadow-[0_0_25px_rgba(6,182,212,0.2)]"
+                    className="flex-shrink-0 w-[280px] h-[110px] mr-5 relative overflow-hidden group/card select-none rounded-2xl transition-all duration-500 hover:scale-[1.02]"
                   >
-                    {/* Premium Dark Background */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-zinc-800/90 via-zinc-900 to-black" />
+                    {/* === CARD BACKGROUND === */}
+                    {/* Premium Dark Glassmorphism */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-zinc-900/95 via-black/90 to-zinc-950/95 backdrop-blur-xl" />
 
-                    {/* Subtle Shine Effect */}
-                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.02] to-transparent" />
+                    {/* Animated Holographic Shine on Hover */}
+                    <div className="absolute inset-0 opacity-0 group-hover/card:opacity-100 transition-opacity duration-700 overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover/card:translate-x-[100%] transition-transform duration-1000" />
+                    </div>
 
-                    {/* Vibrant Gradient Background on Hover */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-cyan-900/20 via-blue-900/10 to-purple-900/20 opacity-0 group-hover/card:opacity-100 transition-opacity duration-300"></div>
+                    {/* Subtle Grid Pattern */}
+                    <div
+                      className="absolute inset-0 opacity-[0.02]"
+                      style={{
+                        backgroundImage:
+                          'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)',
+                        backgroundSize: '12px 12px',
+                      }}
+                    />
 
-                    {/* Decorative Side Bar */}
-                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-cyan-400 via-blue-500 to-purple-600 shadow-[0_0_10px_rgba(6,182,212,0.5)]"></div>
+                    {/* Border Glow */}
+                    <div className="absolute inset-0 rounded-2xl border border-white/[0.08] group-hover/card:border-cyan-500/30 transition-colors duration-300" />
 
-                    <div className="flex items-center h-full pl-4 pr-3 py-2 z-10 relative">
-                      {/* Avatar */}
-                      <div className="w-16 h-16 rounded-full p-[2px] bg-gradient-to-tr from-cyan-400 via-white to-purple-500 shadow-lg shrink-0 self-center">
-                        <div className="w-full h-full rounded-full overflow-hidden bg-black relative">
-                          <img
-                            src={getOptimizedImageUrl(
-                              clients.find(c => c.id === client.clientId)?.img ||
-                                (client.photoUrl && client.photoUrl.trim() !== ''
-                                  ? client.photoUrl
-                                  : null) ||
-                                'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop',
-                              100,
-                              100
-                            )}
-                            className="w-full h-full object-cover filter contrast-110"
-                            alt={client.clientName}
-                            loading="lazy"
-                            onError={e => {
-                              const target = e.currentTarget;
-                              target.onerror = null;
-                              target.src =
-                                'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop';
-                            }}
-                          />
+                    {/* Decorative Accent Line (Left) */}
+                    <div
+                      className={`absolute left-0 top-3 bottom-3 w-[3px] rounded-full bg-gradient-to-b ${tierColor} ${tierGlow}`}
+                    />
+
+                    {/* === CARD CONTENT === */}
+                    <div className="relative z-10 flex items-center h-full pl-4 pr-3 py-3 gap-3">
+                      {/* Avatar Section - Fixed 56px */}
+                      <div className="relative flex-shrink-0 w-14 h-14">
+                        {/* Subtle Glow */}
+                        <div
+                          className={`absolute -inset-0.5 rounded-full bg-gradient-to-tr ${tierColor} opacity-40 blur-sm`}
+                        />
+
+                        {/* Avatar Container */}
+                        <div
+                          className={`relative w-full h-full rounded-full p-[2px] bg-gradient-to-tr ${tierColor} ${tierGlow}`}
+                        >
+                          <div className="w-full h-full rounded-full overflow-hidden bg-black border border-white/10">
+                            <img
+                              src={getOptimizedImageUrl(
+                                clientData?.img ||
+                                  (client.photoUrl && client.photoUrl.trim() !== ''
+                                    ? client.photoUrl
+                                    : null) ||
+                                  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop',
+                                100,
+                                100
+                              )}
+                              className="w-full h-full object-cover"
+                              alt={client.clientName}
+                              loading="lazy"
+                              onError={e => {
+                                const target = e.currentTarget;
+                                target.onerror = null;
+                                target.src =
+                                  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop';
+                              }}
+                            />
+                          </div>
+
+                          {/* Live Indicator */}
+                          <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-green-500 border-2 border-black shadow-[0_0_6px_#22c55e]" />
                         </div>
                       </div>
 
-                      {/* Info Container */}
-                      <div className="ml-3 flex flex-col justify-between flex-1 min-w-0 h-full py-1">
-                        {/* Top: Client Name (Only First Name, Higher Up) */}
-                        <div className="flex items-start w-full mt-0.5">
-                          <span className="text-[var(--text-primary)] font-black text-2xl uppercase truncate leading-none tracking-tight group-hover/card:text-cyan-200 transition-colors">
+                      {/* Main Content - Flex 1 */}
+                      <div className="flex-1 flex flex-col justify-center min-w-0 relative">
+                        {/* Top Row: Name + Time */}
+                        <div className="flex items-center justify-between gap-2 mb-1">
+                          {/* Client Name - Priority */}
+                          <h3 className="text-lg font-black text-white uppercase leading-none tracking-tight truncate">
                             {formatName(client.clientName) || 'CLIENTE'}
-                          </span>
-                        </div>
+                          </h3>
 
-                        {/* Middle: Service Name (Larger font, centered vertically relative to spacing) */}
-                        <div className="flex items-center w-full mt-1 mb-1">
-                          <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 mr-2 flex-shrink-0 animate-pulse"></div>
-                          <span className="text-base font-bold text-[var(--text-secondary)] font-mono uppercase tracking-wide truncate">
-                            {serviceName}
-                          </span>
-                        </div>
-
-                        {/* Bottom: Divider & Time */}
-                        <div className="relative w-full pt-1 border-t border-[var(--border-color)] mt-auto flex justify-end">
-                          <div className="flex items-center justify-center bg-cyan-500/10 border border-cyan-400/20 rounded-md px-3 py-1 shadow-[0_0_10px_rgba(6,182,212,0.1)] group-hover/card:border-cyan-400/50 transition-all">
-                            <span className="text-sm font-black text-cyan-400 font-mono tracking-wider leading-none">
+                          {/* Time Badge - Compact */}
+                          <div className="flex-shrink-0 px-2 py-1 rounded-md bg-cyan-500/15 border border-cyan-400/25">
+                            <span className="text-xs font-black text-cyan-400 font-mono tracking-wide">
                               {client.time}
                             </span>
                           </div>
                         </div>
+
+                        {/* Bottom Row: Service */}
+                        <div className="flex items-center gap-2">
+                          <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_4px_#22d3ee] animate-pulse" />
+                          <span className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider truncate">
+                            {serviceName}
+                          </span>
+                        </div>
                       </div>
                     </div>
+
+                    {/* Bottom Accent Line */}
+                    <div className="absolute bottom-0 left-4 right-4 h-[1px] bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent" />
                   </div>
                 );
               })}
@@ -259,6 +319,7 @@ export const DashboardHome: React.FC = () => {
   const { currentTime, shopStatus } = useShopStatus(); // Using Centralized Logic
   const { initiateFinish } = useOutletContext<DashboardOutletContext>();
   const [isSkipModalOpen, setIsSkipModalOpen] = useState(false);
+  const [previewIndex, setPreviewIndex] = useState(0); // Índice do cliente atual no card
 
   const onInitiateFinish = initiateFinish;
 
@@ -312,6 +373,20 @@ export const DashboardHome: React.FC = () => {
     };
   }, [appointments, todayString]);
 
+  // Cliente atualmente exibido no card (pode ser diferente do primeiro da fila se o usuário pulou)
+  const previewedClient = React.useMemo(() => {
+    // Reset previewIndex se ultrapassar o tamanho da fila
+    const safeIndex = Math.min(previewIndex, queue.length - 1);
+    return queue.length > 0 ? queue[Math.max(0, safeIndex)] : null;
+  }, [queue, previewIndex]);
+
+  // Resetar previewIndex quando a fila mudar significativamente
+  React.useEffect(() => {
+    if (previewIndex >= queue.length) {
+      setPreviewIndex(0);
+    }
+  }, [queue.length, previewIndex]);
+
   // Format Date: "QUARTA-FEIRA, 3 DE DEZEMBRO"
   const dateString = React.useMemo(
     () =>
@@ -357,7 +432,7 @@ export const DashboardHome: React.FC = () => {
   return (
     <div className="flex flex-col items-center w-full max-w-md mx-auto h-full animate-[fadeIn_0.5s_ease-out] transition-colors duration-300">
       {/* 1. CLOCK & DATE - iPhone Style */}
-      <div className="flex flex-col items-center mt-0 mb-4 py-6 px-8">
+      <div className="flex flex-col items-center pt-2 mb-2 py-2 px-8">
         <h1 className="text-6xl font-bold text-white tracking-tighter leading-none font-sans">
           {currentTime.toLocaleTimeString([], {
             hour: '2-digit',
@@ -365,7 +440,7 @@ export const DashboardHome: React.FC = () => {
             second: '2-digit',
           })}
         </h1>
-        <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest mt-2">
+        <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest mt-1">
           {dateString}
         </p>
       </div>
@@ -515,7 +590,7 @@ export const DashboardHome: React.FC = () => {
                   className={`w-full h-full object-contain object-center transition-all duration-1000 transform ${
                     shopStatus.isOpen
                       ? 'scale-100 drop-shadow-[0_0_50px_rgba(0,100,255,0.2)]'
-                      : 'scale-110 drop-shadow-[0_0_50px_rgba(255,0,0,0.1)] grayscale-[50%] brightness-75'
+                      : 'scale-110 drop-shadow-[0_0_50px_rgba(255,0,0,0.15)]'
                   }`}
                   alt="Barbearia"
                   onError={e => {
@@ -568,54 +643,269 @@ export const DashboardHome: React.FC = () => {
                   </div>
                 </div>
               </button>
-            ) : nextClient ? (
-              <div
-                onClick={() => onStatusChange(nextClient.id, 'in_progress')}
-                className="w-full h-24 rounded-lg flex items-center px-0 relative overflow-hidden transition-all duration-500 bg-gradient-to-r from-amber-700 via-orange-600 to-red-800 shadow-[0_4px_20px_rgba(185,28,28,0.4)] active:scale-[0.98] cursor-pointer hover:shadow-[0_6px_25px_rgba(234,88,12,0.5)]"
-                role="button"
-                tabIndex={0}
-              >
-                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay"></div>
-                <div className="w-[30%] h-full flex items-center justify-center relative z-10 pl-1">
-                  <div className="w-[4.5rem] h-[4.5rem] rounded-full bg-gradient-to-br from-yellow-500 to-red-600 p-[2px] shadow-lg transform scale-105">
-                    <img
-                      src={getClientImage(nextClient, 100)}
-                      className="w-full h-full object-cover rounded-full filter contrast-110"
-                      alt="Client"
-                      onError={e => {
-                        e.currentTarget.src =
-                          'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop';
-                      }}
-                    />
-                  </div>
+            ) : previewedClient ? (
+              /* === COMMAND CENTER CARD === */
+              <div className="w-full rounded-2xl relative overflow-hidden transition-all duration-500 group/card">
+                {/* Animated Neon Yellow Border */}
+                <div className="absolute inset-0 rounded-2xl p-[2px] bg-gradient-to-r from-yellow-500 via-amber-400 to-yellow-500 animate-[borderGlow_3s_ease-in-out_infinite]">
+                  <div className="absolute inset-[2px] rounded-2xl bg-[#0a0a0a]"></div>
                 </div>
-                <div className="w-[70%] h-full flex items-center justify-between px-4 z-10 pl-2">
-                  <div className="flex flex-col items-start min-w-0">
-                    <span className="text-[11px] font-black text-amber-100/80 uppercase tracking-[0.2em] mb-0.5 shadow-sm">
-                      PRÓXIMO DA FILA
-                    </span>
-                    <span className="text-3xl font-black text-white uppercase leading-none drop-shadow-md tracking-tighter truncate w-full">
-                      {nextClient.clientName ? nextClient.clientName.split(' ')[0] : 'CLIENTE'}
-                    </span>
+
+                {/* Card Content */}
+                <div className="relative z-10 p-4">
+                  {/* Top Section: Avatar + Info */}
+                  <div className="flex items-center gap-4 mb-4">
+                    {/* Avatar with Glow */}
+                    <div className="relative flex-shrink-0">
+                      <div className="absolute -inset-1 rounded-full bg-yellow-500/40 blur-md animate-pulse"></div>
+                      <div className="relative w-16 h-16 rounded-full p-[2px] bg-gradient-to-tr from-yellow-400 via-amber-500 to-yellow-600 shadow-[0_0_20px_rgba(234,179,8,0.5)]">
+                        <div className="w-full h-full rounded-full overflow-hidden bg-black border border-white/10">
+                          <img
+                            src={getClientImage(previewedClient, 100)}
+                            className="w-full h-full object-cover"
+                            alt="Client"
+                            onError={e => {
+                              e.currentTarget.src =
+                                'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop';
+                            }}
+                          />
+                        </div>
+                        {/* Status Indicator */}
+                        <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-green-500 border-2 border-black shadow-[0_0_8px_#22c55e]"></div>
+                      </div>
+                    </div>
+
+                    {/* Client Info */}
+                    <div className="flex-1 min-w-0">
+                      <span className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.15em] block">
+                        PRÓXIMO DA FILA
+                      </span>
+                      <h2 className="text-2xl font-black text-white uppercase leading-none tracking-tight truncate">
+                        {previewedClient.clientName
+                          ? previewedClient.clientName.split(' ')[0]
+                          : 'CLIENTE'}
+                      </h2>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-xs text-gray-400">
+                          {(() => {
+                            const service =
+                              services.find(s => s.id === previewedClient.serviceId) ||
+                              ALL_SERVICES.find(s => s.id === previewedClient.serviceId);
+                            return service ? service.name : 'Corte & Estilo';
+                          })()}
+                        </span>
+                        <span className="text-gray-600">•</span>
+                        <span className="text-xs font-mono text-yellow-500 font-bold">
+                          {previewedClient.time}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    {/* Discrete Skip Button */}
+
+                  {/* Action Buttons Row */}
+                  <div className="grid grid-cols-[1fr_1fr_2fr] gap-2">
+                    {/* CANCELAR Button - Cancela agendamento diretamente */}
                     <button
-                      onClick={e => {
+                      onClick={async e => {
                         e.stopPropagation();
-                        setIsSkipModalOpen(true);
+                        // Cancelar diretamente sem confirmação
+                        const updated = appointments.map(app =>
+                          app.id === previewedClient.id
+                            ? { ...app, status: 'cancelled' as const }
+                            : app
+                        );
+                        updateAppointments(updated);
+                        setPreviewIndex(0); // Reset para o próximo da fila
+                        try {
+                          await api.updateAppointment(previewedClient.id, { status: 'cancelled' });
+                        } catch (err) {
+                          console.error('Failed to cancel', err);
+                        }
                       }}
-                      className="w-8 h-8 rounded-full bg-black/20 hover:bg-red-500/80 flex items-center justify-center text-white/40 hover:text-white transition-all backdrop-blur-sm z-50 group/skip"
-                      title="Cliente não veio (Cancelar)"
+                      className="flex items-center justify-center gap-2 py-3.5 px-3 rounded-lg bg-gradient-to-b from-red-900/40 to-red-950/60 border border-red-500/50 text-red-400 hover:border-red-400 hover:text-red-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.3)] transition-all active:scale-95 relative overflow-hidden group"
                     >
-                      <X size={16} strokeWidth={3} />
+                      {/* Tech corner accents */}
+                      <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-red-500/70"></div>
+                      <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-red-500/70"></div>
+                      <X
+                        size={20}
+                        strokeWidth={3}
+                        className="drop-shadow-[0_0_4px_rgba(239,68,68,0.5)]"
+                      />
                     </button>
 
-                    <ChevronRight
-                      className="text-amber-200/60 animate-pulse flex-shrink-0"
-                      size={36}
-                    />
+                    {/* PULAR Button - Move o cliente atual para o fim da fila */}
+                    <button
+                      onClick={async e => {
+                        e.stopPropagation();
+                        // Persistir o pulo: adiciona sufixo ao horário para ir para o fim da fila
+                        const currentTime = previewedClient.time;
+                        // Se já foi pulado antes (tem :99), ignora
+                        if (currentTime.includes(':99')) return;
+
+                        const newTime = currentTime + ':99'; // Sufixo para ordenação
+
+                        // Atualizar localmente
+                        const updated = appointments.map(app =>
+                          app.id === previewedClient.id ? { ...app, time: newTime } : app
+                        );
+                        updateAppointments(updated);
+
+                        // Persistir no banco
+                        try {
+                          await api.updateAppointment(previewedClient.id, {
+                            time: newTime,
+                          } as Partial<typeof previewedClient>);
+                        } catch (err) {
+                          console.error('Failed to skip', err);
+                        }
+                      }}
+                      disabled={queue.length <= 1 || previewedClient.time.includes(':99')}
+                      className="flex items-center justify-center gap-2 py-3.5 px-3 rounded-lg bg-gradient-to-b from-slate-800/60 to-slate-900/80 border border-slate-500/40 text-slate-300 hover:border-slate-400 hover:text-white hover:shadow-[0_0_15px_rgba(148,163,184,0.2)] transition-all active:scale-95 relative overflow-hidden"
+                    >
+                      {/* Tech corner accents */}
+                      <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-slate-500/50"></div>
+                      <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-slate-500/50"></div>
+                      {/* Custom Double Chevron SVG */}
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 -42 469 469"
+                        fill="currentColor"
+                        className="drop-shadow-sm"
+                      >
+                        <path d="m90.667969 384.167969h-53.335938c-20.585937 0-37.332031-16.746094-37.332031-37.335938 0-7.742187 2.390625-15.273437 6.71875-21.183593l92.226562-133.480469-92.480468-133.847657c-4.074219-5.546874-6.464844-13.078124-6.464844-20.820312 0-20.585938 16.746094-37.332031 37.332031-37.332031h53.335938c12.4375 0 24.019531 6.25 31.015625 16.722656l106.519531 154.476563c4.074219 5.523437 6.464844 13.054687 6.464844 20.800781 0 7.742187-2.390625 15.273437-6.722657 21.183593l-106.410156 154.28125c-6.847656 10.28125-18.429687 16.535157-30.867187 16.535157zm-53.335938-352c-2.898437 0-5.332031 2.429687-5.332031 5.332031 0 1.152344.363281 2.046875.535156 2.261719l99.027344 143.296875c3.777344 5.460937 3.777344 12.714844 0 18.195312l-98.773438 142.933594c-.425781.597656-.789062 1.492188-.789062 2.644531 0 2.902344 2.433594 5.335938 5.332031 5.335938h53.335938c2.386719 0 3.773437-1.558594 4.394531-2.496094l106.816406-154.859375c.425782-.597656.789063-1.492188.789063-2.644531 0-1.152344-.363281-2.050781-.535157-2.261719l-106.921874-155.050781c-.769532-1.132813-2.15625-2.6875-4.542969-2.6875zm0 0"></path>
+                        <path d="m325.332031 384.167969h-53.332031c-20.585938 0-37.332031-16.746094-37.332031-37.335938 0-7.742187 2.386719-15.273437 6.71875-21.183593l92.222656-133.480469-92.480469-133.847657c-4.074218-5.546874-6.460937-13.078124-6.460937-20.820312 0-20.585938 16.746093-37.332031 37.332031-37.332031h53.332031c12.4375 0 24.023438 6.25 31.019531 16.722656l106.519532 154.476563c4.074218 5.523437 6.460937 13.054687 6.460937 20.800781 0 7.742187-2.386719 15.273437-6.71875 21.183593l-106.410156 154.28125c-6.847656 10.28125-18.433594 16.535157-30.871094 16.535157zm-53.332031-352c-2.902344 0-5.332031 2.429687-5.332031 5.332031 0 1.152344.363281 2.046875.53125 2.261719l99.03125 143.296875c3.773437 5.460937 3.773437 12.714844 0 18.195312l-98.773438 142.933594c-.425781.597656-.789062 1.492188-.789062 2.644531 0 2.902344 2.429687 5.335938 5.332031 5.335938h53.332031c2.390625 0 3.777344-1.558594 4.394531-2.496094l106.816407-154.859375c.425781-.597656.789062-1.492188.789062-2.644531 0-1.152344-.363281-2.050781-.53125-2.261719l-106.921875-155.050781c-.769531-1.132813-2.15625-2.6875-4.546875-2.6875zm0 0"></path>
+                      </svg>
+                    </button>
+
+                    {/* CHAMAR PRÓXIMO Button (Primary) */}
+                    <button
+                      onClick={() => {
+                        onStatusChange(previewedClient.id, 'in_progress');
+                        setPreviewIndex(0); // Reset após chamar
+                      }}
+                      className="flex items-center justify-center gap-2 py-3.5 px-4 rounded-lg bg-gradient-to-b from-yellow-400 via-yellow-500 to-amber-600 text-black font-black shadow-[0_4px_20px_rgba(234,179,8,0.5),inset_0_1px_0_rgba(255,255,255,0.3)] hover:shadow-[0_0_30px_rgba(234,179,8,0.7)] hover:scale-[1.02] transition-all active:scale-95 relative overflow-hidden border border-yellow-400/50"
+                    >
+                      {/* Shine effect */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                      {/* Tech corner accents */}
+                      <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-yellow-300/80"></div>
+                      <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-amber-700/80"></div>
+                      {/* Custom Play Icon SVG */}
+                      <svg
+                        width="18"
+                        height="18"
+                        viewBox="0 0 30.065 30.065"
+                        fill="currentColor"
+                        className="drop-shadow-md"
+                      >
+                        <path d="M26.511,12.004L6.233,0.463c-2.151-1.228-4.344,0.115-4.344,2.53v24.093c0,2.046,1.332,2.979,2.57,2.979c0.583,0,1.177-0.184,1.767-0.543l20.369-12.468c1.024-0.629,1.599-1.56,1.581-2.555C28.159,13.503,27.553,12.593,26.511,12.004z M25.23,14.827L4.862,27.292c-0.137,0.084-0.245,0.126-0.319,0.147c-0.02-0.074-0.04-0.188-0.04-0.353V2.994c0-0.248,0.045-0.373,0.045-0.404c0.08,0.005,0.22,0.046,0.396,0.146l20.275,11.541c0.25,0.143,0.324,0.267,0.348,0.24C25.554,14.551,25.469,14.678,25.23,14.827z"></path>
+                      </svg>
+                      <span className="text-sm font-black uppercase tracking-wider drop-shadow-sm">
+                        CHAMAR
+                      </span>
+                    </button>
                   </div>
+                </div>
+
+                {/* Animated Circuit Lines - Energy Flow Effect */}
+                <div className="absolute top-0 right-0 w-32 h-32 pointer-events-none overflow-hidden">
+                  <svg viewBox="0 0 100 100" className="w-full h-full">
+                    {/* Base circuit paths (dim) */}
+                    <path
+                      d="M0 20 L30 20 L50 40 L100 40"
+                      stroke="rgba(234,179,8,0.15)"
+                      fill="none"
+                      strokeWidth="1.5"
+                    />
+                    <path
+                      d="M0 50 L20 50 L40 70 L100 70"
+                      stroke="rgba(234,179,8,0.15)"
+                      fill="none"
+                      strokeWidth="1.5"
+                    />
+
+                    {/* Animated energy flow on path 1 */}
+                    <path
+                      d="M0 20 L30 20 L50 40 L100 40"
+                      stroke="url(#energyGradient)"
+                      fill="none"
+                      strokeWidth="2"
+                      strokeDasharray="20 80"
+                      style={{
+                        animation: 'circuitFlow 2s linear infinite',
+                      }}
+                    />
+
+                    {/* Animated energy flow on path 2 */}
+                    <path
+                      d="M0 50 L20 50 L40 70 L100 70"
+                      stroke="url(#energyGradient)"
+                      fill="none"
+                      strokeWidth="2"
+                      strokeDasharray="15 85"
+                      style={{
+                        animation: 'circuitFlow 2.5s linear infinite',
+                        animationDelay: '0.5s',
+                      }}
+                    />
+
+                    {/* Junction nodes - pulsing */}
+                    <circle
+                      cx="50"
+                      cy="40"
+                      r="3"
+                      fill="#eab308"
+                      className="animate-pulse"
+                      style={{ filter: 'drop-shadow(0 0 4px #eab308)' }}
+                    />
+                    <circle
+                      cx="40"
+                      cy="70"
+                      r="3"
+                      fill="#eab308"
+                      className="animate-pulse"
+                      style={{ filter: 'drop-shadow(0 0 4px #eab308)', animationDelay: '0.3s' }}
+                    />
+                    <circle
+                      cx="30"
+                      cy="20"
+                      r="2"
+                      fill="#eab308"
+                      className="animate-pulse opacity-60"
+                    />
+                    <circle
+                      cx="20"
+                      cy="50"
+                      r="2"
+                      fill="#eab308"
+                      className="animate-pulse opacity-60"
+                      style={{ animationDelay: '0.6s' }}
+                    />
+
+                    {/* Gradient definition */}
+                    <defs>
+                      <linearGradient id="energyGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="transparent" />
+                        <stop offset="50%" stopColor="#eab308" />
+                        <stop offset="100%" stopColor="transparent" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                </div>
+
+                {/* Scanning line effect (horizontal) */}
+                <div
+                  className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl"
+                  style={{ opacity: 0.3 }}
+                >
+                  <div
+                    className="absolute w-full h-[2px] bg-gradient-to-r from-transparent via-yellow-400 to-transparent"
+                    style={{
+                      animation: 'scanLine 3s ease-in-out infinite',
+                    }}
+                  />
                 </div>
               </div>
             ) : (

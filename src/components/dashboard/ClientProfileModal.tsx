@@ -136,6 +136,45 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({
   const totalVisits = completedApps.length;
   const rating = Math.min(5, totalVisits);
 
+  // ========== HOT CLIENT DETECTION ==========
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+  const appointmentsThisMonth = clientApps.filter(apt => {
+    if (apt.status === 'completed' || apt.status === 'confirmed' || apt.status === 'pending') {
+      try {
+        const [year, month] = apt.date.split('-').map(Number);
+        return year === currentYear && month - 1 === currentMonth;
+      } catch (e) {
+        return false;
+      }
+    }
+    return false;
+  }).length;
+  const isHotClient = appointmentsThisMonth >= 3;
+
+  // ========== RECURRENCE STATUS (Same as ClientCard) ==========
+  const getRecurrenceStatus = () => {
+    if (!client.lastVisit || client.lastVisit === 'Nunca') {
+      return { color: 'bg-blue-500', label: 'Novo', glow: 'shadow-[0_0_10px_#3b82f6]' };
+    }
+    try {
+      const parts = client.lastVisit.split('/');
+      if (parts.length === 3) {
+        const visitDate = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+        const diffDays = Math.ceil(
+          Math.abs(new Date().getTime() - visitDate.getTime()) / (1000 * 60 * 60 * 24)
+        );
+        if (diffDays > 60)
+          return { color: 'bg-red-500', label: 'Risco', glow: 'shadow-[0_0_10px_#ef4444]' };
+        if (diffDays > 30)
+          return { color: 'bg-yellow-500', label: 'Atenção', glow: 'shadow-[0_0_10px_#eab308]' };
+        return { color: 'bg-green-500', label: 'Ativo', glow: 'shadow-[0_0_10px_#22c55e]' };
+      }
+    } catch (e) {}
+    return { color: 'bg-green-500', label: 'Ativo', glow: 'shadow-[0_0_10px_#22c55e]' };
+  };
+  const recurrence = getRecurrenceStatus();
+
   // Animate counters
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -145,43 +184,66 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({
     return () => clearTimeout(timer);
   }, [rating, totalVisits]);
 
-  // Tier Logic with enhanced visuals
-  const getTier = (visits: number) => {
-    if (visits >= 10)
+  // Tier Logic - SYNCED with ClientCard (using client.level)
+  const level = client.level || 1;
+  type Tier = 'BRONZE' | 'SILVER' | 'GOLD' | 'PLATINUM';
+
+  const getTier = (): {
+    name: Tier;
+    color: string;
+    border: string;
+    bg: string;
+    glow: string;
+    ringColor: string;
+    icon: string;
+    badge: string;
+  } => {
+    if (level >= 8)
       return {
         name: 'PLATINUM',
-        color: 'text-cyan-400',
-        border: 'border-cyan-400/50',
-        bg: 'bg-gradient-to-r from-cyan-500/20 to-teal-500/20',
-        glow: 'shadow-[0_0_30px_rgba(34,211,238,0.4)]',
+        color: 'text-purple-400',
+        border: 'border-purple-400/50',
+        bg: 'bg-gradient-to-r from-purple-500/20 to-pink-500/20',
+        glow: 'shadow-[0_0_30px_rgba(168,85,247,0.5)]',
+        ringColor: 'border-purple-400',
         icon: '💎',
-        next: null,
-        progress: 100,
+        badge: 'from-purple-500 to-pink-500 text-purple-100',
       };
-    if (visits >= 5)
+    if (level >= 5)
       return {
         name: 'GOLD',
-        color: 'text-yellow-500',
-        border: 'border-yellow-500/50',
-        bg: 'bg-gradient-to-r from-yellow-500/20 to-amber-500/20',
-        glow: 'shadow-[0_0_30px_rgba(234,179,8,0.4)]',
+        color: 'text-yellow-400',
+        border: 'border-yellow-400/50',
+        bg: 'bg-gradient-to-r from-yellow-500/20 to-orange-500/20',
+        glow: 'shadow-[0_0_25px_rgba(250,204,21,0.5)]',
+        ringColor: 'border-yellow-400',
         icon: '🏆',
-        next: 'PLATINUM',
-        progress: ((visits - 5) / 5) * 100,
+        badge: 'from-yellow-500 to-orange-500 text-yellow-100',
+      };
+    if (level >= 3)
+      return {
+        name: 'SILVER',
+        color: 'text-cyan-400',
+        border: 'border-cyan-400/50',
+        bg: 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20',
+        glow: 'shadow-[0_0_20px_rgba(34,211,238,0.5)]',
+        ringColor: 'border-cyan-400',
+        icon: '⭐',
+        badge: 'from-cyan-500 to-blue-600 text-cyan-100',
       };
     return {
-      name: 'SILVER',
-      color: 'text-zinc-400',
-      border: 'border-zinc-500/50',
-      bg: 'bg-gradient-to-r from-zinc-500/10 to-zinc-600/10',
-      glow: '',
-      icon: '⭐',
-      next: 'GOLD',
-      progress: (visits / 5) * 100,
+      name: 'BRONZE',
+      color: 'text-green-400',
+      border: 'border-green-500/50',
+      bg: 'bg-gradient-to-r from-green-500/20 to-emerald-500/20',
+      glow: 'shadow-[0_0_15px_rgba(34,197,94,0.4)]',
+      ringColor: 'border-green-500',
+      icon: '🌱',
+      badge: 'from-green-600 to-green-800 text-green-100',
     };
   };
 
-  const tier = getTier(totalVisits);
+  const tier = getTier();
 
   const getDateParts = (dateStr: string) => {
     const date = parseLocalDate(dateStr);
@@ -214,9 +276,30 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({
           className="w-full max-w-sm bg-zinc-950 rounded-3xl border border-zinc-800/80 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
         >
           {/* === HEADER - HERO SECTION === */}
-          <div className="relative pt-8 pb-6 px-6 bg-gradient-to-b from-zinc-900 via-zinc-900/95 to-zinc-950 text-center border-b border-zinc-800/50">
+          <div
+            className={`relative pt-8 pb-6 px-6 text-center border-b transition-all duration-500 ${
+              isHotClient
+                ? 'bg-gradient-to-b from-orange-900/30 via-zinc-900/95 to-zinc-950 border-orange-500/30'
+                : 'bg-gradient-to-b from-zinc-900 via-zinc-900/95 to-zinc-950 border-zinc-800/50'
+            }`}
+          >
             {/* Decorative Background Glow */}
-            <div className={`absolute inset-0 ${tier.bg} opacity-30 blur-3xl`} />
+            <div
+              className={`absolute inset-0 ${
+                isHotClient
+                  ? 'bg-gradient-to-br from-orange-500/10 via-transparent to-red-500/10'
+                  : tier.bg
+              } opacity-30 blur-3xl`}
+            />
+
+            {/* 🔥 HOT Client Flame Effect */}
+            {isHotClient && (
+              <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute bottom-0 left-1/4 w-3 h-12 bg-gradient-to-t from-orange-600/40 to-transparent rounded-full blur-sm animate-[flicker_0.5s_ease-in-out_infinite]" />
+                <div className="absolute bottom-0 left-1/2 w-4 h-16 bg-gradient-to-t from-red-500/30 to-yellow-500/10 rounded-full blur-sm animate-[flicker_0.3s_ease-in-out_infinite_0.1s]" />
+                <div className="absolute bottom-0 right-1/4 w-3 h-10 bg-gradient-to-t from-orange-500/40 to-transparent rounded-full blur-sm animate-[flicker_0.4s_ease-in-out_infinite_0.2s]" />
+              </div>
+            )}
 
             {/* Close Button */}
             <button
@@ -226,32 +309,58 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({
               <X size={16} className="group-hover:rotate-90 transition-transform duration-300" />
             </button>
 
-            {/* Avatar with Animated Glow */}
+            {/* Avatar with Animated Tier Ring */}
             <div className="relative inline-block mb-4">
               {/* Pulsing Glow Ring */}
               <div
-                className={`absolute inset-[-8px] rounded-full ${tier.bg} animate-pulse blur-xl opacity-60`}
+                className={`absolute inset-[-8px] rounded-full ${
+                  isHotClient ? 'bg-gradient-to-br from-orange-500/40 to-red-500/40' : tier.bg
+                } animate-pulse blur-xl opacity-60`}
               />
               <div
-                className={`absolute inset-[-4px] rounded-full border-2 ${tier.border} animate-[spin_8s_linear_infinite] opacity-40`}
+                className={`absolute inset-[-4px] rounded-full border-2 ${
+                  isHotClient ? 'border-orange-400/50' : tier.border
+                } animate-[spin_8s_linear_infinite] opacity-40`}
               />
 
-              {/* Avatar Container */}
+              {/* Avatar Container with Tier Ring Color */}
               <div
-                className={`relative w-24 h-24 rounded-full p-[3px] bg-gradient-to-br from-zinc-700 via-zinc-800 to-zinc-900 ${tier.glow}`}
+                className={`relative w-24 h-24 rounded-full p-[3px] border-2 ${
+                  isHotClient ? 'border-orange-400' : tier.ringColor
+                } ${
+                  isHotClient ? 'shadow-[0_0_25px_rgba(249,115,22,0.5)]' : tier.glow
+                } transition-all duration-300`}
               >
-                <img
-                  src={
-                    client.img ||
-                    'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop'
-                  }
-                  alt={client.name}
-                  className="w-full h-full rounded-full object-cover border-2 border-zinc-900"
+                <div className="w-full h-full rounded-full overflow-hidden bg-black/50 border border-white/5 relative">
+                  <img
+                    src={
+                      client.img ||
+                      'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop'
+                    }
+                    alt={client.name}
+                    className="w-full h-full rounded-full object-cover"
+                  />
+                </div>
+
+                {/* Recurrence Status Indicator (Bottom Right) */}
+                <div
+                  className={`absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full border-2 border-zinc-900 ${
+                    recurrence.color
+                  } ${recurrence.glow} z-20 transition-all ${
+                    isTemp ? 'animate-pulse bg-neon-yellow' : ''
+                  }`}
                 />
 
-                {/* Tier Icon Badge */}
+                {/* 🔥 HOT Badge on Avatar */}
+                {isHotClient && (
+                  <div className="absolute -top-1 -left-1 w-7 h-7 rounded-full bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center shadow-[0_0_15px_rgba(249,115,22,0.6)] animate-bounce z-30">
+                    <span className="text-sm">🔥</span>
+                  </div>
+                )}
+
+                {/* Tier Icon Badge (Top Right) */}
                 <div
-                  className={`absolute -bottom-1 -right-1 w-8 h-8 rounded-full ${tier.bg} border-2 border-zinc-900 flex items-center justify-center text-lg ${tier.glow}`}
+                  className={`absolute -top-1 -right-1 w-7 h-7 rounded-full ${tier.bg} border-2 border-zinc-900 flex items-center justify-center text-sm ${tier.glow}`}
                 >
                   {tier.icon}
                 </div>
@@ -260,19 +369,33 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({
 
             {/* Name & Badges */}
             <div className="relative z-10">
-              <h2 className="text-2xl font-black text-white uppercase tracking-wide mb-3 drop-shadow-lg">
+              <h2
+                className={`text-2xl font-black uppercase tracking-wide mb-3 drop-shadow-lg transition-colors ${
+                  isHotClient ? 'text-orange-100' : 'text-white'
+                }`}
+              >
                 {client.name}
               </h2>
 
               <div className="flex items-center justify-center gap-2 flex-wrap">
+                {/* Level Badge */}
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.15, type: 'spring' }}
+                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-gradient-to-r ${tier.badge} shadow-lg`}
+                >
+                  <Star size={10} className="fill-current" />
+                  <span className="text-[9px] font-black tracking-wider">LVL {level}</span>
+                </motion.div>
+
                 {/* Tier Badge */}
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.2, type: 'spring' }}
-                  className={`px-3 py-1.5 rounded-lg border ${tier.border} ${tier.bg} flex items-center gap-2 backdrop-blur-sm`}
+                  className={`px-3 py-1.5 rounded-lg border ${tier.border} bg-white/5 flex items-center gap-2 backdrop-blur-sm`}
                 >
-                  <Star size={12} className={tier.color} fill="currentColor" />
                   <span
                     className={`text-[10px] font-black uppercase tracking-widest ${tier.color}`}
                   >
@@ -280,21 +403,46 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({
                   </span>
                 </motion.div>
 
-                {/* Status Badge */}
-                {client.status === 'new' ? (
-                  <span className="text-[10px] font-bold text-black tracking-widest bg-yellow-500 px-3 py-1.5 rounded-lg shadow-[0_0_15px_rgba(234,179,8,0.5)] animate-pulse">
-                    NOVO
-                  </span>
-                ) : client.isGuest ? (
-                  <span className="text-[10px] font-bold text-white tracking-widest bg-purple-600/80 px-3 py-1.5 rounded-lg">
-                    VISITANTE
-                  </span>
-                ) : (
-                  <span className="text-[10px] font-mono font-bold text-zinc-500 tracking-widest bg-zinc-800/50 px-3 py-1.5 rounded-lg">
-                    #{String(client.id || '0000').slice(-4)}
-                  </span>
+                {/* PROVISÓRIO Badge */}
+                {isTemp && (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.25, type: 'spring' }}
+                    className="px-2.5 py-1.5 rounded-lg bg-neon-yellow/20 border border-neon-yellow/30 animate-pulse"
+                  >
+                    <span className="text-[9px] font-bold text-neon-yellow tracking-wider">
+                      PROVISÓRIO
+                    </span>
+                  </motion.div>
+                )}
+
+                {/* 🔥 HOT Badge */}
+                {isHotClient && (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.3, type: 'spring' }}
+                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-orange-500 to-red-500 shadow-[0_0_10px_rgba(249,115,22,0.4)] animate-pulse"
+                  >
+                    <span className="text-sm">🔥</span>
+                    <span className="text-[9px] font-black text-white tracking-wider">HOT</span>
+                  </motion.div>
                 )}
               </div>
+
+              {/* Recurrence Status Label */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.35 }}
+                className="mt-3 flex items-center justify-center gap-2"
+              >
+                <div className={`w-2 h-2 rounded-full ${recurrence.color} ${recurrence.glow}`} />
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+                  {recurrence.label} • {appointmentsThisMonth}x este mês
+                </span>
+              </motion.div>
             </div>
 
             {/* Action Buttons - Glassmorphism */}

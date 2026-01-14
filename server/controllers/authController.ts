@@ -3,20 +3,19 @@ import { v4 as uuidv4 } from 'uuid';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import prisma from '../prismaClient.js';
+import { JWT_SECRET, JWT_EXPIRES_IN } from '../config.js';
 import {
   loginSchema,
   loginBarberSchema,
   registerClientSchema,
   registerBarberSchema,
-} from '../validators.js'; // Assuming validators.js is still JS
-
-const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret_123';
+} from '../validators.js';
 
 const generateToken = (user: any) => {
   return jwt.sign(
     { id: user.id, email: user.email, type: user.specialty ? 'barber' : 'client' },
     JWT_SECRET,
-    { expiresIn: '30d' }
+    { expiresIn: JWT_EXPIRES_IN }
   );
 };
 

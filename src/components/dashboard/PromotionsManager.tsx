@@ -1,8 +1,25 @@
 import React, { useState } from 'react';
-import { Plus, Trash2, Edit2, Image as ImageIcon, Check, Scissors } from 'lucide-react';
+import {
+  Plus,
+  Trash2,
+  Edit2,
+  Image as ImageIcon,
+  Scissors,
+  Power,
+  Eye,
+  X,
+  Calendar,
+  Sparkles,
+  Loader,
+  ChevronDown,
+  Check,
+} from 'lucide-react';
 import { ConfirmModal } from '../ui/ConfirmModal';
+import { DatePicker } from '../ui/DatePicker';
 import { Combo, ServiceItem } from '../../types';
 import { MOCK_COMBOS } from '../../constants';
+import { motion, AnimatePresence } from 'framer-motion';
+import { generateComboDescription } from '../../services/geminiService';
 
 interface PromotionsManagerProps {
   services: ServiceItem[];
@@ -29,6 +46,18 @@ export const PromotionsManager: React.FC<PromotionsManagerProps> = ({ services }
     },
     { id: 'classic', label: 'Classic (Azul/Roxo)', gradient: 'from-blue-600 to-purple-600' },
   ];
+
+  // Helper: Check if promo is active
+  const isPromoActive = (combo: Combo): boolean => {
+    if (!combo.discountPercent || combo.discountPercent <= 0) return false;
+    if (!combo.promoStart && !combo.promoEnd) return true; // No dates = always active
+
+    const today = new Date().toISOString().split('T')[0];
+    const start = combo.promoStart || '1970-01-01';
+    const end = combo.promoEnd || '2100-01-01';
+
+    return today >= start && today <= end;
+  };
 
   const handleEdit = (combo?: Combo) => {
     if (combo) {
@@ -98,6 +127,40 @@ export const PromotionsManager: React.FC<PromotionsManagerProps> = ({ services }
         localStorage.setItem('barberpro_combos', JSON.stringify(newCombos));
       },
     });
+  };
+
+  // Toggle Active State
+  const handleToggleActive = (id: string, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    const newCombos = combos.map(c => (c.id === id ? { ...c, active: !c.active } : c));
+    setCombos(newCombos);
+    localStorage.setItem('barberpro_combos', JSON.stringify(newCombos));
+  };
+
+  // Preview Modal State
+  const [previewCombo, setPreviewCombo] = useState<Combo | null>(null);
+
+  // AI Description Generation State
+  const [isGeneratingDesc, setIsGeneratingDesc] = useState(false);
+
+  // Handle AI Description Generation
+  const handleGenerateDescription = async () => {
+    if (!editingCombo.title) return;
+
+    setIsGeneratingDesc(true);
+    try {
+      const serviceNames = (editingCombo.items || []).map(item => item.customLabel || 'Serviço');
+      const desc = await generateComboDescription(
+        editingCombo.title,
+        editingCombo.theme || 'standard',
+        serviceNames,
+        editingCombo.priceValue || 0
+      );
+      setEditingCombo(prev => ({ ...prev, description: desc }));
+    } catch (error) {
+      console.error('Error generating description:', error);
+    }
+    setIsGeneratingDesc(false);
   };
 
   const toggleService = (serviceId: string) => {
@@ -218,14 +281,34 @@ export const PromotionsManager: React.FC<PromotionsManagerProps> = ({ services }
             </div>
           </div>
 
-          {/* Description */}
+          {/* Description + AI Button */}
           <div className="space-y-2">
-            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
-              Descrição Completa
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                Descrição Completa
+              </label>
+              <button
+                onClick={handleGenerateDescription}
+                disabled={isGeneratingDesc || !editingCombo.title}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase transition-all ${
+                  isGeneratingDesc
+                    ? 'bg-purple-500/20 text-purple-400 cursor-wait'
+                    : 'bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 hover:text-purple-300 border border-purple-500/30'
+                } ${!editingCombo.title ? 'opacity-50 cursor-not-allowed' : ''}`}
+                title="Gerar descrição com IA baseada no tema"
+              >
+                {isGeneratingDesc ? (
+                  <Loader size={12} className="animate-spin" />
+                ) : (
+                  <Sparkles size={12} />
+                )}
+                {isGeneratingDesc ? 'Gerando...' : 'Gerar com IA'}
+              </button>
+            </div>
             <textarea
               value={editingCombo.description}
               onChange={e => setEditingCombo({ ...editingCombo, description: e.target.value })}
+              placeholder="Descreva o combo ou clique em 'Gerar com IA' para criar automaticamente..."
               className="w-full bg-[var(--bg-card)] border border-[var(--border-color)] p-3 rounded text-[var(--text-primary)] focus:border-neon-yellow outline-none h-24 resize-none"
             />
           </div>
@@ -235,8 +318,9 @@ export const PromotionsManager: React.FC<PromotionsManagerProps> = ({ services }
             <label className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest flex items-center gap-2">
               <Scissors size={12} /> Serviços Inclusos
             </label>
-            {/* Selected Items List (Allows removing items not in the list) */}
-            <div className="flex flex-wrap gap-2 mb-3 bg-[var(--bg-secondary)] p-3 rounded-lg border border-[var(--border-color)]">
+
+            {/* Selected Items as Chips */}
+            <div className="flex flex-wrap gap-2 min-h-[44px] bg-[var(--bg-secondary)] p-3 rounded-lg border border-[var(--border-color)]">
               {editingCombo.items?.map((item, idx) => (
                 <div
                   key={idx}
@@ -247,42 +331,48 @@ export const PromotionsManager: React.FC<PromotionsManagerProps> = ({ services }
                   <button
                     onClick={() => {
                       const newItems = editingCombo.items?.filter((_, i) => i !== idx);
-                      // Optional: Recalculate price if matching service found.
-                      // For simplicity, we just update items, user updates price manually.
                       setEditingCombo({ ...editingCombo, items: newItems });
                     }}
                     className="ml-1 text-gray-400 hover:text-red-500 transition-colors"
                     title="Remover Serviço"
                   >
-                    <Trash2 size={12} />
+                    <X size={12} />
                   </button>
                 </div>
               ))}
               {(!editingCombo.items || editingCombo.items.length === 0) && (
                 <span className="text-[var(--text-secondary)] text-[10px] italic flex items-center gap-2">
-                  <Scissors size={12} /> Nenhum serviço adicionado. Selecione abaixo.
+                  <Scissors size={12} /> Nenhum serviço adicionado
                 </span>
               )}
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
-              {services.map(s => {
-                const isSelected = editingCombo.items?.some(i => i.serviceId === s.id);
-                return (
-                  <div
-                    key={s.id}
-                    onClick={() => toggleService(s.id)}
-                    className={`p-3 rounded border cursor-pointer flex items-center justify-between transition-colors ${
-                      isSelected
-                        ? 'bg-neon-yellow/10 border-neon-yellow text-[var(--text-primary)]'
-                        : 'bg-[var(--bg-card)] border-[var(--border-color)] text-[var(--text-secondary)] hover:border-[var(--text-primary)]'
-                    }`}
-                  >
-                    <span className="text-xs font-bold uppercase">{s.name}</span>
-                    {isSelected && <Check size={14} className="text-neon-yellow" />}
-                  </div>
-                );
-              })}
+            {/* Select Dropdown for Adding Services */}
+            <div className="relative">
+              <select
+                className="w-full bg-[var(--bg-card)] border border-[var(--border-color)] p-3 pr-10 rounded text-[var(--text-primary)] focus:border-neon-yellow outline-none appearance-none cursor-pointer text-sm font-medium uppercase"
+                value=""
+                onChange={e => {
+                  if (e.target.value) {
+                    toggleService(e.target.value);
+                  }
+                }}
+              >
+                <option value="" disabled>
+                  + Selecionar serviço para adicionar
+                </option>
+                {services
+                  .filter(s => !editingCombo.items?.some(i => i.serviceId === s.id))
+                  .map(s => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
+              </select>
+              <ChevronDown
+                size={16}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none"
+              />
             </div>
           </div>
 
@@ -347,6 +437,83 @@ export const PromotionsManager: React.FC<PromotionsManagerProps> = ({ services }
             </div>
           </div>
 
+          {/* Promoção Temporária */}
+          <div className="space-y-4 p-4 rounded-xl bg-gradient-to-br from-orange-900/20 to-red-900/20 border border-orange-500/30">
+            <div className="flex items-center gap-3">
+              <Calendar size={18} className="text-orange-500" />
+              <label className="text-sm font-bold text-white uppercase tracking-wide">
+                Promoção Temporária
+              </label>
+              <span className="text-[10px] text-orange-400 font-medium">(Opcional)</span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <DatePicker
+                label="Data Início"
+                value={editingCombo.promoStart || ''}
+                onChange={v => setEditingCombo({ ...editingCombo, promoStart: v })}
+                placeholder="Selecionar"
+                accentColor="orange"
+              />
+              <DatePicker
+                label="Data Fim"
+                value={editingCombo.promoEnd || ''}
+                onChange={v => setEditingCombo({ ...editingCombo, promoEnd: v })}
+                placeholder="Selecionar"
+                minDate={editingCombo.promoStart || undefined}
+                accentColor="orange"
+              />
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                  % Desconto
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={editingCombo.discountPercent || ''}
+                    onChange={e => {
+                      const discount = parseFloat(e.target.value) || 0;
+                      const originalPrice =
+                        editingCombo.originalPrice || editingCombo.priceValue || 0;
+                      const newPrice = originalPrice * (1 - discount / 100);
+                      setEditingCombo({
+                        ...editingCombo,
+                        discountPercent: discount,
+                        originalPrice: originalPrice,
+                        priceValue: Math.round(newPrice * 100) / 100,
+                      });
+                    }}
+                    placeholder="0"
+                    className="w-full bg-zinc-900 border border-orange-500/30 p-3 pr-8 rounded text-white font-bold focus:border-orange-500 outline-none"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-orange-500 font-bold">
+                    %
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Preview de desconto */}
+            {editingCombo.discountPercent && editingCombo.discountPercent > 0 && (
+              <div className="flex items-center gap-4 p-3 rounded-lg bg-orange-500/10 border border-orange-500/20">
+                <span className="text-orange-400 text-sm">
+                  De{' '}
+                  <span className="line-through text-zinc-500">
+                    R$ {(editingCombo.originalPrice || editingCombo.priceValue || 0).toFixed(2)}
+                  </span>
+                </span>
+                <span className="text-white font-black text-lg">
+                  Por R$ {(editingCombo.priceValue || 0).toFixed(2)}
+                </span>
+                <span className="bg-orange-500 text-black text-xs font-black px-2 py-1 rounded">
+                  -{editingCombo.discountPercent}%
+                </span>
+              </div>
+            )}
+          </div>
+
           <button
             onClick={handleSave}
             className="w-full bg-neon-yellow text-black font-black uppercase py-4 rounded hover:bg-white transition-colors tracking-widest"
@@ -381,7 +548,9 @@ export const PromotionsManager: React.FC<PromotionsManagerProps> = ({ services }
         {combos.map(combo => (
           <div
             key={combo.id}
-            className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-2xl overflow-hidden group hover:border-[var(--text-secondary)] transition-all hover:shadow-2xl hover:-translate-y-1 duration-300"
+            className={`bg-[var(--bg-card)] border border-[var(--border-color)] rounded-2xl overflow-hidden group hover:border-[var(--text-secondary)] transition-all hover:shadow-2xl hover:-translate-y-1 duration-300 ${
+              !combo.active ? 'opacity-50 grayscale' : ''
+            }`}
           >
             <div
               className={`h-40 relative bg-gradient-to-r ${
@@ -398,11 +567,33 @@ export const PromotionsManager: React.FC<PromotionsManagerProps> = ({ services }
 
               <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors" />
 
-              {/* Top Badge */}
+              {/* Top Left: Badge */}
               {combo.badge && (
                 <div className="absolute top-4 left-4 z-20">
                   <span className="bg-white/90 backdrop-blur text-black text-[10px] font-black uppercase px-3 py-1.5 rounded-md shadow-lg tracking-wider">
                     {combo.badge}
+                  </span>
+                </div>
+              )}
+
+              {/* Top Right: Toggle Active */}
+              <button
+                onClick={e => handleToggleActive(combo.id, e)}
+                className={`absolute top-4 right-4 z-20 w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-lg ${
+                  combo.active
+                    ? 'bg-green-500 text-white hover:bg-green-600'
+                    : 'bg-zinc-800 text-zinc-500 hover:bg-zinc-700'
+                }`}
+                title={combo.active ? 'Desativar' : 'Ativar'}
+              >
+                <Power size={18} strokeWidth={2.5} />
+              </button>
+
+              {/* Inactive Overlay */}
+              {!combo.active && (
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-10">
+                  <span className="bg-black/80 text-zinc-400 text-xs font-bold uppercase px-4 py-2 rounded-lg">
+                    Desativado
                   </span>
                 </div>
               )}
@@ -427,15 +618,50 @@ export const PromotionsManager: React.FC<PromotionsManagerProps> = ({ services }
 
               <div className="flex items-center justify-between border-t border-[var(--border-color)] pt-4 mt-2">
                 <div className="flex flex-col">
-                  <span className="text-[10px] text-[var(--text-secondary)] font-bold uppercase tracking-widest">
-                    Valor Final
-                  </span>
-                  <span className="text-xl font-black text-[var(--text-primary)] tracking-tight">
-                    R$ {combo.priceValue.toFixed(2)}
-                  </span>
+                  {isPromoActive(combo) ? (
+                    <>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="bg-orange-500 text-black text-[9px] font-black uppercase px-2 py-0.5 rounded animate-pulse">
+                          -{combo.discountPercent}%
+                        </span>
+                        {combo.promoEnd && (
+                          <span className="text-[9px] text-orange-400 font-medium">
+                            até {new Date(combo.promoEnd).toLocaleDateString('pt-BR')}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-zinc-500 line-through">
+                          R$ {(combo.originalPrice || 0).toFixed(2)}
+                        </span>
+                        <span className="text-xl font-black text-orange-400 tracking-tight">
+                          R$ {combo.priceValue.toFixed(2)}
+                        </span>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-[10px] text-[var(--text-secondary)] font-bold uppercase tracking-widest">
+                        Valor Final
+                      </span>
+                      <span className="text-xl font-black text-[var(--text-primary)] tracking-tight">
+                        R$ {combo.priceValue.toFixed(2)}
+                      </span>
+                    </>
+                  )}
                 </div>
 
                 <div className="flex gap-2">
+                  <button
+                    onClick={e => {
+                      e.stopPropagation();
+                      setPreviewCombo(combo);
+                    }}
+                    className="w-10 h-10 flex items-center justify-center rounded-lg bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-purple-500/10 hover:text-purple-400 border border-[var(--border-color)] hover:border-purple-500/50 transition-all"
+                    title="Prévia"
+                  >
+                    <Eye size={18} />
+                  </button>
                   <button
                     onClick={e => handleDelete(combo.id, e)}
                     className="w-10 h-10 flex items-center justify-center rounded-lg bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-red-500/10 hover:text-red-500 border border-[var(--border-color)] hover:border-red-500/50 transition-all"
@@ -456,6 +682,129 @@ export const PromotionsManager: React.FC<PromotionsManagerProps> = ({ services }
           </div>
         ))}
       </div>
+      {/* Preview Modal */}
+      <AnimatePresence>
+        {previewCombo && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+            onClick={() => setPreviewCombo(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="w-full max-w-md bg-zinc-900 rounded-2xl overflow-hidden shadow-2xl border border-zinc-800"
+              onClick={e => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="relative p-4 flex items-center justify-between border-b border-zinc-800">
+                <div className="flex items-center gap-3">
+                  <Eye size={20} className="text-purple-400" />
+                  <h3 className="text-white font-bold uppercase text-sm">Prévia do Cliente</h3>
+                </div>
+                <button
+                  onClick={() => setPreviewCombo(null)}
+                  className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-zinc-800 text-zinc-500 hover:text-white transition-colors"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Preview Content - Como o cliente vê */}
+              <div className="p-4 bg-black">
+                <div
+                  className={`rounded-2xl overflow-hidden bg-gradient-to-br ${
+                    THEMES.find(t => t.id === previewCombo.theme)?.gradient ||
+                    'from-gray-800 to-black'
+                  }`}
+                >
+                  {/* Image */}
+                  <div className="relative h-48">
+                    {previewCombo.image && (
+                      <img
+                        src={previewCombo.image}
+                        className="absolute inset-0 w-full h-full object-cover opacity-70"
+                      />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+
+                    {/* Badge */}
+                    {previewCombo.badge && (
+                      <span className="absolute top-4 left-4 bg-white text-black text-[10px] font-black uppercase px-3 py-1.5 rounded-lg">
+                        {previewCombo.badge}
+                      </span>
+                    )}
+
+                    {/* Title */}
+                    <div className="absolute bottom-4 left-4 right-4">
+                      <h2 className="text-2xl font-black text-white uppercase tracking-tight">
+                        {previewCombo.title}
+                      </h2>
+                      {previewCombo.subtitle && (
+                        <p className="text-white/70 text-xs font-medium uppercase tracking-widest mt-1">
+                          {previewCombo.subtitle}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Content */}
+                  <div className="p-4 bg-zinc-950">
+                    {/* Description */}
+                    <p className="text-zinc-400 text-sm mb-4 leading-relaxed">
+                      {previewCombo.description || 'Sem descrição'}
+                    </p>
+
+                    {/* Services Included */}
+                    <div className="mb-4">
+                      <p className="text-zinc-600 text-[10px] font-bold uppercase tracking-widest mb-2">
+                        Inclui:
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {previewCombo.items?.map((item, idx) => (
+                          <span
+                            key={idx}
+                            className="bg-zinc-800 text-zinc-300 px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5"
+                          >
+                            <Scissors size={10} className="text-yellow-500" />
+                            {item.customLabel || 'Serviço'}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Price + Button */}
+                    <div className="flex items-center justify-between pt-4 border-t border-zinc-800">
+                      <div>
+                        <p className="text-zinc-600 text-[10px] font-bold uppercase tracking-widest">
+                          Valor
+                        </p>
+                        <p className="text-2xl font-black text-white">
+                          R$ {previewCombo.priceValue.toFixed(2)}
+                        </p>
+                      </div>
+                      <button className="bg-yellow-500 hover:bg-yellow-400 text-black font-black uppercase text-sm px-6 py-3 rounded-xl transition-colors">
+                        Agendar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="p-4 border-t border-zinc-800 text-center">
+                <p className="text-zinc-600 text-xs">
+                  👆 Assim o cliente verá na página de serviços
+                </p>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <ConfirmModal
         isOpen={confirmModal.isOpen}
         onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}

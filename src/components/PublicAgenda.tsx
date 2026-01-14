@@ -85,7 +85,7 @@ export const PublicAgenda: React.FC = () => {
     if (exception?.closed || startH >= endH) return [];
 
     // 2. Definir intervalo de "Grade" (Fina p/ Smart) = 15min
-    const GRID_INTERVAL = 15;
+    const GRID_INTERVAL = shopSettings.slotInterval || 15;
 
     // 3. Mapear Agendamentos do Dia (Occupied Ranges)
     const dateStr = selectedDate.toISOString().split('T')[0];
@@ -127,6 +127,17 @@ export const PublicAgenda: React.FC = () => {
       const nowTotalMinutes = now.getHours() * 60 + now.getMinutes();
       const isPassed = isToday && currentSlotStart < nowTotalMinutes;
 
+      // Check Lunch Break
+      const lunchStart = exception?.lunchStart;
+      const lunchEnd = exception?.lunchEnd;
+      let isLunch = false;
+      if (lunchStart !== undefined && lunchEnd !== undefined) {
+        const slotHour = Math.floor(currentSlotStart / 60);
+        if (slotHour >= lunchStart && slotHour < lunchEnd) {
+          isLunch = true;
+        }
+      }
+
       // Format Label
       const h = Math.floor(time / 60);
       const m = time % 60;
@@ -140,12 +151,12 @@ export const PublicAgenda: React.FC = () => {
       slots.push({
         label: timeLabel,
         minutes: time,
-        status: isOccupied ? 'occupied' : isPassed ? 'passed' : 'available',
+        status: isLunch ? 'lunch' : isOccupied ? 'occupied' : isPassed ? 'passed' : 'available',
       });
     }
 
-    // Filter out passed slots here to hide them completely
-    return slots.filter(s => s.status !== 'passed');
+    // Filter out passed and lunch slots here to hide them completely
+    return slots.filter(s => s.status !== 'passed' && s.status !== 'lunch');
   };
 
   const timeSlotsObjects = generateTimeSlots();
@@ -189,10 +200,10 @@ export const PublicAgenda: React.FC = () => {
   return (
     <section
       id="agenda"
-      className="py-4 pb-8 bg-[var(--bg-primary)] relative border-t border-[var(--border-color)] overflow-hidden scroll-mt-20"
+      className="py-4 pb-8 bg-(--) relative border-t border-(--) overflow-hidden scroll-mt-20"
     >
       {/* Background Elements */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,var(--tw-gradient-stops))] from-[var(--bg-secondary)]/20 via-[var(--bg-primary)] to-[var(--bg-primary)] pointer-events-none"></div>
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,var(--tw-gradient-stops))] from-(--)/20 via-(--) to-(--) pointer-events-none"></div>
 
       <div className="max-w-md mx-auto px-4 relative z-10">
         {/* HEADER COMPACTO */}
@@ -200,10 +211,10 @@ export const PublicAgenda: React.FC = () => {
           className="text-center mb-6 cursor-pointer group"
           onClick={() => document.getElementById('agenda')?.scrollIntoView({ behavior: 'smooth' })}
         >
-          <span className="text-[var(--text-secondary)] font-bold text-[10px] uppercase tracking-[0.2em] mb-1 block group-hover:text-neon-yellow transition-colors">
+          <span className="text-(--) font-bold text-[10px] uppercase tracking-[0.2em] mb-1 block group-hover:text-neon-yellow transition-colors">
             Agendamento Expresso
           </span>
-          <h2 className="text-3xl font-graffiti text-[var(--text-primary)] leading-none drop-shadow-lg group-hover:scale-105 transition-transform duration-300">
+          <h2 className="text-3xl font-graffiti text-(--) leading-none drop-shadow-lg group-hover:scale-105 transition-transform duration-300">
             AGENDA <span className="text-neon-yellow">TRILHA</span>
           </h2>
         </div>
@@ -212,11 +223,11 @@ export const PublicAgenda: React.FC = () => {
         <div
           onClick={() => setIsCalendarOpen(true)}
           className={`
-            bg-[var(--bg-card)] border rounded-xl p-3 mb-6 flex justify-between items-center cursor-pointer transition-all group shadow-lg
+            bg-(--) border rounded-xl p-3 mb-6 flex justify-between items-center cursor-pointer transition-all group shadow-lg
             ${
               isClosed
                 ? 'border-red-900/50 bg-red-900/10'
-                : 'border-[var(--border-color)] hover:border-neon-yellow'
+                : 'border-(--) hover:border-neon-yellow'
             }
           `}
         >
@@ -224,7 +235,7 @@ export const PublicAgenda: React.FC = () => {
             <ChevronLeft size={18} />
           </button>
           <div className="text-center">
-            <span className="text-[9px] text-[var(--text-secondary)] font-bold uppercase tracking-widest block">
+            <span className="text-[9px] text-(--) font-bold uppercase tracking-widest block">
               DATA SELECIONADA
             </span>
             <div className="flex items-center justify-center gap-2">
@@ -236,7 +247,7 @@ export const PublicAgenda: React.FC = () => {
                 className={`text-lg font-black uppercase tracking-wider transition-colors ${
                   isClosed
                     ? 'text-red-500'
-                    : 'text-[var(--text-primary)] group-hover:text-neon-yellow'
+                    : 'text-(--) group-hover:text-neon-yellow'
                 }`}
               >
                 {selectedDate
@@ -283,15 +294,15 @@ export const PublicAgenda: React.FC = () => {
               <button
                 key={day.toISOString()}
                 onClick={() => setSelectedDate(day)}
-                className={`flex-shrink-0 w-16 h-20 rounded-xl flex flex-col items-center justify-center border transition-all snap-center
+                className={`shrink-0 w-16 h-20 rounded-xl flex flex-col items-center justify-center border transition-all snap-center
                             ${
                               dayClosed
                                 ? isSelected
                                   ? 'bg-red-900/30 border-red-500 text-red-500'
-                                  : 'bg-[var(--bg-primary)] border-red-900/30 text-red-700 opacity-70'
+                                  : 'bg-(--) border-red-900/30 text-red-700 opacity-70'
                                 : isSelected
                                 ? 'bg-neon-yellow border-neon-yellow text-black scale-105 shadow-[0_0_15px_rgba(234,179,8,0.4)]'
-                                : 'bg-[var(--bg-secondary)] border-[var(--border-color)] text-[var(--text-secondary)] hover:border-[var(--text-secondary)] hover:bg-[var(--bg-card)] hover:text-[var(--text-primary)]'
+                                : 'bg-(--) border-(--) text-(--) hover:border-(--) hover:bg-(--) hover:text-(--)'
                             }
                         `}
               >
@@ -306,7 +317,7 @@ export const PublicAgenda: React.FC = () => {
                         : 'text-black'
                       : dayClosed
                       ? 'text-red-700'
-                      : 'text-[var(--text-primary)]'
+                      : 'text-(--)'
                   }`}
                 >
                   {day.getDate()}
@@ -364,7 +375,7 @@ export const PublicAgenda: React.FC = () => {
                     <button
                       key={timeStr}
                       onClick={() => handleSlotClick(timeStr)}
-                      className={`${baseClasses} bg-[var(--bg-secondary)] border-[var(--border-color)] text-[var(--text-primary)] hover:bg-neon-yellow hover:text-black hover:border-neon-yellow hover:shadow-[0_0_15px_rgba(234,179,8,0.3)] active:scale-95 group`}
+                      className={`${baseClasses} bg-(--) border-(--) text-(--) hover:bg-neon-yellow hover:text-black hover:border-neon-yellow hover:shadow-[0_0_15px_rgba(234,179,8,0.3)] active:scale-95 group`}
                     >
                       <span className="text-sm font-bold font-mono group-hover:font-black">
                         {timeStr}
@@ -409,7 +420,7 @@ export const PublicAgenda: React.FC = () => {
             onClick={() =>
               document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' })
             }
-            className="animate-bounce text-[var(--text-secondary)] hover:text-neon-yellow transition-colors cursor-pointer bg-transparent border-none p-2 outline-none"
+            className="animate-bounce text-(--) hover:text-neon-yellow transition-colors cursor-pointer bg-transparent border-none p-2 outline-none"
             aria-label="Ir para Estilo Trilha"
           >
             <ChevronDown size={24} />
@@ -419,16 +430,16 @@ export const PublicAgenda: React.FC = () => {
 
       {/* MODAL CALENDARIO (IGUAL BARBEIRO) */}
       {isCalendarOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in">
-          <div className="bg-[var(--bg-card)] w-full max-w-sm rounded-2xl border border-[var(--border-color)] shadow-2xl overflow-hidden">
+        <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in">
+          <div className="bg-(--) w-full max-w-sm rounded-2xl border border-(--) shadow-2xl overflow-hidden">
             {/* Header Modal */}
-            <div className="p-4 border-b border-[var(--border-color)] flex justify-between items-center bg-[var(--bg-secondary)]">
-              <h3 className="font-black text-[var(--text-primary)] uppercase tracking-wider text-sm flex items-center gap-2">
+            <div className="p-4 border-b border-(--) flex justify-between items-center bg-(--)">
+              <h3 className="font-black text-(--) uppercase tracking-wider text-sm flex items-center gap-2">
                 <CalendarIcon size={16} className="text-neon-yellow" /> Selecionar Data
               </h3>
               <button
                 onClick={() => setIsCalendarOpen(false)}
-                className="text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                className="text-(--) hover:text-(--)"
               >
                 <X size={20} />
               </button>
@@ -439,16 +450,16 @@ export const PublicAgenda: React.FC = () => {
               <div className="flex justify-between items-center mb-6">
                 <button
                   onClick={() => changeMonth(-1)}
-                  className="p-2 hover:bg-[var(--bg-primary)] rounded-full text-[var(--text-primary)]"
+                  className="p-2 hover:bg-(--) rounded-full text-(--)"
                 >
                   <ChevronLeft />
                 </button>
-                <h3 className="text-lg font-black text-[var(--text-primary)] uppercase tracking-wider">
+                <h3 className="text-lg font-black text-(--) uppercase tracking-wider">
                   {currentMonth.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
                 </h3>
                 <button
                   onClick={() => changeMonth(1)}
-                  className="p-2 hover:bg-[var(--bg-primary)] rounded-full text-[var(--text-primary)]"
+                  className="p-2 hover:bg-(--) rounded-full text-(--)"
                 >
                   <ChevronRight />
                 </button>
@@ -457,7 +468,7 @@ export const PublicAgenda: React.FC = () => {
               {/* Grid Dias */}
               <div className="grid grid-cols-7 gap-2 text-center mb-4">
                 {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((d, i) => (
-                  <div key={i} className="text-[10px] font-bold text-[var(--text-secondary)]">
+                  <div key={i} className="text-[10px] font-bold text-(--)">
                     {d}
                   </div>
                 ))}
@@ -489,7 +500,7 @@ export const PublicAgenda: React.FC = () => {
                                             ? 'bg-red-900/20 text-red-500 border border-red-900/30'
                                             : isSelected
                                             ? 'bg-neon-yellow text-black shadow-[0_0_10px_rgba(234,179,8,0.5)]'
-                                            : 'bg-[var(--bg-secondary)] text-[var(--text-primary)] hover:bg-[var(--bg-primary)]'
+                                            : 'bg-(--) text-(--) hover:bg-(--)'
                                         }
                                         ${
                                           isToday && !isSelected && !dayClosed

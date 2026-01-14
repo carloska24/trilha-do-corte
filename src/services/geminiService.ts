@@ -120,6 +120,58 @@ export const generateServiceDescription = async (
   }
 };
 
+// --- 6. GERAÇÃO DE DESCRIÇÃO PARA COMBOS ---
+export const generateComboDescription = async (
+  comboName: string,
+  theme: string,
+  services: string[],
+  price: number
+) => {
+  // Map theme to descriptive tone
+  const themeTones: Record<string, string> = {
+    tuxedo: 'elegante, sofisticado, premium',
+    neon: 'moderno, vibrante, jovem',
+    gold: 'luxuoso, exclusivo, VIP',
+    classic: 'tradicional, clássico, refinado',
+    silver: 'clean, minimalista, profissional',
+    standard: 'profissional, confiável',
+  };
+
+  const tone = themeTones[theme] || 'profissional';
+  const servicesList = services.join(', ');
+
+  try {
+    const response = await fetch('/api/ai/generate-description', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        serviceName: comboName,
+        category: 'Combo',
+        duration: 60,
+        vibe: tone,
+        context: `Combo promocional com: ${servicesList}. Preço: R$${price}. Tom: ${tone}.`,
+      }),
+    });
+
+    if (!response.ok) throw new Error('Falha na descrição');
+
+    const data = await response.json();
+    return data.text;
+  } catch (error) {
+    console.error('Error generating combo description:', error);
+    // Fallback criativo baseado no tema
+    const fallbacks: Record<string, string> = {
+      tuxedo: `Experiência ${comboName} premium. Inclui ${servicesList}. Elegância e sofisticação em um único pacote.`,
+      neon: `${comboName} - O combo mais irado! ${servicesList} por apenas R$${price}. Chega junto!`,
+      gold: `${comboName} VIP - Tratamento exclusivo com ${servicesList}. O luxo que você merece.`,
+      classic: `Tradição e qualidade no ${comboName}. ${servicesList} por R$${price}.`,
+      silver: `${comboName} - Clean e direto. ${servicesList}. Sem enrolação.`,
+      standard: `Combo ${comboName}: ${servicesList}. Valor promocional R$${price}.`,
+    };
+    return fallbacks[theme] || fallbacks.standard;
+  }
+};
+
 // Mocks for Fallback
 const mockErrorResponse = (msg = 'Tente novamente.') => ({
   styleName: 'Erro no Processamento',

@@ -24,17 +24,14 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [services, setServices] = useState<ServiceItem[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
 
-  // Settings with defaults (09:00 - 20:00, 60min interval)
-  const [shopSettings, setShopSettings] = useState<ShopSettings>(() => {
-    const saved = localStorage.getItem('shopSettings');
-    const defaults = {
-      startHour: 8,
-      endHour: 20,
-      slotInterval: 60,
-      closedDays: [0],
-      exceptions: {},
-    };
-    return saved ? { ...defaults, ...JSON.parse(saved) } : defaults;
+  // Settings with defaults - Server fetch will override these
+  // DON'T read from localStorage on init to avoid stale data from other devices
+  const [shopSettings, setShopSettings] = useState<ShopSettings>({
+    startHour: 9,
+    endHour: 19,
+    slotInterval: 30,
+    closedDays: [0],
+    exceptions: {},
   });
 
   const [isLoading, setIsLoading] = useState(false);

@@ -269,9 +269,25 @@ export const DailyTimeline: React.FC<DailyTimelineProps> = ({
     const m = currentMinutes % 60;
     const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 
+    // Check if this is lunch time
+    const lunchStart = exception?.lunchStart;
+    const lunchEnd = exception?.lunchEnd;
+    const isLunchTime =
+      lunchStart !== undefined && lunchEnd !== undefined && h >= lunchStart && h < lunchEnd;
+
     const startingApps = dailyApps.filter(a => a.time === timeStr);
 
-    if (startingApps.length > 0) {
+    if (isLunchTime && startingApps.length === 0) {
+      // Show lunch break slot
+      const lunchEndMinutes = lunchEnd * 60;
+      const duration = Math.min(lunchEndMinutes - currentMinutes, 60);
+      items.push({
+        type: 'lunch',
+        time: timeStr,
+        duration: duration,
+      });
+      currentMinutes += duration;
+    } else if (startingApps.length > 0) {
       let maxDuration = 0;
       startingApps.forEach(app => {
         const service = getServiceDetails(app.serviceId);
@@ -294,6 +310,9 @@ export const DailyTimeline: React.FC<DailyTimelineProps> = ({
         currentMinutes = nextStep;
       }
     } else {
+      // Empty slot - use slotInterval from settings
+      const slotInterval = shopSettings.slotInterval || 30;
+
       const nextApp = dailyApps.find(a => {
         const [ah, am] = a.time.split(':').map(Number);
         return ah * 60 + am > currentMinutes;
@@ -301,16 +320,38 @@ export const DailyTimeline: React.FC<DailyTimelineProps> = ({
       const nextAppStart = nextApp
         ? parseInt(nextApp.time.split(':')[0]) * 60 + parseInt(nextApp.time.split(':')[1])
         : endMinutes;
-      const nextHourMark = (Math.floor(currentMinutes / 60) + 1) * 60;
-      let targetEnd = Math.min(nextAppStart, nextHourMark);
-      if (targetEnd <= currentMinutes) targetEnd = currentMinutes + 15;
+
+      // Calculate target end based on slotInterval
+      let targetEnd = currentMinutes + slotInterval;
+
+      // If there's an appointment before the next slot ends, stop there
+      if (nextAppStart < targetEnd) {
+        targetEnd = nextAppStart;
+      }
+
+      // Don't go past end of day
       if (targetEnd > endMinutes) targetEnd = endMinutes;
 
-      items.push({
-        type: 'empty',
-        time: timeStr,
-        duration: targetEnd - currentMinutes,
-      });
+      // Check if this empty slot is in the past (only for today)
+      const now = new Date();
+      const isToday =
+        selectedDate.getDate() === now.getDate() &&
+        selectedDate.getMonth() === now.getMonth() &&
+        selectedDate.getFullYear() === now.getFullYear();
+
+      const currentHour = now.getHours();
+      const currentMin = now.getMinutes();
+      const nowMinutes = currentHour * 60 + currentMin;
+
+      // Only add empty slot if it's NOT in the past (or if it's a future date)
+      if (!isToday || currentMinutes >= nowMinutes) {
+        items.push({
+          type: 'empty',
+          time: timeStr,
+          duration: targetEnd - currentMinutes,
+        });
+      }
+
       currentMinutes = targetEnd;
     }
   }
@@ -359,172 +400,235 @@ export const DailyTimeline: React.FC<DailyTimelineProps> = ({
 
             {/* Content Column */}
             <div className="flex-1 px-2 py-2 relative">
-              {item.type === 'app' ? (
-                <div className="h-full px-1">
-                  {/* Premium Appointment Card */}
-                  <motion.div
-                    draggable={item.data.status !== 'completed'}
-                    onDragStart={e => handleDragStart(e as unknown as React.DragEvent, item.data)}
-                    className={`w-full h-full rounded-xl border relative group/card transition-all duration-300 cursor-grab active:cursor-grabbing ${
+              {item.type === 'app' && (
+                <motion.div
+                  draggable={item.data.status !== 'completed'}
+                  onDragStart={e => handleDragStart(e as unknown as React.DragEvent, item.data)}
+                  className={`w-full h-full rounded-2xl relative group/card cursor-grab active:cursor-grabbing transition-all duration-300 ${
+                    item.data.status === 'completed'
+                      ? 'bg-gradient-to-br from-emerald-950/90 via-emerald-900/40 to-zinc-950 border border-emerald-500/50 shadow-[0_0_25px_rgba(16,185,129,0.15)]'
+                      : 'bg-gradient-to-br from-amber-950/50 via-zinc-900/90 to-zinc-950 border border-amber-500/40 hover:border-amber-400/70 hover:shadow-[0_0_20px_rgba(245,158,11,0.1)]'
+                  }`}
+                  whileHover={{ scale: 1.015, y: -2 }}
+                  whileTap={{ scale: 0.99 }}
+                  onClick={() => {
+                    if (menuOpenId === item.data.id) {
+                      setMenuOpenId(null);
+                    } else {
+                      onSelectClient(item.data.clientName);
+                    }
+                  }}
+                >
+                  {/* Status Accent Line with Glow */}
+                  <div
+                    className={`absolute left-0 top-0 bottom-0 w-1.5 ${
                       item.data.status === 'completed'
-                        ? 'bg-gradient-to-br from-emerald-950/80 to-zinc-950 border-emerald-500/40'
-                        : 'bg-gradient-to-br from-zinc-800/50 to-zinc-900/80 border-zinc-700/50 hover:border-yellow-500/40'
+                        ? 'bg-gradient-to-b from-emerald-400 via-emerald-500 to-emerald-600 shadow-[0_0_12px_#10b981]'
+                        : 'bg-gradient-to-b from-amber-400 via-amber-500 to-amber-600 shadow-[0_0_10px_#f59e0b]'
                     }`}
-                    whileHover={{ scale: 1.01 }}
-                    onClick={() => {
-                      if (menuOpenId === item.data.id) {
-                        setMenuOpenId(null);
-                      } else {
-                        onSelectClient(item.data.clientName);
-                      }
-                    }}
-                  >
-                    {/* Status Accent Line */}
-                    <div
-                      className={`absolute left-0 top-0 bottom-0 w-1 ${
-                        item.data.status === 'completed'
-                          ? 'bg-emerald-500 shadow-[0_0_10px_#10b981]'
-                          : item.data.status === 'confirmed'
-                          ? 'bg-green-500 shadow-[0_0_8px_#22c55e]'
-                          : 'bg-yellow-500 shadow-[0_0_8px_#eab308]'
-                      }`}
-                    />
+                  />
 
-                    {/* Card Content */}
-                    <div className="flex flex-col h-full pl-3">
-                      {/* Header Row */}
-                      <div className="flex items-center justify-between py-2 pr-2 border-b border-zinc-700/30">
+                  {/* Main Content - Layout: Avatar (esq) + 3 Linhas (dir) */}
+                  <div className="flex items-stretch h-full pl-4 pr-2 py-3 gap-3">
+                    {/* === COLUNA 1: AVATAR (Fixo 56px) === */}
+                    {(() => {
+                      const clientData = clients.find(c => c.id === item.data.clientId);
+                      const avatarUrl = clientData?.img || item.data.photoUrl;
+                      return (
+                        <div
+                          className={`relative flex-shrink-0 self-center ${
+                            item.data.status !== 'completed'
+                              ? 'group-hover/card:scale-105 transition-transform duration-300'
+                              : ''
+                          }`}
+                        >
+                          <div
+                            className={`w-14 h-14 rounded-xl overflow-hidden ring-2 ${
+                              item.data.status === 'completed'
+                                ? 'ring-emerald-500/60 shadow-[0_0_20px_rgba(16,185,129,0.3)]'
+                                : 'ring-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.2)]'
+                            }`}
+                          >
+                            {avatarUrl ? (
+                              <img
+                                src={avatarUrl}
+                                alt={item.data.clientName}
+                                className="w-full h-full object-cover"
+                                onError={e => {
+                                  (e.target as HTMLImageElement).style.display = 'none';
+                                  (
+                                    e.target as HTMLImageElement
+                                  ).nextElementSibling?.classList.remove('hidden');
+                                }}
+                              />
+                            ) : null}
+                            <div
+                              className={`w-full h-full flex items-center justify-center text-xl font-black ${
+                                avatarUrl ? 'hidden' : ''
+                              } ${
+                                item.data.status === 'completed'
+                                  ? 'bg-emerald-900/60 text-emerald-400'
+                                  : 'bg-amber-900/50 text-amber-400'
+                              }`}
+                            >
+                              {item.data.clientName?.charAt(0)?.toUpperCase() || '?'}
+                            </div>
+                          </div>
+                          {/* Status Check for Completed */}
+                          {item.data.status === 'completed' && (
+                            <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-2 border-zinc-900 flex items-center justify-center shadow-[0_0_8px_#10b981]">
+                              <CheckCircle2 size={11} className="text-black" strokeWidth={3} />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
+
+                    {/* === COLUNA 2: CONTEÚDO (3 Linhas) === */}
+                    <div className="flex-1 flex flex-col justify-between min-w-0 py-0.5">
+                      {/* LINHA 1: Nome + Badge Status */}
+                      <div className="flex items-center justify-between gap-2">
                         <h3
-                          className={`font-bold text-sm uppercase tracking-wide truncate flex items-center gap-2 ${
-                            item.data.status === 'completed' ? 'text-emerald-200' : 'text-white'
+                          className={`font-black text-base uppercase tracking-wide truncate ${
+                            item.data.status === 'completed' ? 'text-emerald-100' : 'text-white'
                           }`}
                         >
                           {formatName(item.data.clientName)}
-                          {item.data.status === 'completed' && (
-                            <CheckCircle2 size={14} className="text-emerald-400" />
-                          )}
                         </h3>
 
-                        {/* Quick Actions */}
-                        {item.data.status !== 'completed' && (
-                          <div className="flex items-center gap-1">
-                            {/* WhatsApp Reminder */}
-                            <button
-                              onClick={e => handleWhatsAppReminder(e, item.data, item.service.name)}
-                              className="w-7 h-7 flex items-center justify-center text-zinc-500 hover:text-yellow-500 hover:bg-yellow-500/10 rounded-lg transition-all"
-                              title="Enviar lembrete"
-                            >
-                              <Bell size={14} />
-                            </button>
-
-                            {/* Complete Action */}
-                            <button
-                              onClick={e => handleCompleteAppointment(item.data.id, e)}
-                              className="w-7 h-7 flex items-center justify-center text-zinc-500 hover:text-green-500 hover:bg-green-500/10 rounded-lg transition-all"
-                              title="Concluir"
-                            >
-                              <CheckCircle2 size={14} />
-                            </button>
-
-                            {/* More Menu */}
-                            <div className="relative">
-                              <button
-                                onClick={e => {
-                                  e.stopPropagation();
-                                  setMenuOpenId(menuOpenId === item.data.id ? null : item.data.id);
-                                }}
-                                className="w-7 h-7 flex items-center justify-center text-zinc-500 hover:text-white hover:bg-zinc-700 rounded-lg transition-all"
-                              >
-                                <MoreVertical size={14} />
-                              </button>
-
-                              {/* Dropdown Menu */}
-                              <AnimatePresence>
-                                {menuOpenId === item.data.id && (
-                                  <motion.div
-                                    initial={{ opacity: 0, scale: 0.95, y: -5 }}
-                                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                                    exit={{ opacity: 0, scale: 0.95, y: -5 }}
-                                    className="absolute right-0 top-full mt-1 z-[999] bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl overflow-hidden min-w-[140px]"
-                                  >
-                                    <button
-                                      onClick={e => {
-                                        e.stopPropagation();
-                                        setMenuOpenId(null);
-                                        onEditAppointment(item.data);
-                                      }}
-                                      className="w-full px-3 py-2.5 flex items-center gap-2 text-xs font-bold text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
-                                    >
-                                      <Edit size={14} />
-                                      Editar
-                                    </button>
-                                    <button
-                                      onClick={e => handleNoShow(item.data.id, e, item.data)}
-                                      className="w-full px-3 py-2.5 flex items-center gap-2 text-xs font-bold text-orange-400 hover:bg-orange-500/10 transition-colors"
-                                    >
-                                      <X size={14} />
-                                      Não Veio
-                                    </button>
-                                    <button
-                                      onClick={e => handleCancelAppointment(item.data.id, e)}
-                                      className="w-full px-3 py-2.5 flex items-center gap-2 text-xs font-bold text-red-400 hover:bg-red-500/10 transition-colors"
-                                    >
-                                      <Trash2 size={14} />
-                                      Cancelar
-                                    </button>
-                                  </motion.div>
-                                )}
-                              </AnimatePresence>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Completed Badge */}
-                        {item.data.status === 'completed' && (
-                          <div className="flex items-center gap-1 bg-emerald-500 text-black px-2 py-0.5 rounded-lg text-[9px] font-black uppercase">
-                            <Wallet size={10} />
+                        {/* Status Badge */}
+                        {item.data.status === 'completed' ? (
+                          <span className="flex-shrink-0 flex items-center gap-1 bg-emerald-500 text-black px-2 py-0.5 rounded text-[8px] font-black uppercase">
+                            <Wallet size={9} />
                             PAGO
-                          </div>
+                          </span>
+                        ) : (
+                          <span className="flex-shrink-0 bg-amber-500/20 text-amber-400 border border-amber-500/40 px-1.5 py-0.5 rounded text-[8px] font-bold uppercase">
+                            AGUARDA
+                          </span>
                         )}
                       </div>
 
-                      {/* Body Row */}
-                      <div className="flex-1 flex items-center justify-between py-2 pr-3">
-                        <div className="flex flex-col">
-                          <span
-                            className={`text-xs font-bold uppercase tracking-wide ${
-                              item.data.status === 'completed'
-                                ? 'text-emerald-300/70'
-                                : 'text-zinc-400'
-                            }`}
-                          >
-                            ✂️ {item.service.name}
-                          </span>
-                          <span
-                            className={`text-[10px] mt-0.5 ${
-                              item.data.status === 'completed'
-                                ? 'text-emerald-500/60'
-                                : 'text-zinc-600'
-                            }`}
-                          >
-                            ⏱️ {item.service.duration || 30} min
-                          </span>
-                        </div>
-
+                      {/* LINHA 2: Serviço */}
+                      <div className="flex items-center">
                         <span
-                          className={`font-black text-sm ${
+                          className={`text-xs font-semibold uppercase tracking-wider truncate ${
                             item.data.status === 'completed'
-                              ? 'text-emerald-400'
-                              : 'text-yellow-500 drop-shadow-[0_0_8px_rgba(234,179,8,0.3)]'
+                              ? 'text-emerald-300/80'
+                              : 'text-zinc-400'
                           }`}
                         >
-                          R$ {item.data.price || item.service.priceValue || 0}
+                          ✂️ {item.service.name}
+                        </span>
+                      </div>
+
+                      {/* LINHA 3: Duração + Preço */}
+                      <div className="flex items-center justify-between">
+                        <span
+                          className={`text-[11px] font-medium ${
+                            item.data.status === 'completed'
+                              ? 'text-emerald-500/60'
+                              : 'text-zinc-500'
+                          }`}
+                        >
+                          {item.service.duration || 30}min
+                        </span>
+
+                        <span
+                          className={`font-black text-base ${
+                            item.data.status === 'completed'
+                              ? 'text-emerald-400'
+                              : 'text-yellow-500'
+                          }`}
+                        >
+                          R${item.data.price || item.service.priceValue || 0}
                         </span>
                       </div>
                     </div>
-                  </motion.div>
+
+                    {/* === COLUNA 3: MENU (somente se pendente) === */}
+                    {item.data.status !== 'completed' && (
+                      <div className="relative flex-shrink-0 self-center">
+                        <button
+                          onClick={e => {
+                            e.stopPropagation();
+                            setMenuOpenId(menuOpenId === item.data.id ? null : item.data.id);
+                          }}
+                          className="w-8 h-8 flex items-center justify-center text-zinc-500 hover:text-white hover:bg-zinc-700/50 rounded-lg transition-all"
+                        >
+                          <MoreVertical size={16} />
+                        </button>
+                        <AnimatePresence>
+                          {menuOpenId === item.data.id && (
+                            <motion.div
+                              initial={{ opacity: 0, scale: 0.95, y: -5 }}
+                              animate={{ opacity: 1, scale: 1, y: 0 }}
+                              exit={{ opacity: 0, scale: 0.95, y: -5 }}
+                              className="absolute right-0 top-full mt-1 z-[999] bg-zinc-900/95 backdrop-blur-md border border-zinc-700/80 rounded-xl shadow-2xl overflow-hidden min-w-[130px]"
+                            >
+                              <button
+                                onClick={e => handleCompleteAppointment(item.data.id, e)}
+                                className="w-full px-3 py-2.5 flex items-center gap-2 text-xs font-bold text-emerald-400 hover:bg-emerald-500/10 transition-colors"
+                              >
+                                <CheckCircle2 size={14} />
+                                Finalizar
+                              </button>
+                              <button
+                                onClick={e =>
+                                  handleWhatsAppReminder(e, item.data, item.service.name)
+                                }
+                                className="w-full px-3 py-2.5 flex items-center gap-2 text-xs font-bold text-green-400 hover:bg-green-500/10 transition-colors"
+                              >
+                                <Bell size={14} />
+                                Lembrar
+                              </button>
+                              <button
+                                onClick={e => {
+                                  e.stopPropagation();
+                                  setMenuOpenId(null);
+                                  onEditAppointment(item.data);
+                                }}
+                                className="w-full px-3 py-2.5 flex items-center gap-2 text-xs font-bold text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
+                              >
+                                <Edit size={14} />
+                                Editar
+                              </button>
+                              <button
+                                onClick={e => handleNoShow(item.data.id, e, item.data)}
+                                className="w-full px-3 py-2.5 flex items-center gap-2 text-xs font-bold text-orange-400 hover:bg-orange-500/10 transition-colors"
+                              >
+                                <X size={14} />
+                                Não Veio
+                              </button>
+                              <button
+                                onClick={e => handleCancelAppointment(item.data.id, e)}
+                                className="w-full px-3 py-2.5 flex items-center gap-2 text-xs font-bold text-red-400 hover:bg-red-500/10 transition-colors"
+                              >
+                                <Trash2 size={14} />
+                                Cancelar
+                              </button>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+              {item.type === 'lunch' && (
+                // LUNCH BREAK SLOT
+                <div className="w-full h-full flex items-center justify-center cursor-not-allowed">
+                  <div className="w-full h-full flex items-center justify-center bg-amber-950/30 border border-dashed border-amber-500/30 rounded-lg mx-1">
+                    <div className="flex items-center gap-2 text-amber-500/70">
+                      <span className="text-lg">🍔</span>
+                      <span className="text-[10px] font-bold uppercase tracking-widest">
+                        Almoço
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              ) : (
+              )}
+              {item.type === 'empty' && (
                 // EMPTY SLOT - Minimal
                 <div
                   className={`w-full h-full flex items-center justify-center ${

@@ -170,7 +170,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
 
     if (exception?.closed || startH >= endH) return [];
 
-    const GRID_INTERVAL = 15; // 15 min granularity
+    const GRID_INTERVAL = shopSettings?.slotInterval || 15; // Use configured interval
 
     // Occupied Ranges (from appointments prop)
     const dayAppointments = appointments.filter(app => {
@@ -241,6 +241,18 @@ export const BookingModal: React.FC<BookingModalProps> = ({
 
       if (isPassed) slotStatus = 'passed';
 
+      // Check Lunch Break
+      const lunchStart = exception?.lunchStart;
+      const lunchEnd = exception?.lunchEnd;
+      if (lunchStart !== undefined && lunchEnd !== undefined) {
+        const lunchStartMin = lunchStart * 60;
+        const lunchEndMin = lunchEnd * 60;
+        const slotHour = Math.floor(currentSlotStart / 60);
+        if (slotHour >= lunchStart && slotHour < lunchEnd) {
+          slotStatus = 'lunch';
+        }
+      }
+
       const h = Math.floor(time / 60);
       const m = time % 60;
       const timeLabel = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
@@ -252,7 +264,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
       });
     }
 
-    return slots.filter(s => s.status !== 'passed');
+    return slots.filter(s => s.status !== 'passed' && s.status !== 'lunch');
   };
 
   const timeSlotsObjects = generateTimeSlots();

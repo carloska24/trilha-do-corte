@@ -13,14 +13,15 @@ import {
   Search,
   Check,
   ChevronDown,
-  LayoutGrid,
-  Scissors,
 } from 'lucide-react';
 import { generateId } from '../../utils';
 import { generatePromoPhrase, generateServiceDescription } from '../../services/geminiService';
 import { PromoStudio } from './PromoStudio';
 import { PromotionsManager } from './PromotionsManager';
 import { NewServiceIcon } from '../icons/NewServiceIcon';
+import { CatalogIcon } from '../icons/CatalogIcon';
+import { WorkshopIcon } from '../icons/WorkshopIcon';
+import { MarketingIcon } from '../icons/MarketingIcon';
 import { ServiceFormModal } from './ServiceFormModal';
 import { ServiceCard } from '../ui/ServiceCard';
 import { ConfirmModal } from '../ui/ConfirmModal';
@@ -181,60 +182,82 @@ export const ServiceConfig: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto animate-[fadeIn_0.3s_ease-out] pb-24 px-4 md:px-8 pt-4">
-      {/* HEADER WITH TABS */}
+      {/* HEADER PREMIUM */}
       <div className="flex flex-col gap-6 mb-10">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+        {/* Title + Tabs Row */}
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          {/* Title Section */}
           <div className="relative">
-            <h2 className="text-4xl md:text-5xl font-graffiti text-transparent bg-clip-text bg-gradient-to-r from-gray-900 via-gray-700 to-gray-500 dark:from-white dark:via-gray-200 dark:to-gray-500 leading-none drop-shadow-sm dark:drop-shadow-[0_0_10px_rgba(255,255,255,0.1)]">
-              CATÁLOGO
-            </h2>
-            <div className="absolute -bottom-2 left-0 w-1/2 h-1 bg-neon-yellow rounded-full shadow-[0_0_10px_rgba(227,253,0,0.5)]"></div>
-            <p className="text-gray-500 text-[10px] font-bold uppercase tracking-[0.4em] mt-3 ml-1">
-              Gerencie seus serviços e preços
-            </p>
+            <div className="flex items-center gap-4">
+              <CatalogIcon size={48} />
+              <div>
+                <h2 className="text-3xl md:text-4xl font-graffiti text-white leading-none drop-shadow-[0_0_10px_rgba(234,179,8,0.3)]">
+                  CATÁLOGO
+                </h2>
+                <p className="text-yellow-500/80 text-[10px] font-bold uppercase tracking-[0.3em] mt-1">
+                  Gerencie serviços e preços
+                </p>
+              </div>
+            </div>
           </div>
 
-          <div className="flex p-1 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl">
+          {/* Tab Switcher Premium */}
+          <div className="flex p-1.5 bg-gradient-to-b from-[#1a1a2e] to-[#0f0f1a] border border-white/10 rounded-2xl shadow-xl">
             <button
               onClick={() => setActiveTab('services')}
-              className={`px-6 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all ${
+              className={`group relative flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-300 ${
                 activeTab === 'services'
-                  ? 'bg-[var(--bg-card)] text-[var(--text-primary)] shadow-lg'
-                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                  ? 'bg-gradient-to-b from-white/15 to-white/5 text-white shadow-lg border border-white/10'
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
               }`}
             >
-              Oficina
+              <WorkshopIcon size={22} />
+              <span>Oficina</span>
+              {activeTab === 'services' && (
+                <div className="absolute bottom-0 inset-x-4 h-0.5 bg-gradient-to-r from-transparent via-cyan-500 to-transparent" />
+              )}
             </button>
             <button
               onClick={() => setActiveTab('marketing')}
-              className={`px-6 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all ${
+              className={`group relative flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-300 ${
                 activeTab === 'marketing'
-                  ? 'bg-neon-yellow text-black shadow-[0_0_15px_rgba(234,179,8,0.4)]'
-                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                  ? 'bg-gradient-to-b from-yellow-500/20 to-orange-500/10 text-yellow-400 shadow-lg border border-yellow-500/30'
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
               }`}
             >
-              Marketing
+              <MarketingIcon size={22} />
+              <span>Marketing</span>
+              {activeTab === 'marketing' && (
+                <div className="absolute bottom-0 inset-x-4 h-0.5 bg-gradient-to-r from-transparent via-yellow-500 to-transparent" />
+              )}
             </button>
           </div>
         </div>
 
         {/* Action Buttons (Only for Services Tab) */}
         {activeTab === 'services' && (
-          <div className="flex justify-end gap-4">
+          <div className="flex justify-end gap-3">
             <button
               onClick={() => setIsPromoStudioOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg hover:border-purple-500 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all group"
+              className="group relative flex items-center gap-2 px-5 py-2.5 bg-gradient-to-b from-[#1a1a2e] to-[#0f0f1a] border border-purple-500/30 rounded-xl hover:border-purple-500/60 text-gray-300 hover:text-white transition-all duration-300 overflow-hidden"
             >
-              <Sparkles size={16} className="text-purple-500 group-hover:animate-spin-slow" />
-              <span className="text-xs font-bold uppercase tracking-wider">Studio Promo</span>
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-fuchsia-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <Sparkles
+                size={16}
+                className="text-purple-400 group-hover:animate-pulse relative z-10"
+              />
+              <span className="text-xs font-bold uppercase tracking-wider relative z-10">
+                Studio Promo
+              </span>
             </button>
 
             <button
               onClick={handleOpenAdd}
-              className="flex items-center gap-2 px-4 py-2 bg-neon-yellow text-black rounded-lg hover:bg-yellow-400 font-bold uppercase text-xs tracking-wider shadow-[0_0_15px_rgba(234,179,8,0.3)] transition-all transform hover:scale-105"
+              className="group relative flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-yellow-500 to-orange-500 text-black rounded-xl font-bold uppercase text-xs tracking-wider shadow-[0_0_20px_rgba(234,179,8,0.3)] hover:shadow-[0_0_30px_rgba(234,179,8,0.5)] transition-all duration-300 overflow-hidden"
             >
-              <Plus size={16} strokeWidth={3} />
-              <span>Novo Serviço</span>
+              <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-orange-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <Plus size={16} strokeWidth={3} className="relative z-10" />
+              <span className="relative z-10">Novo Serviço</span>
             </button>
           </div>
         )}
@@ -244,21 +267,48 @@ export const ServiceConfig: React.FC = () => {
       {activeTab === 'marketing' ? (
         <PromotionsManager services={services} />
       ) : (
-        <div className="space-y-12">
+        <div className="space-y-10">
           {CATEGORIES.map(category => {
             const catServices = servicesByCategory[category] || [];
             if (catServices.length === 0) return null;
 
+            // Category icon based on name
+            const getCategoryIcon = (cat: string) => {
+              switch (cat) {
+                case 'Cabelo':
+                  return '✂️';
+                case 'Barba':
+                  return '🧔';
+                case 'Combo':
+                  return '💎';
+                case 'Química':
+                  return '🧪';
+                case 'Estética':
+                  return '✨';
+                default:
+                  return '📦';
+              }
+            };
+
             return (
               <div key={category} className="animate-fade-in-up">
+                {/* Category Header Premium */}
                 <div className="flex items-center gap-4 mb-6">
-                  <h3 className="text-2xl font-black text-[var(--text-primary)] uppercase tracking-tighter italic">
-                    {category}
-                  </h3>
-                  <div className="h-px flex-1 bg-gradient-to-r from-[var(--border-color)] to-transparent"></div>
-                  <span className="text-xs font-mono text-[var(--text-secondary)] bg-[var(--bg-secondary)] px-2 py-1 rounded">
-                    {catServices.length} ITEMS
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">{getCategoryIcon(category)}</span>
+                    <h3 className="text-xl md:text-2xl font-black text-[var(--text-primary)] uppercase tracking-tight">
+                      {category}
+                    </h3>
+                  </div>
+
+                  <div className="h-px flex-1 bg-gradient-to-r from-white/20 via-white/5 to-transparent" />
+
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-b from-white/10 to-white/5 border border-white/10 rounded-lg">
+                    <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse" />
+                    <span className="text-[10px] font-bold text-white/60 uppercase tracking-wider">
+                      {catServices.length} {catServices.length === 1 ? 'item' : 'itens'}
+                    </span>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">

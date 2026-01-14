@@ -14,6 +14,32 @@ import {
 import { Service, ShopSettings, BookingData } from '../../../types';
 import { getLocalISODate } from '../../../utils/dateUtils';
 
+// Componente Input movido para fora para evitar re-criação e perda de foco
+const FormInput = ({
+  icon,
+  placeholder,
+  value,
+  onChange,
+  inputMode,
+}: {
+  icon: React.ReactNode;
+  placeholder: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  inputMode?: 'text' | 'numeric' | 'tel';
+}) => (
+  <div className="mb-3 flex items-center gap-3 bg-[#0d0d0d] rounded-xl p-4 border border-white/5 transition-colors focus-within:border-yellow-400/50">
+    <div className="text-yellow-400">{icon}</div>
+    <input
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      className="bg-transparent outline-none text-white w-full placeholder:text-white/30 font-medium"
+      inputMode={inputMode}
+    />
+  </div>
+);
+
 interface AppointmentModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -88,69 +114,73 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
 
   if (!isOpen) return null;
 
-  // Render Service Selection Overlay
+  // Render Service Selection as Compact Dropdown Overlay
   if (isServiceSelectionMode) {
     return (
-      <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl animate-in fade-in duration-200">
-        <div className="w-full max-w-md bg-[var(--bg-card)] rounded-3xl border border-[var(--border-color)] shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
-          <div className="p-6 border-b border-[var(--border-color)] flex items-center justify-between bg-[var(--bg-secondary)]">
-            <h3 className="text-xl font-bold text-[var(--text-primary)] uppercase tracking-wide">
-              Selecionar Serviço
-            </h3>
+      <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-in fade-in duration-200">
+        <div className="w-full max-w-sm bg-zinc-900 rounded-2xl border border-zinc-700/50 shadow-2xl overflow-hidden">
+          {/* Compact Header */}
+          <div className="px-5 py-4 border-b border-zinc-800 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Scissors size={16} className="text-yellow-500" />
+              <h3 className="text-sm font-bold text-white uppercase tracking-wide">
+                Selecionar Serviço
+              </h3>
+            </div>
             <button
               onClick={() => setIsServiceSelectionMode(false)}
-              className="p-2 rounded-full hover:bg-[var(--bg-primary)] text-[var(--text-secondary)] transition-colors"
+              className="w-8 h-8 rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white transition-colors"
             >
-              <X size={20} />
+              <X size={16} />
             </button>
           </div>
-          <div className="flex-1 overflow-y-auto p-4 custom-scrollbar space-y-2">
-            {services.map(s => (
+
+          {/* Compact Service List */}
+          <div className="max-h-[50vh] overflow-y-auto scrollbar-hide">
+            {services.map((s, idx) => (
               <button
                 key={s.id}
                 onClick={() => {
                   setSelectedServiceId(s.id);
                   setIsServiceSelectionMode(false);
                 }}
-                className={`w-full p-4 rounded-xl border flex justify-between items-center transition-all duration-200 group
-                  ${
-                    selectedServiceId === s.id
-                      ? 'bg-neon-yellow/10 border-neon-yellow/50 shadow-[0_0_20px_rgba(234,179,8,0.1)]'
-                      : 'bg-transparent border-[var(--border-color)] hover:border-[var(--text-secondary)] hover:bg-[var(--bg-primary)]'
-                  }`}
+                className={`w-full px-5 py-3.5 flex items-center justify-between transition-all border-b border-zinc-800/50 last:border-b-0
+                  ${selectedServiceId === s.id ? 'bg-yellow-500/10' : 'hover:bg-zinc-800/50'}`}
               >
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3">
+                  {/* Selection Indicator */}
                   <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
+                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all
+                    ${
                       selectedServiceId === s.id
-                        ? 'bg-neon-yellow text-black'
-                        : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]'
+                        ? 'border-yellow-500 bg-yellow-500'
+                        : 'border-zinc-600'
                     }`}
                   >
-                    <Scissors size={18} />
+                    {selectedServiceId === s.id && <Check size={12} className="text-black" />}
                   </div>
+
+                  {/* Service Name + Duration */}
                   <div className="text-left">
-                    <div
-                      className={`font-bold text-sm ${
-                        selectedServiceId === s.id
-                          ? 'text-[var(--text-primary)]'
-                          : 'text-[var(--text-primary)]'
+                    <span
+                      className={`text-sm font-bold ${
+                        selectedServiceId === s.id ? 'text-white' : 'text-zinc-300'
                       }`}
                     >
                       {s.name}
-                    </div>
-                    <div className="text-xs text-[var(--text-secondary)] opacity-80">
-                      {s.duration} min
-                    </div>
+                    </span>
+                    <span className="text-[10px] text-zinc-500 ml-2">{s.duration}min</span>
                   </div>
                 </div>
-                <div
-                  className={`font-mono font-bold text-sm ${
-                    selectedServiceId === s.id ? 'text-neon-yellow' : 'text-[var(--text-secondary)]'
+
+                {/* Price */}
+                <span
+                  className={`text-sm font-black ${
+                    selectedServiceId === s.id ? 'text-yellow-500' : 'text-zinc-500'
                   }`}
                 >
                   {s.price}
-                </div>
+                </span>
               </button>
             ))}
           </div>
@@ -158,32 +188,6 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
       </div>
     );
   }
-
-  // Helper Components for consistency with User's code
-  const Input = ({
-    icon,
-    placeholder,
-    value,
-    onChange,
-    inputMode,
-  }: {
-    icon: React.ReactNode;
-    placeholder: string;
-    value: string;
-    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-    inputMode?: 'text' | 'numeric' | 'tel';
-  }) => (
-    <div className="mb-3 flex items-center gap-3 bg-[#0d0d0d] rounded-xl p-4 border border-white/5 transition-colors focus-within:border-yellow-400/50">
-      <div className="text-yellow-400">{icon}</div>
-      <input
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        className="bg-transparent outline-none text-white w-full placeholder:text-white/30 font-medium"
-        inputMode={inputMode}
-      />
-    </div>
-  );
 
   return (
     <div className="fixed inset-0 z-[100] bg-black/70 flex items-center justify-center backdrop-blur-sm animate-fade-in">
@@ -299,13 +303,13 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
         </div>
 
         {/* INPUTS */}
-        <Input
+        <FormInput
           icon={<User size={18} />}
           placeholder="Nome do cliente"
           value={clientName}
           onChange={e => setClientName(e.target.value)}
         />
-        <Input
+        <FormInput
           icon={<Phone size={18} />} // Using Lucide 'Phone' or custom SVG
           placeholder="(00) 00000-0000"
           value={clientPhone}

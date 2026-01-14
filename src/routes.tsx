@@ -23,9 +23,9 @@ const CalendarView = lazy(() =>
 const ServiceConfig = lazy(() =>
   import('./components/dashboard/ServiceConfig').then(module => ({ default: module.ServiceConfig }))
 );
-const FinancialVault = lazy(() =>
-  import('./components/dashboard/FinancialVault').then(module => ({
-    default: module.FinancialVault,
+const FinanceiroPage = lazy(() =>
+  import('./components/dashboard/FinanceiroPage').then(module => ({
+    default: module.FinanceiroPage,
   }))
 );
 const SettingsView = lazy(() =>
@@ -102,7 +102,7 @@ export const AppRoutes: React.FC = () => {
             path="financial"
             element={
               <Suspense fallback={<LoadingSpinner />}>
-                <FinancialVault />
+                <FinanceiroPage />
               </Suspense>
             }
           />

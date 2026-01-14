@@ -71,217 +71,511 @@ export const PromoControls: React.FC<PromoControlsProps> = ({
         </div>
 
         {/* 1. VARIANT - UNIFIED CONTAINER */}
-        <div className="bg-[var(--bg-secondary)] rounded-3xl border border-[var(--border-color)] shadow-2xl overflow-hidden relative group/container">
-          {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 bg-[var(--bg-card)] border-b border-[var(--border-color)] relative z-10 w-full gap-4">
-            <div className="shrink-0">
-              <div className="w-10 h-10 flex items-center justify-center text-purple-500 opacity-80">
-                <LayoutTemplate size={24} />
+        <div className="bg-gradient-to-b from-[#1a1a2e] to-[#0f0f1a] rounded-2xl border border-purple-500/20 shadow-[0_0_30px_rgba(147,51,234,0.1)] overflow-hidden">
+          {/* Header Minimalista */}
+          <div className="px-5 py-3 border-b border-purple-500/10 flex items-center justify-between bg-black/30">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-fuchsia-600 flex items-center justify-center shadow-lg">
+                <LayoutTemplate size={16} className="text-white" />
+              </div>
+              <div>
+                <h3 className="text-white font-bold text-xs uppercase tracking-wider">
+                  Tipo de Badge
+                </h3>
+                <p className="text-purple-400/60 text-[9px] font-medium">Escolha o formato</p>
               </div>
             </div>
-
-            <div className="flex-1 flex flex-col items-start justify-center overflow-hidden">
-              <h3 className="text-[var(--text-primary)] font-black text-sm uppercase tracking-widest whitespace-nowrap drop-shadow-md">
-                CRIAÇÃO DE PROMOÇÕES
-              </h3>
-              <p className="text-[var(--text-secondary)] text-[10px] font-bold uppercase tracking-[0.2em] whitespace-nowrap">
-                Selecione o estilo do destaque
-              </p>
-            </div>
-
-            <div className="shrink-0">
-              <div className="w-10 h-10 flex items-center justify-center text-purple-500 opacity-80">
-                <Settings size={24} />
-              </div>
+            <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
+              <Sparkles size={14} className="text-purple-400/50" />
             </div>
           </div>
 
-          {/* Selection Tabs */}
-          <div className="flex divide-x divide-white/5 h-40">
-            {BADGE_VARIANTS.map(v => (
-              <button
-                key={v.id}
-                onClick={() => setConfig({ ...config, variant: v.id })}
-                className={`flex-1 relative flex flex-col items-center justify-center gap-4 transition-all duration-300
-                  ${
-                    config.variant === v.id
-                      ? 'bg-purple-900/20 text-[var(--text-primary)]'
-                      : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-card)] hover:text-[var(--text-primary)]'
-                  }
-                `}
+          {/* Selection Cards - Grid Premium */}
+          <div className="grid grid-cols-3 gap-3 p-4">
+            {/* FAIXA / RIBBON */}
+            <button
+              onClick={() => setConfig({ ...config, variant: 'ribbon' })}
+              className={`group relative rounded-xl p-4 transition-all duration-300 flex flex-col items-center gap-3 overflow-hidden
+                ${
+                  config.variant === 'ribbon'
+                    ? 'bg-gradient-to-b from-purple-600/30 to-purple-900/40 border-2 border-purple-500 shadow-[0_0_20px_rgba(147,51,234,0.4)]'
+                    : 'bg-white/5 border border-white/10 hover:bg-white/10 hover:border-purple-500/50'
+                }`}
+            >
+              {/* Glow Effect */}
+              {config.variant === 'ribbon' && (
+                <div className="absolute inset-0 bg-gradient-to-t from-purple-500/20 via-transparent to-transparent pointer-events-none" />
+              )}
+
+              {/* SVG Preview - Ribbon Style */}
+              <div
+                className={`relative w-16 h-12 transition-transform duration-300 ${
+                  config.variant === 'ribbon' ? 'scale-110' : 'opacity-60 group-hover:opacity-100'
+                }`}
               >
-                {config.variant === v.id && (
-                  <>
-                    <div className="absolute top-0 inset-x-0 h-[2px] bg-purple-500 shadow-[0_0_15px_#a855f7]"></div>
-                    <div className="absolute top-0 inset-x-0 h-20 bg-linear-to-b from-purple-500/10 to-transparent pointer-events-none"></div>
-                  </>
-                )}
+                <svg viewBox="0 0 80 40" className="w-full h-full">
+                  {/* Ribbon Shape */}
+                  <defs>
+                    <linearGradient id="ribbonGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop
+                        offset="0%"
+                        stopColor={config.variant === 'ribbon' ? '#a855f7' : '#666'}
+                      />
+                      <stop
+                        offset="100%"
+                        stopColor={config.variant === 'ribbon' ? '#7c3aed' : '#444'}
+                      />
+                    </linearGradient>
+                  </defs>
+                  <path d="M0 8 L70 8 L80 20 L70 32 L0 32 Z" fill="url(#ribbonGrad)" />
+                  <rect x="8" y="14" width="30" height="4" rx="2" fill="white" opacity="0.8" />
+                  <rect x="8" y="22" width="20" height="3" rx="1.5" fill="white" opacity="0.4" />
+                </svg>
+              </div>
 
-                <div
-                  className={`w-16 h-16 flex items-center justify-center transition-transform duration-500
-                    ${
-                      config.variant === v.id
-                        ? 'scale-110 text-purple-400 drop-shadow-[0_0_10px_rgba(168,85,247,0.5)]'
-                        : 'scale-100 opacity-50 grayscale'
-                    }
-                  `}
-                >
-                  {/* Reuse simple placeholders or SVGs here - keeping simple for brevity as Logic is in PromoBadge */}
-                  {/* For visual fidelity, reusing the same SVG blocks as original would be best, but for now using generic placeholders or simple shapes if needed. */}
-                  {/* Actually, I should probably copy the SVG blocks if I want exact match. */}
-                  {/* Using simplified div/text for now as SVG copy-paste is huge and I'm lazy loading them via icons if possible, but original code had inline SVGs. */}
-                  {/* I will use the label first letter as placeholder to keep code short, or just text. */}
-                  <span className="text-2xl font-black">{v.label.charAt(0)}</span>
-                </div>
+              <span
+                className={`text-[10px] font-black uppercase tracking-wider z-10 transition-colors
+                ${
+                  config.variant === 'ribbon'
+                    ? 'text-purple-300'
+                    : 'text-gray-400 group-hover:text-white'
+                }`}
+              >
+                Faixa
+              </span>
 
-                <div className="text-center z-10 block">
-                  <span
-                    className={`block text-xs font-black uppercase tracking-[0.2em] mb-1
-                    ${config.variant === v.id ? 'text-[var(--text-primary)]' : 'text-current'}
-                  `}
+              {/* Active Indicator */}
+              {config.variant === 'ribbon' && (
+                <div className="absolute bottom-0 inset-x-0 h-0.5 bg-gradient-to-r from-transparent via-purple-500 to-transparent" />
+              )}
+            </button>
+
+            {/* SELO / SEAL */}
+            <button
+              onClick={() => setConfig({ ...config, variant: 'seal' })}
+              className={`group relative rounded-xl p-4 transition-all duration-300 flex flex-col items-center gap-3 overflow-hidden
+                ${
+                  config.variant === 'seal'
+                    ? 'bg-gradient-to-b from-purple-600/30 to-purple-900/40 border-2 border-purple-500 shadow-[0_0_20px_rgba(147,51,234,0.4)]'
+                    : 'bg-white/5 border border-white/10 hover:bg-white/10 hover:border-purple-500/50'
+                }`}
+            >
+              {config.variant === 'seal' && (
+                <div className="absolute inset-0 bg-gradient-to-t from-purple-500/20 via-transparent to-transparent pointer-events-none" />
+              )}
+
+              {/* SVG Preview - Seal/Starburst Style */}
+              <div
+                className={`relative w-14 h-14 transition-transform duration-300 ${
+                  config.variant === 'seal' ? 'scale-110' : 'opacity-60 group-hover:opacity-100'
+                }`}
+              >
+                <svg viewBox="0 0 50 50" className="w-full h-full">
+                  <defs>
+                    <linearGradient id="sealGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop
+                        offset="0%"
+                        stopColor={config.variant === 'seal' ? '#f59e0b' : '#666'}
+                      />
+                      <stop
+                        offset="100%"
+                        stopColor={config.variant === 'seal' ? '#d97706' : '#444'}
+                      />
+                    </linearGradient>
+                  </defs>
+                  {/* Starburst Shape */}
+                  <polygon
+                    points="25,2 28,18 45,18 32,28 38,45 25,35 12,45 18,28 5,18 22,18"
+                    fill="url(#sealGrad)"
+                  />
+                  <circle cx="25" cy="25" r="8" fill="white" opacity="0.2" />
+                  <text
+                    x="25"
+                    y="28"
+                    textAnchor="middle"
+                    fill="white"
+                    fontSize="8"
+                    fontWeight="bold"
                   >
-                    {v.label.split(' ')[0]}
-                  </span>
-                </div>
-              </button>
-            ))}
+                    %
+                  </text>
+                </svg>
+              </div>
+
+              <span
+                className={`text-[10px] font-black uppercase tracking-wider z-10 transition-colors
+                ${
+                  config.variant === 'seal'
+                    ? 'text-purple-300'
+                    : 'text-gray-400 group-hover:text-white'
+                }`}
+              >
+                Selo
+              </span>
+
+              {config.variant === 'seal' && (
+                <div className="absolute bottom-0 inset-x-0 h-0.5 bg-gradient-to-r from-transparent via-purple-500 to-transparent" />
+              )}
+            </button>
+
+            {/* PÍLULA / PILL */}
+            <button
+              onClick={() => setConfig({ ...config, variant: 'pill' })}
+              className={`group relative rounded-xl p-4 transition-all duration-300 flex flex-col items-center gap-3 overflow-hidden
+                ${
+                  config.variant === 'pill'
+                    ? 'bg-gradient-to-b from-purple-600/30 to-purple-900/40 border-2 border-purple-500 shadow-[0_0_20px_rgba(147,51,234,0.4)]'
+                    : 'bg-white/5 border border-white/10 hover:bg-white/10 hover:border-purple-500/50'
+                }`}
+            >
+              {config.variant === 'pill' && (
+                <div className="absolute inset-0 bg-gradient-to-t from-purple-500/20 via-transparent to-transparent pointer-events-none" />
+              )}
+
+              {/* SVG Preview - Pill Style */}
+              <div
+                className={`relative w-16 h-12 transition-transform duration-300 ${
+                  config.variant === 'pill' ? 'scale-110' : 'opacity-60 group-hover:opacity-100'
+                }`}
+              >
+                <svg viewBox="0 0 80 36" className="w-full h-full">
+                  <defs>
+                    <linearGradient id="pillGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop
+                        offset="0%"
+                        stopColor={config.variant === 'pill' ? '#22c55e' : '#666'}
+                      />
+                      <stop
+                        offset="100%"
+                        stopColor={config.variant === 'pill' ? '#16a34a' : '#444'}
+                      />
+                    </linearGradient>
+                  </defs>
+                  <rect x="4" y="4" width="72" height="28" rx="14" fill="url(#pillGrad)" />
+                  <circle cx="18" cy="18" r="6" fill="white" opacity="0.3" />
+                  <rect x="30" y="12" width="26" height="4" rx="2" fill="white" opacity="0.7" />
+                  <rect x="30" y="20" width="18" height="3" rx="1.5" fill="white" opacity="0.4" />
+                </svg>
+              </div>
+
+              <span
+                className={`text-[10px] font-black uppercase tracking-wider z-10 transition-colors
+                ${
+                  config.variant === 'pill'
+                    ? 'text-purple-300'
+                    : 'text-gray-400 group-hover:text-white'
+                }`}
+              >
+                Pílula
+              </span>
+
+              {config.variant === 'pill' && (
+                <div className="absolute bottom-0 inset-x-0 h-0.5 bg-gradient-to-r from-transparent via-purple-500 to-transparent" />
+              )}
+            </button>
           </div>
         </div>
 
-        {/* 2. TEXT CONTENT */}
-        <div className="bg-[var(--bg-secondary)] rounded-2xl border border-[var(--border-color)] shadow-inner overflow-hidden">
-          <div className="bg-[var(--bg-card)] px-5 py-3 border-b border-[var(--border-color)] flex items-center gap-2">
-            <Type size={14} className="text-blue-500" />
-            <span className="text-[var(--text-primary)] font-bold uppercase text-xs tracking-[0.2em] opacity-80">
-              Conteúdo
-            </span>
+        {/* 2. TEXT CONTENT - Premium Design */}
+        <div className="bg-gradient-to-b from-[#1a1a2e] to-[#0f0f1a] rounded-2xl border border-blue-500/20 shadow-[0_0_30px_rgba(59,130,246,0.08)] overflow-hidden">
+          {/* Header */}
+          <div className="px-5 py-3 border-b border-blue-500/10 flex items-center justify-between bg-black/30">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg">
+                <Type size={16} className="text-white" />
+              </div>
+              <div>
+                <h3 className="text-white font-bold text-xs uppercase tracking-wider">Conteúdo</h3>
+                <p className="text-blue-400/60 text-[9px] font-medium">Texto do badge</p>
+              </div>
+            </div>
           </div>
 
-          <div className="p-5 space-y-5">
+          <div className="p-5 space-y-4">
+            {/* Texto Principal */}
             <div className="relative group">
-              <label className="absolute -top-2 left-3 bg-[var(--bg-secondary)] px-2 text-[9px] font-bold text-[var(--text-secondary)] uppercase transition-colors group-focus-within:text-purple-500">
-                Texto Principal
-              </label>
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none z-10">
+                <div
+                  className={`w-6 h-6 rounded-md flex items-center justify-center transition-all duration-300
+                  ${config.text ? 'bg-blue-500/20 text-blue-400' : 'bg-white/5 text-gray-500'}`}
+                >
+                  <Type size={12} />
+                </div>
+              </div>
               <input
                 value={config.text}
                 onChange={e => setConfig({ ...config, text: e.target.value })}
-                className="w-full bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl px-4 py-3 text-[var(--text-primary)] focus:border-purple-500 focus:bg-[var(--bg-secondary)] outline-none font-bold text-sm transition-all"
-                placeholder="Ex: OFERTA"
+                className="w-full bg-white/5 border border-white/10 rounded-xl pl-14 pr-16 py-4 text-white font-bold text-base 
+                  focus:border-blue-500/50 focus:bg-blue-500/5 focus:shadow-[0_0_20px_rgba(59,130,246,0.1)]
+                  outline-none transition-all duration-300 placeholder:text-gray-600"
+                placeholder="TEXTO PRINCIPAL"
+                maxLength={20}
               />
-              <div className="absolute right-3 bottom-3 opacity-30 text-[9px] font-mono text-[var(--text-secondary)]">
-                {config.text.length}/12
+              {/* Character Counter */}
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                <span
+                  className={`text-[10px] font-mono font-bold transition-colors
+                  ${
+                    config.text.length > 15
+                      ? 'text-orange-400'
+                      : config.text.length > 10
+                      ? 'text-yellow-400'
+                      : 'text-gray-500'
+                  }`}
+                >
+                  {config.text.length}
+                </span>
+                <span className="text-gray-600 text-[10px] font-mono">/20</span>
               </div>
+              {/* Focus Glow */}
+              <div
+                className="absolute inset-0 rounded-xl opacity-0 group-focus-within:opacity-100 
+                bg-gradient-to-r from-blue-500/10 via-transparent to-cyan-500/10 pointer-events-none transition-opacity duration-300"
+              />
             </div>
 
+            {/* Sub-Texto (apenas para ribbon) */}
             {config.variant === 'ribbon' && (
               <div className="relative group animate-[fadeIn_0.3s_ease-out]">
-                <label className="absolute -top-2 left-3 bg-[var(--bg-secondary)] px-2 text-[9px] font-bold text-[var(--text-secondary)] uppercase transition-colors group-focus-within:text-purple-500">
-                  Sub-texto
-                </label>
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none z-10">
+                  <div
+                    className={`w-6 h-6 rounded-md flex items-center justify-center transition-all duration-300
+                    ${
+                      config.subText
+                        ? 'bg-purple-500/20 text-purple-400'
+                        : 'bg-white/5 text-gray-500'
+                    }`}
+                  >
+                    <span className="text-[10px] font-bold">Aa</span>
+                  </div>
+                </div>
                 <input
                   value={config.subText || ''}
                   onChange={e => setConfig({ ...config, subText: e.target.value })}
-                  className="w-full bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl px-4 py-3 text-[var(--text-primary)] focus:border-purple-500 focus:bg-[var(--bg-secondary)] outline-none font-mono text-xs transition-all"
-                  placeholder="Ex: HOJE"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl pl-14 pr-4 py-3 text-white/80 font-mono text-sm 
+                    focus:border-purple-500/50 focus:bg-purple-500/5 focus:shadow-[0_0_20px_rgba(147,51,234,0.1)]
+                    outline-none transition-all duration-300 placeholder:text-gray-600"
+                  placeholder="SUB-TEXTO (opcional)"
+                  maxLength={12}
+                />
+                <div
+                  className="absolute inset-0 rounded-xl opacity-0 group-focus-within:opacity-100 
+                  bg-gradient-to-r from-purple-500/10 via-transparent to-fuchsia-500/10 pointer-events-none transition-opacity duration-300"
                 />
               </div>
             )}
+
+            {/* Dica Visual */}
+            <div className="flex items-center gap-2 px-2">
+              <div className="w-1 h-1 rounded-full bg-blue-500/50" />
+              <p className="text-[10px] text-gray-500 font-medium">
+                {config.variant === 'ribbon'
+                  ? 'A faixa suporta texto principal + sub-texto'
+                  : config.variant === 'seal'
+                  ? 'O selo exibe apenas o texto principal'
+                  : 'A pílula mostra o texto de forma compacta'}
+              </p>
+            </div>
           </div>
         </div>
 
         {/* 3. APPEARANCE */}
-        <div className="space-y-6">
-          {/* COLOR PALETTE */}
-          <div className="bg-[var(--bg-secondary)] rounded-2xl border border-[var(--border-color)] shadow-inner overflow-hidden">
-            <div className="px-5 py-3 border-b border-[var(--border-color)] bg-[var(--bg-card)] flex items-center justify-between">
-              <span className="text-[var(--text-primary)] font-black uppercase text-xs tracking-[0.2em] flex items-center gap-2">
-                <Palette size={14} className="text-purple-500" />
-                Paleta de Cores
-              </span>
+        <div className="space-y-4">
+          {/* COLOR PALETTE - Premium Design */}
+          <div className="bg-gradient-to-b from-[#1a1a2e] to-[#0f0f1a] rounded-2xl border border-pink-500/20 shadow-[0_0_30px_rgba(236,72,153,0.08)] overflow-hidden">
+            {/* Header */}
+            <div className="px-5 py-3 border-b border-pink-500/10 flex items-center justify-between bg-black/30">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center shadow-lg">
+                  <Palette size={16} className="text-white" />
+                </div>
+                <div>
+                  <h3 className="text-white font-bold text-xs uppercase tracking-wider">
+                    Cor do Badge
+                  </h3>
+                  <p className="text-pink-400/60 text-[9px] font-medium">Escolha a cor de fundo</p>
+                </div>
+              </div>
+              {/* Selected Color Preview */}
+              <div className="flex items-center gap-2">
+                <span className="text-[9px] text-gray-500 uppercase tracking-wide">Ativa:</span>
+                <div
+                  className={`w-6 h-6 rounded-full ring-2 ring-white/50 shadow-lg ${
+                    COLORS.find(c => c.id === config.color)?.class || ''
+                  }`}
+                />
+              </div>
             </div>
+
             <div className="p-5">
-              <div className="flex flex-wrap gap-2">
+              {/* Color Grid - Organized */}
+              <div className="grid grid-cols-7 gap-3">
                 {COLORS.map(c => (
                   <button
                     key={c.id}
                     onClick={() => setConfig({ ...config, color: c.id })}
-                    className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 relative group shadow-lg
-                             ${
-                               config.color === c.id
-                                 ? 'scale-110 ring-2 ring-white z-10'
-                                 : 'opacity-90 hover:opacity-100 hover:scale-105 hover:z-10 ring-1 ring-white/10'
-                             } ${c.class}
-                             ${
-                               c.id === 'transparent'
-                                 ? 'bg-transparent! border-2 border-dashed border-white/20 hover:border-white/50'
-                                 : ''
-                             }
-                         `}
+                    className={`group relative aspect-square rounded-xl flex items-center justify-center transition-all duration-300 overflow-hidden
+                      ${
+                        config.color === c.id
+                          ? 'scale-110 ring-2 ring-white shadow-[0_0_20px_rgba(255,255,255,0.3)] z-10'
+                          : 'ring-1 ring-white/10 hover:ring-white/30 hover:scale-105'
+                      } ${c.class}
+                      ${
+                        c.id === 'transparent'
+                          ? 'bg-transparent! border-2 border-dashed border-white/20 hover:border-white/50'
+                          : ''
+                      }
+                    `}
                     title={c.label}
                   >
-                    {config.color === c.id ? (
-                      <Check size={14} strokeWidth={4} className="text-white drop-shadow-md" />
-                    ) : c.id === 'transparent' ? (
-                      <div className="w-full h-px bg-red-500/30 rotate-45 transform scale-125" />
-                    ) : null}
+                    {/* Check Icon */}
+                    {config.color === c.id && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-[1px]">
+                        <Check size={16} strokeWidth={3} className="text-white drop-shadow-lg" />
+                      </div>
+                    )}
+
+                    {/* Transparent indicator */}
+                    {c.id === 'transparent' && config.color !== c.id && (
+                      <div className="w-full h-0.5 bg-red-500/50 rotate-45 absolute" />
+                    )}
+
+                    {/* Hover Tooltip */}
+                    <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-black/90 rounded text-[8px] text-white font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
+                      {c.label}
+                    </div>
                   </button>
                 ))}
+              </div>
+
+              {/* Selected Color Name */}
+              <div className="mt-4 flex items-center justify-center gap-2">
+                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+                <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">
+                  {COLORS.find(c => c.id === config.color)?.label || 'Selecione'}
+                </span>
+                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
               </div>
             </div>
           </div>
 
-          {/* TYPOGRAPHY */}
-          <div className="bg-[var(--bg-secondary)] rounded-2xl border border-[var(--border-color)] shadow-inner overflow-hidden">
-            <div className="px-5 py-3 border-b border-[var(--border-color)] bg-[var(--bg-card)] flex items-center justify-between">
-              <span className="text-[var(--text-primary)] font-black uppercase text-xs tracking-[0.2em] flex items-center gap-2">
-                <Type size={14} className="text-blue-500" />
-                Tipografia
-              </span>
+          {/* TYPOGRAPHY - Premium Design */}
+          <div className="bg-gradient-to-b from-[#1a1a2e] to-[#0f0f1a] rounded-2xl border border-indigo-500/20 shadow-[0_0_30px_rgba(99,102,241,0.08)] overflow-hidden">
+            {/* Header */}
+            <div className="px-5 py-3 border-b border-indigo-500/10 flex items-center justify-between bg-black/30">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center shadow-lg">
+                  <Type size={16} className="text-white" />
+                </div>
+                <div>
+                  <h3 className="text-white font-bold text-xs uppercase tracking-wider">
+                    Tipografia
+                  </h3>
+                  <p className="text-indigo-400/60 text-[9px] font-medium">Fonte e cor do texto</p>
+                </div>
+              </div>
+              {/* Current Font Preview */}
+              <div
+                className={`px-3 py-1 rounded-lg bg-white/5 border border-white/10 ${
+                  FONTS.find(f => f.id === config.fontFamily)?.class || ''
+                }`}
+              >
+                <span className="text-[10px] text-white/70">
+                  {FONTS.find(f => f.id === config.fontFamily)?.label || 'SANS'}
+                </span>
+              </div>
             </div>
-            <div className="p-5 grid grid-cols-1 gap-6">
+
+            <div className="p-5 space-y-6">
+              {/* Font Style Grid */}
               <div>
-                <label className="text-[9px] font-bold text-[var(--text-secondary)] uppercase tracking-widest block mb-2 px-1">
-                  Estilo da Fonte
-                </label>
-                <div className="grid grid-cols-2 gap-2 h-48 overflow-y-auto pr-2 custom-scrollbar content-start">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                    <div className="w-1 h-1 rounded-full bg-indigo-500" />
+                    Estilo da Fonte
+                  </span>
+                  <span className="text-[9px] text-gray-600">12 opções</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
                   {FONTS.map(f => (
                     <button
                       key={f.id}
                       onClick={() => setConfig({ ...config, fontFamily: f.id as any })}
-                      className={`py-3 px-2 rounded-lg border text-[10px] uppercase font-bold transition-all truncate flex items-center justify-center
-                               ${
-                                 config.fontFamily === f.id
-                                   ? 'bg-purple-600 text-white border-purple-500 shadow-lg'
-                                   : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border-[var(--border-color)] hover:border-white/20 hover:text-[var(--text-primary)]'
-                               } ${f.class}
-                            `}
+                      className={`group relative py-3 px-2 rounded-xl border transition-all duration-300 flex items-center justify-center overflow-hidden
+                        ${
+                          config.fontFamily === f.id
+                            ? 'bg-gradient-to-b from-indigo-600/40 to-indigo-900/40 border-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.3)]'
+                            : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-indigo-500/50'
+                        }`}
                     >
-                      {f.label}
+                      {/* Glow Effect */}
+                      {config.fontFamily === f.id && (
+                        <div className="absolute inset-0 bg-gradient-to-t from-indigo-500/20 via-transparent to-transparent pointer-events-none" />
+                      )}
+
+                      <span
+                        className={`text-[11px] uppercase font-bold z-10 transition-colors truncate
+                        ${
+                          config.fontFamily === f.id
+                            ? 'text-white'
+                            : 'text-gray-400 group-hover:text-white'
+                        }
+                        ${f.class}`}
+                      >
+                        {f.label}
+                      </span>
+
+                      {/* Active Indicator */}
+                      {config.fontFamily === f.id && (
+                        <div className="absolute bottom-0 inset-x-0 h-0.5 bg-gradient-to-r from-transparent via-indigo-500 to-transparent" />
+                      )}
                     </button>
                   ))}
                 </div>
               </div>
 
+              {/* Divider */}
+              <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+
+              {/* Text Color */}
               <div>
-                <label className="text-[9px] font-bold text-[var(--text-secondary)] uppercase tracking-widest block mb-2 px-1">
-                  Cor do Texto
-                </label>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                    <div className="w-1 h-1 rounded-full bg-violet-500" />
+                    Cor do Texto
+                  </span>
+                  {/* Preview */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-[9px] text-gray-600">Preview:</span>
+                    <span
+                      className={`text-xs font-bold ${
+                        config.textColor?.startsWith('text-') ? config.textColor : ''
+                      }`}
+                      style={
+                        config.textColor?.startsWith('#') ? { color: config.textColor } : undefined
+                      }
+                    >
+                      Aa
+                    </span>
+                  </div>
+                </div>
+                <div className="grid grid-cols-7 gap-2">
                   {TEXT_COLORS.map(tc => (
                     <button
                       key={tc.id}
                       onClick={() => setConfig({ ...config, textColor: tc.id })}
-                      className={`w-8 h-8 rounded-full border-2 transition-all flex items-center justify-center relative
-                               ${
-                                 config.textColor === tc.id
-                                   ? 'border-white scale-110 shadow-lg z-10'
-                                   : 'border-transparent opacity-80 hover:opacity-100 hover:scale-105 ring-1 ring-white/10'
-                               }
-                               ${tc.class}
-                            `}
+                      className={`group relative aspect-square rounded-xl transition-all duration-300 flex items-center justify-center overflow-hidden
+                        ${
+                          config.textColor === tc.id
+                            ? 'scale-110 ring-2 ring-white shadow-[0_0_15px_rgba(255,255,255,0.3)] z-10'
+                            : 'ring-1 ring-white/10 hover:ring-white/30 hover:scale-105'
+                        } ${tc.class}`}
                     >
+                      {/* Check Icon */}
                       {config.textColor === tc.id && (
-                        <Check size={12} className="text-white drop-shadow-md" strokeWidth={4} />
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-[1px]">
+                          <Check size={14} strokeWidth={3} className="text-white drop-shadow-lg" />
+                        </div>
                       )}
                     </button>
                   ))}
@@ -290,117 +584,149 @@ export const PromoControls: React.FC<PromoControlsProps> = ({
             </div>
           </div>
 
-          {/* ICONS */}
-          <div className="bg-[var(--bg-secondary)] rounded-2xl border border-[var(--border-color)] shadow-inner overflow-hidden">
-            <div className="px-5 py-3 border-b border-[var(--border-color)] bg-[var(--bg-card)] flex items-center justify-between">
-              <span className="text-[var(--text-primary)] font-black uppercase text-xs tracking-[0.2em] flex items-center gap-2">
-                <Sparkles size={14} className="text-yellow-500" />
-                Ícone
-              </span>
-            </div>
-            <div className="p-5">
-              <div className="grid grid-cols-4 gap-3">
-                {ICONS.map(i => {
-                  const Icon = i.IconComponent || Sparkles;
-                  const isActive = config.icon === i.id;
+          {/* ICONS - Premium Design */}
+          <div className="bg-gradient-to-b from-[#1a1a2e] to-[#0f0f1a] rounded-2xl border border-amber-500/20 shadow-[0_0_30px_rgba(245,158,11,0.08)] overflow-hidden">
+            {/* Header */}
+            <div className="px-5 py-3 border-b border-amber-500/10 flex items-center justify-between bg-black/30">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-lg">
+                  <Sparkles size={16} className="text-white" />
+                </div>
+                <div>
+                  <h3 className="text-white font-bold text-xs uppercase tracking-wider">Ícone</h3>
+                  <p className="text-amber-400/60 text-[9px] font-medium">Símbolo do badge</p>
+                </div>
+              </div>
+              {/* Current Icon Preview */}
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
+                {(() => {
+                  const currentIcon = ICONS.find(i => i.id === config.icon);
+                  const Icon = currentIcon?.IconComponent || Sparkles;
                   return (
-                    <button
-                      key={i.id}
-                      onClick={() => setConfig({ ...config, icon: i.id })}
-                      className={`aspect-square rounded-xl border flex flex-col items-center justify-center gap-1 transition-all group relative overflow-hidden
-                                  ${
-                                    isActive
-                                      ? 'bg-purple-600/20 border-purple-500 text-white shadow-[0_0_15px_rgba(147,51,234,0.3)]'
-                                      : 'bg-[var(--bg-secondary)] border-[var(--border-color)] text-[var(--text-secondary)] hover:border-white/20 hover:text-[var(--text-primary)]'
-                                  }
-                              `}
-                    >
-                      <Icon
-                        size={24}
-                        weight={isActive ? 'fill' : 'duotone'}
-                        className={`transition-transform duration-300 group-hover:scale-110 drop-shadow-lg ${
-                          isActive ? 'text-purple-400' : 'text-[var(--text-secondary)]'
-                        }`}
-                      />
-                      <span
-                        className={`text-[8px] font-bold uppercase tracking-wider z-10 ${
-                          isActive ? 'text-white' : 'text-[var(--text-secondary)]'
-                        }`}
-                      >
-                        {i.label}
-                      </span>
-                    </button>
+                    <>
+                      <Icon size={16} weight="fill" className="text-amber-400" />
+                      <span className="text-[9px] text-white/60 font-medium uppercase">{currentIcon?.label || 'N/A'}</span>
+                    </>
                   );
-                })}
+                })()}
+              </div>
+            </div>
+            
+            <div className="p-5 space-y-5">
+              {/* Icons Grid */}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                    <div className="w-1 h-1 rounded-full bg-amber-500" />
+                    Escolha o Ícone
+                  </span>
+                  <span className="text-[9px] text-gray-600">{ICONS.length} opções</span>
+                </div>
+                <div className="grid grid-cols-4 gap-2">
+                  {ICONS.map(i => {
+                    const Icon = i.IconComponent || Sparkles;
+                    const isActive = config.icon === i.id;
+                    return (
+                      <button
+                        key={i.id}
+                        onClick={() => setConfig({ ...config, icon: i.id })}
+                        className={`group relative aspect-square rounded-xl border transition-all duration-300 flex flex-col items-center justify-center gap-1 overflow-hidden
+                          ${isActive
+                            ? 'bg-gradient-to-b from-amber-600/30 to-amber-900/40 border-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.3)]'
+                            : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-amber-500/50'
+                          }`}
+                      >
+                        {/* Glow Effect */}
+                        {isActive && (
+                          <div className="absolute inset-0 bg-gradient-to-t from-amber-500/20 via-transparent to-transparent pointer-events-none" />
+                        )}
+                        
+                        <Icon
+                          size={22}
+                          weight={isActive ? 'fill' : 'duotone'}
+                          className={`transition-all duration-300 z-10 group-hover:scale-110
+                            ${isActive ? 'text-amber-400 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]' : 'text-gray-400 group-hover:text-white'}`}
+                        />
+                        <span className={`text-[7px] font-bold uppercase tracking-wider z-10 transition-colors
+                          ${isActive ? 'text-amber-300' : 'text-gray-500 group-hover:text-white'}`}>
+                          {i.label}
+                        </span>
+                        
+                        {/* Active Indicator */}
+                        {isActive && (
+                          <div className="absolute bottom-0 inset-x-0 h-0.5 bg-gradient-to-r from-transparent via-amber-500 to-transparent" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
+              {/* Divider */}
+              <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+
               {/* ICON COLOR */}
-              <div className="pt-4 border-t border-[var(--border-color)] mt-4">
-                <label className="text-[9px] font-bold text-[var(--text-secondary)] uppercase tracking-widest block mb-3 px-1">
-                  Cor do Ícone
-                </label>
-                <div className="flex flex-wrap gap-2">
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                    <div className="w-1 h-1 rounded-full bg-orange-500" />
+                    Cor do Ícone
+                  </span>
+                  {/* Preview */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-[9px] text-gray-600">Cor:</span>
+                    <div 
+                      className="w-5 h-5 rounded-md border border-white/20 shadow-inner"
+                      style={{ backgroundColor: config.iconColor || '#9ca3af' }}
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-7 gap-2">
+                  {/* Auto Button */}
                   <button
                     onClick={() => setConfig({ ...config, iconColor: undefined })}
-                    className={`w-8 h-8 rounded-full border border-white/10 flex items-center justify-center transition-all bg-[var(--bg-secondary)]
-                         ${
-                           !config.iconColor
-                             ? 'ring-2 ring-white scale-110'
-                             : 'opacity-60 hover:opacity-100'
-                         }
-                      `}
-                    title="Original / Automático"
+                    className={`group relative aspect-square rounded-xl border transition-all duration-300 flex items-center justify-center overflow-hidden
+                      ${!config.iconColor
+                        ? 'bg-gradient-to-b from-gray-600/30 to-gray-900/40 border-white ring-2 ring-white shadow-[0_0_15px_rgba(255,255,255,0.2)]'
+                        : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/30'
+                      }`}
                   >
-                    <div className="w-full h-full flex items-center justify-center">
-                      <span className="text-[10px] text-[var(--text-secondary)]">Auto</span>
-                    </div>
+                    <span className={`text-[8px] font-bold uppercase transition-colors
+                      ${!config.iconColor ? 'text-white' : 'text-gray-500 group-hover:text-white'}`}>
+                      Auto
+                    </span>
                   </button>
 
                   {[
-                    '#FFFFFF',
-                    '#000000',
-                    '#FCA5A5',
-                    '#FDBA74',
-                    '#FDE047',
-                    '#BEF264',
-                    '#67E8F9',
-                    '#C4B5FD',
-                    '#F472B6',
-                    '#EF4444',
-                    '#3B82F6',
-                    '#10B981',
-                  ].map(color => (
+                    { color: '#FFFFFF', light: true },
+                    { color: '#000000', light: false },
+                    { color: '#FCA5A5', light: true },
+                    { color: '#FDBA74', light: true },
+                    { color: '#FDE047', light: true },
+                    { color: '#BEF264', light: true },
+                    { color: '#67E8F9', light: true },
+                    { color: '#C4B5FD', light: true },
+                    { color: '#F472B6', light: true },
+                    { color: '#EF4444', light: false },
+                    { color: '#3B82F6', light: false },
+                    { color: '#10B981', light: false },
+                    { color: '#8B5CF6', light: false },
+                  ].map(({ color, light }) => (
                     <button
                       key={color}
                       onClick={() => setConfig({ ...config, iconColor: color })}
-                      className={`w-8 h-8 rounded-full border border-[var(--border-color)] flex items-center justify-center transition-all shadow-sm
-                           ${
-                             config.iconColor === color
-                               ? 'ring-2 ring-white scale-110 z-10'
-                               : 'opacity-80 hover:scale-105 hover:opacity-100'
-                           }
-                        `}
+                      className={`group relative aspect-square rounded-xl transition-all duration-300 flex items-center justify-center overflow-hidden
+                        ${config.iconColor === color
+                          ? 'scale-110 ring-2 ring-white shadow-[0_0_15px_rgba(255,255,255,0.3)] z-10'
+                          : 'ring-1 ring-white/10 hover:ring-white/30 hover:scale-105'
+                        }`}
                       style={{ backgroundColor: color }}
                     >
+                      {/* Check Icon */}
                       {config.iconColor === color && (
-                        <Check
-                          size={12}
-                          className={
-                            [
-                              '#FFFFFF',
-                              '#FDE047',
-                              '#BEF264',
-                              '#FCA5A5',
-                              '#FDBA74',
-                              '#67E8F9',
-                              '#C4B5FD',
-                              '#F472B6',
-                            ].includes(color)
-                              ? 'text-black'
-                              : 'text-white'
-                          }
-                          strokeWidth={4}
-                        />
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/10">
+                          <Check size={14} strokeWidth={3} className={light ? 'text-black' : 'text-white'} />
+                        </div>
                       )}
                     </button>
                   ))}
@@ -410,48 +736,83 @@ export const PromoControls: React.FC<PromoControlsProps> = ({
           </div>
         </div>
 
-        {/* 4. POSITION */}
-        <div className="bg-[var(--bg-secondary)] rounded-2xl border border-[var(--border-color)] shadow-inner overflow-hidden">
-          <div className="bg-[var(--bg-card)] px-5 py-3 border-b border-[var(--border-color)] flex items-center gap-2">
-            <Move size={14} className="text-orange-500" />
-            <span className="text-[var(--text-primary)] font-bold uppercase text-xs tracking-[0.2em] opacity-80">
-              Posição
-            </span>
+        {/* 4. POSITION - Premium Design */}
+        <div className="bg-gradient-to-b from-[#1a1a2e] to-[#0f0f1a] rounded-2xl border border-teal-500/20 shadow-[0_0_30px_rgba(20,184,166,0.08)] overflow-hidden">
+          {/* Header */}
+          <div className="px-5 py-3 border-b border-teal-500/10 flex items-center justify-between bg-black/30">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center shadow-lg">
+                <Move size={16} className="text-white" />
+              </div>
+              <div>
+                <h3 className="text-white font-bold text-xs uppercase tracking-wider">Posição</h3>
+                <p className="text-teal-400/60 text-[9px] font-medium">Local do badge no card</p>
+              </div>
+            </div>
+            {/* Current Position Preview */}
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
+              <span className="text-[9px] text-white/60 font-medium uppercase">
+                {POSITIONS.find(p => p.id === config.position)?.label || 'N/A'}
+              </span>
+            </div>
           </div>
-          <div className="p-4 flex flex-col items-center">
-            <div className="relative w-full max-w-[320px]">
-              <div className="relative pointer-events-none">
-                {' '}
-                {/* Wrapper for Card */}
+          
+          <div className="p-5">
+            {/* Card Preview with Position Grid */}
+            <div className="relative w-full max-w-[320px] mx-auto">
+              {/* Service Card Preview (non-interactive) */}
+              <div className="relative pointer-events-none rounded-xl overflow-hidden">
                 <ServiceCard
                   service={{
                     ...selectedService,
-                    badges: badges, // Pass current badges to show live preview
+                    badges: badges,
                   }}
                   variant="default"
                 />
               </div>
 
-              {/* OVERLAY GRID FOR SELECTION */}
-              <div className="absolute inset-0 z-40 grid grid-cols-3 grid-rows-3 p-1 gap-1 h-full min-h-[190px]">
-                {POSITIONS.map(p => (
-                  <button
-                    key={p.id}
-                    onClick={() => setConfig({ ...config, position: p.id })}
-                    className={`rounded transition-all ${
-                      config.position === p.id
-                        ? 'border-2 border-dashed border-purple-500'
-                        : 'hover:bg-white/5'
-                    }`}
-                    title={p.label}
-                  />
-                ))}
+              {/* Position Selection Overlay */}
+              <div className="absolute inset-0 z-40 grid grid-cols-3 grid-rows-3 gap-1 p-2">
+                {POSITIONS.map(p => {
+                  const isActive = config.position === p.id;
+                  return (
+                    <button
+                      key={p.id}
+                      onClick={() => setConfig({ ...config, position: p.id })}
+                      className={`group relative rounded-lg transition-all duration-300 flex items-center justify-center
+                        ${isActive
+                          ? 'border-2 border-teal-500 bg-teal-500/10 shadow-[0_0_15px_rgba(20,184,166,0.3)]'
+                          : 'border border-transparent hover:border-white/20 hover:bg-white/5'
+                        }`}
+                      title={p.label}
+                    >
+                      {/* Position Indicator */}
+                      {isActive && (
+                        <div className="w-3 h-3 rounded-full bg-teal-500 shadow-[0_0_10px_rgba(20,184,166,0.5)] animate-pulse" />
+                      )}
+                      
+                      {/* Hover Label */}
+                      <div className={`absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity
+                        ${isActive ? 'opacity-0!' : ''}`}>
+                        <span className="text-[8px] text-white/50 font-bold uppercase tracking-wide bg-black/50 px-2 py-1 rounded">
+                          {p.label.split(' ')[0]}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
-
-            <p className="text-center text-[10px] text-[var(--text-secondary)] mt-3 font-mono">
-              Toque na área do card para posicionar
-            </p>
+            
+            {/* Help Text */}
+            <div className="mt-4 flex items-center justify-center gap-2">
+              <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+              <p className="text-[9px] text-gray-500 font-medium flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-teal-500/50 animate-pulse" />
+                Toque para posicionar o badge
+              </p>
+              <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+            </div>
           </div>
         </div>
 

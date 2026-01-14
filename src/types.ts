@@ -207,7 +207,8 @@ export interface Combo {
   subtitle?: string; // e.g., "Experiência completa"
   description?: string;
 
-  priceValue: number; // Total price of the combo
+  priceValue: number; // Total price of the combo (with discount if applicable)
+  originalPrice?: number; // Original price before discount
 
   items: ComboItem[]; // List of services included
 
@@ -219,6 +220,11 @@ export interface Combo {
   featured?: boolean; // Should it appear in "Destaques"?
   image?: string;
   duration?: number; // Total duration in minutes
+
+  // Promoção Temporária
+  promoStart?: string; // ISO date string (YYYY-MM-DD)
+  promoEnd?: string; // ISO date string (YYYY-MM-DD)
+  discountPercent?: number; // 0-100
 }
 
 export interface ShopSettings {
@@ -233,6 +239,8 @@ export interface ShopSettings {
       startHour?: number;
       endHour?: number;
       closed?: boolean;
+      lunchStart?: number; // Hour when lunch break starts (e.g., 12)
+      lunchEnd?: number; // Hour when lunch break ends (e.g., 13)
     }
   >;
 }

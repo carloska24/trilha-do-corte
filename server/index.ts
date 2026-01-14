@@ -5,6 +5,9 @@ import { fileURLToPath } from 'url';
 import { upload } from './uploadService.js';
 import 'dotenv/config'; // Load environment variables
 
+// Import Rate Limiters
+import { generalLimiter, authLimiter, appointmentLimiter } from './middleware/rateLimiter.js';
+
 // Import Routes
 import authRoutes from './routes/authRoutes.js';
 import servicesRoutes from './routes/servicesRoutes.js';
@@ -30,6 +33,10 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
 // Security: Limit JSON body size to prevent DoS (was 50mb)
 app.use(express.json({ limit: '1mb' }));
+
+// Apply general rate limiter to all API routes
+app.use('/api', generalLimiter);
+
 app.use(
   '/uploads',
   express.static(path.join(__dirname, 'uploads'), {
@@ -66,10 +73,12 @@ app.post('/api/upload', upload.single('image'), (req: Request, res: Response) =>
   }
 });
 
-// Mount specialized routes
+// Mount specialized routes with appropriate rate limiters
+app.use('/api/login', authLimiter); // Strict limiter for login routes
+app.use('/api/register', authLimiter); // Strict limiter for register routes
 app.use('/api', authRoutes); // Handles /api/login/* and /api/register/*
 app.use('/api/services', servicesRoutes); // Handles /api/services/*
-app.use('/api/appointments', appointmentsRoutes); // Handles /api/appointments/*
+app.use('/api/appointments', appointmentLimiter, appointmentsRoutes); // Rate limited appointments
 app.use('/api', usersRoutes); // Handles /api/clients, /api/barbers
 app.use('/api/ai', aiRoutes); // Handles /api/ai/command
 app.use('/api/avatars', avatarsRoutes); // Handles /api/avatars list

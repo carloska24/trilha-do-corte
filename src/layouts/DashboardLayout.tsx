@@ -200,6 +200,20 @@ export const DashboardLayout: React.FC = () => {
           return;
         }
 
+        // 2.5. Validate Closed Days (Exceptions)
+        const exceptionForDate = shopSettings.exceptions?.[appointmentDate];
+        if (exceptionForDate?.closed) {
+          const msg = `A barbearia está fechada neste dia (${appointmentDate
+            .split('-')
+            .reverse()
+            .slice(0, 2)
+            .join('/')}).`;
+          setAiResponse(`❌ ${msg}`);
+          speak(`A barbearia está fechada neste dia. Escolha outra data.`);
+          setTimeout(() => setAiResponse(null), 4000);
+          return;
+        }
+
         // 3. Validate Availability (Collision Check)
         const isOccupied = appointments.some(
           app =>
@@ -630,7 +644,7 @@ export const DashboardLayout: React.FC = () => {
 
         <div className="flex items-center gap-6">
           <button
-            onClick={() => setShowFinancials(true)}
+            onClick={() => navigate('/dashboard/financial')}
             className="group flex items-center justify-center transition-transform hover:scale-110"
           >
             <AnimatedWallet className="w-10 h-10 text-[var(--text-primary)] drop-shadow-xl filter brightness-110" />

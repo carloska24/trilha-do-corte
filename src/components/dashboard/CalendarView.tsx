@@ -397,6 +397,9 @@ export const CalendarView: React.FC = () => {
           (sum, a) => sum + (a.price || 0),
           0
         )}
+        completedRevenue={getAppointmentsForDate(selectedDate)
+          .filter(a => a.status === 'completed')
+          .reduce((sum, a) => sum + (a.price || 0), 0)}
         selectedDate={selectedDate}
       />
 

@@ -1,10 +1,24 @@
 import React, { useState, useRef } from 'react';
 import { BarberProfile } from '../../types';
-import { X, Camera, Save, Lock, User, Phone, Mail, LogOut, Check } from 'lucide-react';
+import {
+  X,
+  Camera,
+  User,
+  Phone,
+  Mail,
+  LogOut,
+  Check,
+  Sparkles,
+  Crown,
+  Shield,
+  Edit3,
+  Lock,
+} from 'lucide-react';
 import { getOptimizedImageUrl } from '../../utils/imageUtils';
 import { api } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface BarberProfileModalProps {
   barber: BarberProfile;
@@ -99,17 +113,14 @@ export const BarberProfileModal: React.FC<BarberProfileModalProps> = ({ barber, 
       const updated = await api.updateBarber(barber.id, payload);
 
       if (updated) {
-        // Update local context manually or re-fetch
-        // Since updateProfile only takes Partial<User>, we can assume it merges
         updateProfile({
           name: updated.name,
           email: updated.email,
-          // phone might not be in User interface for context, so we trust api update for DB
         });
 
         setSuccess('Perfil atualizado com sucesso!');
         setIsEditing(false);
-        setFormData(prev => ({ ...prev, password: '', confirmPassword: '' })); // Clear passwords
+        setFormData(prev => ({ ...prev, password: '', confirmPassword: '' }));
       } else {
         setError('Erro ao atualizar perfil.');
       }
@@ -122,276 +133,397 @@ export const BarberProfileModal: React.FC<BarberProfileModalProps> = ({ barber, 
   };
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/95 backdrop-blur-sm animate-[fadeIn_0.2s_ease-out]">
-      <div className="bg-[var(--bg-card)] border border-[var(--border-color)] w-full max-w-md rounded-xl shadow-2xl relative flex flex-col overflow-hidden transition-colors duration-300">
-        {/* Header */}
-        <div className="bg-[var(--bg-secondary)] p-4 border-b border-[var(--border-color)] flex justify-between items-center transition-colors">
-          <h3 className="font-graffiti text-xl text-[var(--text-primary)] tracking-wide">
-            PERFIL DO <span className="text-[#FFD700]">MAQUINISTA</span>
-          </h3>
-          <button
-            onClick={onClose}
-            className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
-          >
-            <X size={20} />
-          </button>
-        </div>
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl"
+      >
+        <motion.div
+          initial={{ scale: 0.9, y: 20 }}
+          animate={{ scale: 1, y: 0 }}
+          exit={{ scale: 0.9, y: 20 }}
+          className="relative w-full max-w-md overflow-hidden"
+        >
+          {/* Main Card - Glassmorphism */}
+          <div className="relative bg-zinc-900/80 backdrop-blur-2xl border border-zinc-700/50 rounded-3xl shadow-2xl shadow-black/50 overflow-hidden">
+            {/* Decorative Gradient Orbs */}
+            <div className="absolute -top-20 -right-20 w-40 h-40 bg-yellow-500/20 rounded-full blur-3xl" />
+            <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-purple-500/20 rounded-full blur-3xl" />
 
-        {/* Scrollable Content */}
-        <div className="p-6 overflow-y-auto max-h-[80vh] scrollbar-hide">
-          {/* Photo Section */}
-          <div className="flex flex-col items-center mb-8">
-            <div
-              className="relative group cursor-pointer w-32 h-32"
-              onClick={() => !loading && profilePhotoInputRef.current?.click()}
+            {/* Close Button */}
+            <button
+              onClick={onClose}
+              className="absolute top-4 right-4 z-20 w-10 h-10 rounded-full bg-zinc-800/80 border border-zinc-700/50 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-700/80 hover:border-zinc-600 transition-all"
             >
-              <div className="w-32 h-32 rounded-full border-4 border-[#FFD700] p-1 bg-[var(--bg-primary)] shadow-[0_0_20px_rgba(255,215,0,0.3)] overflow-hidden transition-colors">
-                <img
-                  src={getOptimizedImageUrl(barber.photoUrl || DEFAULT_BARBER_IMAGE, 300, 300)}
-                  alt="Perfil"
-                  className="w-full h-full object-cover filter contrast-110"
-                />
+              <X size={18} />
+            </button>
+
+            {/* Header with Avatar */}
+            <div className="relative pt-8 pb-6 px-6">
+              {/* Title */}
+              <div className="text-center mb-6">
+                <div className="flex items-center justify-center gap-2 mb-1">
+                  <Crown size={16} className="text-yellow-500" />
+                  <h2 className="font-graffiti text-xl text-white tracking-wider">
+                    PERFIL DO <span className="text-yellow-500">MAQUINISTA</span>
+                  </h2>
+                  <Crown size={16} className="text-yellow-500" />
+                </div>
               </div>
-              <div className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                <Camera className="text-white" size={24} />
+
+              {/* Avatar Section - Premium Design */}
+              <div className="flex flex-col items-center">
+                <div
+                  className="relative group cursor-pointer"
+                  onClick={() => !loading && profilePhotoInputRef.current?.click()}
+                >
+                  {/* Animated Ring */}
+                  <div className="absolute -inset-2 rounded-full bg-gradient-to-r from-yellow-500 via-amber-500 to-orange-500 opacity-75 blur-sm animate-pulse" />
+
+                  {/* Photo Container */}
+                  <div className="relative w-28 h-28 rounded-full p-1 bg-gradient-to-br from-yellow-500 via-amber-500 to-orange-600 shadow-[0_0_30px_rgba(234,179,8,0.4)]">
+                    <div className="w-full h-full rounded-full overflow-hidden bg-zinc-900">
+                      <img
+                        src={getOptimizedImageUrl(
+                          barber.photoUrl || DEFAULT_BARBER_IMAGE,
+                          300,
+                          300
+                        )}
+                        alt="Perfil"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Hover Overlay */}
+                  <div className="absolute inset-0 rounded-full bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all duration-300">
+                    <Camera className="text-white" size={28} />
+                  </div>
+
+                  {/* Status Badge */}
+                  <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-green-500 border-4 border-zinc-900 flex items-center justify-center shadow-lg">
+                    <div className="w-3 h-3 rounded-full bg-white animate-pulse" />
+                  </div>
+
+                  <input
+                    type="file"
+                    ref={profilePhotoInputRef}
+                    className="hidden"
+                    accept="image/*"
+                    onChange={handlePhotoChange}
+                    disabled={loading}
+                  />
+                </div>
+
+                {/* Choose Avatar Button */}
+                <button
+                  onClick={() => setShowAvatarSelector(true)}
+                  className="mt-4 flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/30 hover:border-purple-400/60 rounded-full text-xs font-bold text-purple-300 hover:text-purple-200 transition-all hover:shadow-[0_0_20px_rgba(168,85,247,0.3)]"
+                >
+                  <Sparkles size={14} />
+                  ESCOLHER AVATAR
+                </button>
               </div>
-              <input
-                type="file"
-                ref={profilePhotoInputRef}
-                className="hidden"
-                accept="image/*"
-                onChange={handlePhotoChange}
-                disabled={loading}
-              />
             </div>
 
-            <div className="flex flex-col gap-2 items-center mt-4">
-              <button
-                onClick={() => setShowAvatarSelector(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-secondary)] hover:bg-[var(--bg-primary)] border border-[var(--border-color)] hover:border-[#FFD700]/50 rounded-lg text-xs font-bold text-[var(--text-secondary)] hover:text-[#FFD700] transition-all group"
-              >
-                <User size={14} className="group-hover:text-[#FFD700]" />
-                ESCOLHER AVATAR
-              </button>
-            </div>
+            {/* Content Area */}
+            <div className="px-6 pb-6">
+              {/* Messages */}
+              <AnimatePresence>
+                {error && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="mb-4 bg-red-500/10 border border-red-500/30 text-red-400 p-3 rounded-xl text-center text-xs font-bold"
+                  >
+                    {error}
+                  </motion.div>
+                )}
+                {success && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="mb-4 bg-green-500/10 border border-green-500/30 text-green-400 p-3 rounded-xl text-center text-xs font-bold flex items-center justify-center gap-2"
+                  >
+                    <Check size={14} /> {success}
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-            {!isEditing && (
-              <div className="mt-4 text-center animate-fade-in-up">
-                <h2 className="text-2xl font-bold text-[var(--text-primary)]">{barber.name}</h2>
-                <p className="text-[var(--text-secondary)] font-mono text-xs uppercase tracking-widest mt-1">
-                  {barber.email}
-                </p>
-                <div className="flex justify-center gap-2 mt-3">
-                  <span className="bg-[var(--bg-secondary)] text-xs text-[var(--text-secondary)] px-3 py-1 rounded-full border border-[var(--border-color)]">
-                    Nível: Mestre
-                  </span>
-                  {barber.phone && (
-                    <span className="bg-[var(--bg-secondary)] text-xs text-[var(--text-secondary)] px-3 py-1 rounded-full border border-[var(--border-color)]">
-                      {barber.phone}
+              {/* Profile Info Display */}
+              {!isEditing && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-center mb-6"
+                >
+                  <h3 className="text-2xl font-black text-white mb-1">{barber.name}</h3>
+                  <p className="text-zinc-500 font-mono text-xs uppercase tracking-widest">
+                    {barber.email}
+                  </p>
+
+                  {/* Status Badges */}
+                  <div className="flex items-center justify-center gap-2 mt-4">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-yellow-500/10 to-amber-500/10 border border-yellow-500/30 rounded-full text-[10px] font-bold text-yellow-500 uppercase tracking-wider">
+                      <Shield size={10} />
+                      Mestre
                     </span>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
+                    {barber.phone && (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800/60 border border-zinc-700/50 rounded-full text-[10px] font-medium text-zinc-400">
+                        <Phone size={10} />
+                        {barber.phone}
+                      </span>
+                    )}
+                  </div>
+                </motion.div>
+              )}
 
-          {/* Messages */}
-          {error && (
-            <div className="mb-4 bg-red-900/20 border border-red-900/50 text-red-400 p-3 rounded text-center text-xs font-bold">
-              {error}
-            </div>
-          )}
-          {success && (
-            <div className="mb-4 bg-green-900/20 border border-green-900/50 text-green-400 p-3 rounded text-center text-xs font-bold flex items-center justify-center gap-2">
-              <Check size={14} /> {success}
-            </div>
-          )}
+              {/* Edit Form */}
+              {isEditing ? (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
+                  {/* Name Input */}
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider ml-1">
+                      Nome Completo
+                    </label>
+                    <div className="relative">
+                      <User
+                        className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500"
+                        size={16}
+                      />
+                      <input
+                        type="text"
+                        value={formData.name}
+                        onChange={e => setFormData({ ...formData, name: e.target.value })}
+                        className="w-full bg-zinc-800/60 border border-zinc-700/50 rounded-xl pl-11 pr-4 py-3 text-white text-sm focus:outline-none focus:border-yellow-500/50 focus:shadow-[0_0_15px_rgba(234,179,8,0.15)] transition-all"
+                      />
+                    </div>
+                  </div>
 
-          {/* Form / Actions */}
-          {isEditing ? (
-            <div className="space-y-4 animate-fade-in-up">
-              {/* Name */}
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-wider ml-1">
-                  Nome Completo
-                </label>
-                <div className="relative">
-                  <User className="absolute left-3 top-3 text-[var(--text-secondary)]" size={16} />
-                  <input
-                    type="text"
-                    value={formData.name}
-                    onChange={e => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg pl-10 pr-4 py-2.5 text-[var(--text-primary)] text-sm focus:outline-none focus:border-[#FFD700] transition-colors placeholder-[var(--text-secondary)]/50"
-                  />
-                </div>
-              </div>
+                  {/* Email Input */}
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider ml-1">
+                      Email
+                    </label>
+                    <div className="relative">
+                      <Mail
+                        className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500"
+                        size={16}
+                      />
+                      <input
+                        type="email"
+                        value={formData.email}
+                        onChange={e => setFormData({ ...formData, email: e.target.value })}
+                        className="w-full bg-zinc-800/60 border border-zinc-700/50 rounded-xl pl-11 pr-4 py-3 text-white text-sm focus:outline-none focus:border-yellow-500/50 focus:shadow-[0_0_15px_rgba(234,179,8,0.15)] transition-all"
+                      />
+                    </div>
+                  </div>
 
-              {/* Email */}
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-wider ml-1">
-                  Email
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 text-[var(--text-secondary)]" size={16} />
-                  <input
-                    type="email"
-                    value={formData.email}
-                    onChange={e => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg pl-10 pr-4 py-2.5 text-[var(--text-primary)] text-sm focus:outline-none focus:border-[#FFD700] transition-colors placeholder-[var(--text-secondary)]/50"
-                  />
-                </div>
-              </div>
+                  {/* Phone Input */}
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider ml-1">
+                      Telefone
+                    </label>
+                    <div className="relative">
+                      <Phone
+                        className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500"
+                        size={16}
+                      />
+                      <input
+                        type="text"
+                        value={formData.phone}
+                        onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                        className="w-full bg-zinc-800/60 border border-zinc-700/50 rounded-xl pl-11 pr-4 py-3 text-white text-sm focus:outline-none focus:border-yellow-500/50 focus:shadow-[0_0_15px_rgba(234,179,8,0.15)] transition-all"
+                        placeholder="(00) 00000-0000"
+                      />
+                    </div>
+                  </div>
 
-              {/* Phone */}
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-wider ml-1">
-                  Telefone
-                </label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-3 text-[var(--text-secondary)]" size={16} />
-                  <input
-                    type="text"
-                    value={formData.phone}
-                    onChange={e => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg pl-10 pr-4 py-2.5 text-[var(--text-primary)] text-sm focus:outline-none focus:border-[#FFD700] transition-colors placeholder-[var(--text-secondary)]/50"
-                    placeholder="(00) 00000-0000"
-                  />
-                </div>
-              </div>
+                  {/* Password Section */}
+                  <div className="pt-2 border-t border-zinc-800">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Lock size={12} className="text-yellow-500" />
+                      <span className="text-[10px] font-bold text-yellow-500 uppercase tracking-wider">
+                        Alterar Senha
+                      </span>
+                    </div>
 
-              <div className="border-t border-[var(--border-color)] my-4"></div>
-
-              {/* Password Section */}
-              <div className="space-y-3">
-                <h4 className="text-xs font-bold text-[#FFD700] uppercase tracking-widest flex items-center gap-2">
-                  <Lock size={12} /> Alterar Senha
-                </h4>
-
-                <div className="space-y-1">
-                  <input
-                    type="password"
-                    value={formData.password}
-                    onChange={e => setFormData({ ...formData, password: e.target.value })}
-                    className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg px-4 py-2.5 text-[var(--text-primary)] text-sm focus:outline-none focus:border-[#FFD700] transition-colors placeholder-[var(--text-secondary)]/50"
-                    placeholder="Nova Senha (deixe vazio para manter)"
-                  />
-                </div>
-
-                {formData.password && (
-                  <div className="space-y-1 animate-fadeIn">
                     <input
                       type="password"
-                      value={formData.confirmPassword}
-                      onChange={e => setFormData({ ...formData, confirmPassword: e.target.value })}
-                      className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg px-4 py-2.5 text-[var(--text-primary)] text-sm focus:outline-none focus:border-[#FFD700] transition-colors placeholder-[var(--text-secondary)]/50"
-                      placeholder="Confirme a Nova Senha"
+                      value={formData.password}
+                      onChange={e => setFormData({ ...formData, password: e.target.value })}
+                      className="w-full bg-zinc-800/60 border border-zinc-700/50 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-yellow-500/50 transition-all mb-2"
+                      placeholder="Nova Senha (deixe vazio para manter)"
                     />
+
+                    {formData.password && (
+                      <motion.input
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        type="password"
+                        value={formData.confirmPassword}
+                        onChange={e =>
+                          setFormData({ ...formData, confirmPassword: e.target.value })
+                        }
+                        className="w-full bg-zinc-800/60 border border-zinc-700/50 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-yellow-500/50 transition-all"
+                        placeholder="Confirme a Nova Senha"
+                      />
+                    )}
                   </div>
-                )}
-              </div>
 
-              <div className="pt-4 flex gap-3">
-                <button
-                  onClick={() => setIsEditing(false)}
-                  className="flex-1 bg-[var(--bg-secondary)] hover:bg-[var(--bg-primary)] text-[var(--text-secondary)] py-3 rounded-lg font-bold text-xs uppercase tracking-wider border border-[var(--border-color)] transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleSave}
-                  disabled={loading}
-                  className="flex-1 bg-[#FFD700] hover:bg-[#E6C200] text-black py-3 rounded-lg font-bold text-xs uppercase tracking-wider shadow-lg shadow-yellow-500/20 transition-all transform active:scale-95 disabled:opacity-50"
-                >
-                  {loading ? 'Salvando...' : 'Salvar Alterações'}
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              <button
-                onClick={() => setIsEditing(true)}
-                className="w-full bg-[var(--bg-primary)] hover:bg-[var(--bg-secondary)] text-[var(--text-primary)] py-4 flex items-center justify-center gap-3 text-xs font-black uppercase tracking-widest border border-[var(--border-color)] transition-colors shadow-lg group"
-              >
-                <User
-                  size={16}
-                  className="text-[var(--text-secondary)] group-hover:text-[#FFD700] transition-colors"
-                />
-                Editar Informações
-              </button>
+                  {/* Action Buttons */}
+                  <div className="flex gap-3 pt-2">
+                    <button
+                      onClick={() => setIsEditing(false)}
+                      className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 py-3 rounded-xl font-bold text-xs uppercase tracking-wider border border-zinc-700 transition-all"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={handleSave}
+                      disabled={loading}
+                      className="flex-1 bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-black py-3 rounded-xl font-bold text-xs uppercase tracking-wider shadow-lg shadow-yellow-500/25 transition-all disabled:opacity-50"
+                    >
+                      {loading ? 'Salvando...' : 'Salvar'}
+                    </button>
+                  </div>
+                </motion.div>
+              ) : (
+                /* Action Buttons */
+                <div className="space-y-3">
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="w-full bg-gradient-to-r from-zinc-800 to-zinc-800/80 hover:from-zinc-700 hover:to-zinc-700/80 text-white py-4 flex items-center justify-center gap-3 text-xs font-black uppercase tracking-widest border border-zinc-700/50 hover:border-zinc-600 rounded-xl transition-all group"
+                  >
+                    <Edit3 size={16} className="text-yellow-500" />
+                    Editar Informações
+                  </button>
 
-              <button
-                onClick={() => {
-                  logout();
-                  navigate('/');
-                }}
-                className="w-full bg-red-900/10 hover:bg-red-900/30 text-red-500 hover:text-red-400 py-4 flex items-center justify-center gap-3 text-xs font-black uppercase tracking-widest border border-red-900/20 transition-colors"
-              >
-                <LogOut size={16} /> Encerrar Turno (Logout)
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="bg-[var(--bg-primary)] p-3 text-center border-t border-[var(--border-color)] transition-colors">
-          <p className="text-[10px] text-[var(--text-secondary)] font-mono uppercase">
-            Sistema Seguro &bull; Trilha do Corte ID: {barber.id.slice(0, 8)}
-          </p>
-        </div>
-      </div>
-
-      {/* Avatar Selector Modal */}
-      {showAvatarSelector && (
-        <div className="absolute inset-0 z-[100] bg-black/95 backdrop-blur-xl flex items-center justify-center p-6 animate-fade-in">
-          <div className="w-full max-w-sm bg-[#111] border border-white/10 rounded-2xl p-6 shadow-2xl flex flex-col max-h-[80vh]">
-            <div className="flex justify-between items-center mb-4 shrink-0">
-              <h3 className="text-[#FFD700] font-graffiti text-xl uppercase tracking-wider">
-                Escolher Avatar
-              </h3>
-              <button
-                onClick={() => setShowAvatarSelector(false)}
-                className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] p-2 transition-colors"
-              >
-                <X size={24} />
-              </button>
-            </div>
-
-            <div className="grid grid-cols-3 gap-3 overflow-y-auto custom-scrollbar p-1 flex-1 min-h-0">
-              {avatarList.map((url, index) => (
-                <button
-                  key={index}
-                  onClick={async () => {
-                    // Update barber photo
-                    try {
-                      setLoading(true);
-                      await api.updateBarber(barber.id, { img: url });
-                      updateProfile({ photoUrl: url });
-                      setSuccess('Avatar atualizado!');
-                      setTimeout(() => setSuccess(''), 3000);
-                      setShowAvatarSelector(false);
-                    } catch (err) {
-                      console.error(err);
-                      setError('Erro ao atualizar avatar.');
-                    } finally {
-                      setLoading(false);
-                    }
-                  }}
-                  className="relative aspect-square rounded-xl overflow-hidden border border-[var(--border-color)] hover:border-[#FFD700] hover:shadow-[0_0_15px_rgba(255,215,0,0.5)] transition-all group bg-[var(--bg-secondary)]"
-                >
-                  <img
-                    src={url}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    onError={e => {
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = 'none';
+                  <button
+                    onClick={() => {
+                      logout();
+                      navigate('/');
                     }}
-                  />
-                </button>
-              ))}
+                    className="w-full bg-red-500/5 hover:bg-red-500/15 text-red-500 hover:text-red-400 py-4 flex items-center justify-center gap-3 text-xs font-black uppercase tracking-widest border border-red-500/20 hover:border-red-500/40 rounded-xl transition-all"
+                  >
+                    <LogOut size={16} />
+                    Encerrar Turno (Logout)
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="bg-zinc-900/80 py-3 px-6 text-center border-t border-zinc-800/50">
+              <p className="text-[9px] text-zinc-600 font-mono uppercase tracking-wider">
+                Sistema Seguro • Trilha do Corte • ID: {barber.id.slice(0, 8)}
+              </p>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        </motion.div>
+
+        {/* ========== AVATAR SELECTOR MODAL - PREMIUM ========== */}
+        <AnimatePresence>
+          {showAvatarSelector && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 z-[100] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4"
+            >
+              <motion.div
+                initial={{ scale: 0.9, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.9, y: 20 }}
+                className="w-full max-w-md bg-zinc-900/90 backdrop-blur-2xl border border-zinc-700/50 rounded-3xl overflow-hidden shadow-2xl"
+              >
+                {/* Header */}
+                <div className="relative px-6 py-5 border-b border-zinc-800/50">
+                  {/* Decorative Gradient */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-cyan-500/10" />
+
+                  <div className="relative flex justify-between items-center">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/30">
+                        <Sparkles size={18} className="text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-graffiti text-lg text-white tracking-wide">
+                          ESCOLHER <span className="text-purple-400">AVATAR</span>
+                        </h3>
+                        <p className="text-[10px] text-zinc-500 tracking-wider">
+                          Selecione seu personagem
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setShowAvatarSelector(false)}
+                      className="w-10 h-10 rounded-full bg-zinc-800/80 border border-zinc-700/50 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-700 transition-all"
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Avatar Grid */}
+                <div className="p-4 max-h-[60vh] overflow-y-auto scrollbar-hide">
+                  <div className="grid grid-cols-4 gap-3">
+                    {avatarList.map((url, index) => (
+                      <motion.button
+                        key={index}
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: index * 0.03 }}
+                        onClick={async () => {
+                          try {
+                            setLoading(true);
+                            await api.updateBarber(barber.id, { img: url });
+                            updateProfile({ photoUrl: url });
+                            setSuccess('Avatar atualizado!');
+                            setTimeout(() => setSuccess(''), 3000);
+                            setShowAvatarSelector(false);
+                          } catch (err) {
+                            console.error(err);
+                            setError('Erro ao atualizar avatar.');
+                          } finally {
+                            setLoading(false);
+                          }
+                        }}
+                        className="relative aspect-square rounded-2xl overflow-hidden border-2 border-zinc-700/50 hover:border-purple-500 hover:shadow-[0_0_25px_rgba(168,85,247,0.5)] transition-all duration-300 group bg-zinc-800"
+                      >
+                        <img
+                          src={url}
+                          alt={`Avatar ${index + 1}`}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                          onError={e => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                          }}
+                        />
+                        {/* Hover Glow Overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-purple-500/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        {/* Selection Indicator */}
+                        <div className="absolute bottom-1 right-1 w-5 h-5 rounded-full bg-purple-500 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all scale-0 group-hover:scale-100">
+                          <Check size={12} className="text-white" />
+                        </div>
+                      </motion.button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Footer Hint */}
+                <div className="px-6 py-4 bg-zinc-900/80 border-t border-zinc-800/50 text-center">
+                  <p className="text-[10px] text-zinc-500">Clique em um avatar para selecioná-lo</p>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+    </AnimatePresence>
   );
 };

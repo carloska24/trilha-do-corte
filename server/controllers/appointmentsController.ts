@@ -100,7 +100,13 @@ export const createAppointment = async (req: Request, res: Response) => {
       return res.status(409).json({ error: 'Horário já reservado por outro cliente.' });
     }
 
-    // 2. Check Business Rules
+    // 2. Check Business Rules - Fetch settings from DB
+    const shopSettings = await prisma.shop_settings.findFirst();
+    const startHour = shopSettings?.startHour ?? 8;
+    const endHour = shopSettings?.endHour ?? 20;
+    const closedDays = shopSettings?.closedDays ?? [0];
+    const exceptions = (shopSettings?.exceptions as Record<string, any>) || {};
+
     const dateObj = new Date(`${date}T${time}`);
     if (isNaN(dateObj.getTime())) {
       return res.status(400).json({ error: 'Data ou hora inválida.' });
@@ -109,14 +115,33 @@ export const createAppointment = async (req: Request, res: Response) => {
     const day = dateObj.getDay(); // 0 = Sunday
     const hour = parseInt(time.split(':')[0], 10);
 
-    // Rule: Closed on Sundays
-    if (day === 0) {
-      return res.status(400).json({ error: 'A barbearia não abre aos domingos!' });
+    // Check if day is in closedDays
+    if (closedDays.includes(day)) {
+      return res.status(400).json({ error: 'A barbearia está fechada neste dia!' });
     }
 
-    // Rule: Hours 08:00 - 20:00 (Last slot 19:xx)
-    if (hour < 8 || hour > 19) {
-      return res.status(400).json({ error: 'Estamos fechados. Horário: 08h às 20h.' });
+    // Check date-specific exception (closed for the day)
+    const dateKey = date; // YYYY-MM-DD format
+    const dateException = exceptions[dateKey];
+    if (dateException?.closed) {
+      return res.status(400).json({ error: 'A barbearia está fechada nesta data!' });
+    }
+
+    // Check lunch break
+    if (dateException?.lunchStart !== undefined && dateException?.lunchEnd !== undefined) {
+      if (hour >= dateException.lunchStart && hour < dateException.lunchEnd) {
+        return res.status(400).json({ error: 'Horário de almoço - indisponível.' });
+      }
+    }
+
+    // Check business hours (use exception hours if available)
+    const dayStartHour = dateException?.startHour ?? startHour;
+    const dayEndHour = dateException?.endHour ?? endHour;
+
+    if (hour < dayStartHour || hour >= dayEndHour) {
+      return res.status(400).json({
+        error: `Estamos fechados. Horário: ${dayStartHour}h às ${dayEndHour}h.`,
+      });
     }
 
     // Insert
