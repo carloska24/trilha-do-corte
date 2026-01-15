@@ -27,7 +27,7 @@ export const getSettings = async (req: Request, res: Response) => {
 
 export const updateSettings = async (req: Request, res: Response) => {
   try {
-    const { startHour, endHour, closedDays, exceptions } = req.body;
+    const { startHour, endHour, closedDays, exceptions, slotInterval } = req.body;
 
     // Upsert logic (though findFirst -> update is safer for ID-less update intent)
     const existing = await prisma.shop_settings.findFirst();
@@ -37,6 +37,7 @@ export const updateSettings = async (req: Request, res: Response) => {
       endHour,
       closedDays,
       exceptions: exceptions || {},
+      slotInterval,
     };
 
     let settings;

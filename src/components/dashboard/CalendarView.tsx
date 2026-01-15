@@ -1,5 +1,7 @@
 // MARKER_SEARCH_TEST
 import React, { useState, useEffect } from 'react';
+import { DatePicker } from '../ui/DatePicker';
+import { StoreClosedIcon, StoreOpenIcon } from '../icons/StoreStatusIcons';
 import { Appointment, BookingData, Service, Client } from '../../types';
 import { SERVICES as ALL_SERVICES } from '../../constants';
 import { api } from '../../services/api';
@@ -593,6 +595,231 @@ export const CalendarView: React.FC = () => {
                 <span className="text-xs font-bold text-zinc-500">
                   {shopSettings.slotInterval || 60} min por cliente
                 </span>
+              </div>
+            </div>
+            {/* SECTION 3: RAPID ACTIONS (Fechamento/Almoço) - Card Style */}
+            <div className="mt-4 p-5 rounded-2xl bg-zinc-900/50 border border-zinc-800/50 backdrop-blur-sm">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-8 h-8 rounded-lg bg-red-500/10 border border-red-500/30 flex items-center justify-center">
+                  <Zap size={16} className="text-red-500" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+                    Fechamento Rápido
+                  </h3>
+                  <p className="text-[10px] text-zinc-600">Controle de dias e pausas</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                {/* Botões rápidos */}
+                <div className="grid grid-cols-2 gap-2">
+                  {/* FECHADO HOJE */}
+                  {(() => {
+                    const today = new Date().toISOString().slice(0, 10);
+                    const isClosed = shopSettings.exceptions?.[today]?.closed;
+                    return (
+                      <button
+                        type="button"
+                        onClick={e => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          if (isClosed) {
+                            const newExceptions = { ...shopSettings.exceptions };
+                            delete newExceptions[today];
+                            updateShopSettings({ ...shopSettings, exceptions: newExceptions });
+                            api.updateSettings({ ...shopSettings, exceptions: newExceptions });
+                            showToast('✅ Loja reaberta para hoje!');
+                          } else {
+                            const newSettings = {
+                              ...shopSettings,
+                              exceptions: { ...shopSettings.exceptions, [today]: { closed: true } },
+                            };
+                            updateShopSettings(newSettings);
+                            api.updateSettings(newSettings);
+                            showToast('🔒 Loja fechada para hoje!');
+                          }
+                        }}
+                        className={`py-3 px-3 rounded-xl font-bold text-xs uppercase tracking-wide transition-all active:scale-95 flex flex-col items-center gap-2 ${
+                          isClosed
+                            ? 'bg-red-900/20 border-2 border-red-500 text-red-400'
+                            : 'bg-zinc-800/50 border border-zinc-700 text-zinc-400 hover:border-green-500/50 hover:text-green-400'
+                        }`}
+                      >
+                        {isClosed ? (
+                          <StoreClosedIcon
+                            size={48}
+                            className="drop-shadow-[0_0_10px_rgba(239,68,68,0.5)]"
+                          />
+                        ) : (
+                          <StoreOpenIcon
+                            size={48}
+                            className="drop-shadow-[0_0_10px_rgba(74,222,128,0.3)]"
+                          />
+                        )}
+                        <span>{isClosed ? 'ABRIR HOJE' : 'FECHAR HOJE'}</span>
+                      </button>
+                    );
+                  })()}
+
+                  {/* FECHADO AMANHÃ */}
+                  {(() => {
+                    const tomorrow = new Date();
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    const tomorrowStr = tomorrow.toISOString().slice(0, 10);
+                    const isClosed = shopSettings.exceptions?.[tomorrowStr]?.closed;
+                    return (
+                      <button
+                        type="button"
+                        onClick={e => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          if (isClosed) {
+                            const newExceptions = { ...shopSettings.exceptions };
+                            delete newExceptions[tomorrowStr];
+                            updateShopSettings({ ...shopSettings, exceptions: newExceptions });
+                            api.updateSettings({ ...shopSettings, exceptions: newExceptions });
+                            showToast('✅ Loja reaberta para amanhã!');
+                          } else {
+                            const newSettings = {
+                              ...shopSettings,
+                              exceptions: {
+                                ...shopSettings.exceptions,
+                                [tomorrowStr]: { closed: true },
+                              },
+                            };
+                            updateShopSettings(newSettings);
+                            api.updateSettings(newSettings);
+                            showToast('🔒 Loja fechada para amanhã!');
+                          }
+                        }}
+                        className={`py-3 px-3 rounded-xl font-bold text-xs uppercase tracking-wide transition-all active:scale-95 flex flex-col items-center gap-2 ${
+                          isClosed
+                            ? 'bg-red-900/20 border-2 border-red-500 text-red-400'
+                            : 'bg-zinc-800/50 border border-zinc-700 text-zinc-400 hover:border-orange-500/50 hover:text-orange-400'
+                        }`}
+                      >
+                        {isClosed ? (
+                          <StoreClosedIcon
+                            size={48}
+                            className="drop-shadow-[0_0_10px_rgba(239,68,68,0.5)]"
+                          />
+                        ) : (
+                          <StoreOpenIcon
+                            size={48}
+                            className="drop-shadow-[0_0_10px_rgba(251,146,60,0.3)]"
+                          />
+                        )}
+                        <span>{isClosed ? 'ABRIR AMANHÃ' : 'FECHAR AMANHÃ'}</span>
+                      </button>
+                    );
+                  })()}
+                </div>
+
+                {/* Data Customizada */}
+                <div className="p-3 bg-zinc-800/30 rounded-xl border border-zinc-700/50">
+                  <label className="text-xs text-zinc-500 uppercase tracking-wider mb-2 block">
+                    📅 Fechar outra data
+                  </label>
+                  <DatePicker
+                    value=""
+                    placeholder="Selecionar data"
+                    minDate={new Date().toISOString().slice(0, 10)}
+                    accentColor="orange"
+                    onChange={dateStr => {
+                      if (dateStr) {
+                        const newSettings = {
+                          ...shopSettings,
+                          exceptions: { ...shopSettings.exceptions, [dateStr]: { closed: true } },
+                        };
+                        updateShopSettings(newSettings);
+                        api.updateSettings(newSettings);
+                        showToast(
+                          `🔒 Fechado: ${dateStr.split('-').reverse().slice(0, 2).join('/')}`
+                        );
+                      }
+                    }}
+                  />
+                </div>
+
+                {/* Lista de dias fechados (somente futuros) */}
+                {(() => {
+                  const today = new Date().toISOString().slice(0, 10);
+                  const closedDays = Object.keys(shopSettings.exceptions || {})
+                    .filter(date => shopSettings.exceptions?.[date]?.closed && date >= today)
+                    .sort();
+
+                  if (closedDays.length === 0) return null;
+
+                  return (
+                    <div className="p-3 bg-red-950/20 border border-red-500/30 rounded-xl">
+                      <p className="text-red-400 text-xs font-bold uppercase tracking-wider mb-2">
+                        🚫 Dias Fechados ({closedDays.length})
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {closedDays.map(date => (
+                          <div
+                            key={date}
+                            className="flex items-center gap-1 px-2 py-1 bg-red-500/20 rounded-lg group"
+                          >
+                            <span className="text-red-300 text-xs font-mono">
+                              {new Date(date + 'T12:00:00').toLocaleDateString('pt-BR', {
+                                day: '2-digit',
+                                month: '2-digit',
+                                weekday: 'short',
+                              })}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={e => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                const newExceptions = { ...shopSettings.exceptions };
+                                delete newExceptions[date];
+                                const newSettings = { ...shopSettings, exceptions: newExceptions };
+                                updateShopSettings(newSettings);
+                                api.updateSettings(newSettings);
+                                showToast('✅ Data reaberta!');
+                              }}
+                              className="w-4 h-4 rounded-full bg-red-500/30 hover:bg-red-500 flex items-center justify-center text-red-300 hover:text-white transition-colors"
+                            >
+                              <X size={10} strokeWidth={3} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Pausa para Almoço */}
+                <div className="p-3 bg-amber-950/20 border border-amber-500/30 rounded-xl">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-lg">🍔</span>
+                    <span className="text-amber-400 text-xs font-bold uppercase tracking-wider">
+                      Pausa para Almoço (Hoje)
+                    </span>
+                  </div>
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-zinc-500 text-xs shrink-0">Das</span>
+                      <input
+                        type="time"
+                        defaultValue="12:00"
+                        className="flex-1 min-w-0 bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1.5 text-white text-sm focus:border-yellow-500 focus:outline-none"
+                      />
+                      <span className="text-zinc-500 text-xs shrink-0">às</span>
+                      <input
+                        type="time"
+                        defaultValue="13:00"
+                        className="flex-1 min-w-0 bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1.5 text-white text-sm focus:border-yellow-500 focus:outline-none"
+                      />
+                    </div>
+                    <button className="w-full py-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-500 text-xs font-bold uppercase hover:bg-amber-500/20 transition-colors">
+                      Definir Pausa
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
