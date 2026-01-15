@@ -97,6 +97,46 @@ export const DailyTimeline: React.FC<DailyTimelineProps> = ({
 
     const dateKey = getLocalISODate(selectedDate);
 
+    // Get duration of the dragged appointment's service
+    const service = services.find(s => s.id === app.serviceId);
+    const appDuration = service?.duration || 30;
+
+    // Parse target time to minutes
+    const [targetHour, targetMin] = targetTime.split(':').map(Number);
+    const targetStartMinutes = targetHour * 60 + targetMin;
+    const targetEndMinutes = targetStartMinutes + appDuration;
+
+    // Check for collisions with other appointments (excluding the one being moved)
+    const hasCollision = appointments.some(other => {
+      if (other.id === appId) return false;
+      if (other.status === 'cancelled') return false;
+
+      // Only check same date
+      const otherDateKey = other.date.includes('T') ? other.date.split('T')[0] : other.date;
+      if (otherDateKey !== dateKey) return false;
+
+      const otherService = services.find(s => s.id === other.serviceId);
+      const otherDuration = otherService?.duration || 30;
+
+      const [otherHour, otherMin] = other.time.split(':').map(Number);
+      const otherStartMinutes = otherHour * 60 + otherMin;
+      const otherEndMinutes = otherStartMinutes + otherDuration;
+
+      // Check if ranges overlap
+      return !(targetEndMinutes <= otherStartMinutes || targetStartMinutes >= otherEndMinutes);
+    });
+
+    if (hasCollision) {
+      // Show error toast - blocked by another appointment
+      if (typeof window !== 'undefined') {
+        const event = new CustomEvent('showToast', {
+          detail: '⚠️ Horário ocupado! Mova o outro cliente primeiro.',
+        });
+        window.dispatchEvent(event);
+      }
+      return;
+    }
+
     const updatedAppointments = appointments.map(a =>
       a.id === appId ? { ...a, time: targetTime, date: dateKey } : a
     );

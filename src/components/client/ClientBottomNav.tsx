@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, CalendarPlus, Wallet, User, Grid } from 'lucide-react';
+import { Home, Scissors, Wallet, User, CalendarPlus } from 'lucide-react';
 
 interface ClientBottomNavProps {
   currentTab: string;
@@ -12,70 +12,130 @@ export const ClientBottomNav: React.FC<ClientBottomNavProps> = ({
   onTabChange,
   onOpenBooking,
 }) => {
+  const tabs = [
+    { id: 'dash', label: 'Início', icon: Home },
+    { id: 'services', label: 'Serviços', icon: Scissors },
+    { id: 'wallet', label: 'Carteira', icon: Wallet },
+    { id: 'profile', label: 'Perfil', icon: User },
+  ];
+
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-[#111]/95 backdrop-blur-xl border-t border-white/10 pb-safe md:hidden">
-      <div className="flex justify-around items-center h-16">
-        <button
-          onClick={() => onTabChange('dash')}
-          className={`flex flex-col items-center gap-1 p-2 transition-colors ${
-            currentTab === 'dash' ? 'text-neon-yellow' : 'text-gray-500 hover:text-gray-300'
-          }`}
-        >
-          <Home
-            size={20}
-            className={currentTab === 'dash' ? 'drop-shadow-[0_0_8px_rgba(234,179,8,0.5)]' : ''}
-          />
-          <span className="text-[9px] font-bold uppercase tracking-wide">Início</span>
-        </button>
+    <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden">
+      {/* Glassmorphism Background */}
+      <div className="absolute inset-0 bg-black/80 backdrop-blur-xl border-t border-white/10" />
 
-        <button
-          onClick={() => onTabChange('services')}
-          className={`flex flex-col items-center gap-1 p-2 transition-colors ${
-            currentTab === 'services' ? 'text-neon-yellow' : 'text-gray-500 hover:text-gray-300'
-          }`}
-        >
-          <Grid
-            size={20}
-            className={currentTab === 'services' ? 'drop-shadow-[0_0_8px_rgba(234,179,8,0.5)]' : ''}
-          />
-          <span className="text-[9px] font-bold uppercase tracking-wide">Serviços</span>
-        </button>
+      {/* Gradient Top Line */}
+      <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-yellow-500/50 to-transparent" />
 
-        {/* Central Action Button (Floating) */}
-        <div className="relative -top-5">
+      {/* Navigation Container */}
+      <div className="relative flex items-end justify-around h-20 pb-safe px-2">
+        {/* Left Tabs */}
+        {tabs.slice(0, 2).map(tab => {
+          const Icon = tab.icon;
+          const isActive = currentTab === tab.id;
+
+          return (
+            <button
+              key={tab.id}
+              onClick={() => onTabChange(tab.id)}
+              className={`relative flex flex-col items-center justify-center w-16 h-16 rounded-2xl transition-all duration-300 active:scale-90 ${
+                isActive
+                  ? 'bg-gradient-to-br from-yellow-500/20 to-amber-500/10'
+                  : 'hover:bg-white/5'
+              }`}
+            >
+              {/* Icon */}
+              <Icon
+                size={24}
+                className={`transition-all duration-300 ${
+                  isActive
+                    ? 'text-yellow-400 drop-shadow-[0_0_12px_rgba(234,179,8,0.8)]'
+                    : 'text-gray-500'
+                }`}
+                strokeWidth={isActive ? 2.5 : 2}
+              />
+
+              {/* Label */}
+              <span
+                className={`text-[10px] font-bold uppercase tracking-wide mt-1 transition-colors ${
+                  isActive ? 'text-yellow-400' : 'text-gray-600'
+                }`}
+              >
+                {tab.label}
+              </span>
+
+              {/* Active Indicator Dot */}
+              {isActive && (
+                <div className="absolute -bottom-1 w-1 h-1 rounded-full bg-yellow-400 shadow-[0_0_8px_rgba(234,179,8,0.8)]" />
+              )}
+            </button>
+          );
+        })}
+
+        {/* CENTER BOOKING BUTTON */}
+        <div className="relative -mt-6 mx-2">
+          {/* Glow Ring */}
+          <div className="absolute inset-0 rounded-full bg-gradient-to-br from-yellow-400 to-amber-500 blur-lg opacity-40 animate-pulse" />
+
+          {/* Button */}
           <button
             onClick={onOpenBooking}
-            className="w-14 h-14 bg-neon-yellow rounded-full flex items-center justify-center text-black shadow-[0_0_20px_rgba(234,179,8,0.4)] border-4 border-[#111] transform active:scale-95 transition-all"
+            className="relative w-16 h-16 rounded-full bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center shadow-[0_4px_20px_rgba(234,179,8,0.5)] border-4 border-black active:scale-90 transition-all duration-200 group"
           >
-            <CalendarPlus size={24} className="stroke-[2.5]" />
+            <CalendarPlus
+              size={26}
+              className="text-black stroke-[2.5] group-hover:rotate-12 transition-transform"
+            />
           </button>
+
+          {/* Label */}
+          <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[9px] font-black uppercase tracking-wider text-gray-500 whitespace-nowrap">
+            Agendar
+          </span>
         </div>
 
-        <button
-          onClick={() => onTabChange('wallet')}
-          className={`flex flex-col items-center gap-1 p-2 transition-colors ${
-            currentTab === 'wallet' ? 'text-neon-yellow' : 'text-gray-500 hover:text-gray-300'
-          }`}
-        >
-          <Wallet
-            size={20}
-            className={currentTab === 'wallet' ? 'drop-shadow-[0_0_8px_rgba(234,179,8,0.5)]' : ''}
-          />
-          <span className="text-[9px] font-bold uppercase tracking-wide">Carteira</span>
-        </button>
+        {/* Right Tabs */}
+        {tabs.slice(2).map(tab => {
+          const Icon = tab.icon;
+          const isActive = currentTab === tab.id;
 
-        <button
-          onClick={() => onTabChange('profile')}
-          className={`flex flex-col items-center gap-1 p-2 transition-colors ${
-            currentTab === 'profile' ? 'text-neon-yellow' : 'text-gray-500 hover:text-gray-300'
-          }`}
-        >
-          <User
-            size={20}
-            className={currentTab === 'profile' ? 'drop-shadow-[0_0_8px_rgba(234,179,8,0.5)]' : ''}
-          />
-          <span className="text-[9px] font-bold uppercase tracking-wide">Perfil</span>
-        </button>
+          return (
+            <button
+              key={tab.id}
+              onClick={() => onTabChange(tab.id)}
+              className={`relative flex flex-col items-center justify-center w-16 h-16 rounded-2xl transition-all duration-300 active:scale-90 ${
+                isActive
+                  ? 'bg-gradient-to-br from-yellow-500/20 to-amber-500/10'
+                  : 'hover:bg-white/5'
+              }`}
+            >
+              {/* Icon */}
+              <Icon
+                size={24}
+                className={`transition-all duration-300 ${
+                  isActive
+                    ? 'text-yellow-400 drop-shadow-[0_0_12px_rgba(234,179,8,0.8)]'
+                    : 'text-gray-500'
+                }`}
+                strokeWidth={isActive ? 2.5 : 2}
+              />
+
+              {/* Label */}
+              <span
+                className={`text-[10px] font-bold uppercase tracking-wide mt-1 transition-colors ${
+                  isActive ? 'text-yellow-400' : 'text-gray-600'
+                }`}
+              >
+                {tab.label}
+              </span>
+
+              {/* Active Indicator Dot */}
+              {isActive && (
+                <div className="absolute -bottom-1 w-1 h-1 rounded-full bg-yellow-400 shadow-[0_0_8px_rgba(234,179,8,0.8)]" />
+              )}
+            </button>
+          );
+        })}
       </div>
     </div>
   );

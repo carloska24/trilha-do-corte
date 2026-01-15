@@ -6,7 +6,7 @@ export interface Notification {
   title: string;
   message: string;
   timestamp: string;
-  type: 'info' | 'alert' | 'success' | 'opportunity';
+  type: 'info' | 'alert' | 'success' | 'opportunity' | 'promo' | 'loyalty';
   read: boolean;
   actionLink?: string; // e.g. 'booking'
 }
@@ -27,7 +27,7 @@ export const getNotifications = (): Notification[] => {
 export const sendBroadcastNotification = (
   title: string,
   message: string,
-  type: 'info' | 'alert' | 'success' | 'opportunity' = 'info'
+  type: 'info' | 'alert' | 'success' | 'opportunity' | 'promo' | 'loyalty' = 'info'
 ) => {
   const current = getNotifications();
   const newNotif: Notification = {
@@ -52,6 +52,34 @@ export const markAllAsRead = () => {
   const updated = current.map(n => ({ ...n, read: true }));
   localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
   window.dispatchEvent(new Event(EVENT_NAME));
+};
+
+export const clearAllNotifications = () => {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+  window.dispatchEvent(new Event(EVENT_NAME));
+};
+
+export const deleteNotification = (id: string) => {
+  const current = getNotifications();
+  const updated = current.filter(n => n.id !== id);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+  window.dispatchEvent(new Event(EVENT_NAME));
+};
+
+// Helper: Get relative time string
+export const getRelativeTime = (timestamp: string): string => {
+  const now = new Date();
+  const date = new Date(timestamp);
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return 'Agora';
+  if (diffMins < 60) return `Há ${diffMins} min`;
+  if (diffHours < 24) return `Há ${diffHours}h`;
+  if (diffDays === 1) return 'Ontem';
+  return `Há ${diffDays} dias`;
 };
 
 // Hook for React Components
@@ -84,5 +112,5 @@ export const useNotifications = () => {
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
-  return { notifications, unreadCount, markAllAsRead };
+  return { notifications, unreadCount, markAllAsRead, clearAllNotifications, deleteNotification };
 };

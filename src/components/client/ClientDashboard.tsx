@@ -156,7 +156,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
                     }
                     ticketId={`COD-${app.id.substring(0, 6)}`}
                     rating={client.level || 1}
-                    serviceCount={completedServicesCount}
+                    serviceCount={0} // TEMP: Forcing 0 for Silver/Empty test
                     className="w-full max-w-none"
                   />
 
@@ -185,41 +185,45 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
             </div>
           ) : (
             <div
-              onClick={() => onOpenBooking()} // Simplified
-              className="bg-[#101010] border border-gray-800/50 rounded-xl p-8 flex flex-col items-center justify-center text-center group cursor-pointer hover:border-neon-yellow/50 transition-all relative overflow-hidden min-h-[250px]"
+              onClick={() => onOpenBooking()}
+              className="bg-gradient-to-r from-[#101010] to-[#151515] border border-gray-800/50 rounded-2xl p-5 flex items-center gap-5 group cursor-pointer hover:border-neon-yellow/50 transition-all relative overflow-hidden"
             >
-              {/* Background Image Layer */}
-              <div className="absolute inset-0 z-0 opacity-40 group-hover:opacity-60 transition-opacity duration-500">
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent z-10"></div>
+              {/* Background subtle */}
+              <div className="absolute inset-0 z-0 opacity-20 group-hover:opacity-30 transition-opacity">
                 <img
                   src="/ticket-bg.png"
                   onError={e => {
                     e.currentTarget.src =
                       'https://images.unsplash.com/photo-1634152962476-4b8a00e1915c?q=80&w=800&auto=format&fit=crop';
                   }}
-                  className="w-full h-full object-cover object-center transition-all duration-700"
-                  alt="Background"
+                  className="w-full h-full object-cover"
+                  alt=""
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent" />
+              </div>
+
+              {/* Icon */}
+              <div className="relative z-10 w-14 h-14 bg-black/60 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform border border-gray-700 group-hover:border-neon-yellow/50 shrink-0">
+                <Ticket
+                  className="text-gray-500 group-hover:text-neon-yellow transition-colors"
+                  size={24}
                 />
               </div>
 
-              {/* Content - Relative z-10 to sit above background */}
-              <div className="relative z-10 flex flex-col items-center justify-end h-64 w-full py-8 gap-6">
-                <div className="flex items-center justify-center">
-                  <div className="w-16 h-16 bg-black/80 backdrop-blur-sm rounded-full flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg border border-gray-800 group-hover:border-neon-yellow/50">
-                    <Ticket
-                      className="text-gray-400 group-hover:text-neon-yellow transition-colors"
-                      size={24}
-                    />
-                  </div>
-                </div>
+              {/* Content */}
+              <div className="relative z-10 flex-1">
+                <h3 className="text-white font-black text-lg mb-0.5 font-graffiti tracking-wide group-hover:text-neon-yellow transition-colors">
+                  SEM VIAGENS
+                </h3>
+                <p className="text-gray-500 text-[11px] font-bold uppercase tracking-wider">
+                  Sua agenda está livre
+                </p>
+              </div>
 
-                <div className="flex flex-col items-center">
-                  <h3 className="text-white font-black text-2xl mb-1 font-graffiti tracking-wider group-hover:text-neon-yellow transition-colors drop-shadow-lg">
-                    SEM VIAGENS
-                  </h3>
-                  <p className="text-gray-400 text-xs font-bold uppercase tracking-widest max-w-xs drop-shadow-md">
-                    Sua agenda está livre. Que tal marcar um trato no visual?
-                  </p>
+              {/* CTA */}
+              <div className="relative z-10 shrink-0">
+                <div className="bg-neon-yellow text-black font-black text-xs uppercase tracking-wider px-4 py-2.5 rounded-xl group-hover:scale-105 transition-transform shadow-lg">
+                  Agendar
                 </div>
               </div>
             </div>

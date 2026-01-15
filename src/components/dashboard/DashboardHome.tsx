@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { getOptimizedImageUrl } from '../../utils/imageUtils';
 import { ChairIcon } from '../icons/ChairIcon';
+import { RadarIcon } from '../icons/RadarIcon';
 import { Appointment, AppointmentStatus, ServiceItem } from '../../types';
 import { SERVICES as ALL_SERVICES, LOCAL_AVATARS } from '../../constants';
 import {
@@ -320,6 +321,7 @@ export const DashboardHome: React.FC = () => {
   const { initiateFinish } = useOutletContext<DashboardOutletContext>();
   const [isSkipModalOpen, setIsSkipModalOpen] = useState(false);
   const [previewIndex, setPreviewIndex] = useState(0); // Índice do cliente atual no card
+  const [radarToast, setRadarToast] = useState<string | null>(null);
 
   const onInitiateFinish = initiateFinish;
 
@@ -912,35 +914,72 @@ export const DashboardHome: React.FC = () => {
               <button
                 onClick={() => {
                   sendBroadcastNotification(
-                    'VAGA DISPONÍVEL! ⚡',
-                    'Um horário acabou de vagar! Agende agora e garanta seu visual.',
+                    '⚡ HORÁRIO LIVRE AGORA!',
+                    'Seu barbeiro está disponível! Garanta antes que outro cliente agende.',
                     'opportunity'
                   );
-                  alert('Notificação enviada para todos os clientes!');
+                  // Show styled toast instead of native alert
+                  setRadarToast(`🔔 Notificação enviada para ${clients.length} clientes!`);
+                  setTimeout(() => setRadarToast(null), 3000);
                 }}
-                className="w-full h-24 rounded-lg flex items-center px-0 relative overflow-hidden transition-all duration-500 bg-[var(--bg-card)] border border-[var(--border-color)] shadow-[0_4px_20px_rgba(0,0,0,0.1)] active:scale-[0.95] cursor-pointer hover:shadow-[0_0_30px_rgba(251,191,36,0.15)] group/radar"
+                className="w-full rounded-2xl relative overflow-hidden transition-all duration-500 active:scale-[0.97] cursor-pointer group/idle"
               >
-                {/* Radar Content */}
-                <div className="w-full h-full flex items-center justify-between px-6 relative z-10">
-                  <div className="relative w-16 h-16 flex items-center justify-center">
-                    <div className="absolute inset-0 rounded-full border border-amber-500/10 animate-[ping_3s_cubic-bezier(0,0,0.2,1)_infinite]"></div>
-                    <div className="absolute inset-0 rounded-full border border-amber-400/5 animate-[ping_3s_cubic-bezier(0,0,0.2,1)_infinite] delay-500"></div>
-                    <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center border border-white/10 shadow-inner relative overflow-hidden backdrop-blur-sm">
-                      <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-amber-500/10 to-transparent animate-spin [animation-duration:4s]"></div>
-                      <div className="w-1.5 h-1.5 rounded-full bg-amber-500/50 shadow-[0_0_10px_#f59e0b] z-10"></div>
+                {/* Background - Pure black gradient */}
+                <div className="absolute inset-0 bg-gradient-to-b from-black via-zinc-950 to-black" />
+                <div className="absolute inset-0 bg-gradient-to-r from-green-500/0 via-green-500/5 to-green-500/0 group-hover/idle:via-green-500/10 transition-all duration-700" />
+
+                {/* Subtle grid pattern */}
+                <div
+                  className="absolute inset-0 opacity-[0.03]"
+                  style={{
+                    backgroundImage:
+                      'linear-gradient(rgba(110,237,74,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(110,237,74,0.1) 1px, transparent 1px)',
+                    backgroundSize: '20px 20px',
+                  }}
+                />
+
+                {/* Animated border glow - green */}
+                <div className="absolute inset-0 rounded-2xl border border-green-500/20 group-hover/idle:border-green-500/40 transition-colors duration-500" />
+                <div className="absolute inset-0 rounded-2xl group-hover/idle:shadow-[0_0_40px_rgba(84,198,56,0.2)] transition-all duration-500" />
+
+                {/* Content */}
+                <div className="relative z-10 flex items-center justify-center p-4 gap-4">
+                  {/* Left: Radar Icon */}
+                  <RadarIcon size={56} />
+
+                  {/* Center: Status Text */}
+                  <div className="flex flex-col items-center text-center gap-1">
+                    {/* Status label with pulsing dot */}
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#54C638] animate-pulse" />
+                      <span className="text-[10px] font-bold text-green-500/80 uppercase tracking-[0.2em]">
+                        Aguardando Cliente
+                      </span>
+                    </div>
+
+                    {/* Main CTA */}
+                    <span className="text-lg font-black text-white uppercase tracking-wide group-hover/idle:text-green-400 transition-colors duration-300">
+                      🔔 Notificar Clientes
+                    </span>
+
+                    {/* Client count badge */}
+                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-500/10 border border-green-500/20 group-hover/idle:bg-green-500/15 transition-colors">
+                      <span className="text-green-400 text-[10px]">📱</span>
+                      <span className="text-[10px] font-bold text-green-400/80">
+                        {clients.length} clientes receberão
+                      </span>
                     </div>
                   </div>
-                  <div className="flex flex-col items-start flex-1 ml-4 leading-tight opacity-50 group-hover/radar:opacity-100 transition-opacity duration-300">
-                    <span className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.2em]">
-                      Status: Ocioso
-                    </span>
-                    <span className="text-xl font-bold text-[var(--text-primary)] uppercase leading-none tracking-tight mt-0.5">
-                      Buscar Cliente
-                    </span>
-                  </div>
-                  <ChevronRight
-                    className="text-[var(--text-secondary)] group-hover/radar:text-amber-500/50 transition-colors duration-300"
-                    size={24}
+                </div>
+
+                {/* Scanning line effect */}
+                <div
+                  className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl"
+                  style={{ opacity: 0.4 }}
+                >
+                  <div
+                    className="absolute w-full h-[1px] bg-gradient-to-r from-transparent via-amber-400 to-transparent"
+                    style={{ animation: 'scanLine 4s ease-in-out infinite' }}
                   />
                 </div>
               </button>
@@ -997,6 +1036,18 @@ export const DashboardHome: React.FC = () => {
 
         {/* 4. QUEUE TICKER (ISOLATED) */}
         <QueueTicker queue={queue} services={services} clients={clients} />
+
+        {/* RADAR TOAST NOTIFICATION */}
+        {radarToast && (
+          <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[100] animate-[fadeInUp_0.3s_ease-out]">
+            <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-gradient-to-r from-green-600 to-emerald-600 border border-green-400/30 shadow-[0_0_30px_rgba(34,197,94,0.4)] backdrop-blur-xl">
+              <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center animate-pulse">
+                <span className="text-lg">📡</span>
+              </div>
+              <span className="text-white font-bold text-sm">{radarToast}</span>
+            </div>
+          </div>
+        )}
       </>
     </div>
   );

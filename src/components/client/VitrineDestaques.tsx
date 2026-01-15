@@ -11,7 +11,23 @@ interface VitrineDestaquesProps {
 
 export const VitrineDestaques: React.FC<VitrineDestaquesProps> = ({ services, onBook }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
 
+  // Track scroll position to update active dot
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const scrollLeft = container.scrollLeft;
+      const itemWidth = container.offsetWidth * 0.85 + 16; // 85vw + gap
+      const index = Math.round(scrollLeft / itemWidth);
+      setActiveIndex(index);
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, []);
   const MOCK_IMAGES: Record<string, string> = {
     default:
       'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?q=80&w=400&auto=format&fit=crop',
@@ -198,6 +214,29 @@ export const VitrineDestaques: React.FC<VitrineDestaquesProps> = ({ services, on
           </div>
         ))}
       </div>
+
+      {/* Pagination Dots */}
+      {items.length > 1 && (
+        <div className="flex justify-center gap-2 mt-2 px-4">
+          {items.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => {
+                const container = scrollRef.current;
+                if (container) {
+                  const itemWidth = container.offsetWidth * 0.85 + 16;
+                  container.scrollTo({ left: idx * itemWidth, behavior: 'smooth' });
+                }
+              }}
+              className={`h-2 rounded-full transition-all duration-300 ${
+                idx === activeIndex
+                  ? 'w-6 bg-neon-yellow shadow-[0_0_8px_rgba(234,179,8,0.6)]'
+                  : 'w-2 bg-gray-600 hover:bg-gray-500'
+              }`}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 };

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { DatePicker } from '../ui/DatePicker';
 import {
   Store,
   Clock,
@@ -520,26 +521,23 @@ export const SettingsView: React.FC = () => {
                 <label className="text-xs text-zinc-500 uppercase tracking-wider mb-2 block">
                   📅 Fechar outra data
                 </label>
-                <div className="flex gap-2">
-                  <input
-                    type="date"
-                    min={new Date().toISOString().slice(0, 10)}
-                    className="flex-1 bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:border-yellow-500 focus:outline-none"
-                    onChange={e => {
-                      if (e.target.value) {
-                        const dateStr = e.target.value;
-                        updateShopSettings({
-                          ...shopSettings,
-                          exceptions: { ...shopSettings.exceptions, [dateStr]: { closed: true } },
-                        });
-                        showToast(
-                          `🔒 Fechado: ${dateStr.split('-').reverse().slice(0, 2).join('/')}`
-                        );
-                        e.target.value = '';
-                      }
-                    }}
-                  />
-                </div>
+                <DatePicker
+                  value=""
+                  placeholder="Selecionar data"
+                  minDate={new Date().toISOString().slice(0, 10)}
+                  accentColor="orange"
+                  onChange={dateStr => {
+                    if (dateStr) {
+                      updateShopSettings({
+                        ...shopSettings,
+                        exceptions: { ...shopSettings.exceptions, [dateStr]: { closed: true } },
+                      });
+                      showToast(
+                        `🔒 Fechado: ${dateStr.split('-').reverse().slice(0, 2).join('/')}`
+                      );
+                    }
+                  }}
+                />
               </div>
 
               {/* Lista de dias fechados (somente futuros) */}

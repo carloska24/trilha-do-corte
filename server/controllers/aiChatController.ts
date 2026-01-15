@@ -149,6 +149,10 @@ export const handleChat = async (req: Request, res: Response) => {
     const availability = await getAvailabilityForNextDays();
     const services = await getServicesList();
 
+    // Fetch slotInterval from settings for accurate prompt
+    const settings = await prisma.shop_settings.findFirst();
+    const slotInterval = settings?.slotInterval || 30;
+
     const todayStr = new Date().toLocaleDateString('pt-BR', {
       weekday: 'long',
       year: 'numeric',
@@ -163,7 +167,7 @@ export const handleChat = async (req: Request, res: Response) => {
       CONTEXTO ATUAL:
       - Hoje é: ${todayStr}
       - Serviços Disponíveis (com duração em min): ${JSON.stringify(services)}
-      - Horários Livres (Slots de 30min): ${JSON.stringify(availability)}
+      - Horários Livres (Slots de ${slotInterval}min): ${JSON.stringify(availability)}
 
       SUAS INSTRUÇÕES:
       1. Seja educada, moderna (tom "Cyberpunk/Tech") e prestativa. Use emojis ocasionalmente (🤘, ✂️, 🔥).

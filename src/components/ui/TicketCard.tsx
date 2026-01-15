@@ -6,8 +6,8 @@ interface TicketCardProps {
   data: BookingData;
   service?: ServiceItem;
   ticketId: string;
-  rating?: number; // Kept for backward compatibility, serves as serviceCount proxy if needed
-  serviceCount?: number; // New prop for explicit tier logic
+  rating?: number;
+  serviceCount?: number;
   className?: string;
 }
 
@@ -19,70 +19,87 @@ const getTier = (count: number): Tier => {
   return 'PLATINUM';
 };
 
+// Premium Metallic Colors + Custom Texture Images
+// Typography: Montserrat/Inter recommended
+// Colors optimized for metallic backgrounds per ChatGPT analysis
+
+// Helper function to get background image with fallback formats
+const getTextureUrl = (basePath: string) => {
+  // Try png first, then jpg - browser will use whichever exists
+  return `url(${basePath}.png), url(${basePath}.jpg)`;
+};
+
 const TIER_STYLES = {
   SILVER: {
-    gradient: 'bg-linear-to-br from-[#E2E4E9] via-[#F3F4F6] to-[#9CA3AF]', // Brighter silver body
-    border: 'border-black/10 dark:border-white/60', // Adaptive border
-    // CHANGED: Jet Black for maximum contrast
-    textMain: 'text-black',
-    textSoft: 'text-[#374151]',
-    textMuted: 'text-[#4B5563]',
-    accent: 'text-[#111827]',
-    icon: 'text-[#1F2937]',
-    shadow: 'shadow-[0_4px_10px_rgba(0,0,0,0.15)]', // Tighter shadow
-    // CHANGED: Clean Dark Header
-    headerBg: 'bg-[#111]',
-    headerBorder: 'border-white/10',
-    headerText: 'text-white font-bold tracking-[0.2em]',
-    headerTexture: 'opacity-0', // REMOVED texture for clean look
-    headerTextureColor: '#FFFFFF',
-    textureOverlay: 'bg-transparent', // REMOVED overlay
-    cutoutBorder: 'border-gray-400/50',
-    infoBox: 'bg-black/5 border-black/10',
-    divider: 'bg-black/10',
+    // Images for custom textures (place in /public/textures/) - supports .png or .jpg
+    headerImage: '/textures/silver-header',
+    bodyImage: '/textures/silver-body',
+    // Premium color palette for silver
+    gradient: 'bg-gradient-to-br from-[#C0C0C0] via-[#E8E8E8] to-[#A8A9AD]',
+    border: 'border-[#A8A9AD]',
+    // Text colors - MUCH DARKER for readability on silver
+    textMain: 'text-[#0A0A0A]', // Títulos - preto forte
+    textSoft: 'text-[#2A2A2A]', // Labels - cinza muito escuro
+    textMuted: 'text-[#4A4A4A]', // Texto secundário
+    accent: 'text-[#000000]', // Valores - preto puro
+    icon: 'text-[#1A1A1A]', // Ícones - quase preto
+    shadow: 'shadow-xl',
+    // Header - preto grafite elegante
+    headerBg: 'bg-gradient-to-r from-[#2E2E2E] to-[#1A1A1A]',
+    headerBorder: 'border-[#3A3A3A]',
+    headerText: 'text-white',
+    cutoutBg: '#0a0a0a',
+    infoBox: 'bg-black/5 border-[#5A5A5A]/20',
+    divider: 'border-[#5A5A5A]/40',
+    // Badge - grafite escuro premium
+    tierBadge: 'bg-gradient-to-r from-[#2E2E2E] to-[#1A1A1A]',
+    tierBadgeText: 'text-[#E5E5E5]',
+    starColor: '#CFCFCF',
+    shine: 'from-transparent via-white/20 to-transparent',
   },
   GOLD: {
-    gradient: 'bg-linear-to-br from-[#E0B65C] via-[#FDE68A] to-[#8C6A1E]',
-    border: 'border-[#FFD777]/80 dark:border-[#FFD777]/80',
-    // CHANGED: Dark Brown/Bronze for contrast on Gold
-    textMain: 'text-[#422006]', // Deep bronze
-    textSoft: 'text-[#713F12]',
-    textMuted: 'text-[#854D0E]',
-    accent: 'text-[#A16207]',
-    icon: 'text-[#854D0E]',
-    shadow: 'shadow-[0_10px_28px_rgba(0,0,0,0.45)]',
-    // Black Gold Header (Keep dark, text is already bright gold)
-    headerBg: 'bg-linear-to-b from-[#141414] to-[#1F1F1F]',
-    headerBorder: 'border-[rgba(255,215,119,0.35)]',
-    headerText: 'text-[#FDE68A] drop-shadow-[0_2px_0_rgba(0,0,0,1)]',
-    headerTexture: 'opacity-[0.04]', // 4% Grid
-    headerTextureColor: '#FDE68A',
-    textureOverlay: 'bg-[#FFD700]/10',
-    cutoutBorder: 'border-[#FFD777]/60',
-    infoBox: 'bg-[#2a1e0b]/90 border-[#b88a44]',
-    divider: 'bg-[#713F12]/40',
+    headerImage: '/textures/gold-header',
+    bodyImage: '/textures/gold-body',
+    gradient: 'bg-gradient-to-br from-[#BF953F] via-[#FCF6BA] to-[#B38728]',
+    border: 'border-[#D4AF37]',
+    textMain: 'text-[#3D2914]',
+    textSoft: 'text-[#5C4033]',
+    textMuted: 'text-[#7A5A3D]',
+    accent: 'text-[#2A1A0A]',
+    icon: 'text-[#5C4033]',
+    shadow: 'shadow-xl',
+    headerBg: 'bg-gradient-to-r from-[#2C1810] to-[#1A0F0A]',
+    headerBorder: 'border-[#4A3020]',
+    headerText: 'text-[#D4AF37]',
+    cutoutBg: '#0a0a0a',
+    infoBox: 'bg-black/5 border-[#AA771C]/20',
+    divider: 'border-[#AA771C]/40',
+    tierBadge: 'bg-gradient-to-r from-[#8B6914] to-[#6B4F0A]',
+    tierBadgeText: 'text-[#FFE5A0]',
+    starColor: '#FFD700',
+    shine: 'from-transparent via-white/15 to-transparent',
   },
   PLATINUM: {
-    gradient: 'bg-linear-to-br from-[#E5E7EB] via-[#F9FAFB] to-[#6B7280]',
-    border: 'border-black/10 dark:border-white/45',
-    // CHANGED: Dark Slate for contrast on Platinum/White
-    textMain: 'text-[#0F172A]', // Dark Slate
-    textSoft: 'text-[#334155]',
-    textMuted: 'text-[#475569]',
-    accent: 'text-[#3B82F6]', // Blue accent
-    icon: 'text-[#334155]',
-    shadow: 'shadow-[0_12px_30px_rgba(0,0,0,0.55)]',
-    // Dark Titanium Header (Keep dark)
-    headerBg: 'bg-linear-to-b from-[#0F172A] to-[#111827]',
-    headerBorder: 'border-[rgba(147,197,253,0.35)]',
-    headerText:
-      'text-transparent bg-clip-text bg-linear-to-b from-white via-[#93C5FD] to-[#3B82F6] drop-shadow-[0_2px_4px_rgba(59,130,246,0.5)]',
-    headerTexture: 'opacity-[0.05]',
-    headerTextureColor: '#93C5FD',
-    textureOverlay: 'bg-[#93C5FD]/5',
-    cutoutBorder: 'border-[#93C5FD]/40',
-    infoBox: 'bg-[#0f172a]/90 border-[#1e293b]',
-    divider: 'bg-[#334155]/20',
+    headerImage: '/textures/platinum-header',
+    bodyImage: '/textures/platinum-body',
+    gradient: 'bg-gradient-to-br from-[#E5E4E2] via-[#FFFFFF] to-[#BCC6CC]',
+    border: 'border-[#BCC6CC]',
+    textMain: 'text-[#1A1A2E]',
+    textSoft: 'text-[#4A5568]',
+    textMuted: 'text-[#718096]',
+    accent: 'text-[#0F0F1A]',
+    icon: 'text-[#4A5568]',
+    shadow: 'shadow-xl',
+    headerBg: 'bg-gradient-to-r from-[#1A1A2E] to-[#0F0F1A]',
+    headerBorder: 'border-[#2D3748]',
+    headerText: 'text-white',
+    cutoutBg: '#0a0a0a',
+    infoBox: 'bg-black/5 border-[#4A5568]/20',
+    divider: 'border-[#4A5568]/40',
+    tierBadge: 'bg-gradient-to-r from-[#2D3748] to-[#1A202C]',
+    tierBadgeText: 'text-[#E2E8F0]',
+    starColor: '#E2E8F0',
+    shine: 'from-transparent via-white/25 to-transparent',
   },
 };
 
@@ -97,9 +114,6 @@ export const TicketCard: React.FC<TicketCardProps> = ({
   const [isFlipped, setIsFlipped] = React.useState(false);
   const [isAnimating, setIsAnimating] = React.useState(false);
 
-  // Determine Tier: Use serviceCount if available, otherwise fallback to rating logic or default
-  // User logic: 1-5 Silver, 6-10 Gold, 11+ Platinum
-  // If serviceCount is not passed, we default to 1 (Silver)
   const count = serviceCount !== undefined ? serviceCount : rating || 1;
   const tier = getTier(count);
   const styles = TIER_STYLES[tier];
@@ -108,7 +122,7 @@ export const TicketCard: React.FC<TicketCardProps> = ({
     if (isAnimating) return;
     setIsAnimating(true);
     setIsFlipped(!isFlipped);
-    setTimeout(() => setIsAnimating(false), 750); // Keep debounce to prevent spam
+    setTimeout(() => setIsAnimating(false), 700);
   };
 
   const formatPrice = (value: number) =>
@@ -117,12 +131,16 @@ export const TicketCard: React.FC<TicketCardProps> = ({
   const formatDate = (dateStr: string) => {
     if (!dateStr) return '---';
     const [year, month, day] = dateStr.split('-');
-    return `${day}/${month}/${year.slice(-2)}`;
+    return `${day}/${month}`;
   };
-  // Helper to shorten names to avoid layout overflow
+
+  const getShortName = (name: string) => {
+    const parts = name?.split(' ') || ['Cliente'];
+    return parts.length > 1 ? `${parts[0]} ${parts[1][0]}.` : parts[0];
+  };
+
   const resolveServiceName = (name: string) => {
-    let clean = name.replace(/ \+ /g, '+'); // "Corte + Barba" -> "Corte+Barba"
-    // If still too long, aggressively shorten words
+    let clean = name.replace(/ \+ /g, '+');
     if (clean.length > 18) {
       clean = clean
         .split('+')
@@ -131,363 +149,240 @@ export const TicketCard: React.FC<TicketCardProps> = ({
     }
     return clean;
   };
-  // PERSISTENT 3D WRAPPER
-  const wrapperStyle: React.CSSProperties = {
-    transformStyle: 'preserve-3d',
-    perspective: '1000px',
-    transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
-    transition: 'transform 0.7s cubic-bezier(0.4, 0.0, 0.2, 1)', // Smooth easing
-  };
-
-  // SIMPLIFIED FACES (Rely on backface-visibility: hidden)
-  const frontFaceStyle: React.CSSProperties = {
-    transform: 'rotateY(0deg)',
-    WebkitBackfaceVisibility: 'hidden',
-    backfaceVisibility: 'hidden',
-    zIndex: 2,
-    position: 'relative', // Relative to push height
-    inset: 0,
-  };
-
-  const backFaceStyle: React.CSSProperties = {
-    transform: 'rotateY(180deg)',
-    WebkitBackfaceVisibility: 'hidden',
-    backfaceVisibility: 'hidden',
-    zIndex: 1,
-    position: 'absolute',
-    inset: 0,
-  };
 
   return (
     <div
-      className={`relative w-full mx-auto group font-sans cursor-pointer select-none ${
+      className={`relative w-full mx-auto cursor-pointer select-none ${
         className || 'max-w-[340px]'
       }`}
       onClick={handleFlip}
+      style={{ perspective: '1000px' }}
     >
-      {/* Outer Glow - Tier Specific */}
+      {/* 3D Flip Container */}
       <div
-        className={`absolute inset-0 rounded-[24px] transform scale-[0.98] pointer-events-none transition-opacity duration-500 z-0 ${
-          isAnimating ? 'opacity-0' : 'opacity-100'
-        } ${
-          tier === 'GOLD'
-            ? 'bg-[#F4D079]/10 shadow-[0_0_20px_rgba(244,208,121,0.2)]'
-            : tier === 'PLATINUM'
-            ? 'bg-[#93C5FD]/10 shadow-[0_0_20px_rgba(147,197,253,0.2)]'
-            : 'shadow-[0_10px_30px_-10px_rgba(0,0,0,0.3)]' // Clean shadow for silver
-        }`}
-      ></div>
-
-      {/* FLIP INNER CONTAINER */}
-      <div className="relative w-full z-10" style={wrapperStyle}>
-        {/* ================= FRONT FACE ================= */}
+        className="relative w-full transition-transform duration-700"
+        style={{
+          transformStyle: 'preserve-3d',
+          transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
+        }}
+      >
+        {/* ========== FRONT FACE ========== */}
         <div
-          className={`block ring-1 rounded-[24px] ${styles.border} w-full`}
-          style={frontFaceStyle}
+          className={`relative rounded-[20px] ${styles.shadow} ring-1 ${styles.border}`}
+          style={{ backfaceVisibility: 'hidden' }}
         >
-          {/* Main Card Frame */}
-          <div
-            className={`relative p-[2px] rounded-[24px] overflow-hidden ${styles.gradient} ${styles.shadow}`}
-          >
-            <div className="bg-[#141009] relative rounded-[22px] overflow-hidden flex flex-col h-auto backface-hidden antialiased transition-all duration-300">
-              {/* Texture Layer */}
-              <div className="absolute inset-0 z-0 pointer-events-none">
-                <div className={`absolute inset-0 opacity-100 ${styles.gradient}`}></div>
-
-                {/* Micro-noise REDUCED */}
-                <div
-                  className="absolute inset-0 opacity-[0.03] mix-blend-overlay"
-                  style={{
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
-                  }}
-                ></div>
-                <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-transparent to-black/40 mix-blend-overlay"></div>
-                {/* Specific Tier Overlay */}
-                <div
-                  className={`absolute inset-0 mix-blend-overlay ${styles.textureOverlay}`}
-                ></div>
-              </div>
-
-              {/* HEADER TEXTURE & TITLE */}
+          {/* Metallic Body */}
+          <div className={`${styles.gradient} rounded-[20px] p-[2px]`}>
+            <div className="bg-[#0f0f0f] rounded-[18px] overflow-hidden">
+              {/* Header with Texture Image */}
               <div
-                className={`relative z-10 h-14 w-full border-b shadow-md flex items-center justify-between px-5 ${styles.headerBg} ${styles.headerBorder}`}
+                className={`${styles.headerBg} px-4 py-3 flex items-center justify-between border-b ${styles.headerBorder} relative overflow-hidden`}
+                style={{
+                  backgroundImage: getTextureUrl(styles.headerImage),
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                }}
               >
-                {/* Subtle Grid Pattern */}
-                <div
-                  className={`absolute inset-0 ${styles.headerTexture}`}
-                  style={{
-                    backgroundImage: `radial-gradient(circle, ${styles.headerTextureColor} 1px, transparent 1px)`,
-                    backgroundSize: '8px 8px',
-                  }}
-                ></div>
-
-                <span className={`font-graffiti text-xl tracking-wider z-10 ${styles.headerText}`}>
-                  TRILHA
-                  <span className={`${tier === 'GOLD' ? 'text-[#fff]' : 'text-white'}`}>CARD</span>
-                </span>
-                <span
-                  className={`font-mono font-bold text-xs tracking-widest z-10 ${styles.textMuted}`}
-                >
+                <div className="flex items-center gap-2 relative z-10">
+                  <span className="font-graffiti text-lg tracking-wider text-yellow-400 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
+                    TRILHA<span className="text-white/80">CARD</span>
+                  </span>
+                </div>
+                <span className="font-mono text-[10px] text-white/50 tracking-widest relative z-10">
                   {ticketId}
                 </span>
               </div>
 
-              {/* BODY - FRONT */}
-              <div className="relative z-10 p-5 flex flex-col">
-                <div className="flex flex-col gap-3">
-                  {/* Block 1: Passenger */}
-                  <div className="flex flex-col items-start relative">
-                    <span
-                      className={`text-[9px] font-black uppercase tracking-[0.2em] mb-0.5 ml-1 opacity-80 ${styles.textSoft}`}
-                    >
+              {/* Body with Texture Image */}
+              <div
+                className={`${styles.gradient} p-4 space-y-3`}
+                style={{
+                  backgroundImage: getTextureUrl(styles.bodyImage),
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                }}
+              >
+                {/* Client + Tier Badge */}
+                <div className="flex items-start justify-between">
+                  <div>
+                    <span className="text-[11px] font-bold uppercase tracking-widest text-black/70">
                       Cliente
                     </span>
-                    <h3
-                      className={`text-3xl font-black uppercase tracking-wide leading-none ${styles.textMain}`}
+                    <h2
+                      className="text-2xl font-bold uppercase tracking-wide text-black"
+                      style={{ fontFamily: "'Inter', 'Montserrat', sans-serif" }}
                     >
-                      {data.name?.split(' ')[0] || 'CARLOS'}
-                      <span className={`ml-2 opacity-80 ${styles.textSoft}`}>
-                        {data.name?.split(' ')?.[1]?.[0] || 'A'}.
-                      </span>
-                    </h3>
+                      {getShortName(data.name)}
+                    </h2>
                   </div>
-
-                  {/* Block 2: Service + Stars */}
-                  <div className="flex flex-col items-start relative">
-                    <span
-                      className={`text-[9px] font-black uppercase tracking-[0.2em] mb-0.5 ml-1 opacity-80 ${styles.textSoft}`}
-                    >
-                      Serviço
+                  {/* Premium Badge */}
+                  <div
+                    className={`${styles.tierBadge} px-2 py-1 rounded-full flex items-center gap-1 text-[10px] font-bold`}
+                  >
+                    {[1, 2, 3, 4, 5].map(i => (
+                      <Star key={i} size={10} fill={styles.starColor} stroke="none" />
+                    ))}
+                    <span className={`ml-1 uppercase tracking-wider ${styles.tierBadgeText}`}>
+                      {tier}
                     </span>
-
-                    {(() => {
-                      const finalName = resolveServiceName(service?.name || 'Corte');
-                      const fontSize =
-                        finalName.length > 16
-                          ? 'text-sm'
-                          : finalName.length > 10
-                          ? 'text-base'
-                          : 'text-xl';
-                      return (
-                        <h3
-                          className={`${fontSize} font-black uppercase tracking-wide leading-none truncate whitespace-nowrap ${styles.textMain}`}
-                          title={service?.name}
-                        >
-                          {finalName}
-                        </h3>
-                      );
-                    })()}
-
-                    {/* Stars / Tier Indicator */}
-                    <div className="flex gap-1 mt-1.5 ml-0.5 items-center">
-                      {/* Display stars if needed, or just Tier Name */}
-                      {[1, 2, 3, 4, 5].map(s => (
-                        <Star
-                          key={s}
-                          size={12}
-                          fill={
-                            tier === 'GOLD'
-                              ? '#854D0E' // Dark Bronze fill for Gold Card
-                              : tier === 'SILVER'
-                              ? '#374151' // Dark Gray fill for Silver Card
-                              : '#334155' // Dark Slate fill for Platinum Card
-                          }
-                          className={
-                            tier === 'GOLD'
-                              ? 'text-[#854D0E]'
-                              : tier === 'SILVER'
-                              ? 'text-[#374151]'
-                              : 'text-[#334155]'
-                          }
-                          strokeWidth={0}
-                        />
-                      ))}
-                      <span
-                        className={`ml-2 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${styles.border} ${styles.textSoft}`}
-                      >
-                        {tier}
-                      </span>
-                    </div>
                   </div>
                 </div>
 
-                {/* Divider */}
-                <div
-                  className={`w-full h-[1px] my-2 shadow-[0_1px_0_rgba(255,255,255,0.2)] ${styles.divider}`}
-                ></div>
+                {/* Service */}
+                <div>
+                  <span className="text-[11px] font-bold uppercase tracking-widest text-black/70">
+                    Serviço
+                  </span>
+                  <p
+                    className="text-lg font-bold uppercase text-black"
+                    style={{ fontFamily: "'Inter', 'Montserrat', sans-serif" }}
+                  >
+                    {resolveServiceName(service?.name || 'Corte')}
+                  </p>
+                </div>
 
-                {/* Footer Grid */}
-                <div className="grid grid-cols-3 gap-2">
-                  {/* Date */}
-                  <div className="flex flex-col">
-                    <span
-                      className={`text-[8px] font-black uppercase tracking-widest mb-0.5 flex items-center gap-1 opacity-90 ${styles.textSoft}`}
-                    >
-                      <Calendar size={10} strokeWidth={3} className={styles.icon} />
+                {/* Perforation Line */}
+                <div className="relative flex items-center py-1">
+                  <div
+                    className="absolute -left-6 w-4 h-4 rounded-full"
+                    style={{ backgroundColor: styles.cutoutBg }}
+                  />
+                  <div className={`flex-1 border-t-2 border-dashed ${styles.divider}`} />
+                  <div
+                    className="absolute -right-6 w-4 h-4 rounded-full"
+                    style={{ backgroundColor: styles.cutoutBg }}
+                  />
+                </div>
+
+                {/* Bottom Info Grid - LARGER text and icons */}
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div>
+                    <span className="text-[10px] font-bold uppercase block text-black/70">
+                      <Calendar size={14} className="inline mr-1" />
                       Data
                     </span>
-                    <span
-                      className={`font-mono text-sm font-bold drop-shadow-sm truncate pl-0.5 ${styles.textMain}`}
-                    >
+                    <span className="font-mono text-base font-bold text-black">
                       {formatDate(data.date)}
                     </span>
                   </div>
-
-                  {/* Time */}
-                  <div className="flex flex-col items-center">
-                    <span
-                      className={`text-[8px] font-black uppercase tracking-widest mb-0.5 flex items-center gap-1 opacity-90 ${styles.textSoft}`}
-                    >
-                      <Clock size={10} strokeWidth={3} className={styles.icon} />
+                  <div>
+                    <span className="text-[10px] font-bold uppercase block text-black/70">
+                      <Clock size={14} className="inline mr-1" />
                       Horário
                     </span>
-                    <span
-                      className={`font-mono text-sm font-bold drop-shadow-sm pl-0.5 ${styles.textMain}`}
-                    >
+                    <span className="font-mono text-base font-bold text-black">
                       {data.time || '10:00'}
                     </span>
                   </div>
-
-                  {/* Price */}
-                  <div className="flex flex-col items-end">
-                    <span
-                      className={`text-[8px] font-black uppercase tracking-widest mb-0.5 flex items-center gap-1 opacity-90 ${styles.textSoft}`}
-                    >
+                  <div>
+                    <span className="text-[10px] font-bold uppercase block text-black/70">
+                      <Banknote size={14} className="inline mr-1" />
                       Valor
-                      <Banknote size={10} strokeWidth={3} className={`ml-1 ${styles.accent}`} />
                     </span>
-                    <span
-                      className={`font-mono text-base font-bold drop-shadow-sm pl-0.5 ${styles.textMain}`}
-                    >
-                      {formatPrice(service?.priceValue || 35)}
+                    <span className="font-mono text-base font-bold text-black">
+                      {formatPrice(service?.priceValue || 35)
+                        .replace('R$', '')
+                        .trim()}
                     </span>
                   </div>
                 </div>
               </div>
-
-              {/* Cutouts */}
-              <div
-                className={`absolute -left-[10px] top-[calc(64px+80px)] w-5 h-5 bg-[#141009] rounded-full shadow-[inset_-1px_0_2px_rgba(0,0,0,0.5)] z-20 border-r ${styles.cutoutBorder}`}
-              ></div>
-              <div
-                className={`absolute -right-[10px] top-[calc(64px+80px)] w-5 h-5 bg-[#141009] rounded-full shadow-[inset_1px_0_2px_rgba(0,0,0,0.5)] z-20 border-l ${styles.cutoutBorder}`}
-              ></div>
             </div>
           </div>
         </div>
 
-        {/* ================= BACK FACE ================= */}
+        {/* ========== BACK FACE ========== */}
         <div
-          className={`block ring-1 rounded-[24px] ${styles.border} w-full h-full`}
-          style={backFaceStyle}
+          className={`absolute inset-0 rounded-[20px] ${styles.shadow} ring-1 ${styles.border}`}
+          style={{
+            backfaceVisibility: 'hidden',
+            transform: 'rotateY(180deg)',
+          }}
         >
-          <div
-            className={`relative p-[3px] rounded-[24px] shadow-2xl overflow-hidden h-full ${styles.gradient}`}
-          >
-            <div className="bg-[#1a150c] relative rounded-[21px] overflow-hidden h-full flex flex-col backface-hidden antialiased">
-              {/* Metallic Texture (Same as front) */}
-              <div className="absolute inset-0 z-0 transform scale-x-[-1] pointer-events-none">
-                <div className={`absolute inset-0 opacity-100 ${styles.gradient}`}></div>
-                <div
-                  className="absolute inset-0 opacity-[0.15] mix-blend-overlay"
-                  style={{
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
-                  }}
-                ></div>
-                <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-transparent to-black/40 mix-blend-overlay"></div>
-                {/* Specific Tier Overlay Back */}
-                <div
-                  className={`absolute inset-0 mix-blend-overlay ${styles.textureOverlay}`}
-                ></div>
-              </div>
-
-              {/* HEADER TEXTURE & TITLE - BACK */}
+          <div className={`${styles.gradient} rounded-[20px] p-[2px] h-full`}>
+            <div className="bg-[#0f0f0f] rounded-[18px] overflow-hidden h-full flex flex-col">
+              {/* Header with Texture Image - SAME SIZE AS FRONT (py-3) */}
               <div
-                className={`relative z-10 h-14 w-full border-b shadow-md flex items-center justify-center shrink-0 ${styles.headerBg} ${styles.headerBorder}`}
+                className={`${styles.headerBg} px-4 py-3 flex items-center justify-center border-b ${styles.headerBorder}`}
+                style={{
+                  backgroundImage: getTextureUrl(styles.headerImage),
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                }}
               >
-                {/* Subtle Grid Pattern */}
-                {/* Subtle Grid Pattern */}
-                <div
-                  className={`absolute inset-0 ${styles.headerTexture}`}
-                  style={{
-                    backgroundImage: `radial-gradient(circle, ${styles.headerTextureColor} 1px, transparent 1px)`,
-                    backgroundSize: '8px 8px',
-                  }}
-                ></div>
-
-                <span className={`font-graffiti text-xl tracking-wider z-10 ${styles.headerText}`}>
-                  REGRAS & <span className="text-white">POLÍTICA</span>
+                <span className="font-graffiti text-lg tracking-widest text-yellow-400 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
+                  REGRAS & POLÍTICA
                 </span>
               </div>
 
-              {/* BODY - BACK */}
-              <div className="relative z-10 p-5 flex-1 flex flex-col justify-center items-center">
-                <div className="space-y-4 text-center w-full">
-                  {/* Warning Icon/Text */}
-                  <div className={`border rounded-xl p-4 shadow-lg w-full ${styles.infoBox}`}>
-                    <p
-                      className={`text-[11px] font-black uppercase tracking-[0.2em] mb-2 border-b pb-1 ${styles.textSoft} border-white/20`}
-                    >
-                      Cancelamento
-                    </p>
-                    <p className={`text-xs leading-relaxed font-bold ${styles.textMain}`}>
-                      O cancelamento deve ser feito com no mínimo <br />
-                      <span className={`text-sm decoration-clone drop-shadow-sm ${styles.accent}`}>
-                        30 minutos
-                      </span>
-                      <br /> de antecedência.
-                    </p>
-                  </div>
+              {/* Body with Texture */}
+              <div
+                className={`${styles.gradient} p-4 space-y-3 h-full flex flex-col`}
+                style={{
+                  backgroundImage: getTextureUrl(styles.bodyImage),
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                }}
+              >
+                {/* Cancelamento - ABOVE perforation - Matches Front Top Height */}
+                <div className="bg-black/90 border border-white/20 rounded-lg p-2 text-center h-[125px] flex flex-col justify-center items-center">
+                  <p className="text-[9px] font-bold uppercase tracking-widest mb-1 text-white">
+                    Cancelamento
+                  </p>
+                  <p
+                    className="text-[12px] font-medium text-white"
+                    style={{ fontFamily: "'Inter', sans-serif" }}
+                  >
+                    Deve ser feito com no mínimo
+                    <br />
+                    <span className="text-[15px] font-black text-white tracking-wide block py-1">
+                      30 minutos
+                    </span>
+                    de antecedência
+                  </p>
+                </div>
 
-                  {/* Penalty Notice */}
-                  <div className="flex flex-col gap-2 w-full">
-                    <div className="flex items-center justify-center gap-2 opacity-80">
-                      <div className={`h-[2px] w-12 ${styles.divider}`}></div>
-                      <span
-                        className={`text-[9px] font-black uppercase tracking-widest ${styles.textSoft}`}
-                      >
+                {/* Perforation Line - ALIGNED WITH FRONT */}
+                <div className="relative flex items-center py-1 shrink-0">
+                  <div
+                    className="absolute -left-6 w-4 h-4 rounded-full"
+                    style={{ backgroundColor: styles.cutoutBg }}
+                  />
+                  <div className={`flex-1 border-t-2 border-dashed ${styles.divider}`} />
+                  <div
+                    className="absolute -right-6 w-4 h-4 rounded-full"
+                    style={{ backgroundColor: styles.cutoutBg }}
+                  />
+                </div>
+
+                {/* Penalidades - BELOW perforation - Matches Front Bottom Height */}
+                <div className="flex-1 flex flex-col justify-start pt-1">
+                  <div className="bg-black/90 border border-white/15 rounded px-2 py-2 text-center">
+                    <div>
+                      <p className="text-[8px] font-bold uppercase tracking-widest text-white mb-1">
                         Penalidades
-                      </span>
-                      <div className={`h-[2px] w-12 ${styles.divider}`}></div>
+                      </p>
+                      <p
+                        className="text-[11px] font-medium text-white leading-tight"
+                        style={{ fontFamily: "'Inter', sans-serif" }}
+                      >
+                        O não cumprimento acarretará na perda de pontos.
+                      </p>
                     </div>
-                    <p className={`text-[10px] leading-tight font-bold px-4 ${styles.textMuted}`}>
-                      O não cumprimento acarretará na perda de pontos de fidelidade e rebaixamento
-                      de nível.
-                    </p>
                   </div>
                 </div>
 
-                {/* Footer Info */}
-                <div className="mt-auto pt-4 text-center">
-                  <span
-                    className={`text-[9px] font-black uppercase tracking-[0.3em] opacity-70 ${styles.textSoft}`}
-                  >
+                {/* Footer */}
+                <div className="text-center pt-1 shrink-0">
+                  <span className="text-[8px] font-bold uppercase tracking-[0.2em] text-white/60">
                     Trilha do Corte ®
                   </span>
                 </div>
               </div>
-
-              {/* Cutouts - Back */}
-              <div
-                className={`absolute -right-[10px] top-[calc(56px+70px)] w-5 h-5 rounded-full shadow-[inset_2px_0_3px_rgba(0,0,0,0.4)] z-20 border-l ${styles.cutoutBorder}`}
-              ></div>
-              <div
-                className={`absolute -left-[10px] top-[calc(56px+70px)] w-5 h-5 rounded-full shadow-[inset_-2px_0_3px_rgba(0,0,0,0.4)] z-20 border-r ${styles.cutoutBorder}`}
-              ></div>
             </div>
           </div>
         </div>
       </div>
-
-      <style>{`
-        .backface-hidden {
-          backface-visibility: hidden;
-          -webkit-backface-visibility: hidden;
-        }
-        .text-shadow-gold {
-          text-shadow: 0 0 10px rgba(244, 208, 121, 0.5), 0 0 20px rgba(244, 208, 121, 0.3);
-        }
-      `}</style>
     </div>
   );
 };
