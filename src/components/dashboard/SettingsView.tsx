@@ -121,120 +121,6 @@ export const SettingsView: React.FC = () => {
     }
   };
 
-  // ============== SECTION CARD COMPONENT ==============
-  const SectionCard = ({
-    icon: Icon,
-    iconColor,
-    title,
-    subtitle,
-    children,
-    sectionId,
-    defaultOpen = false,
-  }: {
-    icon: React.ElementType;
-    iconColor: string;
-    title: string;
-    subtitle?: string;
-    children: React.ReactNode;
-    sectionId: string;
-    defaultOpen?: boolean;
-  }) => {
-    const isOpen = expandedSection === sectionId || defaultOpen;
-
-    return (
-      <motion.div
-        layout
-        className="rounded-2xl bg-linear-to-br from-zinc-900/80 to-zinc-950 border border-zinc-800/60 overflow-hidden shadow-xl"
-      >
-        {/* Header - Always visible */}
-        <button
-          onClick={() => setExpandedSection(isOpen ? null : sectionId)}
-          className="w-full p-4 flex items-center gap-4 hover:bg-zinc-800/30 transition-colors"
-        >
-          <div
-            className={`w-12 h-12 rounded-xl flex items-center justify-center ${iconColor} shadow-lg`}
-          >
-            <Icon size={24} className="text-black" strokeWidth={2.5} />
-          </div>
-          <div className="flex-1 text-left">
-            <h3 className="text-white font-bold text-sm uppercase tracking-wide">{title}</h3>
-            {subtitle && <p className="text-zinc-500 text-xs mt-0.5">{subtitle}</p>}
-          </div>
-          <ChevronRight
-            size={20}
-            className={`text-zinc-600 transition-transform duration-300 ${
-              isOpen ? 'rotate-90' : ''
-            }`}
-          />
-        </button>
-
-        {/* Content - Expandable */}
-        <AnimatePresence>
-          {isOpen && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="border-t border-zinc-800/50"
-            >
-              <div className="p-4 space-y-4">{children}</div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
-    );
-  };
-
-  // ============== STEPPER COMPONENT ==============
-  const Stepper = ({
-    value,
-    onChange,
-    min = 0,
-    max = 23,
-    suffix = '',
-  }: {
-    value: number;
-    onChange: (v: number) => void;
-    min?: number;
-    max?: number;
-    suffix?: string;
-  }) => (
-    <div className="flex items-center gap-2">
-      <button
-        onClick={() => onChange(Math.max(min, value - 1))}
-        className="w-10 h-10 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white transition-all active:scale-95"
-      >
-        <Minus size={18} strokeWidth={3} />
-      </button>
-      <span className="w-20 text-center text-xl font-black text-white">
-        {String(value).padStart(2, '0')}
-        {suffix}
-      </span>
-      <button
-        onClick={() => onChange(Math.min(max, value + 1))}
-        className="w-10 h-10 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white transition-all active:scale-95"
-      >
-        <Plus size={18} strokeWidth={3} />
-      </button>
-    </div>
-  );
-
-  // ============== TOGGLE COMPONENT ==============
-  const Toggle = ({ checked, onChange }: { checked: boolean; onChange: () => void }) => (
-    <button
-      onClick={onChange}
-      className={`w-14 h-8 rounded-full p-1 transition-all duration-300 ${
-        checked ? 'bg-yellow-500' : 'bg-zinc-700'
-      }`}
-    >
-      <motion.div
-        layout
-        className={`w-6 h-6 rounded-full bg-white shadow-lg ${checked ? 'ml-6' : 'ml-0'}`}
-      />
-    </button>
-  );
-
   return (
     <div className="w-full max-w-md mx-auto pb-28 px-4 pt-4 animate-fade-in-up">
       {/* ============== TOAST ============== */}
@@ -267,6 +153,8 @@ export const SettingsView: React.FC = () => {
           title="Minha Barbearia"
           subtitle="Nome, telefone e PIX"
           sectionId="shop"
+          expandedSection={expandedSection}
+          setExpandedSection={setExpandedSection}
         >
           {editingShop ? (
             <div className="space-y-3">
@@ -368,6 +256,8 @@ export const SettingsView: React.FC = () => {
             loyaltyConfig.enabled ? `${loyaltyConfig.cutsRequired} cortes = 1 grátis` : 'Desativado'
           }
           sectionId="loyalty"
+          expandedSection={expandedSection}
+          setExpandedSection={setExpandedSection}
         >
           <div className="space-y-4">
             {/* Toggle */}
@@ -426,6 +316,8 @@ export const SettingsView: React.FC = () => {
           title="Minha Conta"
           subtitle={barberProfile?.name || 'Barbeiro'}
           sectionId="account"
+          expandedSection={expandedSection}
+          setExpandedSection={setExpandedSection}
         >
           <div className="space-y-3">
             {/* Profile Card */}
@@ -487,3 +379,118 @@ export const SettingsView: React.FC = () => {
     </div>
   );
 };
+
+// ============== COMPONENTS ==============
+
+const SectionCard = ({
+  icon: Icon,
+  iconColor,
+  title,
+  subtitle,
+  children,
+  sectionId,
+  expandedSection,
+  setExpandedSection,
+  defaultOpen = false,
+}: {
+  icon: React.ElementType;
+  iconColor: string;
+  title: string;
+  subtitle?: string;
+  children: React.ReactNode;
+  sectionId: string;
+  expandedSection: string | null;
+  setExpandedSection: (id: string | null) => void;
+  defaultOpen?: boolean;
+}) => {
+  const isOpen = expandedSection === sectionId || defaultOpen;
+
+  return (
+    <motion.div
+      layout
+      className="rounded-2xl bg-linear-to-br from-zinc-900/80 to-zinc-950 border border-zinc-800/60 overflow-hidden shadow-xl"
+    >
+      {/* Header - Always visible */}
+      <button
+        onClick={() => setExpandedSection(isOpen ? null : sectionId)}
+        className="w-full p-4 flex items-center gap-4 hover:bg-zinc-800/30 transition-colors"
+      >
+        <div
+          className={`w-12 h-12 rounded-xl flex items-center justify-center ${iconColor} shadow-lg`}
+        >
+          <Icon size={24} className="text-black" strokeWidth={2.5} />
+        </div>
+        <div className="flex-1 text-left">
+          <h3 className="text-white font-bold text-sm uppercase tracking-wide">{title}</h3>
+          {subtitle && <p className="text-zinc-500 text-xs mt-0.5">{subtitle}</p>}
+        </div>
+        <ChevronRight
+          size={20}
+          className={`text-zinc-600 transition-transform duration-300 ${isOpen ? 'rotate-90' : ''}`}
+        />
+      </button>
+
+      {/* Content - Expandable */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="border-t border-zinc-800/50"
+          >
+            <div className="p-4 space-y-4">{children}</div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+};
+
+const Stepper = ({
+  value,
+  onChange,
+  min = 0,
+  max = 23,
+  suffix = '',
+}: {
+  value: number;
+  onChange: (v: number) => void;
+  min?: number;
+  max?: number;
+  suffix?: string;
+}) => (
+  <div className="flex items-center gap-2">
+    <button
+      onClick={() => onChange(Math.max(min, value - 1))}
+      className="w-10 h-10 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white transition-all active:scale-95"
+    >
+      <Minus size={18} strokeWidth={3} />
+    </button>
+    <span className="w-20 text-center text-xl font-black text-white">
+      {String(value).padStart(2, '0')}
+      {suffix}
+    </span>
+    <button
+      onClick={() => onChange(Math.min(max, value + 1))}
+      className="w-10 h-10 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white transition-all active:scale-95"
+    >
+      <Plus size={18} strokeWidth={3} />
+    </button>
+  </div>
+);
+
+const Toggle = ({ checked, onChange }: { checked: boolean; onChange: () => void }) => (
+  <button
+    onClick={onChange}
+    className={`w-14 h-8 rounded-full p-1 transition-all duration-300 ${
+      checked ? 'bg-yellow-500' : 'bg-zinc-700'
+    }`}
+  >
+    <motion.div
+      layout
+      className={`w-6 h-6 rounded-full bg-white shadow-lg ${checked ? 'ml-6' : 'ml-0'}`}
+    />
+  </button>
+);
