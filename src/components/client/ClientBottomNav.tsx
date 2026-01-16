@@ -28,7 +28,7 @@ export const ClientBottomNav: React.FC<ClientBottomNavProps> = ({
       <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-yellow-500/50 to-transparent" />
 
       {/* Navigation Container */}
-      <div className="relative flex items-end justify-around h-20 pb-safe px-2">
+      <div className="relative flex items-end justify-around h-24 pb-[calc(env(safe-area-inset-bottom)+12px)] px-2">
         {/* Left Tabs */}
         {tabs.slice(0, 2).map(tab => {
           const Icon = tab.icon;
@@ -38,7 +38,7 @@ export const ClientBottomNav: React.FC<ClientBottomNavProps> = ({
             <button
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
-              className={`relative flex flex-col items-center justify-center w-16 h-16 rounded-2xl transition-all duration-300 active:scale-90 ${
+              className={`relative flex flex-col items-center justify-center w-16 h-16 rounded-2xl transition-all duration-200 active:scale-90 ${
                 isActive
                   ? 'bg-gradient-to-br from-yellow-500/20 to-amber-500/10'
                   : 'hover:bg-white/5'
@@ -47,7 +47,7 @@ export const ClientBottomNav: React.FC<ClientBottomNavProps> = ({
               {/* Icon */}
               <Icon
                 size={24}
-                className={`transition-all duration-300 ${
+                className={`transition-all duration-200 ${
                   isActive
                     ? 'text-yellow-400 drop-shadow-[0_0_12px_rgba(234,179,8,0.8)]'
                     : 'text-gray-500'
