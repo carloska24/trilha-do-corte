@@ -9,7 +9,7 @@ interface DatePickerProps {
   placeholder?: string;
   minDate?: string;
   maxDate?: string;
-  accentColor?: 'yellow' | 'orange' | 'purple' | 'green';
+  accentColor?: 'yellow' | 'orange' | 'purple' | 'green' | 'red';
 }
 
 const DAYS_PT = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
@@ -81,6 +81,15 @@ export const DatePicker: React.FC<DatePickerProps> = ({
       border: 'border-green-500',
       ring: 'ring-green-500/50',
       glow: 'shadow-[0_0_30px_rgba(34,197,94,0.4)]',
+    },
+    red: {
+      gradient: 'from-red-600 via-rose-600 to-pink-600',
+      bg: 'bg-red-500',
+      bgHover: 'hover:bg-red-500/30',
+      text: 'text-red-400',
+      border: 'border-red-500',
+      ring: 'ring-red-500/50',
+      glow: 'shadow-[0_0_30px_rgba(239,68,68,0.4)]',
     },
   };
 
@@ -209,10 +218,10 @@ export const DatePicker: React.FC<DatePickerProps> = ({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between gap-2 bg-zinc-900/80 backdrop-blur-sm border-2 ${
-          isOpen ? theme.border : 'border-zinc-700/50'
-        } p-3 rounded-xl text-left transition-all duration-300 ${
-          isOpen ? theme.glow : 'hover:border-zinc-500'
+        className={`w-full flex items-center justify-between gap-2 bg-black/50 backdrop-blur-sm border ${
+          isOpen ? theme.border : 'border-zinc-800'
+        } px-3 py-2 rounded-lg text-left transition-all duration-300 ${
+          isOpen ? theme.glow : 'hover:border-zinc-700'
         }`}
       >
         <div className="flex items-center gap-3">
@@ -224,7 +233,11 @@ export const DatePicker: React.FC<DatePickerProps> = ({
             <Calendar size={14} className={value ? 'text-white' : 'text-zinc-500'} />
           </div>
           <span
-            className={value ? 'text-white font-bold tracking-wide' : 'text-zinc-500 font-medium'}
+            className={
+              value
+                ? 'text-white font-bold tracking-wide text-xs'
+                : 'text-zinc-500 font-medium text-xs'
+            }
           >
             {value ? formatDisplayDate(value) : placeholder}
           </span>

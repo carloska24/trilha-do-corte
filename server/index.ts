@@ -81,8 +81,11 @@ app.use('/api/services', servicesRoutes); // Handles /api/services/*
 app.use('/api/appointments', appointmentLimiter, appointmentsRoutes); // Rate limited appointments
 app.use('/api', usersRoutes); // Handles /api/clients, /api/barbers
 app.use('/api/ai', aiRoutes); // Handles /api/ai/command
+import maintenanceRoutes from './routes/maintenanceRoutes.js';
+
 app.use('/api/avatars', avatarsRoutes); // Handles /api/avatars list
 app.use('/api/settings', settingsRoutes); // Handles /api/settings
+app.use('/api/maintenance', maintenanceRoutes); // Handles /api/maintenance
 
 // Global Error Handler
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {

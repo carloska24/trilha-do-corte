@@ -70,6 +70,7 @@ export const SettingsView: React.FC = () => {
   // ============== UI STATE ==============
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
+  const [cleanupDate, setCleanupDate] = useState('');
 
   // ============== PERSISTENCE ==============
   useEffect(() => {
@@ -360,6 +361,157 @@ export const SettingsView: React.FC = () => {
               </div>
               <ChevronRight size={16} className="text-zinc-600" />
             </button>
+          </div>
+        </SectionCard>
+
+        {/* ========== MANUTENÇÃO DO SISTEMA ========== */}
+        <SectionCard
+          icon={Download}
+          iconColor="bg-gradient-to-br from-cyan-400 to-cyan-600"
+          title="Manutenção do Sistema"
+          subtitle="Backup e Limpeza"
+          sectionId="maintenance"
+          expandedSection={expandedSection}
+          setExpandedSection={setExpandedSection}
+        >
+          <div className="space-y-4">
+            {/* Backup & Restore */}
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={async () => {
+                  try {
+                    const token = localStorage.getItem('token');
+                    const response = await fetch('http://localhost:3000/api/maintenance/backup', {
+                      headers: {
+                        Authorization: `Bearer ${token}`,
+                      },
+                    });
+
+                    if (!response.ok) throw new Error('Falha no backup');
+
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `trilha_backup_${new Date().toISOString().slice(0, 10)}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    showToast('Backup baixado!');
+                  } catch (e) {
+                    showToast('Erro no backup');
+                  }
+                }}
+                className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700 hover:border-cyan-500/50 transition-all group"
+              >
+                <Download
+                  size={24}
+                  className="text-cyan-400 group-hover:scale-110 transition-transform"
+                />
+                <span className="text-xs font-bold text-zinc-300 uppercase">Backup</span>
+              </button>
+
+              <div className="relative">
+                <input
+                  type="file"
+                  accept=".json"
+                  className="hidden"
+                  id="restore-upload"
+                  onChange={async e => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+
+                    if (
+                      !confirm(
+                        'ATENÇÃO: Isso irá substituir/atualizar os dados atuais. Deseja continuar?'
+                      )
+                    ) {
+                      e.target.value = '';
+                      return;
+                    }
+
+                    const formData = new FormData();
+                    formData.append('backupFile', file);
+
+                    try {
+                      await api.post('/maintenance/restore', formData, {
+                        headers: {
+                          'Content-Type': 'multipart/form-data',
+                        },
+                      });
+                      showToast('Backup restaurado!');
+                      setTimeout(() => window.location.reload(), 1500);
+                    } catch (err) {
+                      showToast('Erro na restauração');
+                    }
+                  }}
+                />
+                <label
+                  htmlFor="restore-upload"
+                  className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700 hover:border-purple-500/50 transition-all cursor-pointer group h-full"
+                >
+                  <Save
+                    size={24}
+                    className="text-purple-400 group-hover:scale-110 transition-transform"
+                  />
+                  <span className="text-xs font-bold text-zinc-300 uppercase">Restaurar</span>
+                </label>
+              </div>
+            </div>
+
+            <div className="h-px bg-zinc-800 w-full" />
+
+            {/* Limpeza */}
+            <div className="space-y-2">
+              <p className="text-xs text-zinc-500 uppercase tracking-wider font-bold ml-1">
+                Zona de Limpeza
+              </p>
+
+              {/* Advanced Clean History */}
+              <div className="p-3 bg-red-500/5 rounded-xl border border-red-500/20">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2 text-red-400">
+                    <Calendar size={18} />
+                    <span className="text-sm font-bold">Limpar Histórico</span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      const message = cleanupDate
+                        ? `Isso apagará agendamentos ANTERIORES a ${cleanupDate
+                            .split('-')
+                            .reverse()
+                            .join('/')}. Confirmar?`
+                        : 'Isso apagará agendamentos anteriores a HOJE. Confirmar?';
+
+                      if (!confirm(message)) return;
+
+                      api
+                        .post('/maintenance/clean-schedule', {
+                          mode: 'past',
+                          date: cleanupDate || undefined,
+                        })
+                        .then(res => showToast(`Limpo: ${res.data.count} itens`))
+                        .catch(() => showToast('Erro ao limpar'));
+                    }}
+                    className="px-3 py-1.5 rounded-lg bg-red-500/20 text-red-300 text-xs font-bold hover:bg-red-500/30 transition-colors uppercase"
+                  >
+                    Executar
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <div className="flex-1">
+                    <DatePicker
+                      value={cleanupDate}
+                      onChange={setCleanupDate}
+                      placeholder="Selecionar data"
+                      accentColor="red"
+                    />
+                  </div>
+                  <span className="text-[10px] text-zinc-600">(Vazio = hoje)</span>
+                </div>
+              </div>
+            </div>
           </div>
         </SectionCard>
       </div>
