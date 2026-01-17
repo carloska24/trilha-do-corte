@@ -57,6 +57,7 @@ export const getAppointments = async (req: Request, res: Response) => {
 
     const appointments = await prisma.appointments.findMany({
       where: whereClause,
+      include: { client: true },
     });
 
     // 3. Privacy Filter & formatting
@@ -78,6 +79,7 @@ export const getAppointments = async (req: Request, res: Response) => {
         status: row.status,
         clientName: row.clientName, // Expose name for claim/match logic
         clientId: row.clientId, // Expose ID for debugging
+        clientPhone: (row as any).client?.phone, // Return phone for matching
       };
     });
 
@@ -141,6 +143,20 @@ export const createAppointment = async (req: Request, res: Response) => {
     // Insert
     const id = uuidv4();
     let finalClientId = clientId || null;
+
+    // 1.1 Match by Phone (if not explicitly linked)
+    // Needs 'phone' from body. Validator might strip it if not in schema.
+    // Assuming schema allows it (check validators.ts later if needed, but safe to try)
+    const { clientPhone } = req.body;
+    if (!finalClientId && clientPhone) {
+      const foundClient = await prisma.clients.findFirst({
+        where: { phone: clientPhone },
+      });
+      if (foundClient) {
+        finalClientId = foundClient.id;
+        console.log(`🔗 Linked appointment to client ${foundClient.name} by phone ${clientPhone}`);
+      }
+    }
 
     // ... (Auto-register logic same)
 

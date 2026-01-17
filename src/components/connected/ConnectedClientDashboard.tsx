@@ -67,22 +67,29 @@ export const ConnectedClientDashboard: React.FC = () => {
 
     const isIdMatch = String(a.clientId) === String(currentUser?.id);
     const isNameMatch = normClient && normApp && normApp === normClient;
+    // New: Phone Match
+    const isPhoneMatch =
+      currentUser?.phone &&
+      a.clientPhone &&
+      // Normalize phone just in case (remove spaces/dashes)
+      a.clientPhone.replace(/\D/g, '') === currentUser.phone.replace(/\D/g, '');
 
     // Debug Log (Remove in production)
-    if (normApp.includes('lucas') || normClient.includes('lucas')) {
+    if (normApp.includes('lucas') || normClient.includes('lucas') || isPhoneMatch) {
       console.log('Checking App:', a.id, {
         appId: a.clientId,
         userId: currentUser?.id,
         appName: a.clientName,
         userName: currentUser?.name,
-        normApp,
-        normClient,
+        userPhone: currentUser?.phone,
+        appPhone: a.clientPhone,
         isIdMatch,
         isNameMatch,
+        isPhoneMatch,
       });
     }
 
-    return isIdMatch || isNameMatch;
+    return isIdMatch || isNameMatch || isPhoneMatch;
   });
 
   // SELF-HEALING: Claim orphan appointments (Name match but no ID)

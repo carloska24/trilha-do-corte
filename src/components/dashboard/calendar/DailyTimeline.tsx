@@ -403,14 +403,12 @@ export const DailyTimeline: React.FC<DailyTimelineProps> = ({
       const currentMin = now.getMinutes();
       const nowMinutes = currentHour * 60 + currentMin;
 
-      // Only add empty slot if it's NOT in the past (or if it's a future date)
-      if (!isToday || currentMinutes >= nowMinutes) {
-        items.push({
-          type: 'empty',
-          time: timeStr,
-          duration: targetEnd - currentMinutes,
-        });
-      }
+      // Always add empty slot to maintain timeline structure
+      items.push({
+        type: 'empty',
+        time: timeStr,
+        duration: targetEnd - currentMinutes,
+      });
 
       currentMinutes = targetEnd;
     }
