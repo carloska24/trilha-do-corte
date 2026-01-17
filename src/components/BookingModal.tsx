@@ -1,11 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import {
-  X,
-  CheckCircle,
-  Loader2,
-  User,
-  Smartphone,
-} from 'lucide-react';
+import { X, CheckCircle, Loader2, User, Smartphone, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ServiceItem, BookingData, Appointment } from '../types';
 import { SERVICES as ALL_SERVICES } from '../constants';
 import { TicketCard } from './ui/TicketCard';
@@ -214,8 +208,8 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                         step === s.number
                           ? 'bg-neon-yellow text-black border-black shadow-[0_0_15px_rgba(234,179,8,0.5)] scale-110'
                           : step > s.number
-                          ? 'bg-neon-yellow text-black border-neon-yellow'
-                          : 'bg-[#111] border-gray-800 text-gray-500'
+                            ? 'bg-neon-yellow text-black border-neon-yellow'
+                            : 'bg-[#111] border-gray-800 text-gray-500'
                       }`}
                 >
                   {step > s.number ? <CheckCircle size={14} /> : s.number}
@@ -459,7 +453,6 @@ export const BookingModal: React.FC<BookingModalProps> = ({
           </div>
         )}
       </div>
-
     </div>
   );
 };

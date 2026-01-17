@@ -183,24 +183,28 @@ const QueueTicker = React.memo(
                 const serviceName = service ? service.name : 'Corte & Estilo';
 
                 // Get client tier for avatar styling
-                const clientData = clients.find(c => c.id === client.clientId);
+                const clientData = clients.find(
+                  c =>
+                    c.id === client.clientId ||
+                    c.name.toLowerCase() === client.clientName?.toLowerCase()
+                );
                 const level = clientData?.level || 1;
                 const tierColor =
                   level >= 8
                     ? 'from-purple-400 via-pink-500 to-purple-600'
                     : level >= 5
-                    ? 'from-yellow-400 via-amber-500 to-orange-500'
-                    : level >= 3
-                    ? 'from-cyan-400 via-blue-500 to-cyan-600'
-                    : 'from-green-400 via-emerald-500 to-green-600';
+                      ? 'from-yellow-400 via-amber-500 to-orange-500'
+                      : level >= 3
+                        ? 'from-cyan-400 via-blue-500 to-cyan-600'
+                        : 'from-green-400 via-emerald-500 to-green-600';
                 const tierGlow =
                   level >= 8
                     ? 'shadow-[0_0_20px_rgba(168,85,247,0.5)]'
                     : level >= 5
-                    ? 'shadow-[0_0_20px_rgba(250,204,21,0.5)]'
-                    : level >= 3
-                    ? 'shadow-[0_0_20px_rgba(6,182,212,0.5)]'
-                    : 'shadow-[0_0_15px_rgba(34,197,94,0.4)]';
+                      ? 'shadow-[0_0_20px_rgba(250,204,21,0.5)]'
+                      : level >= 3
+                        ? 'shadow-[0_0_20px_rgba(6,182,212,0.5)]'
+                        : 'shadow-[0_0_15px_rgba(34,197,94,0.4)]';
 
                 return (
                   <div
@@ -411,7 +415,9 @@ export const DashboardHome: React.FC = () => {
     }
 
     // 1. Try to find client in the list (Most reliable/up-to-date)
-    const clientProfile = clients.find(c => c.id === app.clientId);
+    const clientProfile = clients.find(
+      c => c.id === app.clientId || c.name.toLowerCase() === app.clientName?.toLowerCase()
+    );
     if (clientProfile && clientProfile.img && clientProfile.img.trim() !== '') {
       return getOptimizedImageUrl(clientProfile.img, size, size);
     }

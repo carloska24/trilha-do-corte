@@ -41,6 +41,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [currentUser]);
 
+  // REFRESH PROFILE ON MOUNT (To get publicId etc.)
+  useEffect(() => {
+    const refreshProfile = async () => {
+      if (userType === 'client' && currentUser?.id) {
+        try {
+          // Dynamic import to avoid circular dep if api imports AuthContext (it doesn't, but safe)
+          const { api } = await import('../services/api');
+          const freshData = await api.getProfile(currentUser.id);
+          if (freshData) {
+            console.log('🔄 Profile Refreshed:', freshData.name);
+            setCurrentUser(prev => ({ ...prev, ...freshData }) as ClientProfile);
+          }
+        } catch (err) {
+          console.error('Failed to refresh profile:', err);
+        }
+      }
+    };
+
+    refreshProfile();
+  }, [userType]); // Run once when userType is settled (from localstorage)
+
   const login = (type: 'client' | 'barber', profile: ClientProfile | BarberProfile) => {
     setUserType(type);
     setCurrentUser(profile);

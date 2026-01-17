@@ -53,9 +53,61 @@ export const ConnectedClientDashboard: React.FC = () => {
 
   // Filter appointments for this client
   const clientAppointments = appointments.filter(a => {
-    const isMatch = String(a.clientId) === String(currentUser?.id);
-    return isMatch;
+    const normalize = (str: string) =>
+      str
+        ? str
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase()
+            .trim()
+        : '';
+
+    const normClient = normalize(currentUser?.name || '');
+    const normApp = normalize(a.clientName || '');
+
+    const isIdMatch = String(a.clientId) === String(currentUser?.id);
+    const isNameMatch = normClient && normApp && normApp === normClient;
+
+    // Debug Log (Remove in production)
+    if (normApp.includes('lucas') || normClient.includes('lucas')) {
+      console.log('Checking App:', a.id, {
+        appId: a.clientId,
+        userId: currentUser?.id,
+        appName: a.clientName,
+        userName: currentUser?.name,
+        normApp,
+        normClient,
+        isIdMatch,
+        isNameMatch,
+      });
+    }
+
+    return isIdMatch || isNameMatch;
   });
+
+  // SELF-HEALING: Claim orphan appointments (Name match but no ID)
+  React.useEffect(() => {
+    if (!currentUser?.id) return;
+
+    clientAppointments.forEach(app => {
+      // If it matches (which it does, since it's in clientAppointments)
+      // BUT has no clientId (or wrong one? no, filter handles that),
+      // then claim it.
+      if (!app.clientId) {
+        console.log(`🔧 Self-Healing: Claiming orphan app ${app.id} for user ${currentUser.name}`);
+
+        // Optimistic update locally first? No, context handles it via refresh
+        api
+          .updateAppointment(app.id, { clientId: currentUser.id })
+          .then(() => {
+            console.log('✅ Claimed!');
+            // Force refresh to sync DB state
+            // updateAppointments with new state is risky, better to wait for re-fetch or let user see it (it's already filtered in)
+          })
+          .catch(err => console.error('Failed to claim app', err));
+      }
+    });
+  }, [clientAppointments, currentUser?.id]);
 
   return (
     <ClientDashboard

@@ -161,6 +161,7 @@ export const registerClient = async (req: Request, res: Response) => {
           img: updatedClient.img,
           level: updatedClient.level,
           status: updatedClient.status,
+          publicId: updatedClient.publicId,
         },
       });
     }

@@ -192,13 +192,22 @@ const ClientCard: React.FC<ClientCardProps> = ({
         onClick={() => onSelect(client)}
         style={{ touchAction: 'pan-y' }}
       >
+        {/* PROVISÓRIO BADGE (Absolute Top Right) */}
+        {isTemp && (
+          <div className="absolute top-1 right-2 z-20 pointer-events-none">
+            <span className="text-[8px] font-black text-neon-yellow bg-neon-yellow/10 border border-neon-yellow/20 px-1.5 py-0.5 rounded uppercase tracking-wider backdrop-blur-md">
+              PROVISÓRIO
+            </span>
+          </div>
+        )}
+
         {/* Card Inner Content */}
         <div className="p-4 flex items-center gap-4">
           {/* ========== AVATAR SECTION ========== */}
           <div className="relative flex-shrink-0">
             {/* Avatar Ring with Tier Color */}
             <div
-              className={`w-16 h-16 rounded-full p-[3px] border-2 ${style.ring} ${style.glow} transition-all duration-300`}
+              className={`w-14 h-14 rounded-full p-[3px] border-2 ${style.ring} ${style.glow} transition-all duration-300`}
             >
               <div className="w-full h-full rounded-full overflow-hidden bg-black/50 border border-white/5 relative">
                 {client.img ? (
@@ -218,7 +227,7 @@ const ClientCard: React.FC<ClientCardProps> = ({
 
             {/* Status Indicator */}
             <div
-              className={`absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full border-2 border-[#1a1a2e] ${
+              className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-[#1a1a2e] ${
                 recurrence.color
               } ${recurrence.glow} z-20 transition-all
                 ${isTemp ? 'animate-pulse bg-neon-yellow' : ''}
@@ -227,18 +236,18 @@ const ClientCard: React.FC<ClientCardProps> = ({
 
             {/* 🔥 HOT Badge on Avatar */}
             {isHotClient && (
-              <div className="absolute -top-1 -left-1 w-7 h-7 rounded-full bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center shadow-[0_0_15px_rgba(249,115,22,0.6)] animate-bounce z-30">
-                <Flame size={14} className="text-white" />
+              <div className="absolute -top-1 -left-1 w-6 h-6 rounded-full bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center shadow-[0_0_15px_rgba(249,115,22,0.6)] animate-bounce z-30">
+                <Flame size={12} className="text-white" />
               </div>
             )}
           </div>
 
           {/* ========== DATA SECTION ========== */}
-          <div className="flex flex-col flex-1 min-w-0 gap-1.5">
+          <div className="flex flex-col flex-1 min-w-0 gap-1">
             {/* Name Row */}
             <div className="flex items-center gap-2">
               <h3
-                className={`text-lg font-black leading-none uppercase tracking-wide truncate transition-colors
+                className={`text-base font-black leading-none uppercase tracking-wide truncate transition-colors
                 ${isHotClient ? 'text-orange-100' : 'text-white group-hover:text-neon-yellow'}
               `}
               >
@@ -246,57 +255,33 @@ const ClientCard: React.FC<ClientCardProps> = ({
               </h3>
 
               {/* VIP Crown for high levels */}
-              {level >= 8 && <Crown size={16} className="text-purple-400 flex-shrink-0" />}
+              {level >= 8 && <Crown size={14} className="text-purple-400 flex-shrink-0" />}
             </div>
 
             {/* Badges Row */}
             <div className="flex items-center gap-2 flex-wrap">
               {/* Level Badge */}
               <div
-                className={`flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r ${style.badge} shadow-lg`}
+                className={`flex items-center gap-1 px-1.5 py-px rounded-full bg-gradient-to-r ${style.badge} shadow-lg`}
               >
-                <Star size={10} className="fill-current" />
-                <span className="text-[9px] font-black tracking-wider">LVL {level}</span>
+                <Star size={8} className="fill-current" />
+                <span className="text-[8px] font-black tracking-wider">LVL {level}</span>
               </div>
 
               {/* Tier Badge */}
-              <div className={`px-2 py-0.5 rounded-full bg-white/5 border border-white/10`}>
-                <span className={`text-[9px] font-bold tracking-wider ${style.icon}`}>
+              <div
+                className={`px-1.5 py-px rounded-full bg-white/5 border border-white/10 flex items-center justify-center`}
+              >
+                <span className={`text-[8px] font-bold tracking-wider ${style.icon}`}>
                   {style.name}
                 </span>
               </div>
 
-              {/* Temp/Provisório Badge */}
-              {isTemp && (
-                <div className="px-2 py-0.5 rounded-full bg-neon-yellow/20 border border-neon-yellow/30">
-                  <span className="text-[9px] font-bold text-neon-yellow tracking-wider">
-                    PROVISÓRIO
-                  </span>
-                </div>
-              )}
-
               {/* 🔥 HOT Badge */}
               {isHotClient && (
-                <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-orange-500 to-red-500 shadow-[0_0_10px_rgba(249,115,22,0.4)] animate-pulse">
-                  <Flame size={10} className="text-white" />
-                  <span className="text-[9px] font-black text-white tracking-wider">HOT</span>
-                </div>
-              )}
-            </div>
-
-            {/* Info Row */}
-            <div className="flex items-center gap-3 text-[10px] text-gray-500">
-              <div className="flex items-center gap-1">
-                <Clock size={10} />
-                <span>{formatLastVisit()}</span>
-              </div>
-
-              {appointmentsThisMonth > 0 && (
-                <div className="flex items-center gap-1">
-                  <Zap size={10} className={isHotClient ? 'text-orange-400' : 'text-gray-500'} />
-                  <span className={isHotClient ? 'text-orange-400 font-bold' : ''}>
-                    {appointmentsThisMonth}x este mês
-                  </span>
+                <div className="flex items-center gap-1 px-1.5 py-px rounded-full bg-gradient-to-r from-orange-500 to-red-500 shadow-[0_0_10px_rgba(249,115,22,0.4)] animate-pulse">
+                  <Flame size={8} className="text-white" />
+                  <span className="text-[8px] font-black text-white tracking-wider">HOT</span>
                 </div>
               )}
             </div>
@@ -306,26 +291,18 @@ const ClientCard: React.FC<ClientCardProps> = ({
           <div className="flex items-center gap-2 flex-shrink-0">
             {/* WhatsApp for temp clients */}
             {isTemp && (
-              <button
-                onClick={e => {
-                  e.stopPropagation();
-                  onInvite(client);
-                }}
-                className="w-11 h-11 flex items-center justify-center rounded-xl bg-green-500/10 border border-green-500/30 hover:bg-green-500/20 hover:border-green-500/50 transition-all active:scale-95"
-              >
-                <WhatsAppLogo size={22} className="text-green-400" />
-              </button>
+              <div className="pt-2">
+                <button
+                  onClick={e => {
+                    e.stopPropagation();
+                    onInvite(client);
+                  }}
+                  className="w-10 h-10 flex items-center justify-center rounded-full transition-all active:scale-95 hover:bg-green-500/10"
+                >
+                  <WhatsAppLogo size={26} className="text-green-500" />
+                </button>
+              </div>
             )}
-
-            {/* Chevron */}
-            <ChevronRight
-              size={20}
-              className={`transition-all ${
-                isHotClient
-                  ? 'text-orange-400'
-                  : 'text-gray-600 group-hover:text-white group-hover:translate-x-1'
-              }`}
-            />
           </div>
         </div>
 
@@ -336,10 +313,10 @@ const ClientCard: React.FC<ClientCardProps> = ({
             isHotClient
               ? 'bg-gradient-to-r from-transparent via-orange-500 to-transparent'
               : tier === 'GOLD'
-              ? 'bg-gradient-to-r from-transparent via-yellow-500/50 to-transparent opacity-0 group-hover:opacity-100'
-              : tier === 'PLATINUM'
-              ? 'bg-gradient-to-r from-transparent via-purple-500/50 to-transparent opacity-0 group-hover:opacity-100'
-              : 'bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100'
+                ? 'bg-gradient-to-r from-transparent via-yellow-500/50 to-transparent opacity-0 group-hover:opacity-100'
+                : tier === 'PLATINUM'
+                  ? 'bg-gradient-to-r from-transparent via-purple-500/50 to-transparent opacity-0 group-hover:opacity-100'
+                  : 'bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100'
           }
         `}
         />

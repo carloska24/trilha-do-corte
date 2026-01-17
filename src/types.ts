@@ -152,6 +152,7 @@ export interface ClientProfile {
   id: string;
   name: string;
   phone: string;
+  publicId?: number; // Sequential ID
   photoUrl?: string; // Foto do perfil do cliente
   loyaltyPoints: number; // 0 a 10
   history: Appointment[];

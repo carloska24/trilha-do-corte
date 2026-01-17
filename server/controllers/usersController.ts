@@ -13,6 +13,21 @@ export const getClients = async (req: Request, res: Response) => {
   }
 };
 
+export const getClientById = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  try {
+    const client = await prisma.clients.findUnique({
+      where: { id },
+    });
+    if (!client) {
+      return res.status(404).json({ error: 'Client not found' });
+    }
+    res.json({ data: client });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 export const getBarbers = async (req: Request, res: Response) => {
   try {
     const barbers = await prisma.barbers.findMany();

@@ -84,6 +84,24 @@ export const api = {
     }
   },
 
+  getProfile: async (id: string): Promise<Client | null> => {
+    try {
+      const response = await fetch(`${API_URL}/clients/${id}`, {
+        headers: getAuthHeaders(),
+      });
+      if (!response.ok) return null;
+      const json = await response.json();
+      // Backend returns { data: [client] } or { data: client }?
+      // usersController.ts getClients returns array. getClientById?
+      // Wait, usersRoutes usually has /clients but usersController "getClients" returns ALL.
+      // I need to check usersRoutes.ts to see if /clients/:id exists.
+      return json.data;
+    } catch (error) {
+      console.error('getProfile error:', error);
+      return null;
+    }
+  },
+
   updateClient: async (id: string, data: Partial<Client>): Promise<Client | null> => {
     try {
       const response = await fetch(`${API_URL}/clients/${id}`, {

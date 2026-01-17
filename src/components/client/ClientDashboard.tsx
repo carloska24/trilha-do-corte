@@ -186,44 +186,50 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({
           ) : (
             <div
               onClick={() => onOpenBooking()}
-              className="bg-gradient-to-r from-[#101010] to-[#151515] border border-gray-800/50 rounded-2xl p-5 flex items-center gap-5 group cursor-pointer hover:border-neon-yellow/50 transition-all relative overflow-hidden"
+              className="relative w-full max-w-md mx-auto overflow-hidden rounded-xl border border-white/10 group cursor-pointer hover:border-neon-yellow/50 transition-all duration-500 bg-[#0b0e14]"
             >
-              {/* Background subtle */}
-              <div className="absolute inset-0 z-0 opacity-20 group-hover:opacity-30 transition-opacity">
+              {/* Background Image & Gradient */}
+              <div className="absolute inset-0 z-0">
                 <img
                   src="/ticket-bg.png"
                   onError={e => {
                     e.currentTarget.src =
-                      'https://images.unsplash.com/photo-1634152962476-4b8a00e1915c?q=80&w=800&auto=format&fit=crop';
+                      'https://images.unsplash.com/photo-1503951914205-22f2ce97a9ee?q=80&w=800&auto=format&fit=crop';
                   }}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover opacity-20 group-hover:opacity-30 group-hover:scale-105 transition-all duration-700"
                   alt=""
                 />
-                <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-r from-[#0b0e14] via-[#0b0e14]/80 to-transparent" />
               </div>
 
-              {/* Icon */}
-              <div className="relative z-10 w-14 h-14 bg-black/60 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform border border-gray-700 group-hover:border-neon-yellow/50 shrink-0">
-                <Ticket
-                  className="text-gray-500 group-hover:text-neon-yellow transition-colors"
-                  size={24}
-                />
-              </div>
+              {/* Content Container */}
+              <div className="relative z-10 p-4 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-4">
+                  {/* Icon Box */}
+                  <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center backdrop-blur-md group-hover:border-neon-yellow/30 group-hover:shadow-[0_0_15px_rgba(234,179,8,0.2)] transition-all duration-500 shrink-0">
+                    <Ticket
+                      className="text-zinc-400 group-hover:text-neon-yellow transition-colors duration-500"
+                      size={24}
+                      strokeWidth={1.5}
+                    />
+                  </div>
 
-              {/* Content */}
-              <div className="relative z-10 flex-1">
-                <h3 className="text-white font-black text-lg mb-0.5 font-graffiti tracking-wide group-hover:text-neon-yellow transition-colors">
-                  SEM VIAGENS
-                </h3>
-                <p className="text-gray-500 text-[11px] font-bold uppercase tracking-wider">
-                  Sua agenda está livre
-                </p>
-              </div>
+                  {/* Text */}
+                  <div className="flex flex-col">
+                    <h3 className="text-lg font-black text-white font-graffiti tracking-wide leading-none group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-zinc-400 transition-all">
+                      SEM VIAGENS
+                    </h3>
+                    <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest mt-1 group-hover:text-neon-yellow transition-colors">
+                      Sua agenda está livre
+                    </p>
+                  </div>
+                </div>
 
-              {/* CTA */}
-              <div className="relative z-10 shrink-0">
-                <div className="bg-neon-yellow text-black font-black text-xs uppercase tracking-wider px-4 py-2.5 rounded-xl group-hover:scale-105 transition-transform shadow-lg">
-                  Agendar
+                {/* CTA Button */}
+                <div className="shrink-0">
+                  <div className="bg-neon-yellow text-black font-black text-[10px] uppercase tracking-wider px-4 py-2 rounded-lg shadow-[0_4px_15px_rgba(234,179,8,0.2)] group-hover:shadow-[0_6px_20px_rgba(234,179,8,0.4)] group-hover:-translate-y-0.5 transition-all duration-300">
+                    Agendar
+                  </div>
                 </div>
               </div>
             </div>

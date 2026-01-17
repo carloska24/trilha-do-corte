@@ -254,9 +254,18 @@ export const ClientProfileSettings: React.FC<ClientProfileSettingsProps> = ({
                   <p className="text-gray-500 text-[10px] font-mono tracking-widest uppercase">
                     Toque para atualizar foto
                   </p>
+                  <div className="flex items-center gap-2">
+                    <span className="px-3 py-1 rounded-md bg-white/5 border border-white/10 text-[10px] uppercase font-bold text-neon-purple tracking-widest flex items-center gap-1">
+                      ID:{' '}
+                      {client.publicId
+                        ? `#${String(client.publicId).padStart(4, '0')}`
+                        : client.id?.substring(0, 6) || '---'}
+                    </span>
+                  </div>
+
                   <button
                     onClick={() => setShowAvatarSelector(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-[#1a1a1a] hover:bg-[#222] border border-white/10 hover:border-neon-cyan/50 rounded-lg text-xs font-bold text-gray-300 hover:text-neon-cyan transition-all group"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#1a1a1a] hover:bg-[#222] border border-white/10 hover:border-neon-cyan/50 rounded-lg text-xs font-bold text-gray-300 hover:text-neon-cyan transition-all group mt-2"
                   >
                     <Grid size={14} className="group-hover:text-neon-cyan" />
                     ESCOLHER AVATAR GAME
@@ -333,8 +342,8 @@ export const ClientProfileSettings: React.FC<ClientProfileSettingsProps> = ({
                         {freq === 'weekly'
                           ? 'Semanal'
                           : freq === 'biweekly'
-                          ? 'Quinzenal'
-                          : 'Mensal'}
+                            ? 'Quinzenal'
+                            : 'Mensal'}
                       </span>
                       {cutFrequency === freq && (
                         <div className="absolute inset-0 bg-gradient-to-t from-neon-yellow/20 to-transparent opacity-50"></div>

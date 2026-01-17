@@ -9,17 +9,17 @@ datasource db {
 }
 
 model services {
-  id          String         @id
-  name        String?
-  price       String?
-  priceValue  Float?         @map("pricevalue")
-  description String?
-  icon        String?
-  image       String?
-  category    String?
-  activePromo String?        @map("activepromo")
-  duration    Int?
-  badges      String?
+  id           String         @id
+  name         String?
+  price        String?
+  priceValue   Float?         @map("pricevalue")
+  description  String?
+  icon         String?
+  image        String?
+  category     String?
+  activePromo  String?        @map("activepromo")
+  duration     Int?
+  badges       String?
   appointments appointments[]
 }
 
@@ -29,8 +29,8 @@ model barbers {
   specialty    String?
   image        String?
   email        String?
-  phone        String?
   password     String?
+  phone        String?
   appointments appointments[]
 }
 
@@ -45,6 +45,7 @@ model clients {
   notes        String?
   password     String?
   email        String?
+  publicId     Int            @unique @default(autoincrement()) @map("publicid")
   appointments appointments[]
 }
 
@@ -60,10 +61,8 @@ model appointments {
   notes      String?
   clientId   String?   @map("clientid")
   barberId   String?   @map("barberid")
-
-  // Relations
-  client     clients?  @relation(fields: [clientId], references: [id])
   barber     barbers?  @relation(fields: [barberId], references: [id])
+  client     clients?  @relation(fields: [clientId], references: [id])
   service    services? @relation(fields: [serviceId], references: [id])
 
   @@unique([date, time], map: "idx_appointments_unique_slot")
@@ -74,6 +73,6 @@ model shop_settings {
   startHour    Int    @default(9) @map("starthour")
   endHour      Int    @default(19) @map("endhour")
   slotInterval Int    @default(30) @map("slotinterval")
-  closedDays   Int[]  @default([0]) @map("closeddays") // 0 = Sunday
-  exceptions   Json?  @default("{}") // { "YYYY-MM-DD": { closed: boolean, start: int, end: int } }
+  closedDays   Int[]  @default([0]) @map("closeddays")
+  exceptions   Json?  @default("{}")
 }

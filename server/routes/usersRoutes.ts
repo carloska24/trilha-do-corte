@@ -1,6 +1,7 @@
 import express from 'express';
 import {
   getClients,
+  getClientById,
   getBarbers,
   updateClientProfile,
   updateBarberProfile,
@@ -15,6 +16,7 @@ import { authenticateToken } from '../middleware/auth.js';
 
 // Clients
 router.get('/clients', getClients);
+router.get('/clients/:id', authenticateToken, getClientById);
 router.put('/clients/:id', authenticateToken, updateClientProfile);
 router.post('/clients', authenticateToken, createClientAdmin);
 router.delete('/clients/:id', authenticateToken, deleteClient);

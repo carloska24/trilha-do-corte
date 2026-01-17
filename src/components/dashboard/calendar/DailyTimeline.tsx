@@ -26,6 +26,26 @@ interface DailyTimelineProps {
   onSelectClient: (name: string) => void;
 }
 
+const abbreviateService = (name: string) => {
+  return name
+    .replace(/ \+ /g, '+') // Remove spaces around +
+    .split('+')
+    .map(part => {
+      const p = part.trim().toLowerCase();
+      if (p.includes('corte')) return 'CORT';
+      if (p.includes('barba')) return 'BARB';
+      if (p.includes('sobrancelha')) return 'SOBR';
+      if (p.includes('pezinho')) return 'PEZ';
+      if (p.includes('hidrata')) return 'HIDR';
+      if (p.includes('quimica')) return 'QUIM';
+      if (p.includes('luzes')) return 'LUZ';
+      if (p.includes('platinado')) return 'PLAT';
+      if (p.includes('completo')) return 'COMPL';
+      return p.slice(0, 4).toUpperCase();
+    })
+    .join('+');
+};
+
 export const DailyTimeline: React.FC<DailyTimelineProps> = ({
   selectedDate,
   onEditAppointment,
@@ -423,7 +443,7 @@ export const DailyTimeline: React.FC<DailyTimelineProps> = ({
             onDragOver={handleDragOver}
             onDrop={e => handleDrop(e, item.time)}
             className={`flex border-b border-zinc-800/50 group transition-colors duration-200 ${
-              item.type === 'app' ? 'min-h-[90px]' : 'min-h-[50px]'
+              item.type === 'app' ? 'min-h-[72px]' : 'min-h-[50px]'
             } ${item.type === 'empty' && !isPast ? 'hover:bg-zinc-900/30' : ''} ${
               menuOpenId === item.data?.id ? 'z-50 relative' : 'relative'
             }`}
@@ -439,7 +459,7 @@ export const DailyTimeline: React.FC<DailyTimelineProps> = ({
             </div>
 
             {/* Content Column */}
-            <div className="flex-1 px-2 py-2 relative">
+            <div className="flex-1 px-2 py-1.5 relative">
               {item.type === 'app' && (
                 <motion.div
                   draggable={item.data.status !== 'completed'}
@@ -469,10 +489,14 @@ export const DailyTimeline: React.FC<DailyTimelineProps> = ({
                   />
 
                   {/* Main Content - Layout: Avatar (esq) + 3 Linhas (dir) */}
-                  <div className="flex items-stretch h-full pl-4 pr-2 py-3 gap-3">
-                    {/* === COLUNA 1: AVATAR (Fixo 56px) === */}
+                  <div className="flex items-stretch h-full pl-3 pr-2 py-1.5 gap-3">
+                    {/* === COLUNA 1: AVATAR (Fixo 48px) === */}
                     {(() => {
-                      const clientData = clients.find(c => c.id === item.data.clientId);
+                      const clientData = clients.find(
+                        c =>
+                          c.id === item.data.clientId ||
+                          c.name.toLowerCase() === item.data.clientName.toLowerCase()
+                      );
                       const avatarUrl = clientData?.img || item.data.photoUrl;
                       return (
                         <div
@@ -483,7 +507,7 @@ export const DailyTimeline: React.FC<DailyTimelineProps> = ({
                           }`}
                         >
                           <div
-                            className={`w-14 h-14 rounded-xl overflow-hidden ring-2 ${
+                            className={`w-12 h-12 rounded-xl overflow-hidden ring-2 ${
                               item.data.status === 'completed'
                                 ? 'ring-emerald-500/60 shadow-[0_0_20px_rgba(16,185,129,0.3)]'
                                 : 'ring-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.2)]'
@@ -503,7 +527,7 @@ export const DailyTimeline: React.FC<DailyTimelineProps> = ({
                               />
                             ) : null}
                             <div
-                              className={`w-full h-full flex items-center justify-center text-xl font-black ${
+                              className={`w-full h-full flex items-center justify-center text-lg font-black ${
                                 avatarUrl ? 'hidden' : ''
                               } ${
                                 item.data.status === 'completed'
@@ -516,8 +540,8 @@ export const DailyTimeline: React.FC<DailyTimelineProps> = ({
                           </div>
                           {/* Status Check for Completed */}
                           {item.data.status === 'completed' && (
-                            <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-2 border-zinc-900 flex items-center justify-center shadow-[0_0_8px_#10b981]">
-                              <CheckCircle2 size={11} className="text-black" strokeWidth={3} />
+                            <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-zinc-900 flex items-center justify-center shadow-[0_0_8px_#10b981]">
+                              <CheckCircle2 size={10} className="text-black" strokeWidth={3} />
                             </div>
                           )}
                         </div>
@@ -529,7 +553,7 @@ export const DailyTimeline: React.FC<DailyTimelineProps> = ({
                       {/* LINHA 1: Nome + Badge Status */}
                       <div className="flex items-center justify-between gap-2">
                         <h3
-                          className={`font-black text-base uppercase tracking-wide truncate ${
+                          className={`font-black text-sm uppercase tracking-wide truncate ${
                             item.data.status === 'completed' ? 'text-emerald-100' : 'text-white'
                           }`}
                         >
@@ -538,12 +562,12 @@ export const DailyTimeline: React.FC<DailyTimelineProps> = ({
 
                         {/* Status Badge */}
                         {item.data.status === 'completed' ? (
-                          <span className="flex-shrink-0 flex items-center gap-1 bg-emerald-500 text-black px-2 py-0.5 rounded text-[8px] font-black uppercase">
-                            <Wallet size={9} />
+                          <span className="flex-shrink-0 flex items-center gap-1 bg-emerald-500 text-black px-1.5 py-px rounded text-[8px] font-black uppercase">
+                            <Wallet size={8} />
                             PAGO
                           </span>
                         ) : (
-                          <span className="flex-shrink-0 bg-amber-500/20 text-amber-400 border border-amber-500/40 px-1.5 py-0.5 rounded text-[8px] font-bold uppercase">
+                          <span className="flex-shrink-0 bg-amber-500/20 text-amber-400 border border-amber-500/40 px-1.5 py-px rounded text-[8px] font-bold uppercase">
                             AGUARDA
                           </span>
                         )}
@@ -552,20 +576,20 @@ export const DailyTimeline: React.FC<DailyTimelineProps> = ({
                       {/* LINHA 2: Serviço */}
                       <div className="flex items-center">
                         <span
-                          className={`text-xs font-semibold uppercase tracking-wider truncate ${
+                          className={`text-[10px] font-bold uppercase tracking-wider truncate ${
                             item.data.status === 'completed'
                               ? 'text-emerald-300/80'
                               : 'text-zinc-400'
                           }`}
                         >
-                          ✂️ {item.service.name}
+                          ✂️ {abbreviateService(item.service.name)}
                         </span>
                       </div>
 
                       {/* LINHA 3: Duração + Preço */}
                       <div className="flex items-center justify-between">
                         <span
-                          className={`text-[11px] font-medium ${
+                          className={`text-[10px] font-medium ${
                             item.data.status === 'completed'
                               ? 'text-emerald-500/60'
                               : 'text-zinc-500'
@@ -575,7 +599,7 @@ export const DailyTimeline: React.FC<DailyTimelineProps> = ({
                         </span>
 
                         <span
-                          className={`font-black text-base ${
+                          className={`font-black text-sm ${
                             item.data.status === 'completed'
                               ? 'text-emerald-400'
                               : 'text-yellow-500'

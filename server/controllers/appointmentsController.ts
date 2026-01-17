@@ -76,6 +76,8 @@ export const getAppointments = async (req: Request, res: Response) => {
         time: row.time,
         serviceId: row.serviceId,
         status: row.status,
+        clientName: row.clientName, // Expose name for claim/match logic
+        clientId: row.clientId, // Expose ID for debugging
       };
     });
 

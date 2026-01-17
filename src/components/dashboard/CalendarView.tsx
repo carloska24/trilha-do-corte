@@ -453,7 +453,7 @@ export const CalendarView: React.FC = () => {
                     <div className="flex items-center gap-3">
                       <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]" />
                       <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
-                        Abertura
+                        ABRE
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
@@ -464,9 +464,9 @@ export const CalendarView: React.FC = () => {
                           updateShopSettings({ ...shopSettings, startHour: newStart });
                           showToast('Abertura salva!');
                         }}
-                        className="w-9 h-9 rounded-lg bg-zinc-700/50 hover:bg-zinc-600 border border-zinc-600/50 flex items-center justify-center transition-all active:scale-95 text-zinc-400 hover:text-white"
+                        className="w-10 h-10 rounded-xl bg-zinc-700/50 hover:bg-zinc-600 border border-zinc-600/50 flex items-center justify-center transition-all active:scale-95 text-zinc-400 hover:text-white"
                       >
-                        <Minus size={16} strokeWidth={3} />
+                        <Minus size={18} strokeWidth={3} />
                       </button>
                       <span className="w-16 text-center text-xl font-black text-white">
                         {String(shopSettings.startHour).padStart(2, '0')}:00
@@ -481,9 +481,9 @@ export const CalendarView: React.FC = () => {
                           updateShopSettings({ ...shopSettings, startHour: newStart });
                           showToast('Abertura salva!');
                         }}
-                        className="w-9 h-9 rounded-lg bg-zinc-700/50 hover:bg-zinc-600 border border-zinc-600/50 flex items-center justify-center transition-all active:scale-95 text-zinc-400 hover:text-white"
+                        className="w-10 h-10 rounded-xl bg-zinc-700/50 hover:bg-zinc-600 border border-zinc-600/50 flex items-center justify-center transition-all active:scale-95 text-zinc-400 hover:text-white"
                       >
-                        <Plus size={16} strokeWidth={3} />
+                        <Plus size={18} strokeWidth={3} />
                       </button>
                     </div>
                   </div>
@@ -495,7 +495,7 @@ export const CalendarView: React.FC = () => {
                     <div className="flex items-center gap-3">
                       <div className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_#ef4444]" />
                       <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
-                        Fechamento
+                        FECHA
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
@@ -509,9 +509,9 @@ export const CalendarView: React.FC = () => {
                           updateShopSettings({ ...shopSettings, endHour: newEnd });
                           showToast('Fechamento salvo!');
                         }}
-                        className="w-9 h-9 rounded-lg bg-zinc-700/50 hover:bg-zinc-600 border border-zinc-600/50 flex items-center justify-center transition-all active:scale-95 text-zinc-400 hover:text-white"
+                        className="w-10 h-10 rounded-xl bg-zinc-700/50 hover:bg-zinc-600 border border-zinc-600/50 flex items-center justify-center transition-all active:scale-95 text-zinc-400 hover:text-white"
                       >
-                        <Minus size={16} strokeWidth={3} />
+                        <Minus size={18} strokeWidth={3} />
                       </button>
                       <span className="w-16 text-center text-xl font-black text-white">
                         {String(shopSettings.endHour).padStart(2, '0')}:00
@@ -523,9 +523,9 @@ export const CalendarView: React.FC = () => {
                           updateShopSettings({ ...shopSettings, endHour: newEnd });
                           showToast('Fechamento salvo!');
                         }}
-                        className="w-9 h-9 rounded-lg bg-zinc-700/50 hover:bg-zinc-600 border border-zinc-600/50 flex items-center justify-center transition-all active:scale-95 text-zinc-400 hover:text-white"
+                        className="w-10 h-10 rounded-xl bg-zinc-700/50 hover:bg-zinc-600 border border-zinc-600/50 flex items-center justify-center transition-all active:scale-95 text-zinc-400 hover:text-white"
                       >
-                        <Plus size={16} strokeWidth={3} />
+                        <Plus size={18} strokeWidth={3} />
                       </button>
                     </div>
                   </div>

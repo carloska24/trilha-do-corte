@@ -89,7 +89,10 @@ export const ClientMobileDrawer: React.FC<ClientMobileDrawerProps> = ({
                 <div className="flex items-center justify-center gap-2 mb-4">
                   <span className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[10px] uppercase font-bold text-neon-purple tracking-widest flex items-center gap-1">
                     <Sparkles size={10} />
-                    ID: {client.id ? client.id.substring(0, 6) : '---'}
+                    ID:{' '}
+                    {client.publicId
+                      ? `#${String(client.publicId).padStart(4, '0')}`
+                      : client.id?.substring(0, 6) || '---'}
                   </span>
                 </div>
               </div>
