@@ -14,8 +14,12 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
     return res.status(401).json({ error: 'Acesso negado. Token não fornecido.' });
   }
 
-  // Fallback secret para desenvolvimento, idealmente deve vir do .env
-  const secret = process.env.JWT_SECRET || 'dev_secret_123';
+  const secret = process.env.JWT_SECRET;
+
+  if (!secret) {
+    console.error('CRITICAL ERROR: JWT_SECRET is not defined in environment variables.');
+    return res.status(500).json({ error: 'Erro interno de configuração de segurança.' });
+  }
 
   jwt.verify(token, secret, (err: any, user: any) => {
     if (err) {

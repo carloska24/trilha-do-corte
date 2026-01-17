@@ -1,20 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   X,
-  Calendar as CalendarIcon,
-  Clock,
   CheckCircle,
   Loader2,
-  ChevronRight,
   User,
-  ChevronLeft,
   Smartphone,
-  ChevronDown,
 } from 'lucide-react';
 import { ServiceItem, BookingData, Appointment } from '../types';
 import { SERVICES as ALL_SERVICES } from '../constants';
 import { TicketCard } from './ui/TicketCard';
-import { ServiceCard } from './ui/ServiceCard';
+import { ServiceSelectionStep } from './booking/ServiceSelectionStep';
+import { TimeSlotPicker } from './booking/TimeSlotPicker';
 import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -54,14 +50,8 @@ export const BookingModal: React.FC<BookingModalProps> = ({
     time: '',
   });
 
-  const [searchQuery, setSearchQuery] = useState('');
-
   // --- STATES from PublicAgenda for Calendar Logic ---
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [currentMonth, setCurrentMonth] = useState(new Date());
 
   // Initialize data
   useEffect(() => {
@@ -107,184 +97,15 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   }, [selectedDate]);
 
   // --- LOGIC copied/adapted from PublicAgenda ---
-
-  // 1. Generate Next 30 Days
-  const generateDays = () => {
-    const days = [];
-    const today = new Date();
-    for (let i = 0; i < 30; i++) {
-      const d = new Date(today);
-      d.setDate(today.getDate() + i);
-      days.push(d);
-    }
-    return days;
-  };
-  const daysList = generateDays();
-
-  // Scroll to selected day
-  useEffect(() => {
-    if (scrollRef.current && isOpen && step === 2) {
-      // Optional: scroll logic if needed
-    }
-  }, [selectedDate, isOpen, step]);
-
-  // 2. Month Calendar Helpers
-  const getDaysInMonth = (date: Date) => {
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const days = new Date(year, month + 1, 0).getDate();
-    const firstDay = new Date(year, month, 1).getDay(); // 0 = Dom
-
-    const result = [];
-    for (let i = 0; i < firstDay; i++) result.push(null);
-    for (let i = 1; i <= days; i++) result.push(new Date(year, month, i));
-    return result;
-  };
-
-  const changeMonth = (val: number) => {
-    const newM = new Date(currentMonth);
-    newM.setMonth(currentMonth.getMonth() + val);
-    setCurrentMonth(newM);
-  };
-
-  // 3. Smart Time Slots Generation
-
-  // ... inside generateTimeSlots ...
-  const generateTimeSlots = () => {
-    // Validar dia fechado: Domingo retorna array vazio
-    if (selectedDate.getDay() === 0) return [];
-
-    // Check Exceptions
-    const dateKey =
-      selectedDate.getFullYear() +
-      '-' +
-      String(selectedDate.getMonth() + 1).padStart(2, '0') +
-      '-' +
-      String(selectedDate.getDate()).padStart(2, '0');
-
-    const exception = shopSettings?.exceptions?.[dateKey];
-
-    // Default hours or Exception hours
-    const startH = exception?.startHour ?? (shopSettings?.startHour || 9);
-    const endH = exception?.endHour ?? (shopSettings?.endHour || 19);
-
-    if (exception?.closed || startH >= endH) return [];
-
-    const GRID_INTERVAL = shopSettings?.slotInterval || 15; // Use configured interval
-
-    // Occupied Ranges (from appointments prop)
-    const dayAppointments = appointments.filter(app => {
-      // app.date is string YYYY-MM-DD
-      return app.date === dateKey && app.status !== 'cancelled';
-    });
-
-    const occupiedRanges = dayAppointments.map(app => {
-      const [h, m] = app.time.split(':').map(Number);
-      const startMin = h * 60 + m;
-
-      // Use service duration if available, else standard 30
-      const service =
-        services.find(s => s.id === app.serviceId) ||
-        ALL_SERVICES.find(s => s.id === app.serviceId);
-      const duration = service?.duration || 30;
-
-      // CHECK IF THIS IS MINE
-      // We check by Client ID (if logged in) or Phone (if drafted)
-      const isMine =
-        (currentUser?.id && String(app.clientId) === String(currentUser.id)) ||
-        (formData.phone && app.clientPhone === formData.phone); // Fallback
-
-      return { start: startMin, end: startMin + duration, isMine };
-    });
-
-    // Generate Slots
-    const slots = [];
-    const startOfDayMin = startH * 60;
-    const endOfDayMin = endH * 60;
-
-    // Duration of CURRENTLY selected service (to check if it fits)
-    const selectedServiceObj =
-      services.find(s => s.id === formData.serviceId) ||
-      ALL_SERVICES.find(s => s.id === formData.serviceId);
-    const serviceDuration = selectedServiceObj?.duration || 30;
-
-    for (let time = startOfDayMin; time < endOfDayMin; time += GRID_INTERVAL) {
-      const currentSlotStart = time;
-      const currentSlotEnd = time + serviceDuration;
-
-      // Check Overlap
-      let slotStatus = 'available';
-      const conflict = occupiedRanges.find(range => {
-        return currentSlotStart < range.end && currentSlotEnd > range.start;
-      });
-
-      if (conflict) {
-        if (conflict.isMine) {
-          slotStatus = 'user_appointment';
-        } else {
-          slotStatus = 'occupied';
-        }
-      }
-
-      // Check Past
-      const now = new Date();
-      const localNowDateKey =
-        now.getFullYear() +
-        '-' +
-        String(now.getMonth() + 1).padStart(2, '0') +
-        '-' +
-        String(now.getDate()).padStart(2, '0');
-
-      const isToday = dateKey === localNowDateKey;
-      const nowTotalMinutes = now.getHours() * 60 + now.getMinutes();
-      const isPassed = isToday && currentSlotStart < nowTotalMinutes;
-
-      if (isPassed) slotStatus = 'passed';
-
-      // Check Lunch Break
-      const lunchStart = exception?.lunchStart;
-      const lunchEnd = exception?.lunchEnd;
-      if (lunchStart !== undefined && lunchEnd !== undefined) {
-        const lunchStartMin = lunchStart * 60;
-        const lunchEndMin = lunchEnd * 60;
-        const slotHour = Math.floor(currentSlotStart / 60);
-        if (slotHour >= lunchStart && slotHour < lunchEnd) {
-          slotStatus = 'lunch';
-        }
-      }
-
-      const h = Math.floor(time / 60);
-      const m = time % 60;
-      const timeLabel = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-
-      slots.push({
-        label: timeLabel,
-        minutes: time,
-        status: slotStatus,
-      });
-    }
-
-    return slots.filter(s => s.status !== 'passed' && s.status !== 'lunch');
-  };
-
-  const timeSlotsObjects = generateTimeSlots();
-
-  // Is Closed Day?
-  const dateKey =
-    selectedDate.getFullYear() +
-    '-' +
-    String(selectedDate.getMonth() + 1).padStart(2, '0') +
-    '-' +
-    String(selectedDate.getDate()).padStart(2, '0');
-  const isClosed = shopSettings?.exceptions?.[dateKey]?.closed; // Removed .getDay() check
+  // All calendar/time slot generation logic removed, now handled by TimeSlotPicker
 
   // --- END LOGIC ---
 
   if (!isOpen) return null;
 
-  const filteredServices = services.filter(s =>
-    s.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // const filteredServices = services.filter(s => // Removed, not used after ServiceSelectionStep
+  //   s.name.toLowerCase().includes(searchQuery.toLowerCase())
+  // );
   const selectedService =
     services.find(s => s.id === formData.serviceId) ||
     ALL_SERVICES.find(s => s.id === formData.serviceId);
@@ -346,11 +167,11 @@ export const BookingModal: React.FC<BookingModalProps> = ({
     }
   };
 
-  const changeDay = (days: number) => {
-    const newDate = new Date(selectedDate);
-    newDate.setDate(selectedDate.getDate() + days);
-    setSelectedDate(newDate);
-  };
+  // const changeDay = (days: number) => { // Removed, TimeSlotPicker handles internally
+  //   const newDate = new Date(selectedDate);
+  //   newDate.setDate(selectedDate.getDate() + days);
+  //   setSelectedDate(newDate);
+  // };
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -411,260 +232,31 @@ export const BookingModal: React.FC<BookingModalProps> = ({
         <div className="p-4 md:p-6 overflow-y-auto custom-scrollbar flex-1 relative min-h-[400px]">
           {/* STEP 1: SERVICE SELECTION */}
           {step === 1 && (
-            <div className="space-y-4 animate-[slideRight_0.3s_ease-out]">
-              <div className="relative mb-4 group">
-                {/* Search Icon */}
-                <div className="absolute left-0 top-1/2 -translate-y-1/2 pl-2 pointer-events-none">
-                  <div className="w-4 h-4 border-2 border-gray-600 rounded-full group-focus-within:border-neon-yellow transition-colors relative">
-                    <div className="absolute -bottom-1 -right-1 w-2 h-0.5 bg-gray-600 group-focus-within:bg-neon-yellow rotate-45 origin-top-left transition-colors"></div>
-                  </div>
-                </div>
-                <input
-                  type="text"
-                  placeholder="ESCOLHA SEU DESTINO"
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  className="w-full bg-transparent border-b border-gray-800 focus:border-neon-yellow text-sm font-bold text-white uppercase tracking-widest pl-8 py-2 focus:outline-none placeholder-gray-600 transition-colors"
-                />
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-2">
-                {filteredServices.map((s, index) => (
-                  <div key={s.id} className="h-full">
-                    <ServiceCard
-                      service={s}
-                      isSelected={formData.serviceId === s.id}
-                      onClick={() => setFormData({ ...formData, serviceId: s.id })}
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
+            <ServiceSelectionStep
+              services={services}
+              selectedServiceId={formData.serviceId}
+              onSelect={id => setFormData({ ...formData, serviceId: id })}
+            />
           )}
 
-          {/* STEP 2: AGENDA (UPDATED LOGIC & COMPACTNESS) */}
+          {/* STEP 2: AGENDA */}
           {step === 2 && (
-            <div className="space-y-4 animate-[slideRight_0.3s_ease-out]">
-              {/* DATA SELECIONADA & CALENDAR TRIGGER */}
-              <div
-                className={`
-                        bg-[#111] border rounded-xl p-3 mb-2 flex justify-between items-center transition-all group hover:border-gray-700
-                        ${isClosed ? 'border-red-900/50 bg-red-900/10' : 'border-gray-800'}
-                    `}
-              >
-                <button
-                  onClick={e => {
-                    e.stopPropagation();
-                    changeDay(-1);
-                  }}
-                  className="p-2 text-gray-400 hover:text-neon-yellow transition-colors cursor-pointer rounded-full hover:bg-white/5"
-                >
-                  <ChevronLeft size={18} />
-                </button>
-
-                <div
-                  onClick={() => setIsCalendarOpen(true)}
-                  className="text-center cursor-pointer hover:scale-105 transition-transform select-none"
-                >
-                  <span className="text-[9px] text-gray-500 font-bold uppercase tracking-widest block">
-                    DATA DA PARTIDA
-                  </span>
-                  <div className="flex items-center justify-center gap-2">
-                    <CalendarIcon
-                      size={16}
-                      className={`${isClosed ? 'text-red-500' : 'text-neon-yellow'}`}
-                    />
-                    <span
-                      className={`text-lg font-black uppercase tracking-wider transition-colors ${
-                        isClosed ? 'text-red-500' : 'text-white'
-                      }`}
-                    >
-                      {selectedDate
-                        .toLocaleDateString('pt-BR', {
-                          weekday: 'short',
-                          day: '2-digit',
-                          month: 'short',
-                        })
-                        .replace('.', '')
-                        .toUpperCase()}
-                    </span>
-                    {selectedDate.toDateString() === new Date().toDateString() && (
-                      <span className="bg-green-500/20 text-green-500 text-[9px] font-bold px-1.5 py-0.5 rounded border border-green-500/30">
-                        HOJE
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                <button
-                  onClick={e => {
-                    e.stopPropagation();
-                    changeDay(1);
-                  }}
-                  className="p-2 text-gray-400 hover:text-neon-yellow transition-colors cursor-pointer rounded-full hover:bg-white/5"
-                >
-                  <ChevronRight size={18} />
-                </button>
-              </div>
-
-              {/* CARROSSEL DE DIAS */}
-              <div
-                ref={scrollRef}
-                className="flex overflow-x-auto gap-2 pb-2 mb-2 custom-scrollbar snap-x"
-              >
-                {daysList.map(day => {
-                  const isSelected = day.toDateString() === selectedDate.toDateString();
-                  const isToday = day.toDateString() === new Date().toDateString();
-
-                  const dKey =
-                    day.getFullYear() +
-                    '-' +
-                    String(day.getMonth() + 1).padStart(2, '0') +
-                    '-' +
-                    String(day.getDate()).padStart(2, '0');
-                  const dayClosed = shopSettings?.exceptions?.[dKey]?.closed;
-
-                  return (
-                    <button
-                      key={day.toISOString()}
-                      onClick={() => setSelectedDate(day)}
-                      className={`flex-shrink-0 w-14 h-16 rounded-xl flex flex-col items-center justify-center border transition-all snap-center
-                                            ${
-                                              dayClosed
-                                                ? isSelected
-                                                  ? 'bg-red-900/30 border-red-500 text-red-500'
-                                                  : 'bg-[#150505] border-red-900/30 text-red-700 opacity-70'
-                                                : isSelected
-                                                ? 'bg-neon-yellow border-neon-yellow text-black scale-105 shadow-[0_0_15px_rgba(234,179,8,0.4)]'
-                                                : 'bg-[#111] border-gray-800 text-gray-500 hover:border-gray-600 hover:bg-[#151515] hover:text-white'
-                                            }
-                                        `}
-                    >
-                      <span className="text-[9px] font-bold uppercase">
-                        {day.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '')}
-                      </span>
-                      <span className="text-xl font-black">{day.getDate()}</span>
-                      {isToday && !isSelected && (
-                        <div className="w-1 h-1 bg-green-500 rounded-full mt-0.5"></div>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* TIME SLOTS GRID */}
-              <div>
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 block">
-                  Horário de Embarque
-                </label>
-
-                {isClosed ? (
-                  <div className="flex flex-col items-center justify-center py-6 border border-dashed border-red-900/30 rounded-xl bg-red-900/5">
-                    <X size={24} className="text-red-500 mb-2 opacity-50" />
-                    <span className="text-red-500 font-bold uppercase tracking-widest text-xs">
-                      Não haverá atendimento
-                    </span>
-                    <span className="text-red-800 text-[10px] mt-1">Selecione outro dia</span>
-                  </div>
-                ) : (
-                  <>
-                    {timeSlotsObjects.length === 0 ? (
-                      <div className="text-center py-6 text-gray-500">
-                        <Clock className="w-6 h-6 mx-auto mb-2 opacity-20" />
-                        <p className="text-[10px] uppercase tracking-widest">
-                          Sem horários disponíveis
-                        </p>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="grid grid-cols-4 md:grid-cols-5 gap-2 transition-all duration-500">
-                          {timeSlotsObjects.slice(0, isExpanded ? undefined : 15).map(slot => {
-                            let baseClasses =
-                              'flex flex-col items-center justify-center py-2.5 rounded-lg border transition-all duration-200';
-
-                            if (slot.status === 'occupied') {
-                              return (
-                                <div
-                                  key={slot.label}
-                                  className={`${baseClasses} bg-gray-900/50 border-gray-800 opacity-30 cursor-not-allowed`}
-                                >
-                                  <span className="text-sm font-bold text-gray-500 font-mono line-through">
-                                    {slot.label}
-                                  </span>
-                                </div>
-                              );
-                            }
-
-                            if (slot.status === 'user_appointment') {
-                              return (
-                                <div
-                                  key={slot.label}
-                                  className={`${baseClasses} bg-neon-yellow/10 border-neon-yellow/50 cursor-not-allowed`}
-                                >
-                                  <span className="text-sm font-black text-neon-yellow font-mono">
-                                    {slot.label}
-                                  </span>
-                                  <span className="text-[7px] font-bold uppercase text-neon-yellow leading-none mt-0.5">
-                                    Seu Horário
-                                  </span>
-                                </div>
-                              );
-                            }
-
-                            return (
-                              <button
-                                key={slot.label}
-                                onClick={() => setFormData({ ...formData, time: slot.label })}
-                                className={`
-                                                            ${baseClasses}
-                                                            ${
-                                                              formData.time === slot.label
-                                                                ? 'bg-neon-yellow border-neon-yellow text-black shadow-[0_0_10px_rgba(234,179,8,0.3)] scale-105'
-                                                                : 'bg-[#111] border-gray-800 text-white hover:bg-neon-yellow hover:text-black hover:border-neon-yellow hover:shadow-[0_0_15px_rgba(234,179,8,0.3)]'
-                                                            }
-                                                            group
-                                                        `}
-                              >
-                                <span className="text-sm font-bold font-mono group-hover:font-black">
-                                  {slot.label}
-                                </span>
-                                {formData.time !== slot.label && (
-                                  <span className="text-[8px] font-bold uppercase text-green-500 group-hover:text-black mt-0.5 leading-none">
-                                    Livre
-                                  </span>
-                                )}
-                                {formData.time === slot.label && (
-                                  <span className="text-[8px] font-bold uppercase text-black mt-0.5 leading-none">
-                                    OK
-                                  </span>
-                                )}
-                              </button>
-                            );
-                          })}
-                        </div>
-
-                        {timeSlotsObjects.length > 15 && (
-                          <button
-                            onClick={() => setIsExpanded(!isExpanded)}
-                            className="w-full flex items-center justify-center gap-2 mt-4 py-2 text-[10px] font-bold uppercase tracking-widest text-zinc-500 hover:text-white transition-colors"
-                          >
-                            {isExpanded ? (
-                              <>
-                                <ChevronDown className="rotate-180" size={14} /> Menos Horários
-                              </>
-                            ) : (
-                              <>
-                                <ChevronDown size={14} /> Ver Mais Horários (
-                                {timeSlotsObjects.length - 15})
-                              </>
-                            )}
-                          </button>
-                        )}
-                      </>
-                    )}
-                  </>
-                )}
-              </div>
-            </div>
+            <TimeSlotPicker
+              selectedDate={selectedDate}
+              onDateChange={setSelectedDate}
+              selectedTime={formData.time}
+              onTimeSelect={time => setFormData({ ...formData, time })}
+              serviceDuration={
+                (
+                  services.find(s => s.id === formData.serviceId) ||
+                  ALL_SERVICES.find(s => s.id === formData.serviceId)
+                )?.duration || 30
+              }
+              shopSettings={shopSettings}
+              appointments={appointments}
+              currentUser={currentUser}
+              clientPhone={formData.phone}
+            />
           )}
 
           {/* STEP 3: IDENTIFICATION */}
@@ -868,99 +460,6 @@ export const BookingModal: React.FC<BookingModalProps> = ({
         )}
       </div>
 
-      {/* MODAL CALENDARIO (Pop-up over the existing modal) */}
-      {isCalendarOpen && (
-        <div className="absolute inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-          <div className="bg-[#1a1a1a] w-full max-w-xs rounded-2xl border border-gray-700 shadow-2xl overflow-hidden">
-            {/* Header Modal */}
-            <div className="p-4 border-b border-gray-700 flex justify-between items-center bg-[#222]">
-              <h3 className="font-black text-white uppercase tracking-wider text-sm flex items-center gap-2">
-                <CalendarIcon size={16} className="text-neon-yellow" /> Selecionar Data
-              </h3>
-              <button
-                onClick={e => {
-                  e.stopPropagation();
-                  setIsCalendarOpen(false);
-                }}
-                className="text-gray-500 hover:text-white"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <div className="p-4">
-              {/* Navegação Mês */}
-              <div className="flex justify-between items-center mb-6">
-                <button
-                  onClick={() => changeMonth(-1)}
-                  className="p-2 hover:bg-white/10 rounded-full text-white"
-                >
-                  <ChevronLeft size={16} />
-                </button>
-                <h3 className="text-sm font-black text-white uppercase tracking-wider">
-                  {currentMonth.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
-                </h3>
-                <button
-                  onClick={() => changeMonth(1)}
-                  className="p-2 hover:bg-white/10 rounded-full text-white"
-                >
-                  <ChevronRight size={16} />
-                </button>
-              </div>
-
-              {/* Grid Dias */}
-              <div className="grid grid-cols-7 gap-1 text-center mb-2">
-                {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((d, i) => (
-                  <div key={i} className="text-[10px] font-bold text-gray-500">
-                    {d}
-                  </div>
-                ))}
-                {getDaysInMonth(currentMonth).map((day, idx) => {
-                  if (!day) return <div key={`empty-${idx}`}></div>;
-                  const isSelected = day.toDateString() === selectedDate.toDateString();
-                  const isToday = day.toDateString() === new Date().toDateString();
-
-                  const dKey =
-                    day.getFullYear() +
-                    '-' +
-                    String(day.getMonth() + 1).padStart(2, '0') +
-                    '-' +
-                    String(day.getDate()).padStart(2, '0');
-                  const dayClosed = shopSettings?.exceptions?.[dKey]?.closed; // Simple check
-
-                  return (
-                    <button
-                      key={idx}
-                      disabled={dayClosed && !isSelected}
-                      onClick={() => {
-                        setSelectedDate(day);
-                        setIsCalendarOpen(false);
-                      }}
-                      className={`
-                                aspect-square rounded flex items-center justify-center text-xs font-bold transition-all
-                                ${
-                                  dayClosed
-                                    ? 'bg-red-900/10 text-red-700 border border-red-900/20 cursor-not-allowed'
-                                    : isSelected
-                                    ? 'bg-neon-yellow text-black'
-                                    : 'bg-[#111] text-white hover:bg-[#333]'
-                                }
-                                ${
-                                  isToday && !isSelected && !dayClosed
-                                    ? 'border border-blue-500 text-blue-500'
-                                    : ''
-                                }
-                            `}
-                    >
-                      {day.getDate()}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

@@ -323,9 +323,30 @@ export const DashboardLayout: React.FC = () => {
           const successMsg = `Agendado: ${clientName} às ${time}`;
           setAiResponse(`✅ ${successMsg}`);
           speak(`Agendado para ${clientName} às ${time}`);
-          // 3. Update Local State (Optimistic or from response)
-          // We need to fetch fresh data or append. Appending is faster.
+
+          // 3. Update Local State & Notify WhatsApp
           updateAppointments([...appointments, created]);
+
+          // WhatsApp Notification
+          try {
+            const { generateWhatsAppLink } = await import('../utils/whatsappUtils');
+            const link = generateWhatsAppLink({
+              phone: '5511999999999', // TODO: Get real client phone if available, or barber phone?
+              // Actually, usually we send TO the client OR TO the barber.
+              // In BookingModal, we send TO THE BARBER saying "Project Trilha do Corte: New Booking".
+              // Let's match BookingModal behavior: Send confirmation to BARBER (or shop phone).
+              clientName: clientName,
+              date: appointmentDate,
+              time: time,
+              serviceName: serviceName,
+              price: servicePrice,
+            });
+
+            setAiResponse(`✅ Agendado! Abrindo WhatsApp...`);
+            window.open(link, '_blank');
+          } catch (err) {
+            console.error('Error generating WhatsApp link', err);
+          }
         } else {
           setAiResponse('❌ Falha ao criar agendamento.');
           speak('Não consegui criar o agendamento.');

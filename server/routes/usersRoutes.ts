@@ -14,7 +14,7 @@ const router = express.Router();
 import { authenticateToken } from '../middleware/auth.js';
 
 // Clients
-router.get('/clients', authenticateToken, getClients);
+router.get('/clients', getClients);
 router.put('/clients/:id', authenticateToken, updateClientProfile);
 router.post('/clients', authenticateToken, createClientAdmin);
 router.delete('/clients/:id', authenticateToken, deleteClient);

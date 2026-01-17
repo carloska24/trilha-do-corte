@@ -13,7 +13,6 @@ describe('whatsappUtils', () => {
       serviceId: '1',
       status: 'confirmed',
       price: 50,
-      duration: 30,
       photoUrl: '',
       clientId: 'c1',
       barberId: 'b1',
@@ -26,7 +25,6 @@ describe('whatsappUtils', () => {
       serviceId: '2',
       status: 'confirmed',
       price: 100,
-      duration: 60,
       photoUrl: '',
       clientId: 'c2',
       barberId: 'b1',
@@ -39,26 +37,43 @@ describe('whatsappUtils', () => {
       serviceId: '1',
       status: 'cancelled',
       price: 50,
-      duration: 30,
       photoUrl: '',
       clientId: 'c3',
       barberId: 'b1',
     },
   ];
 
-  it('should generate a valid WhatsApp URL with summary', () => {
-    const url = generateWhatsAppExportUrl(mockAppointments, '2026-01-01', 'Barber Kyle');
+  const mockServices: any[] = [
+    { id: '1', name: 'Corte', price: 'R$ 50,00', duration: 30 },
+    { id: '2', name: 'Barba', price: 'R$ 100,00', duration: 60 }
+  ];
 
-    expect(url).toContain('api.whatsapp.com');
-    expect(url).toContain('João');
-    expect(url).toContain('Maria');
-    expect(url).toContain('Total:');
-    expect(url).toContain('R$150'); // 50 + 100 (excludes cancelled)
+  it('should generate a valid WhatsApp URL with summary', () => {
+    const url = generateWhatsAppExportUrl({
+      appointments: mockAppointments,
+      date: new Date('2026-01-01T12:00:00'),
+      services: mockServices,
+      shopName: 'Barber Kyle',
+    });
+    const decodedUrl = decodeURIComponent(url);
+    console.log('DEBUG URL:', decodedUrl);
+
+    expect(decodedUrl).toContain('api.whatsapp.com');
+    expect(decodedUrl).toContain('JOÃO');
+    expect(decodedUrl).toContain('MARIA');
+    expect(decodedUrl).toContain('Tempo total:');
+    expect(decodedUrl).toContain('150,00'); // 50 + 100 (excludes cancelled)
   });
 
   it('should handle empty appointments list gracefully', () => {
-    const url = generateWhatsAppExportUrl([], '2026-01-01', 'Barber Kyle');
-    expect(url).toContain('Nenhum agendamento');
-    expect(url).toContain('api.whatsapp.com');
+    const url = generateWhatsAppExportUrl({
+      appointments: [],
+      date: new Date('2026-01-01T12:00:00'),
+      services: [],
+      shopName: 'Barber Kyle',
+    });
+    const decodedUrl = decodeURIComponent(url);
+    expect(decodedUrl).toContain('Nenhum agendamento');
+    expect(decodedUrl).toContain('api.whatsapp.com');
   });
 });

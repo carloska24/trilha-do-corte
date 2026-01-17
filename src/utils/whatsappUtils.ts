@@ -32,11 +32,20 @@ export const generateWhatsAppExportUrl = ({
   };
 
   const dailyApps = (appointments || [])
-    .filter(a => !!a)
+    .filter(a => !!a && a.status !== 'cancelled')
     .sort((a, b) => a.time.localeCompare(b.time));
 
   if (dailyApps.length === 0) {
-    return '';
+    const dateStrLock = date.toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+    });
+    const msg = `🗓️ *AGENDA — ${dateStrLock}*\n💈 ${shopName}\n\nNenhum agendamento.`;
+    const cleanPhone = barberPhone?.replace(/\D/g, '');
+    const baseUrl = `https://api.whatsapp.com/send`;
+    const phoneParam = cleanPhone ? `&phone=55${cleanPhone}` : '';
+    const textParam = `text=${encodeURIComponent(msg)}`;
+    return `${baseUrl}?${textParam}${phoneParam}`;
   }
 
   const dateStr = date.toLocaleDateString('pt-BR', {
@@ -86,7 +95,7 @@ export const generateWhatsAppExportUrl = ({
       sIcon = '🧴';
 
     let clientName = (app.clientName || 'Cliente').trim();
-    clientName = clientName.replace(/\b\w/g, l => l.toUpperCase());
+    clientName = clientName.toUpperCase();
 
     msg += `${SEPARATOR}\n`;
     msg += `${ICON_CLOCK} *${app.time}*\n`;

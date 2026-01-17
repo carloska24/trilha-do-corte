@@ -30,14 +30,18 @@ async function getAvailabilityForNextDays() {
   const endDate = new Date(brTime);
   endDate.setDate(endDate.getDate() + 7);
 
-  const startStr = startDate.toISOString().split('T')[0];
-  const endStr = endDate.toISOString().split('T')[0];
+  // Prisma needs Date objects for filtering DateTime fields
+  const filterStart = new Date(startDate);
+  filterStart.setHours(0, 0, 0, 0);
+
+  const filterEnd = new Date(endDate);
+  filterEnd.setHours(23, 59, 59, 999);
 
   const existingAppointments = await prisma.appointments.findMany({
     where: {
       date: {
-        gte: startStr,
-        lte: endStr,
+        gte: filterStart,
+        lte: filterEnd,
       },
       status: {
         not: 'cancelled', // Don't block cancelled slots
@@ -57,7 +61,12 @@ async function getAvailabilityForNextDays() {
   const exceptions = (settings?.exceptions as any) || {};
 
   // Create a Set for fast lookup: "YYYY-MM-DD HH:MM"
-  const busySlots = new Set(existingAppointments.map(app => `${app.date} ${app.time}`));
+  // Helper to format Date -> YYYY-MM-DD
+  const formatDateStr = (d: Date | null) => (d ? d.toISOString().split('T')[0] : '');
+
+  const busySlots = new Set(
+    existingAppointments.map(app => `${formatDateStr(app.date)} ${app.time}`)
+  );
 
   // Reduce to 7 days
   for (let i = 0; i < 7; i++) {
@@ -179,9 +188,14 @@ export const handleChat = async (req: Request, res: Response) => {
          - NUNCA pergunte nome ou telefone em texto! SEMPRE use o JSON REQUEST_CLIENT_DATA.
          - O formulário visual vai aparecer para o cliente preencher.
       
+      3. FLUXO OBRIGATÓRIO (SERVIÇO -> HORÁRIO -> CADASTRO):
+         - O cliente perguntou horários?
+           - SE você JÁ sabe o serviço (pelo histórico): Calcule a duração e mostre os slots compatíveis (PROPOSE_SLOTS).
+           - SE você NÃO sabe o serviço: NÃO mostre horários ainda. PERGUNTE: "Para qual serviço seria? (Ex: Corte, Barba...) Preciso checar a duração."
+
       4. APRESENTAÇÃO DOS HORÁRIOS (CRÍTICO - NÃO FALHE):
-         - Se encontrar horários, você DEVE retornar o JSON "PROPOSE_SLOTS".
-         - NUNCA escreva os horários no texto. O texto deve ser apenas: "Encontrei estes horários para [DIA]:".
+         - Retorne o JSON "PROPOSE_SLOTS" SOMENTE após saber o serviço.
+         - NUNCA escreva os horários no texto. O texto deve ser apenas: "Encontrei estes horários para realizar [SERVIÇO] na [DIA]:".
          
       5. LÓGICA DE DURAÇÃO (INTELIGÊNCIA):
          - Se o serviço levar 60min (ex: Platinado), você precisa de 2 slots de 30min SEGUIDOS (ex: 14:00 e 14:30).

@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model services {
@@ -28,6 +29,7 @@ model barbers {
   specialty    String?
   image        String?
   email        String?
+  phone        String?
   password     String?
   appointments appointments[]
 }
@@ -50,7 +52,7 @@ model appointments {
   id         String    @id
   clientName String?   @map("clientname")
   serviceId  String?   @map("serviceid")
-  date       String?
+  date       DateTime? @db.Date
   time       String?
   status     String?
   price      Float?
