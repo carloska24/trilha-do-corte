@@ -215,16 +215,23 @@ export const DatePicker: React.FC<DatePickerProps> = ({
       )}
 
       {/* Input Button */}
-      <button
-        type="button"
+      <div
+        role="button"
+        tabIndex={0}
         onClick={() => setIsOpen(!isOpen)}
+        onKeyDown={e => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setIsOpen(!isOpen);
+          }
+        }}
         className={`w-full flex items-center justify-between gap-2 bg-black/50 backdrop-blur-sm border ${
           isOpen ? theme.border : 'border-zinc-800'
-        } px-3 py-2 rounded-lg text-left transition-all duration-300 ${
+        } px-3 py-2 rounded-lg text-left transition-all duration-300 cursor-pointer outline-none ${
           isOpen ? theme.glow : 'hover:border-zinc-700'
         }`}
       >
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 pointer-events-none">
           <div
             className={`p-1.5 rounded-lg ${
               value ? `bg-gradient-to-br ${theme.gradient}` : 'bg-zinc-800'
@@ -244,13 +251,16 @@ export const DatePicker: React.FC<DatePickerProps> = ({
         </div>
         {value && (
           <button
-            onClick={handleClear}
+            onClick={e => {
+              e.stopPropagation();
+              handleClear(e);
+            }}
             className="text-zinc-500 hover:text-red-400 transition-colors p-1 hover:bg-red-500/10 rounded"
           >
             <X size={14} />
           </button>
         )}
-      </button>
+      </div>
 
       {/* Calendar Modal - Fixed position, centered */}
       <AnimatePresence>

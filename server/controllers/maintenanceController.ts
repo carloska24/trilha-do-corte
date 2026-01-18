@@ -13,25 +13,51 @@ export const cleanSchedule = async (req: Request, res: Response) => {
     const { mode, date } = req.body; // mode: 'past' | 'specific', date: 'YYYY-MM-DD'
 
     if (mode === 'past') {
-      const today = new Date().toISOString().split('T')[0];
+      console.log(`[CLEANUP] Starting cleanup for date < ${date}`);
+
+      // Use Local Time (Brazil) to avoid deleting today's data due to UTC offset
+      const today = new Date()
+        .toLocaleDateString('pt-BR', {
+          timeZone: 'America/Sao_Paulo',
+        })
+        .split('/')
+        .reverse()
+        .join('-'); // YYYY-MM-DD
       const limitDate = date || today;
-      const result = await prisma.appointments.deleteMany({
+
+      // 1. Delete Appointments
+      const deletedAppointments = await prisma.appointments.deleteMany({
         where: {
           date: {
+            lt: new Date(limitDate),
+          },
+        },
+      });
+      console.log(`[CLEANUP] Deleted ${deletedAppointments.count} appointments`);
+
+      // 2. Delete Clients (Optional: Logic to delete clients with no appointments or old lastVisit)
+      // For now, let's delete clients visited before this date to satisfy "Limpar Dados"
+      // Note: lastVisit is a string YYYY-MM-DD
+      const deletedClients = await prisma.clients.deleteMany({
+        where: {
+          lastVisit: {
             lt: limitDate,
           },
         },
       });
+      console.log(`[CLEANUP] Deleted ${deletedClients.count} clients`);
+
       return res.json({
-        message: 'Agendamentos passados removidos com sucesso.',
-        count: result.count,
+        message: 'Limpeza concluída com sucesso.',
+        details: `Agendamentos: ${deletedAppointments.count} | Clientes: ${deletedClients.count}`,
+        count: deletedAppointments.count + deletedClients.count,
       });
     }
 
     if (mode === 'specific' && date) {
       const result = await prisma.appointments.deleteMany({
         where: {
-          date: date,
+          date: new Date(date),
         },
       });
       return res.json({ message: `Agendamentos do dia ${date} removidos.`, count: result.count });
@@ -161,6 +187,6 @@ export const restoreBackup = async (req: Request, res: Response) => {
     res.json({ message: 'Backup restaurado com sucesso!' });
   } catch (error) {
     console.error('Error restoring backup:', error);
-    res.status(500).json({ error: 'Erro ao restaurar backup.', details: error.message });
+    res.status(500).json({ error: 'Erro ao restaurar backup.', details: (error as any).message });
   }
 };

@@ -27,23 +27,9 @@ interface DailyTimelineProps {
 }
 
 const abbreviateService = (name: string) => {
-  return name
-    .replace(/ \+ /g, '+') // Remove spaces around +
-    .split('+')
-    .map(part => {
-      const p = part.trim().toLowerCase();
-      if (p.includes('corte')) return 'CORT';
-      if (p.includes('barba')) return 'BARB';
-      if (p.includes('sobrancelha')) return 'SOBR';
-      if (p.includes('pezinho')) return 'PEZ';
-      if (p.includes('hidrata')) return 'HIDR';
-      if (p.includes('quimica')) return 'QUIM';
-      if (p.includes('luzes')) return 'LUZ';
-      if (p.includes('platinado')) return 'PLAT';
-      if (p.includes('completo')) return 'COMPL';
-      return p.slice(0, 4).toUpperCase();
-    })
-    .join('+');
+  // Retorna o nome completo (apenas padronizando espaços e maiúsculas)
+  // O CSS 'truncate' no componente cuidará de cortar o final se necessário (ex: "CORTE + BARBA + SOBR...")
+  return name.replace(/\s*\+\s*/g, ' + ').toUpperCase();
 };
 
 export const DailyTimeline: React.FC<DailyTimelineProps> = ({

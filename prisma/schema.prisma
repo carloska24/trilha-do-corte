@@ -8,6 +8,21 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+enum AppointmentStatus {
+  pending
+  confirmed
+  in_progress
+  completed
+  cancelled
+}
+
+enum ClientStatus {
+  active
+  new
+  vip
+  inactive
+}
+
 model services {
   id           String         @id
   name         String?
@@ -41,7 +56,7 @@ model clients {
   level        Int?
   lastVisit    String?        @map("lastvisit")
   img          String?
-  status       String?
+  status       ClientStatus?
   notes        String?
   password     String?
   email        String?
@@ -50,29 +65,31 @@ model clients {
 }
 
 model appointments {
-  id         String    @id
-  clientName String?   @map("clientname")
-  serviceId  String?   @map("serviceid")
-  date       DateTime? @db.Date
+  id         String             @id
+  clientName String?            @map("clientname")
+  serviceId  String?            @map("serviceid")
+  date       DateTime?          @db.Date
   time       String?
-  status     String?
+  status     AppointmentStatus?
   price      Float?
-  photoUrl   String?   @map("photourl")
+  photoUrl   String?            @map("photourl")
   notes      String?
-  clientId   String?   @map("clientid")
-  barberId   String?   @map("barberid")
-  barber     barbers?  @relation(fields: [barberId], references: [id])
-  client     clients?  @relation(fields: [clientId], references: [id])
-  service    services? @relation(fields: [serviceId], references: [id])
+  clientId   String?            @map("clientid")
+  barberId   String?            @map("barberid")
+  barber     barbers?           @relation(fields: [barberId], references: [id])
+  client     clients?           @relation(fields: [clientId], references: [id])
+  service    services?          @relation(fields: [serviceId], references: [id])
 
   @@unique([date, time], map: "idx_appointments_unique_slot")
 }
 
-model shop_settings {
+model ShopSettings {
   id           String @id @default(uuid())
   startHour    Int    @default(9) @map("starthour")
   endHour      Int    @default(19) @map("endhour")
   slotInterval Int    @default(30) @map("slotinterval")
   closedDays   Int[]  @default([0]) @map("closeddays")
   exceptions   Json?  @default("{}")
+
+  @@map("shop_settings")
 }

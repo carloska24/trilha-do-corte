@@ -11,7 +11,7 @@ vi.mock('../../server/prismaClient', () => ({
       findUnique: vi.fn(),
       count: vi.fn(),
     },
-    shop_settings: {
+    shopSettings: {
       findFirst: vi.fn(),
     },
     clients: {
@@ -48,7 +48,7 @@ describe('Integration: Booking Flow (Controller)', () => {
 
   it('should successfully create an appointment when slot is free', async () => {
     // Mock Settings: Open
-    (prisma.shop_settings.findFirst as any).mockResolvedValue({
+    (prisma.shopSettings.findFirst as any).mockResolvedValue({
       startHour: 9,
       endHour: 19,
       closedDays: [0], // Sunday
@@ -96,7 +96,7 @@ describe('Integration: Booking Flow (Controller)', () => {
   });
 
   it('should reject booking on closed days (Sunday)', async () => {
-    (prisma.shop_settings.findFirst as any).mockResolvedValue({
+    (prisma.shopSettings.findFirst as any).mockResolvedValue({
       closedDays: [0], // Sunday
     });
 
@@ -114,7 +114,7 @@ describe('Integration: Booking Flow (Controller)', () => {
   });
 
   it('should reject double booking', async () => {
-    (prisma.shop_settings.findFirst as any).mockResolvedValue({
+    (prisma.shopSettings.findFirst as any).mockResolvedValue({
       startHour: 9,
       endHour: 19,
       closedDays: [],

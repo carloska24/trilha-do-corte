@@ -370,7 +370,14 @@ export const DashboardHome: React.FC = () => {
   const { queue, inProgress, nextClient } = React.useMemo(() => {
     const q = appointments
       .filter(a => (a.status === 'pending' || a.status === 'confirmed') && a.date === todayString)
-      .sort((a, b) => a.time.localeCompare(b.time));
+      .sort((a, b) => {
+        // Prioritize items NOT skipped
+        const aSkipped = a.notes?.includes('[SKIPPED]') ? 1 : 0;
+        const bSkipped = b.notes?.includes('[SKIPPED]') ? 1 : 0;
+        if (aSkipped !== bSkipped) return aSkipped - bSkipped;
+
+        return a.time.localeCompare(b.time);
+      });
 
     return {
       queue: q,
@@ -654,9 +661,28 @@ export const DashboardHome: React.FC = () => {
             ) : previewedClient ? (
               /* === COMMAND CENTER CARD === */
               <div className="w-full rounded-2xl relative overflow-hidden transition-all duration-500 group/card">
-                {/* Animated Neon Yellow Border */}
+                {/* Animated Neon Yellow Border Container */}
                 <div className="absolute inset-0 rounded-2xl p-[2px] bg-gradient-to-r from-yellow-500 via-amber-400 to-yellow-500 animate-[borderGlow_3s_ease-in-out_infinite]">
-                  <div className="absolute inset-[2px] rounded-2xl bg-[#0a0a0a]"></div>
+                  {/* Inner Content Area - Clean Background for Image */}
+                  <div className="absolute inset-[2px] rounded-2xl bg-zinc-900 overflow-hidden">
+                    {/* Background Image (User Custom) */}
+                    <img
+                      src="/gonext.png"
+                      alt="Background"
+                      className="w-full h-full object-cover object-center"
+                      onError={e => {
+                        const target = e.currentTarget;
+                        if (target.src.endsWith('png')) {
+                          target.src = '/gonext.jpg';
+                        } else {
+                          // Fallback
+                          target.style.display = 'none';
+                        }
+                      }}
+                    />
+                    {/* Minimal Overlay for Text Contrast */}
+                    <div className="absolute inset-0 bg-black/40"></div>
+                  </div>
                 </div>
 
                 {/* Card Content */}
@@ -746,29 +772,28 @@ export const DashboardHome: React.FC = () => {
                     <button
                       onClick={async e => {
                         e.stopPropagation();
-                        // Persistir o pulo: adiciona sufixo ao horário para ir para o fim da fila
-                        const currentTime = previewedClient.time;
-                        // Se já foi pulado antes (tem :99), ignora
-                        if (currentTime.includes(':99')) return;
+                        // Mark as skipped in notes instead of corrupting time
+                        const currentNotes = previewedClient.notes || '';
+                        if (currentNotes.includes('[SKIPPED]')) return;
 
-                        const newTime = currentTime + ':99'; // Sufixo para ordenação
+                        const newNotes = currentNotes ? `${currentNotes} [SKIPPED]` : '[SKIPPED]';
 
-                        // Atualizar localmente
+                        // Update locally
                         const updated = appointments.map(app =>
-                          app.id === previewedClient.id ? { ...app, time: newTime } : app
+                          app.id === previewedClient.id ? { ...app, notes: newNotes } : app
                         );
                         updateAppointments(updated);
 
-                        // Persistir no banco
+                        // Update in DB
                         try {
                           await api.updateAppointment(previewedClient.id, {
-                            time: newTime,
+                            notes: newNotes,
                           } as Partial<typeof previewedClient>);
                         } catch (err) {
                           console.error('Failed to skip', err);
                         }
                       }}
-                      disabled={queue.length <= 1 || previewedClient.time.includes(':99')}
+                      disabled={queue.length <= 1 || previewedClient.notes?.includes('[SKIPPED]')}
                       className="flex items-center justify-center gap-2 py-3.5 px-3 rounded-lg bg-gradient-to-b from-slate-800/60 to-slate-900/80 border border-slate-500/40 text-slate-300 hover:border-slate-400 hover:text-white hover:shadow-[0_0_15px_rgba(148,163,184,0.2)] transition-all active:scale-95 relative overflow-hidden"
                     >
                       {/* Tech corner accents */}
@@ -817,91 +842,7 @@ export const DashboardHome: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Animated Circuit Lines - Energy Flow Effect */}
-                <div className="absolute top-0 right-0 w-32 h-32 pointer-events-none overflow-hidden">
-                  <svg viewBox="0 0 100 100" className="w-full h-full">
-                    {/* Base circuit paths (dim) */}
-                    <path
-                      d="M0 20 L30 20 L50 40 L100 40"
-                      stroke="rgba(234,179,8,0.15)"
-                      fill="none"
-                      strokeWidth="1.5"
-                    />
-                    <path
-                      d="M0 50 L20 50 L40 70 L100 70"
-                      stroke="rgba(234,179,8,0.15)"
-                      fill="none"
-                      strokeWidth="1.5"
-                    />
-
-                    {/* Animated energy flow on path 1 */}
-                    <path
-                      d="M0 20 L30 20 L50 40 L100 40"
-                      stroke="url(#energyGradient)"
-                      fill="none"
-                      strokeWidth="2"
-                      strokeDasharray="20 80"
-                      style={{
-                        animation: 'circuitFlow 2s linear infinite',
-                      }}
-                    />
-
-                    {/* Animated energy flow on path 2 */}
-                    <path
-                      d="M0 50 L20 50 L40 70 L100 70"
-                      stroke="url(#energyGradient)"
-                      fill="none"
-                      strokeWidth="2"
-                      strokeDasharray="15 85"
-                      style={{
-                        animation: 'circuitFlow 2.5s linear infinite',
-                        animationDelay: '0.5s',
-                      }}
-                    />
-
-                    {/* Junction nodes - pulsing */}
-                    <circle
-                      cx="50"
-                      cy="40"
-                      r="3"
-                      fill="#eab308"
-                      className="animate-pulse"
-                      style={{ filter: 'drop-shadow(0 0 4px #eab308)' }}
-                    />
-                    <circle
-                      cx="40"
-                      cy="70"
-                      r="3"
-                      fill="#eab308"
-                      className="animate-pulse"
-                      style={{ filter: 'drop-shadow(0 0 4px #eab308)', animationDelay: '0.3s' }}
-                    />
-                    <circle
-                      cx="30"
-                      cy="20"
-                      r="2"
-                      fill="#eab308"
-                      className="animate-pulse opacity-60"
-                    />
-                    <circle
-                      cx="20"
-                      cy="50"
-                      r="2"
-                      fill="#eab308"
-                      className="animate-pulse opacity-60"
-                      style={{ animationDelay: '0.6s' }}
-                    />
-
-                    {/* Gradient definition */}
-                    <defs>
-                      <linearGradient id="energyGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stopColor="transparent" />
-                        <stop offset="50%" stopColor="#eab308" />
-                        <stop offset="100%" stopColor="transparent" />
-                      </linearGradient>
-                    </defs>
-                  </svg>
-                </div>
+                {/* Circuit Graphics Removed */}
 
                 {/* Scanning line effect (horizontal) */}
                 <div

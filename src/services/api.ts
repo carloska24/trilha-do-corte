@@ -12,6 +12,29 @@ const getAuthHeaders = () => {
 };
 
 export const api = {
+  // Generic POST method for flexibility
+  post: async (endpoint: string, body: any, options: RequestInit = {}) => {
+    try {
+      const headers = { ...getAuthHeaders(), ...options.headers };
+      // Handle FormData (don't set Content-Type, let browser do it)
+      if (body instanceof FormData) {
+        delete (headers as any)['Content-Type'];
+      }
+
+      const response = await fetch(`${API_URL}${endpoint}`, {
+        method: 'POST',
+        headers,
+        body: body instanceof FormData ? body : JSON.stringify(body),
+      });
+
+      const json = await response.json();
+      return { data: json, status: response.status, ok: response.ok };
+    } catch (error) {
+      console.error(`API POST Error [${endpoint}]:`, error);
+      throw error;
+    }
+  },
+
   loginClient: async (emailOrPhone: string, password: string): Promise<Client | null> => {
     try {
       const response = await fetch(`${API_URL}/login/client`, {

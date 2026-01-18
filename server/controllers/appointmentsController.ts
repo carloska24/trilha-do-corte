@@ -32,13 +32,15 @@ export const getAppointments = async (req: Request, res: Response) => {
     // 2. Query Optimization (Prisma)
     let whereClause: any = {};
 
-    // DEFAULT (GUEST): Only fetch future + recent busy slots
+    // DEFAULT (GUEST): Fetch from START of today (so past slots today are visible/blocked)
     if (!user) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Start of day
       whereClause = {
-        date: { gte: new Date() }, // Now passing Date object
+        date: { gte: today },
       };
     }
-    // CLIENT: Fetch ONLY their history + future
+    // CLIENT: Fetch ONLY their history + past
     else if (!isBarber) {
       whereClause = {
         clientId: user.id,
