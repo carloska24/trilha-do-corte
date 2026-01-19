@@ -5,7 +5,7 @@
       "destination": "https://api-trilha-3kko.onrender.com/api/:match*"
     },
     {
-      "source": "/(.*)",
+      "source": "/((?!assets/|.*\\..*).*)",
       "destination": "/index.html"
     }
   ]
