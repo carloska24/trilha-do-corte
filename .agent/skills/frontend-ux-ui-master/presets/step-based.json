@@ -1,0 +1,34 @@
+{
+  "name": "step-based",
+  "description": "Interface baseada em etapas ou linha do tempo para guiar usuários em processos multi-passos.",
+  "intent": ["onboarding", "checkout", "processo", "configuracao", "cadastro longo"],
+  "flow_structure": {
+    "type": "linear",
+    "max_steps": 5,
+    "navigation": "forward_with_validation"
+  },
+  "step_states": ["completed", "current", "upcoming"],
+  "ui_rules": [
+    "mostrar progresso claramente",
+    "destacar passo atual",
+    "passos futuros visiveis mas desabilitados",
+    "feedback imediato ao concluir etapa"
+  ],
+  "interaction_rules": [
+    "validacao antes de avancar",
+    "permitir voltar sem perder dados",
+    "acoes claras por passo"
+  ],
+  "visual_guidelines": {
+    "connector": "line or progress bar",
+    "icons": "check or number",
+    "spacing": "comfortable"
+  },
+  "do_not": [
+    "processos longos sem progresso visivel",
+    "pular etapas sem explicacao",
+    "muitos passos pequenos desnecessarios",
+    "bloquear retorno sem aviso"
+  ],
+  "recommended_combinations": ["card-ui", "split-layout", "minimalist"]
+}

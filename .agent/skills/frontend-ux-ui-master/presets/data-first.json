@@ -1,0 +1,38 @@
+{
+  "name": "data-first",
+  "description": "Dashboard orientado a dados, com foco em KPIs, leitura rápida e tomada de decisão.",
+  "intent": ["dashboard", "analytics", "kpi", "dados", "painel administrativo"],
+  "data_hierarchy": {
+    "primary": "kpis",
+    "secondary": "charts",
+    "tertiary": "tables or lists"
+  },
+  "layout_rules": [
+    "kpis sempre visiveis no topo",
+    "dados mais importantes primeiro",
+    "agrupar informacoes relacionadas",
+    "evitar scroll excessivo"
+  ],
+  "visual_rules": [
+    "cores usadas para significado, nao decoracao",
+    "variacao de tamanho para hierarquia",
+    "espacamento consistente"
+  ],
+  "chart_guidelines": [
+    "usar graficos simples e legiveis",
+    "evitar 3D ou efeitos",
+    "labels claras e unidades visiveis"
+  ],
+  "interaction_rules": [
+    "filtros acessiveis",
+    "feedback imediato ao mudar dados",
+    "evitar reloads completos"
+  ],
+  "do_not": [
+    "graficos decorativos",
+    "dados sem contexto",
+    "excesso de cores",
+    "cards iguais para dados de pesos diferentes"
+  ],
+  "recommended_combinations": ["card-ui", "dark-mode", "bento-grid (leve)"]
+}

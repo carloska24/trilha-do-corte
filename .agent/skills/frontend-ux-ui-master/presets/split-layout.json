@@ -1,0 +1,32 @@
+{
+  "name": "split-layout",
+  "description": "Layout dividido em duas áreas com funções distintas para storytelling, onboarding e formulários.",
+  "intent": ["onboarding", "login", "cadastro", "explicacao", "comparacao"],
+  "layout": {
+    "type": "split",
+    "ratio": "50/50",
+    "responsive_strategy": "stack_on_mobile"
+  },
+  "area_roles": {
+    "primary": ["headline", "form", "cta", "steps"],
+    "secondary": ["visual", "illustration", "benefits", "testimonials"]
+  },
+  "layout_rules": [
+    "cada lado tem funcao clara",
+    "hierarquia definida no lado primario",
+    "lado secundario nunca rouba foco",
+    "layout empilha no mobile"
+  ],
+  "visual_guidelines": {
+    "separacao": "soft contrast or divider",
+    "balance": "visual weight controlled",
+    "padding": "generous"
+  },
+  "do_not": [
+    "dois ctas competindo",
+    "conteudo pesado nos dois lados",
+    "texto longo em ambas as colunas",
+    "manter split no mobile"
+  ],
+  "recommended_combinations": ["minimalist", "hero-centered", "light-mode", "dark-mode"]
+}

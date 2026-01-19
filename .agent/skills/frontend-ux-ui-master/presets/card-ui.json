@@ -1,0 +1,31 @@
+{
+  "name": "card-ui",
+  "description": "Interface baseada em cards reutilizáveis, clara e escalável para dashboards e aplicações.",
+  "intent": ["dashboard", "admin", "dados", "interface organizada", "saas"],
+  "layout": {
+    "system": "grid-flex-hybrid",
+    "strategy": "modular",
+    "gap": "1rem"
+  },
+  "card_rules": [
+    "cada card representa uma unidade clara de informação",
+    "cards devem ser independentes",
+    "títulos curtos e objetivos",
+    "conteúdo escaneável"
+  ],
+  "components_preference": ["stat-card", "table-card", "chart-card", "list-card", "action-card"],
+  "visual_guidelines": {
+    "border_radius": "lg",
+    "shadow": "subtle",
+    "hover": "border highlight or elevation",
+    "padding": "1rem"
+  },
+  "states": ["loading", "empty", "error", "success"],
+  "do_not": [
+    "cards gigantes com múltiplas responsabilidades",
+    "excesso de texto",
+    "misturar muitos tipos de conteúdo no mesmo card",
+    "quebrar consistência entre cards"
+  ],
+  "recommended_combinations": ["bento-grid", "dark-mode", "data-first"]
+}

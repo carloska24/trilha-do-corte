@@ -1,0 +1,35 @@
+{
+  "name": "bento-grid",
+  "description": "Layout Bento Grid moderno, modular e assimétrico para interfaces premium.",
+  "intent": ["bonito", "moderno", "saas", "interface premium", "home moderna"],
+  "layout": {
+    "system": "css-grid",
+    "columns": {
+      "desktop": "12",
+      "tablet": "8",
+      "mobile": "4"
+    },
+    "strategy": "asymmetric",
+    "gap": "1.25rem"
+  },
+  "grid_rules": [
+    "cards com larguras e alturas diferentes",
+    "elementos principais ocupam mais espaço",
+    "conteúdo agrupado por função",
+    "respiro visual consistente"
+  ],
+  "components_preference": ["feature-card", "stat-card", "media-card", "cta-card"],
+  "visual_guidelines": {
+    "border_radius": "xl",
+    "shadow": "soft",
+    "hover": "elevation + subtle scale",
+    "spacing_system": "8px"
+  },
+  "do_not": [
+    "grid simétrico demais",
+    "cards todos do mesmo tamanho",
+    "excesso de informação por card",
+    "poluição visual"
+  ],
+  "recommended_combinations": ["dark-mode", "card-ui", "glassmorphism (leve)"]
+}

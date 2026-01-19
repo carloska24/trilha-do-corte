@@ -1,0 +1,37 @@
+{
+  "name": "hero-centered",
+  "description": "Layout centrado em um hero forte com foco em mensagem, clareza e conversão.",
+  "intent": ["landing page", "home", "marketing", "apresentacao", "conversao"],
+  "hero_structure": {
+    "alignment": "center",
+    "max_width": "800px",
+    "elements_order": ["headline", "subheadline", "primary_cta", "secondary_cta", "visual_support"]
+  },
+  "typography_rules": [
+    "headline grande e direta",
+    "subheadline explicativa",
+    "uma ideia principal apenas"
+  ],
+  "cta_rules": [
+    "cta principal bem destacado",
+    "apenas uma acao primaria",
+    "acao secundaria discreta"
+  ],
+  "layout_guidelines": [
+    "hero ocupa a primeira dobra",
+    "conteudo abaixo reforca a mensagem",
+    "evitar distrações no topo"
+  ],
+  "visual_rules": [
+    "alto contraste no hero",
+    "uso intencional de espaco",
+    "visual de apoio sem roubar foco"
+  ],
+  "do_not": [
+    "varios ctas concorrendo",
+    "texto longo no hero",
+    "elementos decorativos excessivos",
+    "mensagens vagas"
+  ],
+  "recommended_combinations": ["minimalist", "bento-grid", "light-mode", "dark-mode"]
+}

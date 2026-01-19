@@ -1,0 +1,39 @@
+{
+  "name": "dark-mode",
+  "description": "Tema escuro premium com contraste equilibrado, hierarquia visual e conforto visual.",
+  "intent": ["dark", "premium", "moderno", "interface escura", "saas moderno"],
+  "color_system": {
+    "background": "#0f0f12",
+    "surface": "#18181b",
+    "surface_alt": "#1f1f23",
+    "border": "#27272a",
+    "text_primary": "#f4f4f5",
+    "text_secondary": "#a1a1aa",
+    "muted": "#71717a",
+    "accent": "brand"
+  },
+  "contrast_rules": [
+    "nunca usar preto puro (#000)",
+    "texto principal com alto contraste",
+    "texto secundário mais suave",
+    "bordas discretas, não gritantes"
+  ],
+  "visual_guidelines": {
+    "shadow": "soft ambient",
+    "hover": "surface elevation",
+    "focus": "accent outline",
+    "divider": "subtle border"
+  },
+  "accessibility_constraints": [
+    "contraste mínimo WCAG AA",
+    "foco visível em navegação por teclado",
+    "não depender só de cor para estado"
+  ],
+  "do_not": [
+    "fundo totalmente preto",
+    "texto branco puro em grandes blocos",
+    "cores saturadas em excesso",
+    "baixo contraste em textos longos"
+  ],
+  "recommended_combinations": ["bento-grid", "card-ui", "glassmorphism"]
+}

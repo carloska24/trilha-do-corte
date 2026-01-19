@@ -1,0 +1,40 @@
+{
+  "name": "motion-ui",
+  "description": "Micro-interações e motion design funcionais para feedback, fluidez e percepção de qualidade.",
+  "intent": ["interacao", "feedback", "fluidez", "ui premium", "micro animacoes"],
+  "motion_principles": [
+    "feedback imediato",
+    "causa e efeito claros",
+    "animacoes curtas e suaves",
+    "movimento consistente"
+  ],
+  "timing_rules": {
+    "fast": "100-150ms",
+    "standard": "200-300ms",
+    "slow": "400ms max"
+  },
+  "easing": ["ease-out", "ease-in-out"],
+  "interaction_types": ["hover", "focus", "press", "load", "expand-collapse", "success-error"],
+  "usage_rules": [
+    "animar apenas mudancas de estado",
+    "nunca atrasar a acao do usuario",
+    "motion deve ser previsivel",
+    "usar animacao para orientar atencao"
+  ],
+  "performance_constraints": [
+    "preferir transform e opacity",
+    "evitar animar layout pesado",
+    "desativar motion excessivo em dispositivos fracos"
+  ],
+  "accessibility_constraints": [
+    "respeitar prefers-reduced-motion",
+    "motion nao pode ser a unica forma de feedback"
+  ],
+  "do_not": [
+    "animacoes longas",
+    "movimento decorativo sem funcao",
+    "animar tudo",
+    "efeitos chamativos excessivos"
+  ],
+  "recommended_combinations": ["bento-grid", "card-ui", "data-first", "hero-centered"]
+}

@@ -5,10 +5,10 @@ export const getSettings = async (req: Request, res: Response) => {
   try {
     // Determine today to filter exceptions if needed, but for now return all or just the active record
     // We assume single tenant for now, so we take the first record or create one
-    let settings = await prisma.shop_settings.findFirst();
+    let settings = await prisma.shopSettings.findFirst();
 
     if (!settings) {
-      settings = await prisma.shop_settings.create({
+      settings = await prisma.shopSettings.create({
         data: {
           startHour: 9,
           endHour: 19,
@@ -21,6 +21,7 @@ export const getSettings = async (req: Request, res: Response) => {
     res.json(settings);
   } catch (error: any) {
     console.error('Get Settings Error:', error);
+    console.error('Stack:', error.stack);
     res.status(500).json({ error: 'Failed to fetch settings' });
   }
 };
@@ -30,7 +31,7 @@ export const updateSettings = async (req: Request, res: Response) => {
     const { startHour, endHour, closedDays, exceptions, slotInterval } = req.body;
 
     // Upsert logic (though findFirst -> update is safer for ID-less update intent)
-    const existing = await prisma.shop_settings.findFirst();
+    const existing = await prisma.shopSettings.findFirst();
 
     const data = {
       startHour,
@@ -42,12 +43,12 @@ export const updateSettings = async (req: Request, res: Response) => {
 
     let settings;
     if (existing) {
-      settings = await prisma.shop_settings.update({
+      settings = await prisma.shopSettings.update({
         where: { id: existing.id },
         data,
       });
     } else {
-      settings = await prisma.shop_settings.create({
+      settings = await prisma.shopSettings.create({
         data,
       });
     }

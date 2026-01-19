@@ -1,0 +1,36 @@
+{
+  "name": "minimalist",
+  "description": "Design minimalista inspirado no Swiss Design, focado em tipografia, grid rígido e espaço em branco.",
+  "intent": ["minimal", "clean", "institucional", "premium", "elegante"],
+  "layout": {
+    "grid": "rigid",
+    "alignment": "consistent",
+    "max_width": "1200px",
+    "spacing": "generous"
+  },
+  "typography": {
+    "font_style": "neutral",
+    "scale": "clear hierarchy",
+    "line_height": "comfortable",
+    "font_weight_usage": ["regular", "medium", "semibold"]
+  },
+  "visual_rules": [
+    "uso intenso de espaço em branco",
+    "poucos elementos por seção",
+    "alinhamentos precisos",
+    "hierarquia visual pela tipografia"
+  ],
+  "components_preference": ["text-block", "simple-button", "divider", "list"],
+  "color_rules": [
+    "paleta reduzida (1 cor principal + neutros)",
+    "cores usadas com intenção",
+    "evitar gradientes e efeitos"
+  ],
+  "do_not": [
+    "excesso de componentes",
+    "efeitos visuais decorativos",
+    "animações chamativas",
+    "layout solto ou desalinhado"
+  ],
+  "recommended_combinations": ["hero-centered", "light-mode", "card-ui (leve)"]
+}
