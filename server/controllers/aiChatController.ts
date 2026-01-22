@@ -54,7 +54,7 @@ async function getAvailabilityForNextDays() {
   });
 
   // Fetch Shop Settings from DB
-  const settings = await prisma.shop_settings.findFirst();
+  const settings = await prisma.shopSettings.findFirst();
   const startHourConfig = settings?.startHour || 9;
   const endHourConfig = settings?.endHour || 19;
   const closedDays = settings?.closedDays || [0];
@@ -166,7 +166,7 @@ export const handleChat = async (req: Request, res: Response) => {
     const services = await getServicesList();
 
     // Fetch slotInterval from settings for accurate prompt
-    const settings = await prisma.shop_settings.findFirst();
+    const settings = await prisma.shopSettings.findFirst();
     const slotInterval = settings?.slotInterval || 30;
 
     const todayStr = new Date().toLocaleDateString('pt-BR', {

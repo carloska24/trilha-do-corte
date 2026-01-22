@@ -443,6 +443,38 @@ export const ClientProfileModal: React.FC<ClientProfileModalProps> = ({
                   {recurrence.label} • {appointmentsThisMonth}x este mês
                 </span>
               </motion.div>
+
+              {/* Phone Number Display (Profile) */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className={`mt-2 flex items-center justify-center gap-2 border rounded-full px-3 py-1 ${
+                  client.phone && client.phone !== '00000000000'
+                    ? 'bg-zinc-800 border-zinc-700'
+                    : 'bg-red-500/10 border-red-500/20'
+                }`}
+              >
+                <Phone
+                  size={12}
+                  className={
+                    client.phone && client.phone !== '00000000000'
+                      ? 'text-zinc-400'
+                      : 'text-red-400'
+                  }
+                />
+                <span
+                  className={`text-[11px] font-mono font-bold tracking-wider ${
+                    client.phone && client.phone !== '00000000000'
+                      ? 'text-zinc-200'
+                      : 'text-red-400'
+                  }`}
+                >
+                  {client.phone && client.phone !== '00000000000'
+                    ? client.phone.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3')
+                    : 'Sem telefone'}
+                </span>
+              </motion.div>
             </div>
 
             {/* Action Buttons - Glassmorphism */}

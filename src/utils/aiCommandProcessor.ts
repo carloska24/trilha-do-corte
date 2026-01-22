@@ -40,12 +40,16 @@ const getSystemPrompt = (validServices: string) => {
   const d = new Date();
   const year = d.getFullYear(); // 2026
 
+  // Fix: Explicitly include Weekday so AI knows what "Amanhã" means relative to today
+  const weekDay = d.toLocaleDateString('pt-BR', { weekday: 'long' }).toUpperCase(); // QUARTA-FEIRA
+
   return `
 Você é uma IA classificadora para uma barbearia.
 Sua função é receber um comando de voz e retornar ESTRITAMENTE um JSON.
 
 ## Contexto Temporal:
 - **HOJE:** ${today} (${todayISO})
+- **DIA DA SEMANA:** ${weekDay}
 - **ANO ATUAL:** ${year}
 
 ## Serviços Disponíveis:

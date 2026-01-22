@@ -68,6 +68,7 @@ export const CalendarView: React.FC = () => {
               .replace(',', '.') || '0'
           ),
         clientId: foundClient?.id, // Link to existing client if found
+        clientPhone: data.phone, // CRITICAL: Send phone to allow backend to auto-update/create client
       };
 
       const created = await api.createAppointment(payload);

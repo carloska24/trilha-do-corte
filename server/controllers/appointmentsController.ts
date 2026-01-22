@@ -117,7 +117,7 @@ export const createAppointment = async (req: Request, res: Response) => {
     // ... (Business logic checks remain largely the same, using 'date' string for keys)
 
     // 2. Check Business Rules
-    const shopSettings = await prisma.shop_settings.findFirst();
+    const shopSettings = await prisma.shopSettings.findFirst();
     const startHour = shopSettings?.startHour ?? 8;
     const endHour = shopSettings?.endHour ?? 20;
     const closedDays = shopSettings?.closedDays ?? [0];
@@ -149,7 +149,10 @@ export const createAppointment = async (req: Request, res: Response) => {
     // 1.1 Match by Phone (if not explicitly linked)
     // Needs 'phone' from body. Validator might strip it if not in schema.
     // Assuming schema allows it (check validators.ts later if needed, but safe to try)
-    const { clientPhone } = req.body;
+    // Fix: Frontend sends 'phone', but we might have expected 'clientPhone'. Support both.
+    const { clientPhone: cp, phone: p } = req.body;
+    const clientPhone = cp || p;
+
     if (!finalClientId && clientPhone) {
       const foundClient = await prisma.clients.findFirst({
         where: { phone: clientPhone },
@@ -157,6 +160,88 @@ export const createAppointment = async (req: Request, res: Response) => {
       if (foundClient) {
         finalClientId = foundClient.id;
         console.log(`🔗 Linked appointment to client ${foundClient.name} by phone ${clientPhone}`);
+
+        // SELF-HEALING: Backfill Avatar if missing
+        if (!foundClient.img) {
+          const randomNum = Math.floor(Math.random() * 23) + 1;
+          const newImg = `/avatars/avatar_cyberpunk_${String(randomNum).padStart(2, '0')}.png`;
+          console.log(`🎨 Backfilling missing avatar for ${foundClient.name}`);
+          await prisma.clients.update({
+            where: { id: foundClient.id },
+            data: { img: newImg },
+          });
+        }
+      } else {
+        // Fallback: Try to find by NAME (if provided)
+        let foundByName: any = null;
+        if (clientName) {
+          foundByName = await prisma.clients.findFirst({
+            where: { name: { equals: clientName, mode: 'insensitive' } },
+          });
+        }
+
+        if (foundByName) {
+          finalClientId = foundByName.id;
+          console.log(`🔗 Linked appointment to client ${foundByName.name} by NAME match`);
+
+          // FIX: Update phone if the existing one is invalid/placeholder and we have a new one
+          const updates: any = {};
+          if (
+            clientPhone &&
+            (!foundByName.phone ||
+              foundByName.phone === '00000000000' ||
+              foundByName.phone.length < 8)
+          ) {
+            console.log(`📝 Updating client phone from ${foundByName.phone} to ${clientPhone}`);
+            updates.phone = clientPhone;
+          }
+
+          // SELF-HEALING: Backfill Avatar if missing
+          if (!foundByName.img) {
+            const randomNum = Math.floor(Math.random() * 23) + 1;
+            const newImg = `/avatars/avatar_cyberpunk_${String(randomNum).padStart(2, '0')}.png`;
+            console.log(`🎨 Backfilling missing avatar for ${foundByName.name}`);
+            updates.img = newImg;
+          }
+
+          if (Object.keys(updates).length > 0) {
+            await prisma.clients.update({
+              where: { id: foundByName.id },
+              data: updates,
+            });
+          }
+        } else {
+          // AUTO-CREATE NEW CLIENT
+
+          console.log(`🆕 Creating new client for phone ${clientPhone}`);
+          const newClientId = uuidv4();
+
+          // Avatar Logic (Reuse from usersController)
+          let finalImg = photoUrl;
+          if (!finalImg) {
+            const randomNum = Math.floor(Math.random() * 23) + 1;
+            finalImg = `/avatars/avatar_cyberpunk_${String(randomNum).padStart(2, '0')}.png`;
+          }
+
+          try {
+            await prisma.clients.create({
+              data: {
+                id: newClientId,
+                name: clientName || 'Cliente Novo',
+                phone: clientPhone,
+                img: finalImg,
+                status: 'new',
+                lastVisit: date, // Set first visit
+                level: 1,
+              },
+            });
+            finalClientId = newClientId;
+            console.log(`✅ New Client Created: ${newClientId}`);
+          } catch (createErr) {
+            console.error('Failed to auto-create client:', createErr);
+            // Fallback: Proceed without linking (or could throw error)
+          }
+        }
       }
     }
 
@@ -175,6 +260,7 @@ export const createAppointment = async (req: Request, res: Response) => {
         notes,
         clientId: finalClientId,
       },
+      include: { client: true }, // CRITICAL: Return client data for frontend UI
     });
 
     // ... (Client lifecycle same)

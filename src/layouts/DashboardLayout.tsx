@@ -330,20 +330,23 @@ export const DashboardLayout: React.FC = () => {
           // WhatsApp Notification
           try {
             const { generateWhatsAppLink } = await import('../utils/whatsappUtils');
-            const link = generateWhatsAppLink({
-              phone: '5511999999999', // TODO: Get real client phone if available, or barber phone?
-              // Actually, usually we send TO the client OR TO the barber.
-              // In BookingModal, we send TO THE BARBER saying "Project Trilha do Corte: New Booking".
-              // Let's match BookingModal behavior: Send confirmation to BARBER (or shop phone).
-              clientName: clientName,
-              date: appointmentDate,
-              time: time,
-              serviceName: serviceName,
-              price: servicePrice,
-            });
+
+            // Fix: Use client phone if available (preferred), otherwise fallback safely
+            // Note: The notification usually goes TO the barber or TO the client.
+            // If notifying client: use client phone. If notifying barber: use barber phone.
+            // Let's assume we want to open a chat WITH the client to confirm.
+            const targetPhone =
+              foundClient?.phone && foundClient.phone !== '00000000000' ? foundClient.phone : '';
+
+            const link = generateWhatsAppLink(
+              targetPhone,
+              `Olá ${clientName}! Seu agendamento foi confirmado para ${appointmentDate.split('-').reverse().join('/')} às ${time}. (${serviceName} - R$ ${servicePrice})`
+            );
 
             setAiResponse(`✅ Agendado! Abrindo WhatsApp...`);
-            window.open(link, '_blank');
+            if (targetPhone) {
+              window.open(link, '_blank');
+            }
           } catch (err) {
             console.error('Error generating WhatsApp link', err);
           }

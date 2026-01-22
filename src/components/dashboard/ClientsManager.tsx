@@ -285,6 +285,24 @@ const ClientCard: React.FC<ClientCardProps> = ({
                 </div>
               )}
             </div>
+
+            {/* Phone Number Display */}
+            <div className="flex items-center gap-2 mt-2 opacity-90 group-hover:opacity-100 transition-opacity">
+              <div
+                className={`w-4 h-4 rounded-full flex items-center justify-center ${client.phone && client.phone !== '00000000000' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}
+              >
+                <span className="text-[10px]">
+                  {client.phone && client.phone !== '00000000000' ? '📞' : '⚠️'}
+                </span>
+              </div>
+              <span
+                className={`text-[11px] font-mono font-bold tracking-wider ${client.phone && client.phone !== '00000000000' ? 'text-zinc-300' : 'text-red-400/80'}`}
+              >
+                {client.phone && client.phone !== '00000000000'
+                  ? client.phone.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3')
+                  : 'Sem telefone'}
+              </span>
+            </div>
           </div>
 
           {/* ========== ACTIONS SECTION ========== */}

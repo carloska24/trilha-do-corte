@@ -81,7 +81,7 @@ export const createBackup = async (req: Request, res: Response) => {
       prisma.appointments.findMany(),
       prisma.services.findMany(),
       prisma.barbers.findMany(),
-      prisma.shop_settings.findFirst(),
+      prisma.shopSettings.findFirst(),
     ]);
 
     const backupData = {
@@ -172,7 +172,7 @@ export const restoreBackup = async (req: Request, res: Response) => {
       if (shopSettings) {
         // Assume single settings row logic or ID based
         if (shopSettings.id) {
-          await tx.shop_settings.upsert({
+          await tx.shopSettings.upsert({
             where: { id: shopSettings.id },
             update: shopSettings,
             create: shopSettings,
